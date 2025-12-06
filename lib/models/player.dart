@@ -1,16 +1,44 @@
 
 import 'package:hive/hive.dart';
+import 'package:hive/hive.dart';
 import 'task.dart';
+
+enum Job {
+  warrior,
+  cleric,
+  wizard,
+  adventurer,
+}
+
+class JobAdapter extends TypeAdapter<Job> {
+  @override
+  final int typeId = 4;
+
+  @override
+  Job read(BinaryReader reader) {
+    return Job.values[reader.readByte()];
+  }
+
+  @override
+  void write(BinaryWriter writer, Job obj) {
+    writer.writeByte(obj.index);
+  }
+}
+
 
 class Player {
   int level;
   int currentExp;
   int expToNextLevel;
+  Job currentJob;
+  int comboCount;
 
   Player({
     this.level = 1,
     this.currentExp = 0,
     this.expToNextLevel = 100, // Initial EXP requirement
+    this.currentJob = Job.adventurer,
+    this.comboCount = 0,
   });
 
   Map<QuestRank, int> get questSlots {
@@ -57,6 +85,8 @@ class PlayerAdapter extends TypeAdapter<Player> {
       level: reader.readInt(),
       currentExp: reader.readInt(),
       expToNextLevel: reader.readInt(),
+      currentJob: reader.read(),
+      comboCount: reader.readInt(),
     );
   }
 
@@ -65,5 +95,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.writeInt(obj.level);
     writer.writeInt(obj.currentExp);
     writer.writeInt(obj.expToNextLevel);
+    writer.write(obj.currentJob);
+    writer.writeInt(obj.comboCount);
   }
 }

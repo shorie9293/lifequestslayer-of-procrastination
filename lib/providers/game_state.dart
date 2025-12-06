@@ -17,13 +17,95 @@ class GameState extends ChangeNotifier {
   List<Task> get tasks => _tasks;
 
   List<Task> get guildTasks => _tasks.where((t) => t.status == TaskStatus.inGuild && !t.isCompleted).toList();
-  List<Task> get activeTasks => _tasks.where((t) => t.status == TaskStatus.active && !t.isCompleted).toList();
+  List<Task> get activeTasks {
+    return _tasks.where((t) {
+      if (t.status != TaskStatus.active || t.isCompleted) return false;
+      
+      // Cleric: Hide daily/weekly tasks if already completed this cycle
+      // Logic Refinement:
+      // If repeatInterval != none:
+      //   If lastCompletedAt is today -> Hide.
+      //   If Weekly and repeatWeekdays is set -> Show only on those days.
+      if (_player.currentJob == Job.cleric && t.repeatInterval != RepeatInterval.none) {
+         final now = DateTime.now();
 
-  void addTask(String title, {QuestRank rank = QuestRank.B}) {
+         // Weekday Check for Weekly tasks
+         if (t.repeatInterval == RepeatInterval.weekly && t.repeatWeekdays.isNotEmpty) {
+           if (!t.repeatWeekdays.contains(now.weekday)) {
+             return false; // Not today
+           }
+         }
+
+         // Completion Check (Hidden if done today)
+         if (t.lastCompletedAt != null) {
+            final last = t.lastCompletedAt!;
+            if (now.year == last.year && now.month == last.month && now.day == last.day) {
+              return false; // Completed today
+            }
+         }
+      }
+      return true;
+    }).toList();
+  }
+
+  ThemeData get currentTheme {
+    switch (_player.currentJob) {
+      case Job.warrior:
+        return _warriorTheme;
+      case Job.cleric:
+        return _clericTheme;
+      case Job.wizard:
+        return _wizardTheme;
+      case Job.adventurer:
+        return _adventurerTheme;
+    }
+  }
+
+  final _adventurerTheme = ThemeData(
+    brightness: Brightness.dark,
+    primarySwatch: Colors.brown,
+    scaffoldBackgroundColor: const Color(0xFF2e2b1a),
+    appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF3e3b16), elevation: 0),
+    colorScheme: ColorScheme.fromSwatch(brightness: Brightness.dark, primarySwatch: Colors.brown, accentColor: Colors.green),
+     useMaterial3: true,
+  );
+
+  // Define themes
+  final _warriorTheme = ThemeData(
+    brightness: Brightness.dark,
+    primarySwatch: Colors.red,
+    scaffoldBackgroundColor: const Color(0xFF2e1a1a),
+    appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF3e1616), elevation: 0),
+    colorScheme: ColorScheme.fromSwatch(brightness: Brightness.dark, primarySwatch: Colors.red, accentColor: Colors.orange),
+    useMaterial3: true,
+  );
+
+  final _clericTheme = ThemeData(
+    brightness: Brightness.dark,
+    primarySwatch: Colors.cyan,
+    scaffoldBackgroundColor: const Color(0xFF1a2e2e),
+    appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF163e3e), elevation: 0),
+    colorScheme: ColorScheme.fromSwatch(brightness: Brightness.dark, primarySwatch: Colors.cyan, accentColor: Colors.tealAccent),
+     useMaterial3: true,
+  );
+
+  final _wizardTheme = ThemeData(
+    brightness: Brightness.dark,
+    primarySwatch: Colors.deepPurple,
+    scaffoldBackgroundColor: const Color(0xFF1a1a2e),
+    appBarTheme: const AppBarTheme(backgroundColor: Color(0xFF16213e), elevation: 0),
+    colorScheme: ColorScheme.fromSwatch(brightness: Brightness.dark, primarySwatch: Colors.deepPurple, accentColor: Colors.amber),
+     useMaterial3: true,
+  );
+
+  void addTask(String title, {QuestRank rank = QuestRank.B, RepeatInterval repeatInterval = RepeatInterval.none, List<int>? repeatWeekdays, List<SubTask>? subTasks}) {
     final newTask = Task(
       id: const Uuid().v4(),
       title: title,
       rank: rank,
+      repeatInterval: repeatInterval,
+      repeatWeekdays: repeatWeekdays,
+      subTasks: subTasks,
     );
     _tasks.add(newTask);
     notifyListeners();
@@ -58,14 +140,68 @@ class GameState extends ChangeNotifier {
     }
   }
 
+  void toggleSubTask(String taskId, int subTaskIndex) {
+    final index = _tasks.indexWhere((t) => t.id == taskId);
+    if (index != -1) {
+      final task = _tasks[index];
+      if (subTaskIndex >= 0 && subTaskIndex < task.subTasks.length) {
+        task.subTasks[subTaskIndex].isCompleted = !task.subTasks[subTaskIndex].isCompleted;
+        notifyListeners();
+      }
+    }
+  }
+
+  void changeJob(Job newJob) {
+    _player.currentJob = newJob;
+    notifyListeners();
+  }
+
   bool completeTask(String taskId) {
     final index = _tasks.indexWhere((t) => t.id == taskId);
     if (index != -1) {
-      _tasks[index].isCompleted = true;
-      _tasks[index].status = TaskStatus.inGuild; 
+      final task = _tasks[index];
+
+      // Wizard: Check subtasks
+      if (_player.currentJob == Job.wizard && task.subTasks.isNotEmpty) {
+        if (task.subTasks.any((s) => !s.isCompleted)) {
+           // Maybe return a specific result or just false?
+           // Ideally we should notify UI *why*. 
+           // For now, failure to complete implies requirements not met.
+          return false; 
+        }
+      }
+
+      // Logic for Repeatable Tasks (Cleric)
+      if (_player.currentJob == Job.cleric && task.repeatInterval != RepeatInterval.none) {
+         _tasks[index].lastCompletedAt = DateTime.now();
+         // Do NOT set isCompleted = true for repeatable tasks, just mark timestamp and keep active/inguild?
+         // Actually spec says "Completed but resurfaces next day". 
+         // So for implementation: keep it active or moved back to guild?
+         // "完了しても翌日復活する" -> Stays in list but hidden or visually marked done.
+         // Let's keep it 'active' but hidden by the getter.
+      } else {
+        _tasks[index].isCompleted = true;
+        _tasks[index].status = TaskStatus.inGuild; 
+      }
+      
+      // Warrior: Combo Bonus
+      int expGain = 50;
+      if (_player.currentJob == Job.warrior) {
+        _player.comboCount++;
+        expGain += (_player.comboCount * 5); // Simple bonus
+      } else {
+        // Reset combo if not warrior or maybe just keep it but don't use it? 
+        // Let's reset combo on job change or meaningful gap? 
+        // For now, if switching job, maybe reset? or just ignore. 
+        // If not warrior, we probably shouldn't increase it. 
+        // Actually, if we want to reset combo when failing/delaying, that's complex.
+        // Let's just say only Warrior gains combo.
+        // If completing as non-warrior, does it reset? Let's say yes, or just 0.
+        _player.comboCount = 0;
+      }
       
       // Award EXP
-      bool leveledUp = _player.addExp(50); // Fixed 50 EXP per task for MVP
+      bool leveledUp = _player.addExp(expGain); 
       notifyListeners();
       return leveledUp;
     }

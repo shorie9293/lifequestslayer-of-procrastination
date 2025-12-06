@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'providers/game_state.dart';
 import 'screens/home_screen.dart';
+import 'screens/guild_screen.dart';
 
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/task.dart';
@@ -14,8 +15,11 @@ void main() async {
 
   Hive.registerAdapter(TaskAdapter()); // TypeId: 0
   Hive.registerAdapter(TaskStatusAdapter()); // TypeId: 1
-  Hive.registerAdapter(QuestRankAdapter()); // TypeId: 2
+  Hive.registerAdapter(QuestionRankAdapter()); // TypeId: 2 (Renamed in task.dart, matching class name)
   Hive.registerAdapter(PlayerAdapter()); // TypeId: 3
+  Hive.registerAdapter(JobAdapter()); // TypeId: 4
+  Hive.registerAdapter(RepeatIntervalAdapter()); // TypeId: 5
+  Hive.registerAdapter(SubTaskAdapter()); // TypeId: 6
 
   await Hive.openBox<Task>('tasksBox');
   await Hive.openBox<Player>('playerBox');
@@ -30,29 +34,21 @@ class RPGTodoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => GameState(),
-      child: MaterialApp(
-        title: 'RPG Todo',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          brightness: Brightness.dark,
-          primarySwatch: Colors.deepPurple,
-          scaffoldBackgroundColor: const Color(0xFF1a1a2e),
-          appBarTheme: const AppBarTheme(
-            backgroundColor: Color(0xFF16213e),
-            elevation: 0,
-          ),
-          textTheme: GoogleFonts.vt323TextTheme(Theme.of(context).textTheme).apply(
-            bodyColor: Colors.white,
-            displayColor: Colors.white,
-          ),
-          colorScheme: ColorScheme.fromSwatch(
-            brightness: Brightness.dark,
-            primarySwatch: Colors.deepPurple,
-            accentColor: Colors.amber,
-          ),
-          useMaterial3: true,
-        ),
-        home: const HomeScreen(),
+      child: Consumer<GameState>(
+        builder: (context, gameState, child) {
+          return MaterialApp(
+            title: 'RPG Todo',
+            debugShowCheckedModeBanner: false,
+            theme: gameState.currentTheme.copyWith(
+              // Ensure text theme is applied to the new theme
+              textTheme: GoogleFonts.vt323TextTheme(gameState.currentTheme.textTheme).apply(
+                bodyColor: Colors.white,
+                displayColor: Colors.white,
+              ),
+            ),
+            home: const GuildScreen(),
+          );
+        },
       ),
     );
   }
