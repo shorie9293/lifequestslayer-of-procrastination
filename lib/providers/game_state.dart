@@ -1,12 +1,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import '../models/task.dart';
 import '../models/player.dart';
 
 class GameState extends ChangeNotifier {
-  final Player _player = Player();
-  final List<Task> _tasks = [];
+  Player _player = Player();
+  List<Task> _tasks = [];
+
+  GameState() {
+    loadData();
+  }
 
   Player get player => _player;
   List<Task> get tasks => _tasks;
@@ -65,5 +70,34 @@ class GameState extends ChangeNotifier {
       return leveledUp;
     }
     return false;
+  }
+  Future<void> loadData() async {
+    final playerBox = Hive.box<Player>('playerBox');
+    if (playerBox.isNotEmpty) {
+      _player = playerBox.getAt(0)!;
+    }
+
+    final tasksBox = Hive.box<Task>('tasksBox');
+    _tasks = tasksBox.values.toList();
+    
+    // Avoid double-notifying on initial load if possible, 
+    // but constructor calls this so it's fine.
+    // However, we should be careful about the loop with saveData().
+    // Since loadData is called in constructor, creating an instance calls it.
+  }
+
+  Future<void> saveData() async {
+    final playerBox = Hive.box<Player>('playerBox');
+    playerBox.put(0, _player);
+
+    final tasksBox = Hive.box<Task>('tasksBox');
+    await tasksBox.clear();
+    await tasksBox.addAll(_tasks);
+  }
+
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    saveData(); // Auto-save on any change
   }
 }

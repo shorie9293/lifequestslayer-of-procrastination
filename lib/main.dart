@@ -5,7 +5,21 @@ import 'package:google_fonts/google_fonts.dart';
 import 'providers/game_state.dart';
 import 'screens/home_screen.dart';
 
-void main() {
+import 'package:hive_flutter/hive_flutter.dart';
+import 'models/task.dart';
+import 'models/player.dart';
+
+void main() async {
+  await Hive.initFlutter();
+
+  Hive.registerAdapter(TaskAdapter()); // TypeId: 0
+  Hive.registerAdapter(TaskStatusAdapter()); // TypeId: 1
+  Hive.registerAdapter(QuestRankAdapter()); // TypeId: 2
+  Hive.registerAdapter(PlayerAdapter()); // TypeId: 3
+
+  await Hive.openBox<Task>('tasksBox');
+  await Hive.openBox<Player>('playerBox');
+
   runApp(const RPGTodoApp());
 }
 

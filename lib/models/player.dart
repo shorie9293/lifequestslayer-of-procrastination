@@ -1,4 +1,5 @@
 
+import 'package:hive/hive.dart';
 import 'task.dart';
 
 class Player {
@@ -43,5 +44,26 @@ class Player {
       leveledUp = true;
     }
     return leveledUp;
+  }
+}
+
+class PlayerAdapter extends TypeAdapter<Player> {
+  @override
+  final int typeId = 3;
+
+  @override
+  Player read(BinaryReader reader) {
+    return Player(
+      level: reader.readInt(),
+      currentExp: reader.readInt(),
+      expToNextLevel: reader.readInt(),
+    );
+  }
+
+  @override
+  void write(BinaryWriter writer, Player obj) {
+    writer.writeInt(obj.level);
+    writer.writeInt(obj.currentExp);
+    writer.writeInt(obj.expToNextLevel);
   }
 }

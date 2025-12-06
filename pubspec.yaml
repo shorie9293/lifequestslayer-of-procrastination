@@ -38,6 +38,8 @@ dependencies:
   provider: ^6.1.5+1
   google_fonts: ^6.3.0
   uuid: ^4.5.2
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:
