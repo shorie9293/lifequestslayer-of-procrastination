@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/game_state.dart';
 import '../models/task.dart';
-import '../models/player.dart';
+import '../widgets/player_status_header.dart';
 import 'guild_screen.dart';
 import 'temple_screen.dart';
 
@@ -36,7 +36,6 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final gameState = Provider.of<GameState>(context);
-    final player = gameState.player;
     final tasks = gameState.activeTasks;
 
     return Scaffold(
@@ -68,43 +67,7 @@ class HomeScreen extends StatelessWidget {
       body: Column(
         children: [
           // Player Stats Header
-          Container(
-            padding: const EdgeInsets.all(16),
-            color: Colors.black12,
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                     Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                         Text("Lv.${player.level} ${_getJobName(player.currentJob)}", style: GoogleFonts.pressStart2p(fontSize: 16)),
-                         if (player.currentJob == Job.warrior)
-                           Text("Combo: ${player.comboCount}", style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-                      ],
-                    ),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text("S: ${tasks.where((t) => t.rank == QuestRank.S).length}/${player.questSlots[QuestRank.S] ?? 0}"),
-                        Text("A: ${tasks.where((t) => t.rank == QuestRank.A).length}/${player.questSlots[QuestRank.A] ?? 0}"),
-                        Text("B: ${tasks.where((t) => t.rank == QuestRank.B).length}/${player.questSlots[QuestRank.B] ?? 0}"),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                LinearProgressIndicator(
-                  value: player.currentExp / player.expToNextLevel,
-                  minHeight: 10,
-                  backgroundColor: Colors.grey[800],
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.green),
-                ),
-                Text("${player.currentExp} / ${player.expToNextLevel} EXP"),
-              ],
-            ),
-          ),
+          const PlayerStatusHeader(),
           // Active Tasks (Monsters)
           Expanded(
             child: tasks.isEmpty
@@ -197,13 +160,5 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-
-  String _getJobName(Job job) {
-    switch (job) {
-      case Job.warrior: return "戦士";
-      case Job.cleric: return "僧侶";
-      case Job.wizard: return "魔法使い";
-      case Job.adventurer: return "冒険者";
-    }
-  }
 }
+

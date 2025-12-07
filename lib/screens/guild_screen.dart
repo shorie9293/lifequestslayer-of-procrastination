@@ -4,6 +4,7 @@ import '../providers/game_state.dart';
 import '../models/task.dart';
 import '../models/player.dart';
 import 'home_screen.dart';
+import '../widgets/player_status_header.dart';
 
 class GuildScreen extends StatelessWidget {
   const GuildScreen({super.key});
@@ -62,6 +63,7 @@ class GuildScreen extends StatelessWidget {
       ),
       body: Column(
         children: [
+          const PlayerStatusHeader(),
           Expanded(
             child: tasks.isEmpty
                 ? const Center(child: Text("クエスト依頼はありません。"))
@@ -153,12 +155,14 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
   @override
   Widget build(BuildContext context) {
     final gameState = Provider.of<GameState>(context, listen: false);
-    final job = gameState.player.currentJob;
+    final player = gameState.player;
 
     return AlertDialog(
       title: const Text("新規クエスト作成"),
       content: SingleChildScrollView(
-        child: Column(
+        child: SizedBox(
+          width: double.maxFinite,
+          child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
@@ -178,7 +182,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
               }).toList(),
               onChanged: (val) => setState(() => _selectedRank = val!),
             ),
-            if (job == Job.cleric) ...[
+            if (player.canUseSkill(Job.cleric)) ...[
               const SizedBox(height: 16),
               DropdownButtonFormField<RepeatInterval>(
                 value: _selectedRepeat,
@@ -207,7 +211,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                 )
               ]
             ],
-            if (job == Job.wizard) ...[
+            if (player.canUseSkill(Job.wizard)) ...[
               const SizedBox(height: 16),
               Row(
                 children: [
@@ -244,6 +248,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                 ),
             ]
           ],
+        ),
         ),
       ),
       actions: [

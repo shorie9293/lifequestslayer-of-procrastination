@@ -22,11 +22,8 @@ class GameState extends ChangeNotifier {
       if (t.status != TaskStatus.active || t.isCompleted) return false;
       
       // Cleric: Hide daily/weekly tasks if already completed this cycle
-      // Logic Refinement:
-      // If repeatInterval != none:
-      //   If lastCompletedAt is today -> Hide.
-      //   If Weekly and repeatWeekdays is set -> Show only on those days.
-      if (_player.currentJob == Job.cleric && t.repeatInterval != RepeatInterval.none) {
+      // Logic: If Cleric Skill Active (current job or inherited)
+      if (_player.canUseSkill(Job.cleric) && t.repeatInterval != RepeatInterval.none) {
          final now = DateTime.now();
 
          // Weekday Check for Weekly tasks
@@ -156,23 +153,33 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void toggleSkill(Job job) {
+    if (_player.isMastered(job)) {
+      if (_player.activeSkills.contains(job)) {
+        _player.activeSkills.remove(job);
+      } else {
+        _player.activeSkills.add(job);
+      }
+      notifyListeners();
+    }
+  }
+
   bool completeTask(String taskId) {
     final index = _tasks.indexWhere((t) => t.id == taskId);
     if (index != -1) {
       final task = _tasks[index];
 
       // Wizard: Check subtasks
-      if (_player.currentJob == Job.wizard && task.subTasks.isNotEmpty) {
+      // Use Skill Check
+      if (_player.canUseSkill(Job.wizard) && task.subTasks.isNotEmpty) {
         if (task.subTasks.any((s) => !s.isCompleted)) {
-           // Maybe return a specific result or just false?
-           // Ideally we should notify UI *why*. 
-           // For now, failure to complete implies requirements not met.
+          // Cannot complete yet
           return false; 
         }
       }
 
       // Logic for Repeatable Tasks (Cleric)
-      if (_player.currentJob == Job.cleric && task.repeatInterval != RepeatInterval.none) {
+      if (_player.canUseSkill(Job.cleric) && task.repeatInterval != RepeatInterval.none) {
          _tasks[index].lastCompletedAt = DateTime.now();
          // Do NOT set isCompleted = true for repeatable tasks, just mark timestamp and keep active/inguild?
          // Actually spec says "Completed but resurfaces next day". 
@@ -184,19 +191,21 @@ class GameState extends ChangeNotifier {
         _tasks[index].status = TaskStatus.inGuild; 
       }
       
+      // Calculate Base EXP based on Rank
+      int expGain = 0;
+      switch (task.rank) {
+        case QuestRank.S: expGain = 1000; break;
+        case QuestRank.A: expGain = 300; break;
+        case QuestRank.B: expGain = 100; break;
+      }
+      
       // Warrior: Combo Bonus
-      int expGain = 50;
-      if (_player.currentJob == Job.warrior) {
+      if (_player.canUseSkill(Job.warrior)) {
         _player.comboCount++;
-        expGain += (_player.comboCount * 5); // Simple bonus
+        // Bonus: +10 per combo count. 
+        // Example: 2nd combo = +20 exp. 10th combo = +100 exp (double B rank!).
+        expGain += (_player.comboCount * 10); 
       } else {
-        // Reset combo if not warrior or maybe just keep it but don't use it? 
-        // Let's reset combo on job change or meaningful gap? 
-        // For now, if switching job, maybe reset? or just ignore. 
-        // If not warrior, we probably shouldn't increase it. 
-        // Actually, if we want to reset combo when failing/delaying, that's complex.
-        // Let's just say only Warrior gains combo.
-        // If completing as non-warrior, does it reset? Let's say yes, or just 0.
         _player.comboCount = 0;
       }
       
