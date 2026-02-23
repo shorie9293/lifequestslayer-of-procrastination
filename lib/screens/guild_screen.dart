@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/game_state.dart';
+import '../viewmodels/game_view_model.dart';
 import '../models/task.dart';
 import '../models/player.dart';
-import 'home_screen.dart';
 import '../widgets/player_status_header.dart';
+import '../widgets/task_card.dart';
+import 'home_screen.dart';
 
 class GuildScreen extends StatelessWidget {
   const GuildScreen({super.key});
@@ -17,8 +18,8 @@ class GuildScreen extends StatelessWidget {
   }
 
   void _acceptTask(BuildContext context, String taskId) {
-    final gameState = Provider.of<GameState>(context, listen: false);
-    final error = gameState.acceptTask(taskId);
+    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+    final error = viewModel.acceptTask(taskId);
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -34,16 +35,27 @@ class GuildScreen extends StatelessWidget {
   }
 
   void _deleteTask(BuildContext context, String taskId) {
-    Provider.of<GameState>(context, listen: false).deleteTask(taskId);
+    Provider.of<GameViewModel>(context, listen: false).deleteTask(taskId);
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("クエストを破棄しました。")),
     );
   }
 
+  String _getTaskDetails(Task task) {
+    String details = "状態: 未受注";
+    if (task.repeatInterval != RepeatInterval.none) {
+      details += " | 繰り返し: ${task.repeatInterval.name}";
+    }
+    if (task.subTasks.isNotEmpty) {
+      details += " | サブタスク: ${task.subTasks.length}個";
+    }
+    return details;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final tasks = Provider.of<GameState>(context).guildTasks;
-    final player = Provider.of<GameState>(context).player;
+    final viewModel = Provider.of<GameViewModel>(context);
+    final tasks = viewModel.guildTasks;
 
     return Scaffold(
       appBar: AppBar(
@@ -71,37 +83,20 @@ class GuildScreen extends StatelessWidget {
                     itemCount: tasks.length,
                     itemBuilder: (context, index) {
                       final task = tasks[index];
-                      return Card(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: ExpansionTile(
-                          title: Text("[${task.rank.name}] ${task.title}"),
-                          subtitle: Text(_getTaskDetails(task)),
-                          children: [
-                             if (task.subTasks.isNotEmpty)
-                                ...task.subTasks.map((s) => ListTile(
-                                  title: Text(s.title),
-                                  leading: const Icon(Icons.check_box_outline_blank, size: 16),
-                                  dense: true,
-                                )),
-                             Padding(
-                               padding: const EdgeInsets.all(8.0),
-                               child: Row(
-                                 mainAxisAlignment: MainAxisAlignment.end,
-                                 children: [
-                                   TextButton(
-                                     onPressed: () => _deleteTask(context, task.id),
-                                     child: const Text("破棄", style: TextStyle(color: Colors.grey)),
-                                   ),
-                                   const SizedBox(width: 8),
-                                   ElevatedButton(
-                                     onPressed: () => _acceptTask(context, task.id),
-                                     child: const Text("受注"),
-                                   ),
-                                 ],
-                               ),
-                             )
-                          ]
-                        ),
+                      return TaskCard(
+                        task: task,
+                        subtitle: _getTaskDetails(task),
+                        actions: [
+                           TextButton(
+                             onPressed: () => _deleteTask(context, task.id),
+                             child: const Text("破棄", style: TextStyle(color: Colors.grey)),
+                           ),
+                           const SizedBox(width: 8),
+                           ElevatedButton(
+                             onPressed: () => _acceptTask(context, task.id),
+                             child: const Text("受注"),
+                           ),
+                        ],
                       );
                     },
                   ),
@@ -113,17 +108,6 @@ class GuildScreen extends StatelessWidget {
         child: const Icon(Icons.add),
       ),
     );
-  }
-
-  String _getTaskDetails(Task task) {
-    String details = "状態: 未受注";
-    if (task.repeatInterval != RepeatInterval.none) {
-      details += " | 繰り返し: ${task.repeatInterval.name}";
-    }
-    if (task.subTasks.isNotEmpty) {
-      details += " | サブタスク: ${task.subTasks.length}個";
-    }
-    return details;
   }
 }
 
@@ -154,8 +138,8 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final gameState = Provider.of<GameState>(context, listen: false);
-    final player = gameState.player;
+    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+    final player = viewModel.player;
 
     return AlertDialog(
       title: const Text("新規クエスト作成"),
@@ -276,13 +260,11 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
   void _addTask() {
     if (_titleController.text.isEmpty) return;
     
-    // For weekly, ensure at least one day selected if weekly is chosen, default to Today if empty? 
-    // Or just let it be empty (never shows up?). Let's default to Today if empty and Weekly.
     if (_selectedRepeat == RepeatInterval.weekly && _selectedWeekdays.isEmpty) {
       _selectedWeekdays.add(DateTime.now().weekday);
     }
 
-    Provider.of<GameState>(context, listen: false).addTask(
+    Provider.of<GameViewModel>(context, listen: false).addTask(
       _titleController.text,
       rank: _selectedRank,
       repeatInterval: _selectedRepeat,

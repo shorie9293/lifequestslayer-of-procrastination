@@ -3,17 +3,17 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../models/player.dart';
 import '../models/task.dart';
-import '../providers/game_state.dart';
+import '../viewmodels/game_view_model.dart';
 
 class PlayerStatusHeader extends StatelessWidget {
   const PlayerStatusHeader({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // We listen to GameState changes to update stats live
-    final gameState = Provider.of<GameState>(context);
-    final player = gameState.player;
-    final activeTasks = gameState.activeTasks;
+    // We listen to GameViewModel changes to update stats live
+    final viewModel = Provider.of<GameViewModel>(context);
+    final player = viewModel.player;
+    final activeTasks = viewModel.activeTasks;
 
     return Container(
       padding: const EdgeInsets.all(16),

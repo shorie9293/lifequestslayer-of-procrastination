@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/game_state.dart';
+import '../viewmodels/game_view_model.dart';
 import '../models/player.dart';
 
 class TempleScreen extends StatelessWidget {
@@ -8,17 +8,8 @@ class TempleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gameState = Provider.of<GameState>(context);
-    final player = gameState.player;
-    // Unlock Condition: Adventurer Lv 10 to switch to others? 
-    // Previous: player.level >= 10. (Which uses current job level).
-    // If I switch to Warrior Lv1, player.level becomes 1.
-    // So "canChangeJob" might fail if I am Warrior Lv1.
-    // BUT user said "Warrior Lv20 -> Wizard".
-    // So if I am Warrior Lv1, I should still be able to switch back to Adventurer or others if I ALREADY unlocked them?
-    // Let's use: If Adventurer Level >= 10 OR Current Level >= 10?
-    // Actually, persistence means once I unlock, I should keep access?
-    // Simplest interpretation: You need Adventurer Lv10 to unlock the Temple functionality (other jobs).
+    final viewModel = Provider.of<GameViewModel>(context);
+    final player = viewModel.player;
     final adventurerLv = player.jobLevels[Job.adventurer] ?? 1;
     final canChangeJob = adventurerLv >= 10;
 
@@ -48,18 +39,18 @@ class TempleScreen extends StatelessWidget {
           const SizedBox(height: 20),
           _buildJobCard(
             context,
-            gameState,
+            viewModel,
             Job.adventurer,
             "冒険者 (Adventurer)",
             Icons.hiking,
             "基本の職業。まずはここから。",
             Colors.brown,
             player.currentJob == Job.adventurer,
-            true, // Always allowed if it's default/fallback? Or should we allow switching back? Yes.
+            true, // Always allowed
           ),
           _buildJobCard(
             context,
-            gameState,
+            viewModel,
             Job.warrior,
             "戦士 (Warrior)",
             Icons.shield,
@@ -70,7 +61,7 @@ class TempleScreen extends StatelessWidget {
           ),
           _buildJobCard(
             context,
-            gameState,
+            viewModel,
             Job.cleric,
             "僧侶 (Cleric)",
             Icons.health_and_safety,
@@ -81,7 +72,7 @@ class TempleScreen extends StatelessWidget {
           ),
           _buildJobCard(
             context,
-            gameState,
+            viewModel,
             Job.wizard,
             "魔法使い (Wizard)",
             Icons.auto_fix_high,
@@ -97,7 +88,7 @@ class TempleScreen extends StatelessWidget {
 
   Widget _buildJobCard(
     BuildContext context,
-    GameState gameState,
+    GameViewModel viewModel,
     Job job,
     String title,
     IconData icon,
@@ -106,7 +97,7 @@ class TempleScreen extends StatelessWidget {
     bool isSelected,
     bool isUnlocked,
   ) {
-    final player = gameState.player;
+    final player = viewModel.player;
     final level = player.jobLevels[job] ?? 1;
     final isMastered = player.isMastered(job);
     final isSkillActive = player.activeSkills.contains(job);
@@ -121,7 +112,7 @@ class TempleScreen extends StatelessWidget {
       child: InkWell(
         onTap: isUnlocked || isSelected ? () {
           if (!isSelected) {
-             gameState.changeJob(job);
+             viewModel.changeJob(job);
              ScaffoldMessenger.of(context).showSnackBar(
                SnackBar(content: Text("$title に転職しました！")),
              );
@@ -197,7 +188,7 @@ class TempleScreen extends StatelessWidget {
                     Switch(
                       value: isSkillActive, 
                       onChanged: (val) {
-                        gameState.toggleSkill(job);
+                        viewModel.toggleSkill(job);
                       },
                       activeColor: color,
                     )

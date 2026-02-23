@@ -1,26 +1,35 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../providers/game_state.dart';
-import '../models/task.dart';
+import '../viewmodels/game_view_model.dart';
 import '../widgets/player_status_header.dart';
+import '../widgets/task_card.dart';
 import 'guild_screen.dart';
 import 'temple_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  bool _completeTask(BuildContext context, String taskId) {
-    final gameState = Provider.of<GameState>(context, listen: false);
-    final leveledUp = gameState.completeTask(taskId);
+  void _completeTask(BuildContext context, String taskId) {
+    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+    
+    // We need to check if task still exists/active to show errors if needed
+    // But completeTask handles logic.
+    // If completeTask returns true (Leveled Up), we show dialog.
+    // If it returns false, it might be (1) Not leveled up (Success), or (2) Blocked (Failure).
+    // We can check if task is still in activeTasks to see if it was removed?
+    
+    final wasActive = viewModel.activeTasks.any((t) => t.id == taskId);
+    if (!wasActive) return; // Already gone?
+
+    final leveledUp = viewModel.completeTask(taskId);
     
     if (leveledUp) {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text("レベルアップ！"),
-          content: Text("おめでとうございます！ レベル ${gameState.player.level} になりました！"),
+          content: Text("おめでとうございます！ レベル ${viewModel.player.level} になりました！"),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
@@ -29,14 +38,25 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       );
+    } else {
+       // Check if task is still active (meaning it failed to complete)
+       final stillActive = viewModel.activeTasks.any((t) => t.id == taskId);
+       if (stillActive) {
+          // Why did it fail?
+          final task = viewModel.activeTasks.firstWhere((t) => t.id == taskId);
+          if (task.subTasks.any((s) => !s.isCompleted)) {
+             ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("サブタスクが残っています！")),
+             );
+          }
+       }
     }
-    return leveledUp || gameState.activeTasks.every((t) => t.id != taskId);
   }
 
   @override
   Widget build(BuildContext context) {
-    final gameState = Provider.of<GameState>(context);
-    final tasks = gameState.activeTasks;
+    final viewModel = Provider.of<GameViewModel>(context);
+    final tasks = viewModel.activeTasks;
 
     return Scaffold(
       appBar: AppBar(
@@ -83,65 +103,27 @@ class HomeScreen extends StatelessWidget {
                     itemCount: tasks.length,
                     itemBuilder: (context, index) {
                       final task = tasks[index];
-                      return Card(
+                      return TaskCard(
+                        task: task,
                         color: Colors.red[900],
-                        child: ExpansionTile(
-                          collapsedIconColor: Colors.white,
-                          iconColor: Colors.white,
-                          leading: const Icon(Icons.bug_report, size: 40, color: Colors.white),
-                          title: Text(
-                            "[${task.rank.name}] ${task.title}",
-                            style: GoogleFonts.vt323(fontSize: 24, color: Colors.white),
+                        onSubTaskToggle: (idx, _) => viewModel.toggleSubTask(task.id, idx),
+                        actions: [
+                          IconButton(
+                            icon: const Icon(Icons.undo, color: Colors.grey),
+                            onPressed: () {
+                              viewModel.cancelTask(task.id);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("クエストをギルドに戻しました")),
+                              );
+                            },
+                            tooltip: "ギルドに戻す",
                           ),
-                          children: [
-                            if (task.subTasks.isNotEmpty)
-                               ...task.subTasks.asMap().entries.map((entry) {
-                                 final idx = entry.key;
-                                 final sub = entry.value;
-                                 return ListTile(
-                                   title: Text(sub.title, style: const TextStyle(color: Colors.white)),
-                                   leading: Checkbox(
-                                     value: sub.isCompleted,
-                                     onChanged: (val) {
-                                       Provider.of<GameState>(context, listen: false).toggleSubTask(task.id, idx);
-                                     },
-                                     checkColor: Colors.black,
-                                     activeColor: Colors.white,
-                                   ),
-                                 );
-                               }),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.undo, color: Colors.grey),
-                                    onPressed: () {
-                                      Provider.of<GameState>(context, listen: false).cancelTask(task.id);
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text("クエストをギルドに戻しました")),
-                                      );
-                                    },
-                                    tooltip: "ギルドに戻す",
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(Icons.filter_vintage, color: Colors.yellow), 
-                                    onPressed: () {
-                                       final success = _completeTask(context, task.id);
-                                       if (!success && task.subTasks.any((s) => !s.isCompleted)) {
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text("サブタスクが残っています！")),
-                                          );
-                                       }
-                                    },
-                                    tooltip: "討伐！",
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+                          IconButton(
+                            icon: const Icon(Icons.filter_vintage, color: Colors.yellow), 
+                            onPressed: () => _completeTask(context, task.id),
+                            tooltip: "討伐！",
+                          ),
+                        ],
                       );
                     },
                   ),
@@ -161,4 +143,3 @@ class HomeScreen extends StatelessWidget {
     );
   }
 }
-

@@ -1,15 +1,22 @@
-
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import '../models/task.dart';
 import '../models/player.dart';
+import '../repositories/player_repository.dart';
+import '../repositories/task_repository.dart';
 
-class GameState extends ChangeNotifier {
+class GameViewModel extends ChangeNotifier {
+  final PlayerRepository _playerRepository;
+  final TaskRepository _taskRepository;
+
   Player _player = Player();
   List<Task> _tasks = [];
 
-  GameState() {
+  GameViewModel({
+    PlayerRepository? playerRepository,
+    TaskRepository? taskRepository,
+  })  : _playerRepository = playerRepository ?? PlayerRepository(),
+        _taskRepository = taskRepository ?? TaskRepository() {
     loadData();
   }
 
@@ -17,10 +24,15 @@ class GameState extends ChangeNotifier {
   List<Task> get tasks => _tasks;
 
   List<Task> get guildTasks => _tasks.where((t) => t.status == TaskStatus.inGuild && !t.isCompleted).toList();
+  
   List<Task> get activeTasks {
     return _tasks.where((t) {
       if (t.status != TaskStatus.active || t.isCompleted) return false;
-      
+      return _isVisibleForPlayer(t);
+    }).toList();
+  }
+
+  bool _isVisibleForPlayer(Task t) {
       // Cleric: Hide daily/weekly tasks if already completed this cycle
       // Logic: If Cleric Skill Active (current job or inherited)
       if (_player.canUseSkill(Job.cleric) && t.repeatInterval != RepeatInterval.none) {
@@ -42,19 +54,14 @@ class GameState extends ChangeNotifier {
          }
       }
       return true;
-    }).toList();
   }
 
   ThemeData get currentTheme {
     switch (_player.currentJob) {
-      case Job.warrior:
-        return _warriorTheme;
-      case Job.cleric:
-        return _clericTheme;
-      case Job.wizard:
-        return _wizardTheme;
-      case Job.adventurer:
-        return _adventurerTheme;
+      case Job.warrior: return _warriorTheme;
+      case Job.cleric: return _clericTheme;
+      case Job.wizard: return _wizardTheme;
+      case Job.adventurer: return _adventurerTheme;
     }
   }
 
@@ -67,7 +74,6 @@ class GameState extends ChangeNotifier {
      useMaterial3: true,
   );
 
-  // Define themes
   final _warriorTheme = ThemeData(
     brightness: Brightness.dark,
     primarySwatch: Colors.red,
@@ -105,7 +111,7 @@ class GameState extends ChangeNotifier {
       subTasks: subTasks,
     );
     _tasks.add(newTask);
-    notifyListeners();
+    _notifyAndSave();
   }
 
   String? acceptTask(String taskId) {
@@ -120,20 +126,20 @@ class GameState extends ChangeNotifier {
     }
 
     _tasks[index].status = TaskStatus.active;
-    notifyListeners();
+    _notifyAndSave();
     return null; // Success
   }
 
   void deleteTask(String taskId) {
     _tasks.removeWhere((t) => t.id == taskId);
-    notifyListeners();
+    _notifyAndSave();
   }
 
   void cancelTask(String taskId) {
     final index = _tasks.indexWhere((t) => t.id == taskId);
     if (index != -1) {
       _tasks[index].status = TaskStatus.inGuild;
-      notifyListeners();
+      _notifyAndSave();
     }
   }
 
@@ -143,14 +149,14 @@ class GameState extends ChangeNotifier {
       final task = _tasks[index];
       if (subTaskIndex >= 0 && subTaskIndex < task.subTasks.length) {
         task.subTasks[subTaskIndex].isCompleted = !task.subTasks[subTaskIndex].isCompleted;
-        notifyListeners();
+        _notifyAndSave();
       }
     }
   }
 
   void changeJob(Job newJob) {
     _player.currentJob = newJob;
-    notifyListeners();
+    _notifyAndSave();
   }
 
   void toggleSkill(Job job) {
@@ -160,89 +166,66 @@ class GameState extends ChangeNotifier {
       } else {
         _player.activeSkills.add(job);
       }
-      notifyListeners();
+      _notifyAndSave();
     }
   }
 
   bool completeTask(String taskId) {
     final index = _tasks.indexWhere((t) => t.id == taskId);
-    if (index != -1) {
-      final task = _tasks[index];
+    if (index == -1) return false;
 
-      // Wizard: Check subtasks
-      // Use Skill Check
-      if (_player.canUseSkill(Job.wizard) && task.subTasks.isNotEmpty) {
-        if (task.subTasks.any((s) => !s.isCompleted)) {
-          // Cannot complete yet
-          return false; 
-        }
-      }
+    final task = _tasks[index];
 
-      // Logic for Repeatable Tasks (Cleric)
-      if (_player.canUseSkill(Job.cleric) && task.repeatInterval != RepeatInterval.none) {
-         _tasks[index].lastCompletedAt = DateTime.now();
-         // Do NOT set isCompleted = true for repeatable tasks, just mark timestamp and keep active/inguild?
-         // Actually spec says "Completed but resurfaces next day". 
-         // So for implementation: keep it active or moved back to guild?
-         // "完了しても翌日復活する" -> Stays in list but hidden or visually marked done.
-         // Let's keep it 'active' but hidden by the getter.
-      } else {
-        _tasks[index].isCompleted = true;
-        _tasks[index].status = TaskStatus.inGuild; 
+    // Wizard: Subtask Check
+    if (_player.canUseSkill(Job.wizard) && task.subTasks.isNotEmpty) {
+      if (task.subTasks.any((s) => !s.isCompleted)) {
+        return false; 
       }
-      
-      // Calculate Base EXP based on Rank
-      int expGain = 0;
-      switch (task.rank) {
-        case QuestRank.S: expGain = 1000; break;
-        case QuestRank.A: expGain = 300; break;
-        case QuestRank.B: expGain = 100; break;
-      }
-      
-      // Warrior: Combo Bonus
-      if (_player.canUseSkill(Job.warrior)) {
-        _player.comboCount++;
-        // Bonus: +10 per combo count. 
-        // Example: 2nd combo = +20 exp. 10th combo = +100 exp (double B rank!).
-        expGain += (_player.comboCount * 10); 
-      } else {
-        _player.comboCount = 0;
-      }
-      
-      // Award EXP
-      bool leveledUp = _player.addExp(expGain); 
-      notifyListeners();
-      return leveledUp;
-    }
-    return false;
-  }
-  Future<void> loadData() async {
-    final playerBox = Hive.box<Player>('playerBox');
-    if (playerBox.isNotEmpty) {
-      _player = playerBox.getAt(0)!;
     }
 
-    final tasksBox = Hive.box<Task>('tasksBox');
-    _tasks = tasksBox.values.toList();
+    // Cleric: Repeatable Logic
+    if (_player.canUseSkill(Job.cleric) && task.repeatInterval != RepeatInterval.none) {
+       _tasks[index].lastCompletedAt = DateTime.now();
+       // Keeps status active but hidden by getter
+    } else {
+      _tasks[index].isCompleted = true;
+      _tasks[index].status = TaskStatus.inGuild; 
+    }
     
-    // Avoid double-notifying on initial load if possible, 
-    // but constructor calls this so it's fine.
-    // However, we should be careful about the loop with saveData().
-    // Since loadData is called in constructor, creating an instance calls it.
+    // XP Logic
+    int expGain = 0;
+    switch (task.rank) {
+      case QuestRank.S: expGain = 1000; break;
+      case QuestRank.A: expGain = 300; break;
+      case QuestRank.B: expGain = 100; break;
+    }
+    
+    // Warrior: Combo Bonus
+    if (_player.canUseSkill(Job.warrior)) {
+      _player.comboCount++;
+      expGain += (_player.comboCount * 10); 
+    } else {
+      _player.comboCount = 0;
+    }
+    
+    bool leveledUp = _player.addExp(expGain); 
+    _notifyAndSave();
+    return leveledUp;
+  }
+
+  Future<void> loadData() async {
+    _player = await _playerRepository.loadPlayer();
+    _tasks = await _taskRepository.loadTasks();
+    notifyListeners();
   }
 
   Future<void> saveData() async {
-    final playerBox = Hive.box<Player>('playerBox');
-    playerBox.put(0, _player);
-
-    final tasksBox = Hive.box<Task>('tasksBox');
-    await tasksBox.clear();
-    await tasksBox.addAll(_tasks);
+    await _playerRepository.savePlayer(_player);
+    await _taskRepository.saveTasks(_tasks);
   }
 
-  @override
-  void notifyListeners() {
-    super.notifyListeners();
-    saveData(); // Auto-save on any change
+  void _notifyAndSave() {
+    notifyListeners();
+    saveData();
   }
 }

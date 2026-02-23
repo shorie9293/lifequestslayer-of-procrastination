@@ -1,8 +1,7 @@
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'providers/game_state.dart';
+import 'viewmodels/game_view_model.dart';
 import 'screens/home_screen.dart';
 import 'screens/guild_screen.dart';
 
@@ -15,14 +14,13 @@ void main() async {
 
   Hive.registerAdapter(TaskAdapter()); // TypeId: 0
   Hive.registerAdapter(TaskStatusAdapter()); // TypeId: 1
-  Hive.registerAdapter(QuestionRankAdapter()); // TypeId: 2 (Renamed in task.dart, matching class name)
+  Hive.registerAdapter(QuestionRankAdapter()); // TypeId: 2
   Hive.registerAdapter(PlayerAdapter()); // TypeId: 3
   Hive.registerAdapter(JobAdapter()); // TypeId: 4
   Hive.registerAdapter(RepeatIntervalAdapter()); // TypeId: 5
   Hive.registerAdapter(SubTaskAdapter()); // TypeId: 6
 
-  await Hive.openBox<Task>('tasksBox');
-  await Hive.openBox<Player>('playerBox');
+  // Boxes are opened in Repositories on demand/init.
 
   runApp(const RPGTodoApp());
 }
@@ -33,15 +31,14 @@ class RPGTodoApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (context) => GameState(),
-      child: Consumer<GameState>(
-        builder: (context, gameState, child) {
+      create: (context) => GameViewModel(),
+      child: Consumer<GameViewModel>(
+        builder: (context, viewModel, child) {
           return MaterialApp(
             title: 'RPG Todo',
             debugShowCheckedModeBanner: false,
-            theme: gameState.currentTheme.copyWith(
-              // Ensure text theme is applied to the new theme
-              textTheme: GoogleFonts.vt323TextTheme(gameState.currentTheme.textTheme).apply(
+            theme: viewModel.currentTheme.copyWith(
+              textTheme: GoogleFonts.vt323TextTheme(viewModel.currentTheme.textTheme).apply(
                 bodyColor: Colors.white,
                 displayColor: Colors.white,
               ),
