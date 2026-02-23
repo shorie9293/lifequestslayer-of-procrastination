@@ -1,0 +1,12 @@
+[build]
+  # FlutterをインストールしてWebビルドを実行するスクリプトを指定
+  command = "bash build.sh"
+  # 公開するディレクトリ（Flutter Webのビルド出力先）
+  publish = "build/web"
+
+[[redirects]]
+  # シングルページアプリケーション(SPA)およびPWAのルーティング設定
+  # ブラウザで直リンクを開いた際やリロードした際のエラーを防ぎます
+  from = "/*"
+  to = "/index.html"
+  status = 200
