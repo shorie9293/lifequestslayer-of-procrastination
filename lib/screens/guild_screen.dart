@@ -5,7 +5,6 @@ import '../models/task.dart';
 import '../models/player.dart';
 import '../widgets/player_status_header.dart';
 import '../widgets/task_card.dart';
-import 'home_screen.dart';
 
 class GuildScreen extends StatelessWidget {
   const GuildScreen({super.key});
@@ -60,18 +59,6 @@ class GuildScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("冒険者ギルド"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.map), // Battle icon
-            onPressed: () {
-               Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const HomeScreen()),
-              );
-            },
-            tooltip: "戦場へ",
-          )
-        ],
       ),
       body: Column(
         children: [

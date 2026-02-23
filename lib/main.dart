@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'viewmodels/game_view_model.dart';
-import 'screens/home_screen.dart';
-import 'screens/guild_screen.dart';
-
+import 'screens/main_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'models/task.dart';
 import 'models/player.dart';
@@ -43,7 +41,7 @@ class RPGTodoApp extends StatelessWidget {
                 displayColor: Colors.white,
               ),
             ),
-            home: const GuildScreen(),
+            home: const MainScreen(),
           );
         },
       ),

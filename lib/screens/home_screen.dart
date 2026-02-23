@@ -4,8 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../viewmodels/game_view_model.dart';
 import '../widgets/player_status_header.dart';
 import '../widgets/task_card.dart';
-import 'guild_screen.dart';
-import 'temple_screen.dart';
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -61,28 +60,6 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("戦場"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.temple_buddhist),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const TempleScreen()),
-              );
-            },
-            tooltip: "神殿へ",
-          ),
-          IconButton(
-            icon: const Icon(Icons.list_alt),
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const GuildScreen()),
-              );
-            },
-            tooltip: "ギルドへ行く",
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -129,16 +106,6 @@ class HomeScreen extends StatelessWidget {
                   ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const GuildScreen()),
-          );
-        },
-        label: const Text("ギルドへ"),
-        icon: const Icon(Icons.arrow_forward),
       ),
     );
   }
