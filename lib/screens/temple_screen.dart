@@ -16,10 +16,30 @@ class TempleScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('転職の神殿'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.restart_alt),
+            tooltip: 'チュートリアルをリセット',
+            onPressed: () {
+              viewModel.resetTutorial();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('チュートリアルをリセットしました')),
+              );
+            },
+          ),
+        ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: const AssetImage('assets/images/temple_bg.png'),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.7), BlendMode.darken),
+          ),
+        ),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
           const Text(
             "新たな道を歩むがよい...",
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -82,6 +102,7 @@ class TempleScreen extends StatelessWidget {
             canChangeJob,
           ),
         ],
+      ),
       ),
     );
   }

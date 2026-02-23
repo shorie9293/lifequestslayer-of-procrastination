@@ -61,10 +61,30 @@ class HomeScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("戦場"),
       ),
-      body: Column(
-        children: [
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: const AssetImage('assets/images/home_bg.png'),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.7), BlendMode.darken),
+          ),
+        ),
+        child: Column(
+          children: [
           // Player Stats Header
           const PlayerStatusHeader(),
+          if (viewModel.tutorialStep == 2)
+            Container(
+              color: Colors.redAccent.withOpacity(0.2),
+              padding: const EdgeInsets.all(12),
+              child: const Row(
+                children: [
+                   Icon(Icons.info_outline, color: Colors.redAccent),
+                   SizedBox(width: 8),
+                   Expanded(child: Text("【チュートリアル】\nクエストの「討伐！」ボタンを押して完了させよう！", style: TextStyle(fontWeight: FontWeight.bold))),
+                ]
+              ),
+            ),
           // Active Tasks (Monsters)
           Expanded(
             child: tasks.isEmpty
@@ -106,6 +126,7 @@ class HomeScreen extends StatelessWidget {
                   ),
           ),
         ],
+      ),
       ),
     );
   }

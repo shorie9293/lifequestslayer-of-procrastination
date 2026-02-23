@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../viewmodels/game_view_model.dart';
+import '../widgets/help_dialog.dart';
 import 'guild_screen.dart';
 import 'home_screen.dart';
 import 'temple_screen.dart';
@@ -12,6 +15,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  bool _isHelpDialogShowing = false;
 
   final List<Widget> _screens = [
     const GuildScreen(),
@@ -21,6 +25,21 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<GameViewModel>(context);
+
+    if (!viewModel.isLoaded) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (!viewModel.hasSeenConcept && !_isHelpDialogShowing) {
+      _isHelpDialogShowing = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        showHelpDialog(context).then((_) {
+          viewModel.markConceptAsSeen();
+        });
+      });
+    }
+
     return Scaffold(
       body: _screens[_currentIndex],
       // BottomNavigationBarを追加（Add BottomNavigationBar for smartphones）

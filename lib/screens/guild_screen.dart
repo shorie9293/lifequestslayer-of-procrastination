@@ -5,6 +5,7 @@ import '../models/task.dart';
 import '../models/player.dart';
 import '../widgets/player_status_header.dart';
 import '../widgets/task_card.dart';
+import '../widgets/help_dialog.dart';
 
 class GuildScreen extends StatelessWidget {
   const GuildScreen({super.key});
@@ -59,10 +60,61 @@ class GuildScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("冒険者ギルド"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: 'アプリについて',
+            onPressed: () => showHelpDialog(context),
+          ),
+        ],
       ),
-      body: Column(
-        children: [
-          const PlayerStatusHeader(),
+      body: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: const AssetImage('assets/images/guild_bg.png'),
+            fit: BoxFit.cover,
+            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.7), BlendMode.darken),
+          ),
+        ),
+        child: Column(
+          children: [
+            const PlayerStatusHeader(),
+          if (viewModel.tutorialStep == 0)
+            Container(
+              color: Colors.blueAccent.withOpacity(0.2),
+              padding: const EdgeInsets.all(12),
+              child: const Row(
+                children: [
+                   Icon(Icons.info_outline, color: Colors.blueAccent),
+                   SizedBox(width: 8),
+                   Expanded(child: Text("【チュートリアル】\n右下の「＋」ボタンを押して、最初のクエストを登録しよう！", style: TextStyle(fontWeight: FontWeight.bold))),
+                ]
+              ),
+            ),
+          if (viewModel.tutorialStep == 1)
+            Container(
+              color: Colors.blueAccent.withOpacity(0.2),
+              padding: const EdgeInsets.all(12),
+              child: const Row(
+                children: [
+                   Icon(Icons.info_outline, color: Colors.blueAccent),
+                   SizedBox(width: 8),
+                   Expanded(child: Text("【チュートリアル】\n登録したクエストの「受注」ボタンを押そう！", style: TextStyle(fontWeight: FontWeight.bold))),
+                ]
+              ),
+            ),
+          if (viewModel.tutorialStep == 2)
+            Container(
+              color: Colors.orangeAccent.withOpacity(0.2),
+              padding: const EdgeInsets.all(12),
+              child: const Row(
+                children: [
+                   Icon(Icons.info_outline, color: Colors.orangeAccent),
+                   SizedBox(width: 8),
+                   Expanded(child: Text("【チュートリアル】\nクエストを受注した！下のメニューから「戦場」へ移動しよう！", style: TextStyle(fontWeight: FontWeight.bold))),
+                ]
+              ),
+            ),
           Expanded(
             child: tasks.isEmpty
                 ? const Center(child: Text("クエスト依頼はありません。"))
@@ -89,6 +141,7 @@ class GuildScreen extends StatelessWidget {
                   ),
           ),
         ],
+      ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _showCreateTaskDialog(context),

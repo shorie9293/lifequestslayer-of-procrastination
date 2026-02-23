@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
+import 'package:hive/hive.dart';
 import '../models/task.dart';
 import '../models/player.dart';
 import '../repositories/player_repository.dart';
@@ -11,6 +12,9 @@ class GameViewModel extends ChangeNotifier {
 
   Player _player = Player();
   List<Task> _tasks = [];
+  int _tutorialStep = 0;
+  bool _isLoaded = false;
+  bool _hasSeenConcept = false;
 
   GameViewModel({
     PlayerRepository? playerRepository,
@@ -22,6 +26,9 @@ class GameViewModel extends ChangeNotifier {
 
   Player get player => _player;
   List<Task> get tasks => _tasks;
+  int get tutorialStep => _tutorialStep;
+  bool get isLoaded => _isLoaded;
+  bool get hasSeenConcept => _hasSeenConcept;
 
   List<Task> get guildTasks => _tasks.where((t) => t.status == TaskStatus.inGuild && !t.isCompleted).toList();
   
@@ -111,6 +118,7 @@ class GameViewModel extends ChangeNotifier {
       subTasks: subTasks,
     );
     _tasks.add(newTask);
+    if (_tutorialStep == 0) completeTutorialStep(0);
     _notifyAndSave();
   }
 
@@ -126,6 +134,7 @@ class GameViewModel extends ChangeNotifier {
     }
 
     _tasks[index].status = TaskStatus.active;
+    if (_tutorialStep == 1) completeTutorialStep(1);
     _notifyAndSave();
     return null; // Success
   }
@@ -209,6 +218,7 @@ class GameViewModel extends ChangeNotifier {
     }
     
     bool leveledUp = _player.addExp(expGain); 
+    if (_tutorialStep == 2) completeTutorialStep(2);
     _notifyAndSave();
     return leveledUp;
   }
@@ -216,6 +226,37 @@ class GameViewModel extends ChangeNotifier {
   Future<void> loadData() async {
     _player = await _playerRepository.loadPlayer();
     _tasks = await _taskRepository.loadTasks();
+    var box = await Hive.openBox('tutorialBox');
+    _tutorialStep = box.get('step', defaultValue: 0);
+    _hasSeenConcept = box.get('hasSeenConcept', defaultValue: false);
+    _isLoaded = true;
+    notifyListeners();
+  }
+
+  Future<void> completeTutorialStep(int step) async {
+    if (_tutorialStep == step) {
+      _tutorialStep++;
+      var box = await Hive.openBox('tutorialBox');
+      await box.put('step', _tutorialStep);
+      notifyListeners();
+    }
+  }
+
+  Future<void> markConceptAsSeen() async {
+    if (!_hasSeenConcept) {
+      _hasSeenConcept = true;
+      var box = await Hive.openBox('tutorialBox');
+      await box.put('hasSeenConcept', true);
+      notifyListeners();
+    }
+  }
+
+  Future<void> resetTutorial() async {
+    _tutorialStep = 0;
+    _hasSeenConcept = false;
+    var box = await Hive.openBox('tutorialBox');
+    await box.put('step', 0);
+    await box.put('hasSeenConcept', false);
     notifyListeners();
   }
 
