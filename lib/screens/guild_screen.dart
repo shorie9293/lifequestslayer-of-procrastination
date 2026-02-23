@@ -117,7 +117,7 @@ class GuildScreen extends StatelessWidget {
             ),
           Expanded(
             child: tasks.isEmpty
-                ? const Center(child: Text("クエスト依頼はありません。"))
+                ? const Center(child: Text("クエスト依頼はありません。", style: TextStyle(fontSize: 18, color: Colors.grey)))
                 : ListView.builder(
                     itemCount: tasks.length,
                     itemBuilder: (context, index) {
@@ -278,11 +278,17 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text("キャンセル"),
+          style: TextButton.styleFrom(foregroundColor: Colors.grey[400]),
+          child: const Text("キャンセル", style: TextStyle(fontSize: 16)),
         ),
         ElevatedButton(
           onPressed: _addTask,
-          child: const Text("作成"),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blueAccent,
+            foregroundColor: Colors.white,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+          child: const Text("作成", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         ),
       ],
     );

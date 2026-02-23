@@ -92,7 +92,7 @@ class HomeScreen extends StatelessWidget {
                     child: Text(
                       "クエストがありません。\nギルドで受注してください！",
                       textAlign: TextAlign.center,
-                      style: GoogleFonts.vt323(fontSize: 24, color: Colors.grey),
+                      style: const TextStyle(fontSize: 20, color: Colors.grey),
                     ),
                   )
                 : ListView.builder(

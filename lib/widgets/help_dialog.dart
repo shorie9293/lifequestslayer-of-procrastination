@@ -33,9 +33,14 @@ class HelpDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        TextButton(
+        ElevatedButton(
           onPressed: () => Navigator.pop(context),
-          child: const Text('理解した！'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.amber,
+            foregroundColor: Colors.black,
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+          ),
+          child: const Text('理解した！', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         ),
       ],
     );

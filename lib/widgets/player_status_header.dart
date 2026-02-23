@@ -28,7 +28,7 @@ class PlayerStatusHeader extends StatelessWidget {
                 children: [
                   Text(
                     "Lv.${player.level} ${_getJobName(player.currentJob)}",
-                    style: GoogleFonts.pressStart2p(fontSize: 16),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   if (player.currentJob == Job.warrior)
                     Text(

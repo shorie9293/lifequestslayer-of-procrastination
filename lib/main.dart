@@ -36,12 +36,18 @@ class RPGTodoApp extends StatelessWidget {
             title: 'RPG Todo',
             debugShowCheckedModeBanner: false,
             theme: viewModel.currentTheme.copyWith(
-              textTheme: GoogleFonts.vt323TextTheme(viewModel.currentTheme.textTheme).apply(
+              textTheme: GoogleFonts.dotGothic16TextTheme(viewModel.currentTheme.textTheme).apply(
                 bodyColor: Colors.white,
                 displayColor: Colors.white,
               ),
             ),
             home: const MainScreen(),
+            builder: (context, child) {
+              return MediaQuery(
+                data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.2)),
+                child: child!,
+              );
+            },
           );
         },
       ),
