@@ -4,10 +4,24 @@ import 'package:google_fonts/google_fonts.dart';
 import '../viewmodels/game_view_model.dart';
 import '../widgets/player_status_header.dart';
 import '../widgets/task_card.dart';
+import '../models/task.dart';
 
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
+
+  Color _getRankColor(QuestRank rank) {
+    switch (rank) {
+      case QuestRank.S:
+        return const Color(0xFF4A148C); // 深い紫 (落ち着いたSランク)
+      case QuestRank.A:
+        return const Color(0xFF8E3A3A); // くすんだ臙脂色（落ち着いたAランク）
+      case QuestRank.B:
+        return const Color(0xFF455A64); // 青灰色（落ち着いたBランク）
+      default:
+        return const Color(0xFF424242);
+    }
+  }
 
   void _completeTask(BuildContext context, String taskId) {
     final viewModel = Provider.of<GameViewModel>(context, listen: false);
@@ -102,7 +116,7 @@ class HomeScreen extends StatelessWidget {
                       final task = tasks[index];
                       return TaskCard(
                         task: task,
-                        color: Colors.red[900],
+                        color: _getRankColor(task.rank),
                         onSubTaskToggle: (idx, _) => viewModel.toggleSubTask(task.id, idx),
                         actions: [
                           IconButton(
@@ -116,7 +130,7 @@ class HomeScreen extends StatelessWidget {
                             tooltip: "ギルドに戻す",
                           ),
                           IconButton(
-                            icon: const Icon(Icons.filter_vintage, color: Colors.yellow), 
+                            icon: const Text('⚔️', style: TextStyle(fontSize: 24)), 
                             onPressed: () => _completeTask(context, task.id),
                             tooltip: "討伐！",
                           ),

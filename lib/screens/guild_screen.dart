@@ -10,10 +10,30 @@ import '../widgets/help_dialog.dart';
 class GuildScreen extends StatelessWidget {
   const GuildScreen({super.key});
 
+  Color _getRankColor(QuestRank rank) {
+    switch (rank) {
+      case QuestRank.S:
+        return const Color(0xFF4A148C); // 深い紫
+      case QuestRank.A:
+        return const Color(0xFF8E3A3A); // くすんだ臙脂色
+      case QuestRank.B:
+        return const Color(0xFF455A64); // 青灰色
+      default:
+        return const Color(0xFF424242);
+    }
+  }
+
   void _showCreateTaskDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => const CreateTaskDialog(),
+    );
+  }
+
+  void _showEditTaskDialog(BuildContext context, Task task) {
+    showDialog(
+      context: context,
+      builder: (context) => CreateTaskDialog(task: task),
     );
   }
 
@@ -124,8 +144,13 @@ class GuildScreen extends StatelessWidget {
                       final task = tasks[index];
                       return TaskCard(
                         task: task,
+                        color: _getRankColor(task.rank),
                         subtitle: _getTaskDetails(task),
                         actions: [
+                           TextButton(
+                             onPressed: () => _showEditTaskDialog(context, task),
+                             child: const Text("編集", style: TextStyle(color: Colors.grey)),
+                           ),
                            TextButton(
                              onPressed: () => _deleteTask(context, task.id),
                              child: const Text("破棄", style: TextStyle(color: Colors.grey)),
@@ -133,6 +158,11 @@ class GuildScreen extends StatelessWidget {
                            const SizedBox(width: 8),
                            ElevatedButton(
                              onPressed: () => _acceptTask(context, task.id),
+                             style: ElevatedButton.styleFrom(
+                               backgroundColor: Colors.amber[700], // 目立つ落ち着いた色
+                               foregroundColor: Colors.white,
+                               textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                             ),
                              child: const Text("受注"),
                            ),
                         ],
@@ -152,19 +182,31 @@ class GuildScreen extends StatelessWidget {
 }
 
 class CreateTaskDialog extends StatefulWidget {
-  const CreateTaskDialog({super.key});
+  final Task? task;
+  const CreateTaskDialog({super.key, this.task});
 
   @override
   State<CreateTaskDialog> createState() => _CreateTaskDialogState();
 }
 
 class _CreateTaskDialogState extends State<CreateTaskDialog> {
-  final _titleController = TextEditingController();
-  QuestRank _selectedRank = QuestRank.B;
-  RepeatInterval _selectedRepeat = RepeatInterval.none;
-  final List<int> _selectedWeekdays = []; // 1=Mon
-  final List<SubTask> _subTasks = [];
+  late final TextEditingController _titleController;
+  late QuestRank _selectedRank;
+  late RepeatInterval _selectedRepeat;
+  late List<int> _selectedWeekdays; // 1=Mon
+  late List<SubTask> _subTasks;
   final _subTaskController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    final t = widget.task;
+    _titleController = TextEditingController(text: t?.title ?? "");
+    _selectedRank = t?.rank ?? QuestRank.B;
+    _selectedRepeat = t?.repeatInterval ?? RepeatInterval.none;
+    _selectedWeekdays = t != null ? List.from(t.repeatWeekdays) : [];
+    _subTasks = t != null ? List<SubTask>.from(t.subTasks.map((s) => SubTask(title: s.title, isCompleted: s.isCompleted))) : [];
+  }
 
   void _toggleWeekday(int day) {
     setState(() {
@@ -182,7 +224,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     final player = viewModel.player;
 
     return AlertDialog(
-      title: const Text("新規クエスト作成"),
+      title: Text(widget.task == null ? "新規クエスト作成" : "クエスト編集"),
       content: SingleChildScrollView(
         child: SizedBox(
           width: double.maxFinite,
@@ -282,13 +324,13 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
           child: const Text("キャンセル", style: TextStyle(fontSize: 16)),
         ),
         ElevatedButton(
-          onPressed: _addTask,
+          onPressed: _saveTask,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blueAccent,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
           ),
-          child: const Text("作成", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          child: Text(widget.task == null ? "作成" : "保存", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         ),
       ],
     );
@@ -303,20 +345,32 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     }
   }
 
-  void _addTask() {
+  void _saveTask() {
     if (_titleController.text.isEmpty) return;
     
     if (_selectedRepeat == RepeatInterval.weekly && _selectedWeekdays.isEmpty) {
       _selectedWeekdays.add(DateTime.now().weekday);
     }
 
-    Provider.of<GameViewModel>(context, listen: false).addTask(
-      _titleController.text,
-      rank: _selectedRank,
-      repeatInterval: _selectedRepeat,
-      repeatWeekdays: _selectedWeekdays.isNotEmpty ? _selectedWeekdays : null,
-      subTasks: _subTasks.isNotEmpty ? _subTasks : null,
-    );
+    final vm = Provider.of<GameViewModel>(context, listen: false);
+    if (widget.task == null) {
+      vm.addTask(
+        _titleController.text,
+        rank: _selectedRank,
+        repeatInterval: _selectedRepeat,
+        repeatWeekdays: _selectedWeekdays.isNotEmpty ? _selectedWeekdays : null,
+        subTasks: _subTasks.isNotEmpty ? _subTasks : null,
+      );
+    } else {
+      vm.editTask(
+        widget.task!.id,
+        _titleController.text,
+        rank: _selectedRank,
+        repeatInterval: _selectedRepeat,
+        repeatWeekdays: _selectedWeekdays.isNotEmpty ? _selectedWeekdays : null,
+        subTasks: _subTasks.isNotEmpty ? _subTasks : null,
+      );
+    }
     Navigator.pop(context);
   }
 }

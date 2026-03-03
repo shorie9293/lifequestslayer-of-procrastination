@@ -88,10 +88,10 @@ class SubTaskAdapter extends TypeAdapter<SubTask> {
 
 class Task {
   final String id;
-  final String title;
+  String title;
   TaskStatus status;
   bool isCompleted;
-  final QuestRank rank;
+  QuestRank rank;
   RepeatInterval repeatInterval;
   List<int> repeatWeekdays; // 1=Mon, ..., 7=Sun
   DateTime? lastCompletedAt;

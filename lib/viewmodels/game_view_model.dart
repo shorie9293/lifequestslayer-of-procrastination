@@ -122,6 +122,18 @@ class GameViewModel extends ChangeNotifier {
     _notifyAndSave();
   }
 
+  void editTask(String taskId, String title, {QuestRank rank = QuestRank.B, RepeatInterval repeatInterval = RepeatInterval.none, List<int>? repeatWeekdays, List<SubTask>? subTasks}) {
+    final index = _tasks.indexWhere((t) => t.id == taskId);
+    if (index != -1) {
+      _tasks[index].title = title;
+      _tasks[index].rank = rank;
+      _tasks[index].repeatInterval = repeatInterval;
+      _tasks[index].repeatWeekdays = repeatWeekdays ?? [];
+      _tasks[index].subTasks = subTasks ?? [];
+      _notifyAndSave();
+    }
+  }
+
   String? acceptTask(String taskId) {
     final index = _tasks.indexWhere((t) => t.id == taskId);
     if (index == -1) return "タスクが見つかりません";
