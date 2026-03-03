@@ -18,8 +18,8 @@ class _MainScreenState extends State<MainScreen> {
   bool _isHelpDialogShowing = false;
 
   final List<Widget> _screens = [
-    const GuildScreen(),
     const HomeScreen(),
+    const GuildScreen(),
     const TempleScreen(),
   ];
 
@@ -52,12 +52,12 @@ class _MainScreenState extends State<MainScreen> {
         },
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'ギルド',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.map),
             label: '戦場',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.list_alt),
+            label: 'ギルド',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.temple_buddhist),
