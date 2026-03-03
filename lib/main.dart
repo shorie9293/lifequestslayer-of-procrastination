@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'viewmodels/game_view_model.dart';
 import 'screens/main_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:flutter/gestures.dart';
 import 'models/task.dart';
 import 'models/player.dart';
 
@@ -35,6 +36,15 @@ class RPGTodoApp extends StatelessWidget {
           return MaterialApp(
             title: 'RPG Todo',
             debugShowCheckedModeBanner: false,
+            // PCのマウス操作でもスワイプが反応するように設定（開発・Web用）
+            scrollBehavior: const MaterialScrollBehavior().copyWith(
+              dragDevices: {
+                PointerDeviceKind.mouse,
+                PointerDeviceKind.touch,
+                PointerDeviceKind.stylus,
+                PointerDeviceKind.unknown, // 念のためTrackpadなど含める
+              },
+            ),
             theme: viewModel.currentTheme.copyWith(
               textTheme: GoogleFonts.dotGothic16TextTheme(viewModel.currentTheme.textTheme).apply(
                 bodyColor: Colors.white,

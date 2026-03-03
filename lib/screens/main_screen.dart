@@ -16,12 +16,25 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   bool _isHelpDialogShowing = false;
+  final PageController _pageController = PageController(initialPage: 0); // スワイプ用のページコントローラー
 
   final List<Widget> _screens = [
     const HomeScreen(),
     const GuildScreen(),
     const TempleScreen(),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    // リソースを解放
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,14 +54,29 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     return Scaffold(
-      body: _screens[_currentIndex],
+      // 画面をスワイプできるようにPageViewを利用する
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        children: _screens,
+      ),
       // BottomNavigationBarを追加（Add BottomNavigationBar for smartphones）
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) {
-           setState(() {
+          setState(() {
             _currentIndex = index;
           });
+          // タブがタップされたときにスワイプアニメーションでページを切り替える
+          _pageController.animateToPage(
+            index,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+          );
         },
         items: const [
           BottomNavigationBarItem(
