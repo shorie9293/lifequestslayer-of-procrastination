@@ -1,4 +1,4 @@
-package com.example.rpg_todo
+package com.shorie.lifequest
 
 import io.flutter.embedding.android.FlutterActivity
 
