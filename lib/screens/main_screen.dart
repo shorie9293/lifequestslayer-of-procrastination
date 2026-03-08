@@ -53,6 +53,45 @@ class _MainScreenState extends State<MainScreen> {
           viewModel.markConceptAsSeen();
         });
       });
+    } else if (viewModel.pendingLoginBonusAmount != null) {
+      final amount = viewModel.pendingLoginBonusAmount!;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        viewModel.clearPendingLoginBonus();
+        showGeneralDialog(
+          context: context,
+          barrierDismissible: true,
+          barrierLabel: '',
+          barrierColor: Colors.black87,
+          transitionDuration: const Duration(milliseconds: 600),
+          pageBuilder: (context, anim1, anim2) {
+            return Center(
+              child: Material(
+                color: Colors.transparent,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('＼ 本日の恩賞 ／', style: TextStyle(color: Colors.amberAccent, fontSize: 24, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 16),
+                    Text('💰 +$amount 金貨', style: const TextStyle(color: Colors.amber, fontSize: 48, fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 32),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[800], foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text('ありがたき幸せ！', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+          transitionBuilder: (context, anim1, anim2, child) {
+            return Transform.scale(
+              scale: Curves.elasticOut.transform(anim1.value),
+              child: child,
+            );
+          },
+        );
+      });
     }
 
     return Scaffold(

@@ -15,6 +15,7 @@ class GameViewModel extends ChangeNotifier {
   int _tutorialStep = 0;
   bool _isLoaded = false;
   bool _hasSeenConcept = false;
+  int? pendingLoginBonusAmount;
 
   GameViewModel({
     PlayerRepository? playerRepository,
@@ -373,6 +374,7 @@ class GameViewModel extends ChangeNotifier {
 
     if (isLogin && changedDate) {
       _player.coins += 50; // ログインボーナス
+      pendingLoginBonusAmount = 50;
       _notifyAndSave();
     }
   }
@@ -483,6 +485,11 @@ class GameViewModel extends ChangeNotifier {
     var box = await Hive.openBox('tutorialBox');
     await box.put('step', 0);
     await box.put('hasSeenConcept', false);
+    notifyListeners();
+  }
+
+  void clearPendingLoginBonus() {
+    pendingLoginBonusAmount = null;
     notifyListeners();
   }
 
