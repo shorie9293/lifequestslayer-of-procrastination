@@ -81,10 +81,32 @@ class GuildScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("冒険者ギルド"),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.help_outline),
-            tooltip: 'アプリについて',
-            onPressed: () => showHelpDialog(context),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.settings),
+            tooltip: '設定',
+            onSelected: (value) {
+              if (value == 'help') {
+                showHelpDialog(context);
+              } else if (value == 'notification') {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('通知設定は準備中です')),
+                );
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'help',
+                child: Row(
+                  children: [Icon(Icons.help_outline, color: Colors.black54), SizedBox(width: 8), Text('遊び方・ヘルプ')],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'notification',
+                child: Row(
+                  children: [Icon(Icons.notifications_none, color: Colors.black54), SizedBox(width: 8), Text('通知設定 (準備中)')],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -138,37 +160,38 @@ class GuildScreen extends StatelessWidget {
           Expanded(
             child: tasks.isEmpty
                 ? const Center(child: Text("クエスト依頼はありません。", style: TextStyle(fontSize: 18, color: Colors.grey)))
-                : ListView.builder(
-                    itemCount: tasks.length,
-                    itemBuilder: (context, index) {
-                      final task = tasks[index];
-                      return TaskCard(
-                        task: task,
-                        color: _getRankColor(task.rank),
-                        subtitle: _getTaskDetails(task),
-                        actions: [
-                           TextButton(
-                             onPressed: () => _showEditTaskDialog(context, task),
-                             child: const Text("編集", style: TextStyle(color: Colors.grey)),
-                           ),
-                           TextButton(
-                             onPressed: () => _deleteTask(context, task.id),
-                             child: const Text("破棄", style: TextStyle(color: Colors.grey)),
-                           ),
-                           const SizedBox(width: 8),
-                           ElevatedButton(
-                             onPressed: () => _acceptTask(context, task.id),
-                             style: ElevatedButton.styleFrom(
-                               backgroundColor: Colors.amber[700], // 目立つ落ち着いた色
-                               foregroundColor: Colors.white,
-                               textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                  : ListView.builder(
+                      padding: const EdgeInsets.only(bottom: 80), // FABとの被り対策
+                      itemCount: tasks.length,
+                      itemBuilder: (context, index) {
+                        final task = tasks[index];
+                        return TaskCard(
+                          task: task,
+                          color: _getRankColor(task.rank),
+                          subtitle: _getTaskDetails(task),
+                          actions: [
+                             TextButton(
+                               onPressed: () => _showEditTaskDialog(context, task),
+                               child: const Text("編集", style: TextStyle(color: Colors.grey)),
                              ),
-                             child: const Text("受注"),
-                           ),
-                        ],
-                      );
-                    },
-                  ),
+                             TextButton(
+                               onPressed: () => _deleteTask(context, task.id),
+                               child: const Text("破棄", style: TextStyle(color: Colors.grey)),
+                             ),
+                             const SizedBox(width: 8),
+                             ElevatedButton(
+                               onPressed: () => _acceptTask(context, task.id),
+                               style: ElevatedButton.styleFrom(
+                                 backgroundColor: Colors.amber[700], // 目立つ落ち着いた色
+                                 foregroundColor: Colors.white,
+                                 textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                               ),
+                               child: const Text("受注"),
+                             ),
+                          ],
+                        );
+                      },
+                    ),
           ),
         ],
       ),
@@ -220,6 +243,37 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     });
   }
 
+  void _autoEstimateRank() {
+    final title = _titleController.text;
+    if (title.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("先にタイトルを入力してください")),
+      );
+      return;
+    }
+
+    QuestRank newRank = QuestRank.B;
+    int length = title.length;
+
+    if (length > 30 || title.contains("実装") || title.contains("開発") || title.contains("会議") || title.contains("資料")) {
+      newRank = QuestRank.A;
+    } else if (length > 15 || title.contains("作成") || title.contains("買い物") || title.contains("連絡")) {
+      newRank = QuestRank.B;
+    }
+
+    if (title.contains("本番") || title.contains("デプロイ") || title.contains("リリース") || title.contains("重要")) {
+      newRank = QuestRank.S;
+    }
+
+    setState(() {
+      _selectedRank = newRank;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("魔導書による解析: ${newRank.name}ランクと推定")),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<GameViewModel>(context, listen: false);
@@ -235,8 +289,9 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
           children: [
             TextField(
               controller: _titleController,
-              decoration: const InputDecoration(labelText: "タイトル"),
+              decoration: const InputDecoration(labelText: "タイトル（長文入力可）"),
               autofocus: true,
+              maxLines: null, // 複数行対応
             ),
             const SizedBox(height: 16),
             TextField(
@@ -248,17 +303,35 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<QuestRank>(
-              value: _selectedRank,
-              decoration: const InputDecoration(labelText: "ランク"),
-              items: QuestRank.values.map((rank) {
-                return DropdownMenuItem(
-                  value: rank,
-                  child: Text(rank.name),
-                );
-              }).toList(),
-              onChanged: (val) => setState(() => _selectedRank = val!),
-            ),
+            Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<QuestRank>(
+                  value: _selectedRank,
+                  decoration: const InputDecoration(labelText: "ランク"),
+                  items: QuestRank.values.map((rank) {
+                    return DropdownMenuItem(
+                      value: rank,
+                      child: Text(rank.name),
+                    );
+                  }).toList(),
+                  onChanged: (val) => setState(() => _selectedRank = val!),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: _autoEstimateRank,
+                icon: const Icon(Icons.auto_awesome, size: 16),
+                label: const Text("魔導書で解析"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.purple[800],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+              ),
+            ],
+          ),
             if (player.canUseSkill(Job.cleric)) ...[
               const SizedBox(height: 16),
               DropdownButtonFormField<RepeatInterval>(

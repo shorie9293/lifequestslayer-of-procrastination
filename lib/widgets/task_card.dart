@@ -22,6 +22,19 @@ class TaskCard extends StatelessWidget {
     this.subtitle,
   });
 
+  String _getRankEnemyEmoji(QuestRank rank) {
+    switch (rank) {
+      case QuestRank.S:
+        return '🐉'; // ドラゴン
+      case QuestRank.A:
+        return '👹'; // 鬼・オーガ
+      case QuestRank.B:
+        return '🐺'; // 狼
+      default:
+        return '🍄'; // スライム・キノコ
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Default styling checks
@@ -37,11 +50,12 @@ class TaskCard extends StatelessWidget {
         iconColor: textColor,
         collapsedTextColor: textColor,
         textColor: textColor,
-        leading: Icon(
-          task.status == TaskStatus.active ? Icons.bug_report : Icons.assignment,
-          size: 40,
-          color: textColor,
-        ),
+        leading: task.status == TaskStatus.active
+            ? Text(
+                _getRankEnemyEmoji(task.rank), // 敵の絵文字
+                style: const TextStyle(fontSize: 32),
+              )
+            : Icon(Icons.assignment, size: 40, color: textColor),
         title: Text(
           "[${task.rank.name}] ${task.title}",
           style: GoogleFonts.vt323(fontSize: 24, color: textColor),

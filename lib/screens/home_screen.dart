@@ -55,7 +55,7 @@ class HomeScreen extends StatelessWidget {
     final coinsGained = result['coinsGained'] as int;
     final bonusMessages = result['bonusMessages'] as List<String>;
 
-    // 討伐成功メッセージ
+    // 討伐成功メッセージ (SnackBar)
     if (bonusMessages.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -76,6 +76,35 @@ class HomeScreen extends StatelessWidget {
         SnackBar(content: Text("討伐成功！ $coinsGained 金貨を獲得しました！")),
       );
     }
+
+    // 討伐完了エフェクト（ダイアログ）
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      barrierColor: Colors.black45,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (context, anim1, anim2) {
+        // 短時間で自動的に閉じる
+        Future.delayed(const Duration(seconds: 1), () {
+          if (context.mounted) Navigator.of(context).pop();
+        });
+        return Center(
+          child: DefaultTextStyle(
+            style: GoogleFonts.vt323(fontSize: 80, color: Colors.amberAccent, fontWeight: FontWeight.bold),
+            child: const Text('討伐完了\n💥', textAlign: TextAlign.center),
+          ),
+        );
+      },
+      transitionBuilder: (context, anim1, anim2, child) {
+        return Transform.scale(
+          scale: Curves.elasticOut.transform(anim1.value),
+          child: Opacity(
+            opacity: anim1.value,
+            child: child,
+          ),
+        );
+      },
+    );
 
     if (leveledUp) {
       showDialog(

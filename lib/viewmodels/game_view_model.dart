@@ -340,9 +340,10 @@ class GameViewModel extends ChangeNotifier {
     }
   }
 
-  void _checkAndResetMissions() {
+  void _checkAndResetMissions({bool isLogin = false}) {
     final now = DateTime.now();
-    
+    bool changedDate = false;
+
     // デイリーリセット
     if (_player.lastMissionResetDate == null || 
         _player.lastMissionResetDate!.day != now.day ||
@@ -353,6 +354,7 @@ class GameViewModel extends ChangeNotifier {
       _player.todayTaskLimitOffset = _player.nextDayTaskLimitOffset;
       _player.nextDayTaskLimitOffset = 0;
       _player.lastMissionResetDate = now;
+      changedDate = true;
     }
     
     // ウィークリーリセットは便宜上ここでは月曜日にリセットとする
@@ -367,6 +369,11 @@ class GameViewModel extends ChangeNotifier {
           currentWeek != lastWeek) {
         _player.weeklySRankCompleted = 0;
       }
+    }
+
+    if (isLogin && changedDate) {
+      _player.coins += 50; // ログインボーナス
+      _notifyAndSave();
     }
   }
 
@@ -448,6 +455,7 @@ class GameViewModel extends ChangeNotifier {
     _tutorialStep = box.get('step', defaultValue: 0);
     _hasSeenConcept = box.get('hasSeenConcept', defaultValue: false);
     _isLoaded = true;
+    _checkAndResetMissions(isLogin: true); // ログインボーナス判定含む
     notifyListeners();
   }
 
