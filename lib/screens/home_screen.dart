@@ -35,8 +35,48 @@ class HomeScreen extends StatelessWidget {
     final wasActive = viewModel.activeTasks.any((t) => t.id == taskId);
     if (!wasActive) return; // Already gone?
 
-    final leveledUp = viewModel.completeTask(taskId);
+    final result = viewModel.completeTask(taskId);
     
+    if (result == null) {
+       // Check if task is still active (meaning it failed to complete)
+       final stillActive = viewModel.activeTasks.any((t) => t.id == taskId);
+       if (stillActive) {
+          final task = viewModel.activeTasks.firstWhere((t) => t.id == taskId);
+          if (task.subTasks.any((s) => !s.isCompleted)) {
+             ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("サブタスクが残っています！")),
+             );
+          }
+       }
+       return;
+    }
+
+    final leveledUp = result['leveledUp'] as bool;
+    final coinsGained = result['coinsGained'] as int;
+    final bonusMessages = result['bonusMessages'] as List<String>;
+
+    // 討伐成功メッセージ
+    if (bonusMessages.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+               Text("討伐成功！ $coinsGained 金貨を獲得しました！"),
+               const SizedBox(height: 4),
+               ...bonusMessages.map((msg) => Text(msg, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amberAccent))),
+            ]
+          ),
+          duration: const Duration(seconds: 4),
+        )
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("討伐成功！ $coinsGained 金貨を獲得しました！")),
+      );
+    }
+
     if (leveledUp) {
       showDialog(
         context: context,
@@ -51,18 +91,6 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       );
-    } else {
-       // Check if task is still active (meaning it failed to complete)
-       final stillActive = viewModel.activeTasks.any((t) => t.id == taskId);
-       if (stillActive) {
-          // Why did it fail?
-          final task = viewModel.activeTasks.firstWhere((t) => t.id == taskId);
-          if (task.subTasks.any((s) => !s.isCompleted)) {
-             ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("サブタスクが残っています！")),
-             );
-          }
-       }
     }
   }
 

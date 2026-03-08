@@ -5,6 +5,7 @@ import '../widgets/help_dialog.dart';
 import 'guild_screen.dart';
 import 'home_screen.dart';
 import 'temple_screen.dart';
+import 'town_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -22,6 +23,7 @@ class _MainScreenState extends State<MainScreen> {
     const HomeScreen(),
     const GuildScreen(),
     const TempleScreen(),
+    const TownScreen(),
   ];
 
   @override
@@ -91,7 +93,12 @@ class _MainScreenState extends State<MainScreen> {
             icon: Icon(Icons.temple_buddhist),
             label: '神殿',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.store),
+            label: '街',
+          ),
         ],
+        type: BottomNavigationBarType.fixed, // タブが4つ以上の場合のアニメーションを防ぐ
         selectedItemColor: Colors.white,
         unselectedItemColor: Colors.grey,
         backgroundColor: Colors.black87,

@@ -96,6 +96,8 @@ class Task {
   List<int> repeatWeekdays; // 1=Mon, ..., 7=Sun
   DateTime? lastCompletedAt;
   List<SubTask> subTasks;
+  int? targetTimeMinutes; // 目標時間（分）
+  DateTime? activeAt;     // タスク開始日時（アクティブ化した日時）
 
   Task({
     required this.id,
@@ -107,6 +109,8 @@ class Task {
     List<int>? repeatWeekdays,
     this.lastCompletedAt,
     List<SubTask>? subTasks,
+    this.targetTimeMinutes,
+    this.activeAt,
   }) : subTasks = subTasks ?? [], repeatWeekdays = repeatWeekdays ?? [];
 }
 
@@ -116,7 +120,7 @@ class TaskAdapter extends TypeAdapter<Task> {
 
   @override
   Task read(BinaryReader reader) {
-    return Task(
+    final task = Task(
       id: reader.read(),
       title: reader.read(),
       status: reader.read(), // Hive handles nested adapters automatically
@@ -127,6 +131,13 @@ class TaskAdapter extends TypeAdapter<Task> {
       lastCompletedAt: reader.read(), // DateTime adapter is built-in or primitive? DateTime is supported by Hive generally
       subTasks: (reader.read() as List).cast<SubTask>(),
     );
+    try {
+      task.targetTimeMinutes = reader.read();
+      task.activeAt = reader.read();
+    } catch (e) {
+      // 過去のデータを読み込んだ場合のフォールバック
+    }
+    return task;
   }
 
   @override
@@ -140,5 +151,7 @@ class TaskAdapter extends TypeAdapter<Task> {
     writer.write(obj.repeatWeekdays);
     writer.write(obj.lastCompletedAt);
     writer.write(obj.subTasks);
+    writer.write(obj.targetTimeMinutes);
+    writer.write(obj.activeAt);
   }
 }

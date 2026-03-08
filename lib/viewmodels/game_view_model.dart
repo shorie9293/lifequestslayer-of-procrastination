@@ -30,6 +30,19 @@ class GameViewModel extends ChangeNotifier {
   bool get isLoaded => _isLoaded;
   bool get hasSeenConcept => _hasSeenConcept;
 
+  int get fatigueWarnThreshold => 5 + _player.todayTaskLimitOffset;
+  int get fatigueSevereThreshold => 10 + _player.todayTaskLimitOffset;
+
+  String get fatigueStatus {
+    if (_player.dailyTasksCompleted >= fatigueSevereThreshold) return "💀 疲労困憊";
+    if (_player.dailyTasksCompleted >= fatigueWarnThreshold) return "⚠️ 疲労";
+    return "😄 元気";
+  }
+
+  double get fatigueProgress {
+    return (_player.dailyTasksCompleted / fatigueSevereThreshold).clamp(0.0, 1.0);
+  }
+
   List<Task> get guildTasks => _tasks.where((t) => t.status == TaskStatus.inGuild && !t.isCompleted).toList();
   
   List<Task> get activeTasks {
@@ -108,7 +121,7 @@ class GameViewModel extends ChangeNotifier {
      useMaterial3: true,
   );
 
-  void addTask(String title, {QuestRank rank = QuestRank.B, RepeatInterval repeatInterval = RepeatInterval.none, List<int>? repeatWeekdays, List<SubTask>? subTasks}) {
+  void addTask(String title, {QuestRank rank = QuestRank.B, RepeatInterval repeatInterval = RepeatInterval.none, List<int>? repeatWeekdays, List<SubTask>? subTasks, int? targetTimeMinutes}) {
     final newTask = Task(
       id: const Uuid().v4(),
       title: title,
@@ -116,13 +129,14 @@ class GameViewModel extends ChangeNotifier {
       repeatInterval: repeatInterval,
       repeatWeekdays: repeatWeekdays,
       subTasks: subTasks,
+      targetTimeMinutes: targetTimeMinutes,
     );
     _tasks.add(newTask);
     if (_tutorialStep == 0) completeTutorialStep(0);
     _notifyAndSave();
   }
 
-  void editTask(String taskId, String title, {QuestRank rank = QuestRank.B, RepeatInterval repeatInterval = RepeatInterval.none, List<int>? repeatWeekdays, List<SubTask>? subTasks}) {
+  void editTask(String taskId, String title, {QuestRank rank = QuestRank.B, RepeatInterval repeatInterval = RepeatInterval.none, List<int>? repeatWeekdays, List<SubTask>? subTasks, int? targetTimeMinutes}) {
     final index = _tasks.indexWhere((t) => t.id == taskId);
     if (index != -1) {
       _tasks[index].title = title;
@@ -130,6 +144,7 @@ class GameViewModel extends ChangeNotifier {
       _tasks[index].repeatInterval = repeatInterval;
       _tasks[index].repeatWeekdays = repeatWeekdays ?? [];
       _tasks[index].subTasks = subTasks ?? [];
+      _tasks[index].targetTimeMinutes = targetTimeMinutes;
       _notifyAndSave();
     }
   }
@@ -146,6 +161,7 @@ class GameViewModel extends ChangeNotifier {
     }
 
     _tasks[index].status = TaskStatus.active;
+    _tasks[index].activeAt = DateTime.now(); // タスク開始日時を記録
     if (_tutorialStep == 1) completeTutorialStep(1);
     _notifyAndSave();
     return null; // Success
@@ -191,16 +207,16 @@ class GameViewModel extends ChangeNotifier {
     }
   }
 
-  bool completeTask(String taskId) {
+  Map<String, dynamic>? completeTask(String taskId) {
     final index = _tasks.indexWhere((t) => t.id == taskId);
-    if (index == -1) return false;
+    if (index == -1) return null;
 
     final task = _tasks[index];
 
     // Wizard: Subtask Check
     if (_player.canUseSkill(Job.wizard) && task.subTasks.isNotEmpty) {
       if (task.subTasks.any((s) => !s.isCompleted)) {
-        return false; 
+        return null; 
       }
     }
 
@@ -213,6 +229,25 @@ class GameViewModel extends ChangeNotifier {
       _tasks[index].status = TaskStatus.inGuild; 
     }
     
+    // 状態のリセット確認（日付変更後初回のタスク完了時用）
+    _checkAndResetMissions();
+
+    List<String> bonusMessages = [];
+
+    // 不正対策（疲労度システム）
+    // 1日にこなせるクエスト量に制限を設け、乱発を防ぐ
+    double fatigueMultiplier = 1.0;
+    int fatigueWarnThreshold = 5 + _player.todayTaskLimitOffset;
+    int fatigueSevereThreshold = 10 + _player.todayTaskLimitOffset;
+
+    if (_player.dailyTasksCompleted >= fatigueSevereThreshold) {
+      fatigueMultiplier = 0.1;
+      bonusMessages.add("⚠️ 疲労困憊 (取得報酬10%)");
+    } else if (_player.dailyTasksCompleted >= fatigueWarnThreshold) {
+      fatigueMultiplier = 0.5;
+      bonusMessages.add("⚠️ 疲労 (取得報酬50%)");
+    }
+
     // XP Logic
     int expGain = 0;
     switch (task.rank) {
@@ -229,10 +264,181 @@ class GameViewModel extends ChangeNotifier {
       _player.comboCount = 0;
     }
     
+    expGain = (expGain * fatigueMultiplier).round();
+
+    // 称号ボーナス (装備しているとベースのEXPに+5%)
+    if (_player.equippedTitle != null) {
+      expGain = (expGain * 1.05).round();
+    }
+
+    // ========== 新ゲーミング機能 ==========
+    int coinsGained = task.rank == QuestRank.S ? 100 : task.rank == QuestRank.A ? 30 : 10;
+    coinsGained = (coinsGained * fatigueMultiplier).round();
+    
+    // 1. タイムアタック・ボーナス
+    if (task.targetTimeMinutes != null && task.activeAt != null) {
+      final usedMinutes = DateTime.now().difference(task.activeAt!).inMinutes;
+      if (usedMinutes <= task.targetTimeMinutes!) {
+        int speedBonus = 50;
+        coinsGained += speedBonus;
+        bonusMessages.add("🕒 スピードクリアボーナス！ +$speedBonus金貨");
+      }
+    }
+
+    // レベル依存のレアドロップ (確率はレベル*2%、最大50%)
+    double dropChance = (_player.level * 0.02).clamp(0.01, 0.5);
+    bool isRare = (DateTime.now().millisecond % 100) < (dropChance * 100);
+    if (isRare) {
+      int rareBonus = (coinsGained * 5 * fatigueMultiplier).round();
+      if (rareBonus > 0) {
+        coinsGained += rareBonus;
+        bonusMessages.add("✨ レアドロップ発見！！ +$rareBonus金貨");
+      }
+    }
+
+    // 3. ミッション（習慣化）と称号チェック
+    _player.dailyTasksCompleted++;
+    if (task.rank == QuestRank.S) _player.weeklySRankCompleted++;
+
+    _player.totalTasksCompleted++;
+    if (task.rank == QuestRank.S) _player.totalSRankCompleted++;
+    if (task.rank == QuestRank.A) _player.totalARankCompleted++;
+    if (task.rank == QuestRank.B) _player.totalBRankCompleted++;
+
+    _checkTitles(bonusMessages);
+
+    if (_player.dailyTasksCompleted == 3) {
+      int dailyBonus = 200;
+      coinsGained += dailyBonus;
+      bonusMessages.add("📅 デイリーミッション達成！ +$dailyBonus金貨");
+    }
+    if (task.rank == QuestRank.S && _player.weeklySRankCompleted == 1) { // 初回のみ
+      int weeklyBonus = 500;
+      coinsGained += weeklyBonus;
+      bonusMessages.add("🏆 ウィークリーSランク達成！ +$weeklyBonus金貨");
+    }
+
+    _player.coins += coinsGained;
+    // ===================================
+    
     bool leveledUp = _player.addExp(expGain); 
     if (_tutorialStep == 2) completeTutorialStep(2);
     _notifyAndSave();
-    return leveledUp;
+    
+    return {
+      'leveledUp': leveledUp,
+      'coinsGained': coinsGained,
+      'bonusMessages': bonusMessages,
+    };
+  }
+
+  void buyShopItem(String itemId, int price) {
+    if (_player.coins >= price && !_player.homeItems.contains(itemId)) {
+      _player.coins -= price;
+      _player.homeItems.add(itemId);
+      _notifyAndSave();
+    }
+  }
+
+  void _checkAndResetMissions() {
+    final now = DateTime.now();
+    
+    // デイリーリセット
+    if (_player.lastMissionResetDate == null || 
+        _player.lastMissionResetDate!.day != now.day ||
+        _player.lastMissionResetDate!.month != now.month ||
+        _player.lastMissionResetDate!.year != now.year) {
+      _player.dailyTasksCompleted = 0;
+      // 昨日稼いだ休息ボーナスを今日に適用
+      _player.todayTaskLimitOffset = _player.nextDayTaskLimitOffset;
+      _player.nextDayTaskLimitOffset = 0;
+      _player.lastMissionResetDate = now;
+    }
+    
+    // ウィークリーリセットは便宜上ここでは月曜日にリセットとする
+    // 厳密なウィークリー管理は少し複雑なので、lastMissionResetDateからの経過日数などで判定も可能だが
+    // 今回は簡易に「週が変わっていたらリセット」
+    if (_player.lastMissionResetDate != null) {
+      // is after next monday or week changed
+      int currentWeek = (now.day - now.weekday + 10) ~/ 7;
+      int lastWeek = (_player.lastMissionResetDate!.day - _player.lastMissionResetDate!.weekday + 10) ~/ 7;
+      if (now.year > _player.lastMissionResetDate!.year || 
+          now.month > _player.lastMissionResetDate!.month || 
+          currentWeek != lastWeek) {
+        _player.weeklySRankCompleted = 0;
+      }
+    }
+  }
+
+  // --- 称号システム（案3） ---
+  void _checkTitles(List<String> bonusMessages) {
+    _unlockTitle("見習い冒険者", () => _player.totalTasksCompleted >= 10, bonusMessages);
+    _unlockTitle("ベテラン", () => _player.totalTasksCompleted >= 100, bonusMessages);
+    _unlockTitle("ゴブリンスレイヤー", () => _player.totalBRankCompleted >= 50, bonusMessages);
+    _unlockTitle("エリートハンター", () => _player.totalARankCompleted >= 20, bonusMessages);
+    _unlockTitle("竜殺し", () => _player.totalSRankCompleted >= 5, bonusMessages);
+  }
+
+  void _unlockTitle(String targetTitle, bool Function() condition, List<String> messages) {
+    if (!_player.titles.contains(targetTitle) && condition()) {
+      _player.titles.add(targetTitle);
+      messages.add("🏅 称号獲得：『$targetTitle』");
+    }
+  }
+
+  void equipTitle(String title) {
+    if (_player.titles.contains(title) || title.isEmpty) {
+      _player.equippedTitle = title.isEmpty ? null : title;
+      _notifyAndSave();
+    }
+  }
+
+  void equipSkin(String skinId) {
+    if (_player.homeItems.contains(skinId) || skinId.isEmpty) {
+      _player.equippedSkin = skinId.isEmpty ? null : skinId;
+      _notifyAndSave();
+    }
+  }
+
+  // --- 宿屋システム（案1） ---
+  String? restAtInn(int innType) {
+    final now = DateTime.now();
+    if (_player.lastRestDate != null && 
+        _player.lastRestDate!.year == now.year &&
+        _player.lastRestDate!.month == now.month &&
+        _player.lastRestDate!.day == now.day) {
+      return "今日はもう十分休んだ。また明日来な！";
+    }
+
+    int cost = 0;
+    int limitBonus = 0;
+
+    switch (innType) {
+      case 0: // テント
+        cost = 50;
+        limitBonus = 2; // 翌日の限界数+2
+        break;
+      case 1: // 普通のベッド
+        cost = 200;
+        limitBonus = 5; // 翌日の限界数+5
+        break;
+      case 2: // 王様のベッド
+        cost = 1000;
+        limitBonus = 12; // 翌日の限界数+12
+        break;
+      default:
+        return "そんなメニューはないぜ";
+    }
+
+    if (_player.coins < cost) {
+      return "金貨が足りないぜ";
+    }
+
+    _player.coins -= cost;
+    _player.nextDayTaskLimitOffset = limitBonus;
+    _player.lastRestDate = now;
+    _notifyAndSave();
+    return null; // Success
   }
 
   Future<void> loadData() async {

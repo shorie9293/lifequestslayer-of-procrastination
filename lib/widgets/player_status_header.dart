@@ -23,12 +23,44 @@ class PlayerStatusHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
                 children: [
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white12,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.grey, width: 2),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      _getSkinIcon(player.equippedSkin),
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (player.equippedTitle != null && player.equippedTitle!.isNotEmpty)
+                    Text(
+                      "【${player.equippedTitle}】",
+                      style: const TextStyle(fontSize: 14, color: Colors.orange, fontWeight: FontWeight.bold),
+                    ),
                   Text(
                     "Lv.${player.level} ${_getJobName(player.currentJob)}",
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  Row(
+                    children: [
+                      const Icon(Icons.monetization_on, color: Colors.amber, size: 16),
+                      const SizedBox(width: 4),
+                      Text(
+                        "${player.coins}",
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber),
+                      ),
+                    ],
                   ),
                   if (player.currentJob == Job.warrior)
                     Text(
@@ -36,6 +68,8 @@ class PlayerStatusHeader extends StatelessWidget {
                       style: const TextStyle(
                           color: Colors.redAccent, fontWeight: FontWeight.bold),
                     ),
+                    ],
+                  ),
                 ],
               ),
               Column(
@@ -60,6 +94,24 @@ class PlayerStatusHeader extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("体調: ${viewModel.fatigueStatus}", style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text("本日の完遂: ${player.dailyTasksCompleted} / ${viewModel.fatigueSevereThreshold}", style: const TextStyle(fontSize: 12)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          LinearProgressIndicator(
+            value: 1.0 - viewModel.fatigueProgress, // 減っていくゲージ
+            minHeight: 8,
+            backgroundColor: Colors.grey[800],
+            valueColor: AlwaysStoppedAnimation<Color>(
+              viewModel.fatigueProgress >= 1.0 ? Colors.red :
+              viewModel.fatigueProgress >= 0.5 ? Colors.orange : Colors.blue,
+            ),
+          ),
+          const SizedBox(height: 12),
           LinearProgressIndicator(
             value: player.currentExp / player.expToNextLevel,
             minHeight: 10,
@@ -83,6 +135,14 @@ class PlayerStatusHeader extends StatelessWidget {
       case Job.adventurer:
         return "冒険者";
     }
+  }
+
+  String _getSkinIcon(String? skinId) {
+    if (skinId == "skin_1") return "🧥";
+    if (skinId == "skin_2") return "🎖️";
+    if (skinId == "skin_3") return "🪄";
+    if (skinId == "skin_4") return "👑";
+    return "👤";
   }
 
   Widget _buildRankRow(QuestRank rank, int current, int max) {

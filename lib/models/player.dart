@@ -35,6 +35,25 @@ class Player {
   Set<Job> activeSkills; // Mastery skills equipped
   Job currentJob;
   int comboCount;
+  int coins;
+  List<String> homeItems;
+  int dailyTasksCompleted;
+  int weeklySRankCompleted;
+  DateTime? lastMissionResetDate;
+
+  // Inn / Sleep System (Plan 1)
+  int nextDayTaskLimitOffset;
+  int todayTaskLimitOffset;
+  DateTime? lastRestDate;
+
+  // Title / Achievement System (Plan 3)
+  int totalTasksCompleted;
+  int totalSRankCompleted;
+  int totalARankCompleted;
+  int totalBRankCompleted;
+  List<String> titles;
+  String? equippedTitle;
+  String? equippedSkin; // 追加: 装備中のスキンID
 
   Player({
     Map<Job, int>? jobLevels,
@@ -42,10 +61,27 @@ class Player {
     Set<Job>? activeSkills,
     this.currentJob = Job.adventurer,
     this.comboCount = 0,
+    this.coins = 0,
+    List<String>? homeItems,
+    this.dailyTasksCompleted = 0,
+    this.weeklySRankCompleted = 0,
+    this.lastMissionResetDate,
+    this.nextDayTaskLimitOffset = 0,
+    this.todayTaskLimitOffset = 0,
+    this.lastRestDate,
+    this.totalTasksCompleted = 0,
+    this.totalSRankCompleted = 0,
+    this.totalARankCompleted = 0,
+    this.totalBRankCompleted = 0,
+    List<String>? titles,
+    this.equippedTitle,
+    this.equippedSkin,
   }) : 
     jobLevels = jobLevels ?? {Job.adventurer: 1}, 
     jobExps = jobExps ?? {Job.adventurer: 0},
-    activeSkills = activeSkills ?? {};
+    activeSkills = activeSkills ?? {},
+    homeItems = homeItems ?? [],
+    titles = titles ?? [];
 
   // Getters for current job (Compatibility)
   int get level => jobLevels[currentJob] ?? 1;
@@ -54,11 +90,11 @@ class Player {
   // Calculate expToNextLevel dynamically based on level
   int get expToNextLevel {
     int lvl = level;
-    // New Formula: 50 * 1.25^(lvl-1)
+    // New Formula: 50 * 1.4^(lvl-1)
     // Lv1->2: 50
-    // Lv10: ~372
-    // Lv20: ~3400 (Cumulative ~18000)
-    return (50 * (dependencies_pow(1.25, lvl - 1))).round();
+    // Lv10: ~1034
+    // Lv20: ~29914
+    return (50 * (dependencies_pow(1.4, lvl - 1))).round();
   }
 
   // Helper for power since math lib might need import. 
@@ -87,13 +123,13 @@ class Player {
     }
 
     if (refLevel >= 10) {
-      return {QuestRank.S: 1, QuestRank.A: 3, QuestRank.B: 5};
+      return {QuestRank.S: 1, QuestRank.A: 2, QuestRank.B: 3};
     }
     if (refLevel >= 5) {
       return {QuestRank.S: 0, QuestRank.A: 1, QuestRank.B: 3};
     }
     if (refLevel >= 2) {
-      return {QuestRank.S: 0, QuestRank.A: 0, QuestRank.B: 3};
+      return {QuestRank.S: 0, QuestRank.A: 0, QuestRank.B: 2};
     }
 
     return {QuestRank.S: 0, QuestRank.A: 0, QuestRank.B: 1};
@@ -123,7 +159,7 @@ class Player {
     cExp += amount;
     
     int lvl = jobLevels[currentJob] ?? 1;
-    int expNext = (50 * (dependencies_pow(1.25, lvl - 1))).round();
+    int expNext = (50 * (dependencies_pow(1.4, lvl - 1))).round();
     
     bool leveledUp = false;
     while (cExp >= expNext) {
@@ -131,7 +167,7 @@ class Player {
       lvl++;
       jobLevels[currentJob] = lvl;
       // Re-calc next for loop
-      expNext = (50 * (dependencies_pow(1.25, lvl - 1))).round();
+      expNext = (50 * (dependencies_pow(1.4, lvl - 1))).round();
       leveledUp = true;
     }
     jobExps[currentJob] = cExp; // Save back
@@ -208,13 +244,40 @@ class PlayerAdapter extends TypeAdapter<Player> {
       
       // Let's just implement new format. If it crashes, we clear box.
       
-      return Player(
+      final player = Player(
          jobLevels: (reader.readMap()).cast<Job, int>(),
          jobExps: (reader.readMap()).cast<Job, int>(),
          activeSkills: (reader.readList()).cast<Job>().toSet(),
          currentJob: reader.read(), // Job
          comboCount: reader.readInt(),
       );
+      
+      try {
+        player.coins = reader.readInt();
+        player.homeItems = (reader.readList()).cast<String>();
+        player.dailyTasksCompleted = reader.readInt();
+        player.weeklySRankCompleted = reader.readInt();
+        player.lastMissionResetDate = reader.read();
+        
+        // New fields for Plan 1 & Plan 3
+        player.nextDayTaskLimitOffset = reader.readInt();
+        player.todayTaskLimitOffset = reader.readInt();
+        player.lastRestDate = reader.read();
+        player.totalTasksCompleted = reader.readInt();
+        player.totalSRankCompleted = reader.readInt();
+        player.totalARankCompleted = reader.readInt();
+        player.totalBRankCompleted = reader.readInt();
+        player.titles = (reader.readList()).cast<String>();
+        player.equippedTitle = reader.read();
+        
+        // --- 新フィールドの互換性チェック用 ---
+        if (reader.availableBytes > 0) {
+           player.equippedSkin = reader.read();
+        }
+      } catch (e) {
+        // Fallback for old data
+      }
+      return player;
     } catch (e) {
        // Fallback default
        return Player();
@@ -228,5 +291,20 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.writeList(obj.activeSkills.toList());
     writer.write(obj.currentJob);
     writer.writeInt(obj.comboCount);
+    writer.writeInt(obj.coins);
+    writer.writeList(obj.homeItems);
+    writer.writeInt(obj.dailyTasksCompleted);
+    writer.writeInt(obj.weeklySRankCompleted);
+    writer.write(obj.lastMissionResetDate);
+    writer.writeInt(obj.nextDayTaskLimitOffset);
+    writer.writeInt(obj.todayTaskLimitOffset);
+    writer.write(obj.lastRestDate);
+    writer.writeInt(obj.totalTasksCompleted);
+    writer.writeInt(obj.totalSRankCompleted);
+    writer.writeInt(obj.totalARankCompleted);
+    writer.writeInt(obj.totalBRankCompleted);
+    writer.writeList(obj.titles);
+    writer.write(obj.equippedTitle);
+    writer.write(obj.equippedSkin);
   }
 }

@@ -1,0 +1,27 @@
+name: ProjectOrchestrator
+description: ゲーム×TODOアプリの企画会議を統括し、最終案をユーザーに提案する
+model: gemini-3-pro
+workflow:
+  - step: brainstorming
+    agents: [GamingExpert, ProductivityExpert]
+    description: 両側面からアイデアを出し合う
+  - step: mediation
+    agents: [BalanceMediator]
+    description: 出されたアイデアを統合し、現実的な落とし所を探る
+  - step: finalization
+    agents: [DecisionMaker]
+    description: 最終的な企画骨子をまとめ、実装フェーズ前の「お伺い」を作成する
+
+sub_agents:
+  - name: GamingExpert
+    description: 「面白さ・没入感」を最優先するRPGマニア。ゲーミフィケーションの鬼。
+    model: gemini-3-flash
+  - name: ProductivityExpert
+    description: 「ツールとしての実用性・効率」を最優先する仕事効率化オタク。
+    model: gemini-3-flash
+  - name: BalanceMediator
+    description: 遊びと実用のバランスを調整する、冷静なプロダクトマネージャー。
+    model: gemini-3-pro
+  - name: DecisionMaker
+    description: 会議の内容を総括し、ユーザーに最終判断を仰ぐ責任者。
+    model: gemini-3-pro

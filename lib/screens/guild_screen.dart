@@ -196,6 +196,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
   late List<int> _selectedWeekdays; // 1=Mon
   late List<SubTask> _subTasks;
   final _subTaskController = TextEditingController();
+  late final TextEditingController _targetTimeController;
 
   @override
   void initState() {
@@ -206,6 +207,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     _selectedRepeat = t?.repeatInterval ?? RepeatInterval.none;
     _selectedWeekdays = t != null ? List.from(t.repeatWeekdays) : [];
     _subTasks = t != null ? List<SubTask>.from(t.subTasks.map((s) => SubTask(title: s.title, isCompleted: s.isCompleted))) : [];
+    _targetTimeController = TextEditingController(text: t?.targetTimeMinutes?.toString() ?? "");
   }
 
   void _toggleWeekday(int day) {
@@ -235,6 +237,15 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
               controller: _titleController,
               decoration: const InputDecoration(labelText: "タイトル"),
               autofocus: true,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _targetTimeController,
+              decoration: const InputDecoration(
+                labelText: "目標時間（分）",
+                hintText: "例: 30 (時間内にクリアでボーナス)",
+              ),
+              keyboardType: TextInputType.number,
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<QuestRank>(
@@ -352,6 +363,8 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
       _selectedWeekdays.add(DateTime.now().weekday);
     }
 
+    int? targetTime = int.tryParse(_targetTimeController.text);
+
     final vm = Provider.of<GameViewModel>(context, listen: false);
     if (widget.task == null) {
       vm.addTask(
@@ -360,6 +373,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
         repeatInterval: _selectedRepeat,
         repeatWeekdays: _selectedWeekdays.isNotEmpty ? _selectedWeekdays : null,
         subTasks: _subTasks.isNotEmpty ? _subTasks : null,
+        targetTimeMinutes: targetTime,
       );
     } else {
       vm.editTask(
@@ -369,6 +383,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
         repeatInterval: _selectedRepeat,
         repeatWeekdays: _selectedWeekdays.isNotEmpty ? _selectedWeekdays : null,
         subTasks: _subTasks.isNotEmpty ? _subTasks : null,
+        targetTimeMinutes: targetTime,
       );
     }
     Navigator.pop(context);
