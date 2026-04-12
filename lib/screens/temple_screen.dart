@@ -40,6 +40,8 @@ class TempleScreen extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: [
+          _buildFontSizeSection(context, viewModel),
+          const SizedBox(height: 20),
           const Text(
             "新たな道を歩むがよい...",
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
@@ -103,6 +105,54 @@ class TempleScreen extends StatelessWidget {
           ),
         ],
       ),
+      ),
+    );
+  }
+
+  Widget _buildFontSizeSection(BuildContext context, GameViewModel viewModel) {
+    const options = [
+      (label: '小', scale: 1.0),
+      (label: '中', scale: 1.2),
+      (label: '大', scale: 1.5),
+    ];
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.text_fields, color: Colors.white70),
+                SizedBox(width: 8),
+                Text('フォントサイズ', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: options.map((opt) {
+                final isSelected = (viewModel.fontSizeScale - opt.scale).abs() < 0.01;
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        backgroundColor: isSelected ? Colors.white24 : Colors.transparent,
+                        side: BorderSide(
+                          color: isSelected ? Colors.white : Colors.white38,
+                          width: isSelected ? 2 : 1,
+                        ),
+                      ),
+                      onPressed: () => viewModel.setFontSizeScale(opt.scale),
+                      child: Text(opt.label, style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
       ),
     );
   }

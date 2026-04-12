@@ -16,6 +16,7 @@ class GameViewModel extends ChangeNotifier {
   bool _isLoaded = false;
   bool _hasSeenConcept = false;
   int? pendingLoginBonusAmount;
+  double _fontSizeScale = 1.2;
 
   GameViewModel({
     PlayerRepository? playerRepository,
@@ -30,13 +31,14 @@ class GameViewModel extends ChangeNotifier {
   int get tutorialStep => _tutorialStep;
   bool get isLoaded => _isLoaded;
   bool get hasSeenConcept => _hasSeenConcept;
+  double get fontSizeScale => _fontSizeScale;
 
   int get fatigueWarnThreshold => 5 + _player.todayTaskLimitOffset;
   int get fatigueSevereThreshold => 10 + _player.todayTaskLimitOffset;
 
   String get fatigueStatus {
-    if (_player.dailyTasksCompleted >= fatigueSevereThreshold) return "💀 疲労困憊";
-    if (_player.dailyTasksCompleted >= fatigueWarnThreshold) return "⚠️ 疲労";
+    if (_player.dailyTasksCompleted >= fatigueSevereThreshold) return "🌙 今日の英雄は休め";
+    if (_player.dailyTasksCompleted >= fatigueWarnThreshold) return "🍺 十分戦った";
     return "😄 元気";
   }
 
@@ -243,10 +245,10 @@ class GameViewModel extends ChangeNotifier {
 
     if (_player.dailyTasksCompleted >= fatigueSevereThreshold) {
       fatigueMultiplier = 0.1;
-      bonusMessages.add("⚠️ 疲労困憊 (取得報酬10%)");
+      bonusMessages.add("🌙 今日の英雄は十分戦った。宿屋で休んで明日に備えよ！");
     } else if (_player.dailyTasksCompleted >= fatigueWarnThreshold) {
       fatigueMultiplier = 0.5;
-      bonusMessages.add("⚠️ 疲労 (取得報酬50%)");
+      bonusMessages.add("🍺 疲れが溜まってきたぞ。宿屋で一息つくか？");
     }
 
     // XP Logic
@@ -260,7 +262,11 @@ class GameViewModel extends ChangeNotifier {
     // Warrior: Combo Bonus
     if (_player.canUseSkill(Job.warrior)) {
       _player.comboCount++;
-      expGain += (_player.comboCount * 10); 
+      int comboBonus = _player.comboCount * 10;
+      expGain += comboBonus;
+      if (_player.comboCount > 1) {
+        bonusMessages.add("⚔️ ${_player.comboCount}コンボ！ +${comboBonus} EXP");
+      }
     } else {
       _player.comboCount = 0;
     }
@@ -331,6 +337,37 @@ class GameViewModel extends ChangeNotifier {
       'coinsGained': coinsGained,
       'bonusMessages': bonusMessages,
     };
+  }
+
+  // --- 宝石システム ---
+
+  void addGems(int amount) {
+    _player.gems += amount;
+    _notifyAndSave();
+  }
+
+  /// 宝石を消費する。残高不足ならfalseを返す
+  bool spendGems(int amount) {
+    if (_player.gems < amount) return false;
+    _player.gems -= amount;
+    _notifyAndSave();
+    return true;
+  }
+
+  /// 宝石→金貨変換: 10宝石 = 1000金貨
+  bool exchangeGemsForCoins(int gemAmount) {
+    if (!spendGems(gemAmount)) return false;
+    _player.coins += gemAmount * 100;
+    _notifyAndSave();
+    return true;
+  }
+
+  /// 宝石で疲労を即時リセット (50宝石)
+  bool resetFatigueWithGems() {
+    if (!spendGems(50)) return false;
+    _player.dailyTasksCompleted = 0;
+    _notifyAndSave();
+    return true;
   }
 
   void buyShopItem(String itemId, int price) {
@@ -450,12 +487,24 @@ class GameViewModel extends ChangeNotifier {
     return null; // Success
   }
 
+  Future<void> setFontSizeScale(double scale) async {
+    _fontSizeScale = scale;
+    var box = await Hive.openBox('settingsBox');
+    await box.put('fontSizeScale', scale);
+    notifyListeners();
+  }
+
   Future<void> loadData() async {
     _player = await _playerRepository.loadPlayer();
     _tasks = await _taskRepository.loadTasks();
     var box = await Hive.openBox('tutorialBox');
     _tutorialStep = box.get('step', defaultValue: 0);
     _hasSeenConcept = box.get('hasSeenConcept', defaultValue: false);
+    var settingsBox = await Hive.openBox('settingsBox');
+    // 大:1.2 / 中:1.0 / 小:0.85（旧「大」は廃止）
+    final saved = settingsBox.get('fontSizeScale', defaultValue: 1.2) as double;
+    // 旧「大」（1.4など1.2超）は廃止し、大（1.2）に丸める
+    _fontSizeScale = saved > 1.2 ? 1.2 : saved;
     _isLoaded = true;
     _checkAndResetMissions(isLogin: true); // ログインボーナス判定含む
     notifyListeners();

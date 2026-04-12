@@ -54,6 +54,7 @@ class Player {
   List<String> titles;
   String? equippedTitle;
   String? equippedSkin; // 追加: 装備中のスキンID
+  int gems; // プレミアム通貨（課金で取得）
 
   Player({
     Map<Job, int>? jobLevels,
@@ -76,7 +77,8 @@ class Player {
     List<String>? titles,
     this.equippedTitle,
     this.equippedSkin,
-  }) : 
+    this.gems = 0,
+  }) :
     jobLevels = jobLevels ?? {Job.adventurer: 1}, 
     jobExps = jobExps ?? {Job.adventurer: 0},
     activeSkills = activeSkills ?? {},
@@ -274,6 +276,9 @@ class PlayerAdapter extends TypeAdapter<Player> {
         if (reader.availableBytes > 0) {
            player.equippedSkin = reader.read();
         }
+        if (reader.availableBytes > 0) {
+           player.gems = reader.readInt();
+        }
       } catch (e) {
         // Fallback for old data
       }
@@ -306,5 +311,6 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.writeList(obj.titles);
     writer.write(obj.equippedTitle);
     writer.write(obj.equippedSkin);
+    writer.writeInt(obj.gems);
   }
 }

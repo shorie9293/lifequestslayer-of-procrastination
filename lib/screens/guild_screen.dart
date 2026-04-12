@@ -3,9 +3,11 @@ import 'package:provider/provider.dart';
 import '../viewmodels/game_view_model.dart';
 import '../models/task.dart';
 import '../models/player.dart';
+import '../utils/tutorial_keys.dart';
 import '../widgets/player_status_header.dart';
 import '../widgets/task_card.dart';
 import '../widgets/help_dialog.dart';
+import '../services/notification_service.dart';
 
 class GuildScreen extends StatelessWidget {
   const GuildScreen({super.key});
@@ -21,6 +23,86 @@ class GuildScreen extends StatelessWidget {
       default:
         return const Color(0xFF424242);
     }
+  }
+
+  void _showFontSizeDialog(BuildContext context) {
+    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+    double current = viewModel.fontSizeScale;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            return AlertDialog(
+              title: const Row(
+                children: [
+                  Icon(Icons.text_fields, color: Colors.amber),
+                  SizedBox(width: 8),
+                  Text('文字サイズ'),
+                ],
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _fontSizeOption(ctx, setState, viewModel, '大', 1.2, current),
+                  _fontSizeOption(ctx, setState, viewModel, '中', 1.0, current),
+                  _fontSizeOption(ctx, setState, viewModel, '小', 0.85, current),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('閉じる'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _fontSizeOption(BuildContext ctx, StateSetter setState, GameViewModel viewModel, String label, double value, double current) {
+    return RadioListTile<double>(
+      title: Text('$label  (Abc あいう)', style: TextStyle(fontSize: 14 * value / 1.0)),
+      value: value,
+      groupValue: current,
+      onChanged: (v) {
+        if (v != null) {
+          setState(() => current = v);
+          viewModel.setFontSizeScale(v);
+        }
+      },
+    );
+  }
+
+  void _showTutorialResetDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('チュートリアルをリセット'),
+        content: const Text('チュートリアルを最初からやり直しますか？\n（ゲームデータは消えません）'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: TextButton.styleFrom(foregroundColor: Colors.grey),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Provider.of<GameViewModel>(ctx, listen: false).resetTutorial();
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('🔄 チュートリアルをリセットしました')),
+              );
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], foregroundColor: Colors.white),
+            child: const Text('リセット'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showCreateTaskDialog(BuildContext context) {
@@ -49,7 +131,7 @@ class GuildScreen extends StatelessWidget {
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("クエストを受注しました！")),
+        const SnackBar(content: Text("⚔️ 出発！武運を祈る！")),
       );
     }
   }
@@ -88,9 +170,14 @@ class GuildScreen extends StatelessWidget {
               if (value == 'help') {
                 showHelpDialog(context);
               } else if (value == 'notification') {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('通知設定は準備中です')),
+                showDialog(
+                  context: context,
+                  builder: (context) => const NotificationSettingsDialog(),
                 );
+              } else if (value == 'font_size') {
+                _showFontSizeDialog(context);
+              } else if (value == 'tutorial_reset') {
+                _showTutorialResetDialog(context);
               }
             },
             itemBuilder: (context) => [
@@ -103,7 +190,19 @@ class GuildScreen extends StatelessWidget {
               const PopupMenuItem(
                 value: 'notification',
                 child: Row(
-                  children: [Icon(Icons.notifications_none, color: Colors.black54), SizedBox(width: 8), Text('通知設定 (準備中)')],
+                  children: [Icon(Icons.notifications_none, color: Colors.black54), SizedBox(width: 8), Text('通知設定')],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'font_size',
+                child: Row(
+                  children: [Icon(Icons.text_fields, color: Colors.black54), SizedBox(width: 8), Text('文字サイズ')],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'tutorial_reset',
+                child: Row(
+                  children: [Icon(Icons.replay, color: Colors.black54), SizedBox(width: 8), Text('チュートリアルをリセット')],
                 ),
               ),
             ],
@@ -121,45 +220,27 @@ class GuildScreen extends StatelessWidget {
         child: Column(
           children: [
             const PlayerStatusHeader(),
-          if (viewModel.tutorialStep == 0)
-            Container(
-              color: Colors.blueAccent.withOpacity(0.2),
-              padding: const EdgeInsets.all(12),
-              child: const Row(
-                children: [
-                   Icon(Icons.info_outline, color: Colors.blueAccent),
-                   SizedBox(width: 8),
-                   Expanded(child: Text("【チュートリアル】\n右下の「＋」ボタンを押して、最初のクエストを登録しよう！", style: TextStyle(fontWeight: FontWeight.bold))),
-                ]
-              ),
-            ),
-          if (viewModel.tutorialStep == 1)
-            Container(
-              color: Colors.blueAccent.withOpacity(0.2),
-              padding: const EdgeInsets.all(12),
-              child: const Row(
-                children: [
-                   Icon(Icons.info_outline, color: Colors.blueAccent),
-                   SizedBox(width: 8),
-                   Expanded(child: Text("【チュートリアル】\n登録したクエストの「受注」ボタンを押そう！", style: TextStyle(fontWeight: FontWeight.bold))),
-                ]
-              ),
-            ),
-          if (viewModel.tutorialStep == 2)
-            Container(
-              color: Colors.orangeAccent.withOpacity(0.2),
-              padding: const EdgeInsets.all(12),
-              child: const Row(
-                children: [
-                   Icon(Icons.info_outline, color: Colors.orangeAccent),
-                   SizedBox(width: 8),
-                   Expanded(child: Text("【チュートリアル】\nクエストを受注した！下のメニューから「戦場」へ移動しよう！", style: TextStyle(fontWeight: FontWeight.bold))),
-                ]
-              ),
-            ),
+
           Expanded(
             child: tasks.isEmpty
-                ? const Center(child: Text("クエスト依頼はありません。", style: TextStyle(fontSize: 18, color: Colors.grey)))
+                ? Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        Text("🏰", style: TextStyle(fontSize: 48)),
+                        SizedBox(height: 12),
+                        Text(
+                          "まだクエストが届いていない。",
+                          style: TextStyle(fontSize: 18, color: Colors.grey),
+                        ),
+                        SizedBox(height: 8),
+                        Text(
+                          "右下の ＋ から最初の依頼を登録しよう！",
+                          style: TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  )
                   : ListView.builder(
                       padding: const EdgeInsets.only(bottom: 80), // FABとの被り対策
                       itemCount: tasks.length,
@@ -180,13 +261,14 @@ class GuildScreen extends StatelessWidget {
                              ),
                              const SizedBox(width: 8),
                              ElevatedButton(
+                               key: index == 0 ? TutorialKeys.acceptTaskKey : null,
                                onPressed: () => _acceptTask(context, task.id),
                                style: ElevatedButton.styleFrom(
-                                 backgroundColor: Colors.amber[700], // 目立つ落ち着いた色
+                                 backgroundColor: Colors.amber[700],
                                  foregroundColor: Colors.white,
                                  textStyle: const TextStyle(fontWeight: FontWeight.bold),
                                ),
-                               child: const Text("受注"),
+                               child: const Text("出発する"),
                              ),
                           ],
                         );
@@ -197,6 +279,7 @@ class GuildScreen extends StatelessWidget {
       ),
       ),
       floatingActionButton: FloatingActionButton(
+        key: TutorialKeys.fabKey,
         onPressed: () => _showCreateTaskDialog(context),
         child: const Icon(Icons.add),
       ),
@@ -281,7 +364,11 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
 
     return AlertDialog(
       title: Text(widget.task == null ? "新規クエスト作成" : "クエスト編集"),
-      content: SingleChildScrollView(
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.55,
+        ),
+        child: SingleChildScrollView(
         child: SizedBox(
           width: double.maxFinite,
           child: Column(
@@ -401,6 +488,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
         ),
         ),
       ),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
@@ -460,5 +548,174 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
       );
     }
     Navigator.pop(context);
+  }
+}
+
+// ─── 通知設定ダイアログ ───────────────────────────────────────────
+
+class NotificationSettingsDialog extends StatefulWidget {
+  const NotificationSettingsDialog({super.key});
+
+  @override
+  State<NotificationSettingsDialog> createState() =>
+      _NotificationSettingsDialogState();
+}
+
+class _NotificationSettingsDialogState
+    extends State<NotificationSettingsDialog> {
+  final _service = NotificationService();
+
+  bool _enabled = true;
+  int _morningHour = 8;
+  int _morningMinute = 0;
+  int _eveningHour = 21;
+  int _eveningMinute = 0;
+
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final enabled = await _service.isEnabled();
+    final mh = await _service.getMorningHour();
+    final mm = await _service.getMorningMinute();
+    final eh = await _service.getEveningHour();
+    final em = await _service.getEveningMinute();
+    setState(() {
+      _enabled = enabled;
+      _morningHour = mh;
+      _morningMinute = mm;
+      _eveningHour = eh;
+      _eveningMinute = em;
+      _loading = false;
+    });
+  }
+
+  Future<void> _pickTime({required bool isMorning}) async {
+    final initial = TimeOfDay(
+      hour: isMorning ? _morningHour : _eveningHour,
+      minute: isMorning ? _morningMinute : _eveningMinute,
+    );
+    final picked = await showTimePicker(context: context, initialTime: initial);
+    if (picked == null) return;
+    setState(() {
+      if (isMorning) {
+        _morningHour = picked.hour;
+        _morningMinute = picked.minute;
+      } else {
+        _eveningHour = picked.hour;
+        _eveningMinute = picked.minute;
+      }
+    });
+  }
+
+  Future<void> _save() async {
+    final granted = await _service.requestPermission();
+    if (!granted && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('通知の許可が得られませんでした')),
+      );
+      return;
+    }
+    await _service.saveSettings(
+      enabled: _enabled,
+      morningHour: _morningHour,
+      morningMinute: _morningMinute,
+      eveningHour: _eveningHour,
+      eveningMinute: _eveningMinute,
+    );
+    await _service.scheduleAll();
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_enabled ? '通知を設定しました！' : '通知をOFFにしました'),
+        ),
+      );
+    }
+  }
+
+  String _fmt(int hour, int minute) =>
+      '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
+
+  @override
+  Widget build(BuildContext context) {
+    if (_loading) {
+      return const AlertDialog(
+        content: SizedBox(
+          height: 80,
+          child: Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+
+    return AlertDialog(
+      title: const Row(
+        children: [
+          Icon(Icons.notifications_active, color: Colors.amber),
+          SizedBox(width: 8),
+          Text('通知設定'),
+        ],
+      ),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SwitchListTile(
+            title: const Text('通知を有効にする'),
+            value: _enabled,
+            onChanged: (v) => setState(() => _enabled = v),
+            contentPadding: EdgeInsets.zero,
+          ),
+          const Divider(),
+          ListTile(
+            enabled: _enabled,
+            leading: const Text('☀️', style: TextStyle(fontSize: 22)),
+            title: const Text('朝の伝令'),
+            subtitle: const Text('「本日の依頼書が届いておるぞ！」'),
+            trailing: TextButton(
+              onPressed: _enabled ? () => _pickTime(isMorning: true) : null,
+              child: Text(
+                _fmt(_morningHour, _morningMinute),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            contentPadding: EdgeInsets.zero,
+          ),
+          ListTile(
+            enabled: _enabled,
+            leading: const Text('🍺', style: TextStyle(fontSize: 22)),
+            title: const Text('夜の催促'),
+            subtitle: const Text('「討伐報告を忘れるでないぞ！」'),
+            trailing: TextButton(
+              onPressed: _enabled ? () => _pickTime(isMorning: false) : null,
+              child: Text(
+                _fmt(_eveningHour, _eveningMinute),
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            contentPadding: EdgeInsets.zero,
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          style: TextButton.styleFrom(foregroundColor: Colors.grey[400]),
+          child: const Text('キャンセル'),
+        ),
+        ElevatedButton(
+          onPressed: _save,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.amber[700],
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('保存'),
+        ),
+      ],
+    );
   }
 }

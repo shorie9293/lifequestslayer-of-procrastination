@@ -5,6 +5,7 @@ import '../viewmodels/game_view_model.dart';
 import '../widgets/player_status_header.dart';
 import '../widgets/task_card.dart';
 import '../models/task.dart';
+import '../utils/tutorial_keys.dart';
 
 
 class HomeScreen extends StatelessWidget {
@@ -107,19 +108,78 @@ class HomeScreen extends StatelessWidget {
     );
 
     if (leveledUp) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text("レベルアップ！"),
-          content: Text("おめでとうございます！ レベル ${viewModel.player.level} になりました！"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("やった！"),
-            ),
-          ],
-        ),
-      );
+      Future.delayed(const Duration(milliseconds: 1200), () {
+        if (context.mounted) {
+          showGeneralDialog(
+            context: context,
+            barrierDismissible: true,
+            barrierLabel: '',
+            barrierColor: Colors.black87,
+            transitionDuration: const Duration(milliseconds: 400),
+            pageBuilder: (context, anim1, anim2) {
+              return Center(
+                child: Material(
+                  color: Colors.transparent,
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 32),
+                    padding: const EdgeInsets.all(32),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF7B5C00), Color(0xFFFFD700), Color(0xFF7B5C00)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: const [BoxShadow(color: Colors.amber, blurRadius: 32, spreadRadius: 4)],
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text("⬆", style: TextStyle(fontSize: 48)),
+                        const SizedBox(height: 8),
+                        Text(
+                          "LEVEL UP!",
+                          style: GoogleFonts.pressStart2p(
+                            fontSize: 24,
+                            color: Colors.white,
+                            shadows: const [Shadow(color: Colors.black54, blurRadius: 8)],
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          "Lv. ${viewModel.player.level} に到達！",
+                          style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "次のレベルまで ${viewModel.player.expToNextLevel} EXP",
+                          style: const TextStyle(fontSize: 13, color: Colors.white70),
+                        ),
+                        const SizedBox(height: 24),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(context),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: const Color(0xFF7B5C00),
+                            padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                          ),
+                          child: const Text("さらなる高みへ！", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+            transitionBuilder: (context, anim1, anim2, child) {
+              return Transform.scale(
+                scale: Curves.elasticOut.transform(anim1.value),
+                child: Opacity(opacity: anim1.value.clamp(0.0, 1.0), child: child),
+              );
+            },
+          );
+        }
+      });
     }
   }
 
@@ -144,18 +204,7 @@ class HomeScreen extends StatelessWidget {
           children: [
           // Player Stats Header
           const PlayerStatusHeader(),
-          if (viewModel.tutorialStep == 2)
-            Container(
-              color: Colors.redAccent.withOpacity(0.2),
-              padding: const EdgeInsets.all(12),
-              child: const Row(
-                children: [
-                   Icon(Icons.info_outline, color: Colors.redAccent),
-                   SizedBox(width: 8),
-                   Expanded(child: Text("【チュートリアル】\nクエストの「討伐！」ボタンを押して完了させよう！", style: TextStyle(fontWeight: FontWeight.bold))),
-                ]
-              ),
-            ),
+
           // Active Tasks (Monsters)
           Expanded(
             child: tasks.isEmpty
@@ -187,6 +236,7 @@ class HomeScreen extends StatelessWidget {
                             tooltip: "ギルドに戻す",
                           ),
                           IconButton(
+                            key: index == 0 ? TutorialKeys.battleCompleteKey : null,
                             icon: const Text('⚔️', style: TextStyle(fontSize: 24)), 
                             onPressed: () => _completeTask(context, task.id),
                             tooltip: "討伐！",

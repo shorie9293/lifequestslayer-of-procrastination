@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/game_view_model.dart';
 import '../widgets/help_dialog.dart';
+import '../widgets/tutorial_overlay.dart';
+import '../utils/tutorial_keys.dart';
 import 'guild_screen.dart';
 import 'home_screen.dart';
 import 'temple_screen.dart';
@@ -29,6 +31,88 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+  }
+
+  int? _renderedTutorialStep;
+  Rect? _tutorialRect;
+
+  void _updateTutorialRect(int step) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      GlobalKey? key;
+      if (step == 0) key = TutorialKeys.fabKey;
+      else if (step == 1) key = TutorialKeys.acceptTaskKey;
+      else if (step == 2 && _currentIndex == 0) key = TutorialKeys.battleCompleteKey;
+      
+      if (key != null && key.currentContext != null) {
+        final box = key.currentContext!.findRenderObject() as RenderBox?;
+        if (box != null && box.hasSize) {
+          final offset = box.localToGlobal(Offset.zero);
+          final rect = offset & box.size;
+          if (_tutorialRect != rect || _renderedTutorialStep != step) {
+            setState(() {
+              _tutorialRect = rect;
+              _renderedTutorialStep = step;
+            });
+          }
+        }
+      } else if (step == 2 && _currentIndex != 0) {
+         // Navigation tab 0
+         final screenWidth = MediaQuery.of(context).size.width;
+         final screenHeight = MediaQuery.of(context).size.height;
+         final tabWidth = screenWidth / 4;
+         final rect = Rect.fromLTWH(0, screenHeight - kBottomNavigationBarHeight - MediaQuery.of(context).padding.bottom, tabWidth, kBottomNavigationBarHeight);
+         if (_tutorialRect != rect || _renderedTutorialStep != step) {
+            setState(() {
+              _tutorialRect = rect;
+              _renderedTutorialStep = step;
+            });
+         }
+      } else {
+        // Retry next frame if UI not fully built
+        Future.delayed(const Duration(milliseconds: 100), () {
+          if (mounted) _updateTutorialRect(step);
+        });
+      }
+    });
+  }
+
+  Widget _buildTutorialOverlay(int step) {
+    if (_tutorialRect == null || _renderedTutorialStep != step) {
+      _updateTutorialRect(step);
+      return const SizedBox.shrink();
+    }
+
+    String character = "阿国";
+    String icon = "💃";
+    String message = "";
+    Alignment align = Alignment.center;
+
+    if (step == 0) {
+      character = "阿国"; icon = "💃";
+      message = "新入りさんでありんすね！\nまずは右下の「＋」ボタンを押して、\n最初のクエストを登録するでありんす！";
+      align = const Alignment(0, -0.2);
+    } else if (step == 1) {
+      character = "幸村"; icon = "🔥";
+      message = "よくやったでござる！\n次は登録したクエストの「受注」ボタンを\nタップして、いざ出陣用意じゃ！";
+      align = const Alignment(0, -0.5);
+    } else if (step == 2 && _currentIndex != 0) {
+      character = "官兵衛"; icon = "🧠";
+      message = "クエストを受注したな。\nでは下のメニューから「戦場」へ移動し、\n討伐の準備を整えるでござる。";
+      align = const Alignment(0, 0);
+    } else if (step == 2 && _currentIndex == 0) {
+      character = "誾千代"; icon = "⚡";
+      message = "ここが戦場じゃ！\n準備ができたらクエストの「討伐(⚔️)」ボタンを\n押して任務を完了させるのじゃ！";
+      align = const Alignment(0, -0.5);
+    }
+
+    return TutorialOverlay(
+      targetRect: _tutorialRect!,
+      characterName: character,
+      avatarIcon: icon,
+      message: message,
+      dialogAlignment: align,
+    );
   }
 
   @override
@@ -94,54 +178,67 @@ class _MainScreenState extends State<MainScreen> {
       });
     }
 
-    return Scaffold(
-      // 画面をスワイプできるようにPageViewを利用する
-      body: PageView(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        children: _screens,
+    return Stack(
+      children: [
+        Scaffold(
+          // 画面をスワイプできるようにPageViewを利用する
+          body: PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+              if (viewModel.tutorialStep <= 2) {
+                 _renderedTutorialStep = -1; // Force tutorial update on tab change
+                 _updateTutorialRect(viewModel.tutorialStep);
+              }
+            },
+            children: _screens,
+          ),
+          // BottomNavigationBarを追加（Add BottomNavigationBar for smartphones）
+          bottomNavigationBar: BottomNavigationBar(
+            currentIndex: _currentIndex,
+            onTap: (index) {
+              setState(() {
+                _currentIndex = index;
+              });
+              if (viewModel.tutorialStep <= 2) {
+                 _renderedTutorialStep = -1;
+                 _updateTutorialRect(viewModel.tutorialStep);
+              }
+              // タブがタップされたときにスワイプアニメーションでページを切り替える
+              _pageController.animateToPage(
+                index,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+              );
+            },
+            items: const [
+              BottomNavigationBarItem(
+                icon: Icon(Icons.map),
+                label: '戦場',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.list_alt),
+                label: 'ギルド',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.temple_buddhist),
+                label: '神殿',
+              ),
+              BottomNavigationBarItem(
+                icon: Icon(Icons.store),
+                label: '街',
+              ),
+            ],
+            type: BottomNavigationBarType.fixed, // タブが4つ以上の場合のアニメーションを防ぐ
+            selectedItemColor: Colors.amber[700],
+            unselectedItemColor: Colors.grey,
+            backgroundColor: Colors.black87,
+        ),
       ),
-      // BottomNavigationBarを追加（Add BottomNavigationBar for smartphones）
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-          // タブがタップされたときにスワイプアニメーションでページを切り替える
-          _pageController.animateToPage(
-            index,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-          );
-        },
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.map),
-            label: '戦場',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'ギルド',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.temple_buddhist),
-            label: '神殿',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.store),
-            label: '街',
-          ),
-        ],
-        type: BottomNavigationBarType.fixed, // タブが4つ以上の場合のアニメーションを防ぐ
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.black87,
-      ),
+      if (viewModel.tutorialStep <= 2) _buildTutorialOverlay(viewModel.tutorialStep),
+      ],
     );
   }
 }

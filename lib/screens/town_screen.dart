@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/game_view_model.dart';
+import 'gem_shop_screen.dart';
 
 class TownScreen extends StatelessWidget {
   const TownScreen({super.key});
@@ -36,16 +37,38 @@ class TownScreen extends StatelessWidget {
             Column(
               children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               color: Colors.black45,
               child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.monetization_on, color: Colors.amber, size: 32),
-                  const SizedBox(width: 8),
+                  const Icon(Icons.monetization_on, color: Colors.amber, size: 28),
+                  const SizedBox(width: 6),
                   Text(
                     "${player.coins} 金貨",
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.amber),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber),
+                  ),
+                  const Spacer(),
+                  const Icon(Icons.diamond, color: Colors.purpleAccent, size: 24),
+                  const SizedBox(width: 4),
+                  Text(
+                    "${player.gems} 宝石",
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.purpleAccent),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('購入'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.purple[700],
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const GemShopScreen()),
+                    ),
                   ),
                 ],
               ),

@@ -7,8 +7,11 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter/gestures.dart';
 import 'models/task.dart';
 import 'models/player.dart';
+import 'services/notification_service.dart';
+import 'services/iap_service.dart';
 
 void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
 
   Hive.registerAdapter(TaskAdapter()); // TypeId: 0
@@ -21,6 +24,10 @@ void main() async {
 
   // Boxes are opened in Repositories on demand/init.
 
+  final notificationService = NotificationService();
+  await notificationService.initialize();
+  await notificationService.scheduleAll();
+
   runApp(const RPGTodoApp());
 }
 
@@ -29,8 +36,11 @@ class RPGTodoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => GameViewModel(),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => GameViewModel()),
+        ChangeNotifierProvider(create: (_) => IAPService()..initialize()),
+      ],
       child: Consumer<GameViewModel>(
         builder: (context, viewModel, child) {
           return MaterialApp(
@@ -54,7 +64,7 @@ class RPGTodoApp extends StatelessWidget {
             home: const MainScreen(),
             builder: (context, child) {
               return MediaQuery(
-                data: MediaQuery.of(context).copyWith(textScaler: const TextScaler.linear(1.2)),
+                data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(viewModel.fontSizeScale)),
                 child: child!,
               );
             },
