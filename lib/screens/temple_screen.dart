@@ -16,18 +16,6 @@ class TempleScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('転職の神殿'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.restart_alt),
-            tooltip: 'チュートリアルをリセット',
-            onPressed: () {
-              viewModel.resetTutorial();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('チュートリアルをリセットしました')),
-              );
-            },
-          ),
-        ],
       ),
       body: Container(
         decoration: BoxDecoration(
