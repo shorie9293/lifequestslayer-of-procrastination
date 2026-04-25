@@ -24,9 +24,15 @@ void main() async {
 
   // Boxes are opened in Repositories on demand/init.
 
-  final notificationService = NotificationService();
-  await notificationService.initialize();
-  await notificationService.scheduleAll();
+  // 通知サービスの初期化（エラーが発生してもアプリ起動を妨げない）
+  try {
+    final notificationService = NotificationService();
+    await notificationService.initialize();
+    await notificationService.scheduleAll();
+    debugPrint('[main] 通知サービスの初期化が完了しました');
+  } catch (e) {
+    debugPrint('[main] 通知サービスの初期化に失敗しました（アプリは継続）: $e');
+  }
 
   runApp(const RPGTodoApp());
 }

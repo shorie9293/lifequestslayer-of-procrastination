@@ -775,13 +775,82 @@ class _NotificationSettingsDialogState
   }
 
   Future<void> _save() async {
+    // 権限リクエスト（初回はOSのダイアログ、拒否済みの場合は何も起こらない）
     final granted = await _service.requestPermission();
     if (!granted && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('通知の許可が得られませんでした')),
+      // 権限が拒否された場合、OSのアプリ設定画面へ誘導する
+      final shouldOpenSettings = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.notifications_off, color: Colors.red),
+              SizedBox(width: 8),
+              Text('通知が許可されていません'),
+            ],
+          ),
+          content: const Text(
+            '通知を有効にするには、アプリの設定画面で「通知」を許可してください。\n\n'
+            '設定画面を開きますか？',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('キャンセル'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber[700],
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('設定を開く'),
+            ),
+          ],
+        ),
       );
+      if (shouldOpenSettings == true) {
+        await _service.openAppNotificationSettings();
+      }
       return;
     }
+
+    // Android 12+ で正確なアラーム権限がない場合、設定画面へ誘導
+    if (_enabled) {
+      final canExact = await _service.canScheduleExactAlarms();
+      if (!canExact && mounted) {
+        final shouldContinue = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('正確な通知時刻について'),
+            content: const Text(
+              'Android 12以降では、正確な時刻に通知を届けるために特別な権限が必要です。'
+              '設定画面で「正確なアラームの設定」を許可すると、'
+              '指定した時刻により正確に通知が届くようになります。\n\n'
+              '許可しない場合でも通知は届きますが、数分程度遅れることがあります。',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('このまま続ける'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber[700],
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('設定を開く'),
+              ),
+            ],
+          ),
+        );
+        if (shouldContinue == true) {
+          await _service.openAlarmSettings();
+        }
+      }
+    }
+
     await _service.saveSettings(
       enabled: _enabled,
       morningHour: _morningHour,
@@ -857,6 +926,37 @@ class _NotificationSettingsDialogState
                 _fmt(_eveningHour, _eveningMinute),
                 style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
+            ),
+            contentPadding: EdgeInsets.zero,
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.bug_report, color: Colors.orange, size: 22),
+            title: const Text('テスト通知を送信'),
+            subtitle: const Text('即座に通知を表示して動作確認'),
+            trailing: ElevatedButton.icon(
+              icon: const Icon(Icons.send, size: 16),
+              label: const Text('送信'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange[700],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+              ),
+              onPressed: () async {
+                final granted = await _service.requestPermission();
+                if (!granted && mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('通知の許可が得られませんでした')),
+                  );
+                  return;
+                }
+                await _service.sendTestNotification();
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('テスト通知を送信しました！ステータスバーを確認してください')),
+                  );
+                }
+              },
             ),
             contentPadding: EdgeInsets.zero,
           ),
