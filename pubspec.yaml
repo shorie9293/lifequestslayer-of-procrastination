@@ -1,0 +1,41 @@
+name: rpg_todo
+description: "A new Flutter project."
+publish_to: 'none'
+
+version: 1.2.1+10
+
+environment:
+  sdk: ^3.5.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+  provider: ^6.1.5+1
+  google_fonts: ^6.3.0
+  uuid: ^4.5.2
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.9.4
+  in_app_purchase: ^3.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.14.4
+  rename: ^3.1.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon.png"

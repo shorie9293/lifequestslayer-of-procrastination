@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(flutter pub:*)",
+      "Bash(where flutter:*)",
+      "Read(//c/flutter/**)",
+      "Read(//c/Users/horie/flutter/**)",
+      "Bash(find /c/Users/horie/AppData -name flutter* -maxdepth 5)",
+      "Bash(cmd.exe /c \"winget --version 2>&1 && echo WINGET_OK\")",
+      "Bash(cmd.exe /c \"git --version 2>&1 && java -version 2>&1 && echo DONE\")",
+      "Bash(powershell.exe -Command \"winget --version; Write-Host ''WINGET_DONE''\")",
+      "Bash(powershell.exe -Command \"git --version 2>&1; java -version 2>&1; Write-Host ''CHECK_DONE''\")",
+      "Bash(powershell.exe -Command \"winget search Flutter 2>&1 | Select-String -Pattern ''Flutter|flutter''\")",
+      "Bash(powershell.exe -Command \"winget search Flutter\")",
+      "Bash(powershell.exe -Command \":*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "input=$(cat); cmd=$(echo \"$input\" | python3 -c \"import sys,json; d=json.load(sys.stdin); print(d['tool_input']['command'])\" 2>/dev/null); if echo \"$cmd\" | grep -q 'flutter build appbundle'; then ver=$(grep '^version:' '/e/workspace/MyCompany/projects/rpg-task/pubspec.yaml' | head -1 | awk '{print $2}'); echo \"{\\\"systemMessage\\\": \\\"⚠️  flutter build appbundle を実行します。現在のバージョン: $ver / バージョンをインクリメント済みか確認してください。\\\", \\\"continue\\\": true}\"; fi",
+            "statusMessage": "バージョン確認中..."
+          }
+        ]
+      }
+    ]
+  }
+}

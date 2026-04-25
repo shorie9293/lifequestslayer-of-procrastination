@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>rpg_todo — ToDoを冒険にするアプリ｜クローズドテスト募集中</title>
+<meta name="description" content="タスクを討伐してレベルアップする、RPG風のタスク管理アプリ。Android向けクローズドテスト参加者を募集しています。" />
+<meta property="og:title" content="rpg_todo — ToDoを冒険にするアプリ" />
+<meta property="og:description" content="タスクを討伐してレベルアップ。Android向けクローズドテスト参加者を募集しています。" />
+<meta property="og:type" content="website" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DotGothic16&family=Noto+Sans+JP:wght@400;500;700&family=Cinzel:wght@600;800&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --bg-dark: #0d0a07;
+    --bg-panel: #1a130c;
+    --bg-panel-2: #241a10;
+    --gold: #e8c36a;
+    --gold-light: #ffde9a;
+    --gold-dark: #8a6a1f;
+    --parchment: #f4e4bf;
+    --text: #efe4cf;
+    --text-dim: #b0a188;
+    --accent-red: #d35b4b;
+    --accent-blue: #6aa7e8;
+    --border: #3a2a18;
+    --shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Noto Sans JP', sans-serif;
+    background: var(--bg-dark);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+    background-image:
+      radial-gradient(ellipse at top, rgba(232,195,106,0.08), transparent 60%),
+      radial-gradient(ellipse at bottom, rgba(106,167,232,0.04), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3 {
+    font-family: 'DotGothic16', 'Cinzel', 'Noto Sans JP', serif;
+    color: var(--gold-light);
+    letter-spacing: 0.02em;
+  }
+
+  a { color: var(--gold); text-decoration: none; }
+  a:hover { color: var(--gold-light); }
+
+  /* ------------ NAV ------------ */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(13,10,7,0.85);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .brand {
+    font-family: 'DotGothic16', sans-serif;
+    font-size: 22px;
+    color: var(--gold-light);
+  }
+  .brand::before { content: "⚔ "; }
+  .nav-links { display: flex; gap: 20px; }
+  .nav-links a { font-size: 14px; color: var(--text-dim); }
+  .nav-links a:hover { color: var(--gold-light); }
+  @media (max-width: 640px) { .nav-links { display: none; } }
+
+  /* ------------ HERO ------------ */
+  .hero {
+    position: relative;
+    padding: 80px 24px 120px;
+    text-align: center;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(circle at 50% 20%, rgba(232,195,106,0.15), transparent 50%),
+      repeating-linear-gradient(0deg, rgba(255,222,154,0.02) 0 2px, transparent 2px 4px);
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-block;
+    padding: 6px 18px;
+    border: 1px solid var(--gold);
+    border-radius: 999px;
+    font-size: 13px;
+    color: var(--gold);
+    margin-bottom: 24px;
+    background: rgba(232,195,106,0.08);
+    font-family: 'DotGothic16', sans-serif;
+  }
+  .hero h1 {
+    font-size: clamp(32px, 6vw, 56px);
+    line-height: 1.2;
+    margin-bottom: 20px;
+    text-shadow: 0 0 20px rgba(232,195,106,0.3);
+  }
+  .hero h1 .highlight {
+    color: var(--gold);
+    display: inline-block;
+  }
+  .hero-subtitle {
+    font-size: clamp(15px, 2vw, 18px);
+    color: var(--text-dim);
+    max-width: 640px;
+    margin: 0 auto 40px;
+  }
+  .cta-row {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+  .btn {
+    display: inline-block;
+    padding: 14px 32px;
+    border-radius: 4px;
+    font-weight: 700;
+    font-size: 15px;
+    font-family: 'DotGothic16', sans-serif;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .btn-primary {
+    background: linear-gradient(180deg, var(--gold-light), var(--gold) 50%, var(--gold-dark));
+    color: #2a1d08;
+    box-shadow: 0 4px 0 #5a4210, 0 8px 20px rgba(232,195,106,0.25);
+    border: 1px solid #6a4a10;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0 #5a4210, 0 12px 28px rgba(232,195,106,0.35);
+    color: #2a1d08;
+  }
+  .btn-primary:active {
+    transform: translateY(2px);
+    box-shadow: 0 2px 0 #5a4210;
+  }
+  .btn-secondary {
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid var(--gold);
+  }
+  .btn-secondary:hover {
+    background: rgba(232,195,106,0.08);
+    color: var(--gold-light);
+  }
+
+  .hero-stats {
+    display: flex;
+    gap: 32px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 48px;
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+  .hero-stats span strong {
+    display: block;
+    font-family: 'DotGothic16', sans-serif;
+    color: var(--gold-light);
+    font-size: 24px;
+    margin-bottom: 4px;
+  }
+
+  /* ------------ SECTION ------------ */
+  section { padding: 80px 24px; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .section-title {
+    text-align: center;
+    font-size: clamp(24px, 4vw, 34px);
+    margin-bottom: 12px;
+  }
+  .section-title::before { content: "— "; color: var(--gold-dark); }
+  .section-title::after  { content: " —"; color: var(--gold-dark); }
+  .section-subtitle {
+    text-align: center;
+    color: var(--text-dim);
+    max-width: 640px;
+    margin: 0 auto 48px;
+    font-size: 15px;
+  }
+
+  /* ------------ FEATURES ------------ */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .feature-card {
+    background: linear-gradient(180deg, var(--bg-panel), var(--bg-panel-2));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 28px 24px;
+    position: relative;
+    transition: transform 0.2s, border-color 0.2s;
+  }
+  .feature-card:hover {
+    transform: translateY(-4px);
+    border-color: var(--gold-dark);
+  }
+  .feature-icon {
+    font-size: 32px;
+    margin-bottom: 12px;
+  }
+  .feature-card h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+  }
+  .feature-card p {
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
+  /* ------------ STEPS ------------ */
+  #join {
+    background:
+      linear-gradient(180deg, transparent, rgba(232,195,106,0.03), transparent),
+      var(--bg-dark);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+    margin-top: 32px;
+  }
+  .step-card {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    position: relative;
+  }
+  .step-num {
+    position: absolute;
+    top: -16px;
+    left: 20px;
+    width: 40px;
+    height: 40px;
+    background: var(--gold);
+    color: #2a1d08;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'DotGothic16', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    box-shadow: 0 2px 0 var(--gold-dark);
+  }
+  .step-card h3 { font-size: 16px; margin: 12px 0 8px; }
+  .step-card p { color: var(--text-dim); font-size: 14px; }
+
+  /* ------------ SPECS ------------ */
+  .specs-table {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .specs-row {
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+  .specs-row:last-child { border-bottom: none; }
+  .specs-row dt {
+    padding: 16px 20px;
+    background: var(--bg-panel-2);
+    color: var(--gold-light);
+    font-family: 'DotGothic16', sans-serif;
+    font-size: 14px;
+    border-right: 1px solid var(--border);
+  }
+  .specs-row dd {
+    padding: 16px 20px;
+    color: var(--text-dim);
+    font-size: 14px;
+  }
+  @media (max-width: 640px) {
+    .specs-row { grid-template-columns: 1fr; }
+    .specs-row dt { border-right: none; border-bottom: 1px solid var(--border); }
+  }
+
+  /* ------------ FAQ ------------ */
+  .faq-item {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    overflow: hidden;
+  }
+  .faq-q {
+    padding: 18px 24px;
+    cursor: pointer;
+    color: var(--gold-light);
+    font-family: 'DotGothic16', sans-serif;
+    font-size: 15px;
+    user-select: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .faq-q:hover { background: var(--bg-panel-2); }
+  .faq-q::after { content: "▼"; color: var(--gold); font-size: 12px; transition: transform 0.2s; }
+  .faq-item.open .faq-q::after { transform: rotate(180deg); }
+  .faq-a {
+    padding: 0 24px;
+    color: var(--text-dim);
+    font-size: 14px;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease, padding 0.3s ease;
+  }
+  .faq-item.open .faq-a {
+    max-height: 400px;
+    padding: 0 24px 18px;
+  }
+
+  /* ------------ FINAL CTA ------------ */
+  .final-cta {
+    text-align: center;
+    padding: 100px 24px;
+    background: radial-gradient(ellipse at center, rgba(232,195,106,0.1), transparent 70%);
+  }
+  .final-cta h2 { font-size: clamp(26px, 4vw, 38px); margin-bottom: 16px; }
+  .final-cta p { color: var(--text-dim); margin-bottom: 32px; }
+
+  /* ------------ FOOTER ------------ */
+  footer {
+    padding: 40px 24px;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 13px;
+  }
+  footer p { margin-bottom: 8px; }
+  footer .social { margin-top: 12px; }
+  footer .social a { margin: 0 8px; }
+
+  /* ------------ PIXEL DECORATION ------------ */
+  .pixel-divider {
+    height: 8px;
+    background:
+      repeating-linear-gradient(90deg,
+        var(--gold) 0 8px,
+        transparent 8px 16px);
+    opacity: 0.3;
+    margin: 0 auto;
+    max-width: 200px;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <div class="brand">rpg_todo</div>
+    <div class="nav-links">
+      <a href="#features">特徴</a>
+      <a href="#join">参加方法</a>
+      <a href="#specs">スペック</a>
+      <a href="#faq">FAQ</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-badge">🏰 クローズドテスト受付中</div>
+  <h1>
+    今日の家事も仕事も、<br />
+    <span class="highlight">冒険クエストにしよう。</span>
+  </h1>
+  <p class="hero-subtitle">
+    rpg_todo は、タスク管理をRPGに変えるAndroidアプリ。<br />
+    クエストを討伐してXPを稼ぎ、あなたの冒険者をレベルアップさせていきます。
+  </p>
+
+  <div class="cta-row">
+    <a href="[TEST_URL]" class="btn btn-primary" target="_blank" rel="noopener">
+      ⚔ クローズドテストに参加する
+    </a>
+    <a href="#features" class="btn btn-secondary">
+      特徴を見る
+    </a>
+  </div>
+
+  <div class="hero-stats">
+    <span><strong>無料</strong>料金なし・広告控えめ</span>
+    <span><strong>個人開発</strong>1人で10ヶ月</span>
+    <span><strong>Android</strong>対応中</span>
+  </div>
+</header>
+
+<div class="pixel-divider"></div>
+
+<section id="features">
+  <div class="container">
+    <h2 class="section-title">この冒険で手に入るもの</h2>
+    <p class="section-subtitle">
+      ただのToDoアプリではありません。続けるほど積み上がる、目に見える達成感。
+    </p>
+
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">⚔️</div>
+        <h3>タスクは "クエスト"</h3>
+        <p>登録したタスクは冒険者ギルドの依頼ボードに貼り出されます。難易度ランク（E〜S）で獲得XPが変わります。</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🎖</div>
+        <h3>XPとレベルアップ</h3>
+        <p>クエストを討伐するたびに経験値が溜まり、キャラクターがレベルアップ。見た目も変化します。</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🔥</div>
+        <h3>ストリーク報酬</h3>
+        <p>連続ログインで金貨と宝石がもらえます。2日、3日、5日、7日、14日、30日……節目で大きな報酬。</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">📚</div>
+        <h3>知識クエスト</h3>
+        <p>タスク完了時にランダムで豆知識クイズが出題。正解でXPボーナス。スキップも自由です。</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">🏅</div>
+        <h3>称号システム</h3>
+        <p>累計討伐数や難易度別の達成数で称号が解放されます。《ベテラン》《竜殺し》《ゴブリンスレイヤー》など。</p>
+      </div>
+
+      <div class="feature-card">
+        <div class="feature-icon">💤</div>
+        <h3>疲労システム</h3>
+        <p>1日に詰め込みすぎないよう、疲労が溜まると効率が落ちます。"燃え尽き"を防ぐための機能です。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="join">
+  <div class="container">
+    <h2 class="section-title">クローズドテストに参加する</h2>
+    <p class="section-subtitle">
+      Google Play の仕様で、正式リリース前に20人以上の仲間が必要です。<br />
+      Androidスマホをお持ちの方、力を貸してください。
+    </p>
+
+    <div class="steps">
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <h3>申込フォームから登録</h3>
+        <p>下記のリンクから、テスターとして参加するGoogleアカウント（Gmail）を登録してください。</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <h3>承認メールを受け取る</h3>
+        <p>承認後、Google Play のアプリページURLをお送りします。</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <h3>Google Playでインストール</h3>
+        <p>普段通りアプリとしてインストール。通常版と同じように使えます。</p>
+      </div>
+      <div class="step-card">
+        <div class="step-num">4</div>
+        <h3>14日間、気ままに冒険</h3>
+        <p>バグや気になる点があればアプリ内メニューから送ってください。14日は入れっぱなしだと嬉しいです。</p>
+      </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 48px;">
+      <a href="[TEST_URL]" class="btn btn-primary" target="_blank" rel="noopener">
+        🏰 いますぐ申し込む
+      </a>
+    </div>
+  </div>
+</section>
+
+<section id="specs">
+  <div class="container" style="max-width: 800px;">
+    <h2 class="section-title">アプリスペック</h2>
+    <p class="section-subtitle">技術スタックと対応プラットフォーム。</p>
+
+    <dl class="specs-table">
+      <div class="specs-row">
+        <dt>アプリ名</dt>
+        <dd>rpg_todo</dd>
+      </div>
+      <div class="specs-row">
+        <dt>バージョン</dt>
+        <dd>1.0.4 （+5） / v1.2 仕様策定中</dd>
+      </div>
+      <div class="specs-row">
+        <dt>対応OS</dt>
+        <dd>Android （クローズドテスト中） / Web（開発版）</dd>
+      </div>
+      <div class="specs-row">
+        <dt>開発</dt>
+        <dd>Flutter / Dart SDK ^3.5.4</dd>
+      </div>
+      <div class="specs-row">
+        <dt>状態管理</dt>
+        <dd>Provider 6.1.5+</dd>
+      </div>
+      <div class="specs-row">
+        <dt>ストレージ</dt>
+        <dd>Hive（端末内ローカル保存）</dd>
+      </div>
+      <div class="specs-row">
+        <dt>料金</dt>
+        <dd>無料（課金要素は疲労回復の宝石のみ、任意）</dd>
+      </div>
+      <div class="specs-row">
+        <dt>開発者</dt>
+        <dd>Horie Shunta（個人）</dd>
+      </div>
+    </dl>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="container" style="max-width: 800px;">
+    <h2 class="section-title">よくある質問</h2>
+    <p class="section-subtitle">クリック/タップで開きます。</p>
+
+    <div class="faq-item">
+      <div class="faq-q">クローズドテストって何ですか？</div>
+      <div class="faq-a">
+        <p>Google Play が定めるリリース前のテスト段階です。招待された人だけがインストールできます。
+          今回は正式公開の前に、20名以上のテスターに14日間使ってもらう必要があるため募集しています。</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">参加費はかかりますか？</div>
+      <div class="faq-a">
+        <p>一切かかりません。アプリも無料です。</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">iPhoneでも使えますか？</div>
+      <div class="faq-a">
+        <p>現在はAndroidのみの対応です。iOS版は将来検討していますが、確約はできません。</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">個人情報は取得されますか？</div>
+      <div class="faq-a">
+        <p>データはすべて端末内（Hive）に保存されます。サーバー送信は行っていません。
+          Google Play のテスターとして登録する際に Google アカウント（メールアドレス）の情報は必要になります。</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">フィードバックはどう送ればいいですか？</div>
+      <div class="faq-a">
+        <p>アプリ内メニュー、または開発者メール（horie.shunta@gmail.com）に直接お送りください。
+          X（Twitter）での引用RPも歓迎です。</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q">テスト終了後はどうなりますか？</div>
+      <div class="faq-a">
+        <p>正式リリース後は通常版アプリに自動でアップデートされます。データもそのまま引き継がれる予定です。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="container">
+    <h2>冒険の始まりに、<br />あと数名足りません。</h2>
+    <p>ToDoを倒す体験を、一緒に見届けてもらえると嬉しいです。</p>
+    <a href="[TEST_URL]" class="btn btn-primary" target="_blank" rel="noopener">
+      ⚔ クローズドテストに参加する
+    </a>
+  </div>
+</section>
+
+<footer>
+  <p>© 2026 Horie Shunta — Built with Flutter</p>
+  <p>rpg_todo は個人開発プロジェクトです</p>
+  <div class="social">
+    <a href="mailto:horie.shunta@gmail.com">Contact</a>
+    ・
+    <a href="[TEST_URL]">Closed Test</a>
+  </div>
+</footer>
+
+<script>
+  // FAQ アコーディオン
+  document.querySelectorAll('.faq-item').forEach(item => {
+    item.querySelector('.faq-q').addEventListener('click', () => {
+      item.classList.toggle('open');
+    });
+  });
+
+  // スムーズスクロール（CSSでも指定しているが、古いブラウザ向け保険）
+  document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+      const target = document.querySelector(this.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+</script>
+</body>
+</html>
