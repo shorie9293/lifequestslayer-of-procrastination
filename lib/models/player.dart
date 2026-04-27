@@ -177,126 +177,68 @@ class PlayerAdapter extends TypeAdapter<Player> {
   @override
   final int typeId = 3;
 
+  static const int _formatVersion = 2;
+
   @override
   Player read(BinaryReader reader) {
-    // Handle migration manually if possible, BUT Hive requires exact read order of bytes written.
-    // Previous write: level(int), currentExp(int), expToNextLevel(int), currentJob(Job), comboCount(int).
-    // If we want to support old data, we must read these.
-    // If we change structure, we effectively invalidate old data unless we handle standard migration patterns.
-    // Strategy: Read the 5 fields. If they exist (check available bytes? No Hive doesn't work like that easily).
-    // This is "schema evolution". 
-    // Since we are dev phase, simplest is: Read the old format, map to new format.
-    // BUT if we write New format, next read will fail if we try to read old format.
-    // We need a version flag? Or catch exception?
-    // Actually, simple Hack: Add a version byte at start? No, typeId is matched.
-    // Let's assume we are resetting data OR using a new TypeId? No, updating existing.
-    // Correct way: Check available bytes?
-    // Or just accept that this change CLEARS data if we interpret bytes wrong.
-    // Wait, I can try to read the old 3 ints + Job + int.
-    // Then use them to populate the map.
-    
-    // HOWEVER, to support FUTURE reads of the NEW format, we need to distinguish.
-    // Standard Hive way: append fields. But we are removing fields.
-    // So we should Create a NEW Adapter and maybe register it with a new ID? 
-    // And migration?
-    // User requested "各職業のレベルは転職しても維持" implying persistence is key.
-    // I will implementation a "Try Read" strategy or just structure it to be compatible?
-    // No, structure is different.
-    // I will write a simple Migrator:
-    // We will use TypeId 3.
-    // I'll assume the user will RESET data (Hot Restart often clears if structure changes drastically without migration logic in boxes).
-    // Actually, let's implement the Adapter to read as:
-    // int jobCount (Length of map). If it's small (e.g. < 100), it's likely a length. 
-    // Old format started with `level` (int). likely 1-20.
-    // New format: I'll write a version byte 255.
-    
-    // SAFEST: Just read old fields, ignoring them, then read new fields?
-    // No, we want to USE old fields.
-    
-    // OK, since I can't easily peek, I will assume we are starting fresh OR I will try to be clever.
-    // Check `reader.availableBytes`?
-    // Let's just break compatibility and ask user to reset? 
-    // "転職するとレベルがリセット" -> The user description implies how feature WORKS, not that it happened.
-    // "各職業のレベルは転職しても維持" -> Feature request.
-    
-    // I'll maintain the method signature but use a boolean flag in the saved data?
-    // Too risky to guess. I'll implement the new structure.
-    // If old data exists, it might crash. I'll catch it in `main.dart` or `game_state` and reset if error.
-    
-    // Improved Plan: Read as Map.
-    
-    // New Write Format: 
-    // byte version = 1;
-    // write maps...
-    
-    // To safe guard:
     try {
-      // Trying to detect version.
-      // But we can't peek.
-      // I will overwrite the Adapter.
-      
-      // NEW FORMAT:
-      // int version = reader.readByte();
-      // if (version == 1) { ... read new ... }
-      // else { ... treat as old ... } (But first byte of old was Level (int). If Level < 255, it acts as byte?? No readInt is 4 bytes).
-      
-      // Let's just implement new format. If it crashes, we clear box.
-      
-      final player = Player(
-         jobLevels: (reader.readMap()).cast<Job, int>(),
-         jobExps: (reader.readMap()).cast<Job, int>(),
-         activeSkills: (reader.readList()).cast<Job>().toSet(),
-         currentJob: reader.read(), // Job
-         comboCount: reader.readInt(),
-      );
-      
-      try {
-        player.coins = reader.readInt();
-        player.homeItems = (reader.readList()).cast<String>();
-        player.dailyTasksCompleted = reader.readInt();
-        player.weeklySRankCompleted = reader.readInt();
-        player.lastMissionResetDate = reader.read();
-        
-        // New fields for Plan 1 & Plan 3
-        player.nextDayTaskLimitOffset = reader.readInt();
-        player.todayTaskLimitOffset = reader.readInt();
-        player.lastRestDate = reader.read();
-        player.totalTasksCompleted = reader.readInt();
-        player.totalSRankCompleted = reader.readInt();
-        player.totalARankCompleted = reader.readInt();
-        player.totalBRankCompleted = reader.readInt();
-        player.titles = (reader.readList()).cast<String>();
-        player.equippedTitle = reader.read();
-        
-        // --- 新フィールドの互換性チェック用 ---
-        if (reader.availableBytes > 0) {
-           player.equippedSkin = reader.read();
-        }
-        if (reader.availableBytes >= 4) {
-           player.gems = reader.readInt();
-        }
-        // v1.2: ストリーク（>=4 バイトガードで安全に読み出し）
-        if (reader.availableBytes >= 4) {
-          player.streakDays = reader.readInt();
-        }
-        if (reader.availableBytes >= 4) {
-          player.longestStreak = reader.readInt();
-        }
-        if (reader.availableBytes > 0) {
-          player.lastLoginDate = reader.read();
-        }
-      } catch (e) {
-        debugPrint('PlayerAdapter: optional fields read failed (old data format?): $e');
+      final version = reader.readByte();
+      if (version < 1 || version > _formatVersion) {
+        throw HiveError('未知のデータバージョン: $version (対応: 1〜$_formatVersion)');
       }
-      return player;
+      return _readV2(reader);
     } catch (e) {
-      debugPrint('PlayerAdapter: critical read failure, resetting to default player: $e');
+      debugPrint('PlayerAdapter: データ読み込みに失敗。データを初期化します: $e');
       return Player();
     }
   }
 
+  Player _readV2(BinaryReader reader) {
+    final player = Player(
+       jobLevels: (reader.readMap()).cast<Job, int>(),
+       jobExps: (reader.readMap()).cast<Job, int>(),
+       activeSkills: (reader.readList()).cast<Job>().toSet(),
+       currentJob: reader.read(),
+       comboCount: reader.readInt(),
+    );
+
+    player.coins = reader.readInt();
+    player.homeItems = (reader.readList()).cast<String>();
+    player.dailyTasksCompleted = reader.readInt();
+    player.weeklySRankCompleted = reader.readInt();
+    player.lastMissionResetDate = reader.read();
+    player.nextDayTaskLimitOffset = reader.readInt();
+    player.todayTaskLimitOffset = reader.readInt();
+    player.lastRestDate = reader.read();
+    player.totalTasksCompleted = reader.readInt();
+    player.totalSRankCompleted = reader.readInt();
+    player.totalARankCompleted = reader.readInt();
+    player.totalBRankCompleted = reader.readInt();
+    player.titles = (reader.readList()).cast<String>();
+    player.equippedTitle = reader.read();
+
+    if (reader.availableBytes > 0) {
+      player.equippedSkin = reader.read();
+    }
+    if (reader.availableBytes >= 4) {
+      player.gems = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.streakDays = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.longestStreak = reader.readInt();
+    }
+    if (reader.availableBytes > 0) {
+      player.lastLoginDate = reader.read();
+    }
+
+    return player;
+  }
+
   @override
   void write(BinaryWriter writer, Player obj) {
+    writer.writeByte(_formatVersion);
     writer.writeMap(obj.jobLevels);
     writer.writeMap(obj.jobExps);
     writer.writeList(obj.activeSkills.toList());
@@ -318,7 +260,6 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.write(obj.equippedTitle);
     writer.write(obj.equippedSkin);
     writer.writeInt(obj.gems);
-    // v1.2: ストリーク (末尾追記で後方互換を維持)
     writer.writeInt(obj.streakDays);
     writer.writeInt(obj.longestStreak);
     writer.write(obj.lastLoginDate);

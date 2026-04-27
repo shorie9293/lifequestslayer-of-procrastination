@@ -35,9 +35,9 @@ class _GemShopScreenState extends State<GemShopScreen> {
     super.dispose();
   }
 
-  void _onIAPUpdate() {
+  void _onIAPUpdate() async {
     final iap = context.read<IAPService>();
-    final gems = iap.consumePendingGems();
+    final gems = await iap.consumePendingGems();
     if (gems > 0) {
       context.read<GameViewModel>().addGems(gems);
       ScaffoldMessenger.of(context).showSnackBar(

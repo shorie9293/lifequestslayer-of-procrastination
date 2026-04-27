@@ -27,10 +27,10 @@ class TaskRepository {
   Future<void> saveTasks(List<Task> tasks) async {
     final box = await Hive.openBox<Task>(boxName);
 
+    if (tasks.isEmpty) return;
+
     // 現在のタスクを一括 upsert
-    if (tasks.isNotEmpty) {
-      await box.putAll({for (final t in tasks) t.id: t});
-    }
+    await box.putAll({for (final t in tasks) t.id: t});
 
     // 削除されたタスクのキーを除去
     final currentIds = tasks.map((t) => t.id).toSet();

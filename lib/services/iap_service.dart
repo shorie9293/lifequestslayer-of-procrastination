@@ -96,10 +96,10 @@ class IAPService extends ChangeNotifier {
   }
 
   /// UIが呼び出して宝石をGameViewModelに付与する
-  int consumePendingGems() {
+  Future<int> consumePendingGems() async {
     final gems = _pendingGems;
     _pendingGems = 0;
-    _pendingBox?.put(_kPendingKey, 0);
+    await _pendingBox?.put(_kPendingKey, 0);
     return gems;
   }
 
