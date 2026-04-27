@@ -1,8 +1,9 @@
-# 仕様書: RPG風タスク管理＆学習アプリ（rpg_todo）
+# 【神想】延期討伐伝 -Slayer of Procrastination-
 
-**ステータス**: 開発中（v1.2 仕様策定中）
-**最終更新**: 2026-04-17
-**リポジトリ**: `projects/rpg-task/`（旧: `E:\workspace\todo`）
+**ステータス**: 基盤固め完了（v1.2 実装済、v1.3 構想中）
+**最終更新**: 2026-04-27
+**神域**: `utsushiyo/rpg-task/`
+**神器**: Flutter/Dart + Provider + Hive
 
 ---
 
