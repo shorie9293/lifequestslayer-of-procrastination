@@ -9,23 +9,13 @@ import '../widgets/fatigue_gem_popup.dart';
 import '../models/task.dart';
 import '../data/quiz_data.dart';
 import '../utils/tutorial_keys.dart';
+import '../utils/rank_colors.dart';
 
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  Color _getRankColor(QuestRank rank) {
-    switch (rank) {
-      case QuestRank.S:
-        return const Color(0xFF4A148C); // 深い紫 (落ち着いたSランク)
-      case QuestRank.A:
-        return const Color(0xFF8E3A3A); // くすんだ臙脂色（落ち着いたAランク）
-      case QuestRank.B:
-        return const Color(0xFF455A64); // 青灰色（落ち着いたBランク）
-      default:
-        return const Color(0xFF424242);
-    }
-  }
+  Color _getRankColor(QuestRank rank) => RankColors.forRank(rank);
 
   void _completeTask(BuildContext context, String taskId) {
     final viewModel = Provider.of<GameViewModel>(context, listen: false);

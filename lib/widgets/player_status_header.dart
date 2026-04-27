@@ -23,53 +23,59 @@ class PlayerStatusHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white12,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: Colors.grey, width: 2),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      _getSkinIcon(player.equippedSkin),
-                      style: const TextStyle(fontSize: 24),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (player.equippedTitle != null && player.equippedTitle!.isNotEmpty)
-                        Text(
-                          "【${player.equippedTitle}】",
-                          style: const TextStyle(fontSize: 14, color: Colors.orange, fontWeight: FontWeight.bold),
-                        ),
-                      Text(
-                        "Lv.${player.level} ${_getJobName(player.currentJob)}",
-                        style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white12,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.grey, width: 2),
                       ),
-                      Row(
+                      alignment: Alignment.center,
+                      child: Text(
+                        _getSkinIcon(player.equippedSkin),
+                        style: const TextStyle(fontSize: 24),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.monetization_on, color: Colors.amber, size: 16),
-                          const SizedBox(width: 4),
+                          if (player.equippedTitle != null && player.equippedTitle!.isNotEmpty)
+                            Text(
+                              "【${player.equippedTitle}】",
+                              style: const TextStyle(fontSize: 14, color: Colors.orange, fontWeight: FontWeight.bold),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
                           Text(
-                            "${player.coins}",
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber),
+                            "Lv.${player.level} ${_getJobName(player.currentJob)}",
+                            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
+                          Row(
+                            children: [
+                              const Icon(Icons.monetization_on, color: Colors.amber, size: 16),
+                              const SizedBox(width: 4),
+                              Text(
+                                "${player.coins}",
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.amber),
+                              ),
+                            ],
+                          ),
+                          if (player.currentJob == Job.warrior)
+                            Text(
+                              "Combo: ${player.comboCount}",
+                              style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                            ),
                         ],
                       ),
-                      if (player.currentJob == Job.warrior)
-                        Text(
-                          "Combo: ${player.comboCount}",
-                          style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
-                        ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,

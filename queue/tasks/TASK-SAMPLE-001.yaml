@@ -1,0 +1,14 @@
+task_id: "TASK-SAMPLE-001"
+title: "冒険の書（サンプルタスク）"
+assigned_to: "pm"
+priority: "medium"
+created_at: "2026-04-27T10:00:00Z"
+blockedBy: []
+context: |
+  これはサンプルのタスク定義である。
+  全ての神々は、書簡（YAML）の書式を此の如く整えよ。
+
+  実際のタスクでは context に具体的な指示を記述し、
+  artifacts に関連する外部リソースを記載する。
+artifacts:
+  shinso: "utsushiyo/rpg-task/shinso.md"

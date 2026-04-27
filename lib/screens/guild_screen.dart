@@ -8,22 +8,12 @@ import '../widgets/player_status_header.dart';
 import '../widgets/task_card.dart';
 import '../widgets/help_dialog.dart';
 import '../services/notification_service.dart';
+import '../utils/rank_colors.dart';
 
 class GuildScreen extends StatelessWidget {
   const GuildScreen({super.key});
 
-  Color _getRankColor(QuestRank rank) {
-    switch (rank) {
-      case QuestRank.S:
-        return const Color(0xFF4A148C); // 深い紫
-      case QuestRank.A:
-        return const Color(0xFF8E3A3A); // くすんだ臙脂色
-      case QuestRank.B:
-        return const Color(0xFF455A64); // 青灰色
-      default:
-        return const Color(0xFF424242);
-    }
-  }
+  Color _getRankColor(QuestRank rank) => RankColors.forRank(rank);
 
   void _showFontSizeDialog(BuildContext context) {
     final viewModel = Provider.of<GameViewModel>(context, listen: false);

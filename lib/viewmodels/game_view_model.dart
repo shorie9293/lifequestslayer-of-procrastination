@@ -1,18 +1,23 @@
 import 'dart:math';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide DateUtils;
 import 'package:uuid/uuid.dart';
-import 'package:hive/hive.dart';
 import '../models/task.dart';
 import '../models/player.dart';
 import '../models/title_definition.dart';
 import '../data/quiz_data.dart';
 import '../repositories/player_repository.dart';
 import '../repositories/task_repository.dart';
+import '../services/settings_repository.dart';
+import '../services/streak_service.dart';
+import '../services/title_service.dart';
+import '../services/quiz_service.dart';
+import '../services/fatigue_service.dart';
+import '../utils/date_utils.dart';
 
 class GameViewModel extends ChangeNotifier {
   final PlayerRepository _playerRepository;
   final TaskRepository _taskRepository;
+  final SettingsRepository _settingsRepository;
 
   Player _player = Player();
   List<Task> _tasks = [];
@@ -20,14 +25,11 @@ class GameViewModel extends ChangeNotifier {
   bool _isLoaded = false;
   bool _hasSeenConcept = false;
   int? pendingLoginBonusAmount;
-  int? pendingStreakReward;   // ストリーク報酬（ログイン後にUIが表示）
+  int? pendingStreakReward;
   double _fontSizeScale = 1.2;
 
   // v1.2: 疲労MAXダイアログは1日1回のみ（settingsBoxに日付を永続化）
   bool _hasShownFatiguePopupToday = false;
-
-  // v1.2: 出題確率 (テスト時に override しやすいよう定数化)
-  static const double kKnowledgeQuestProbability = 0.30;
 
   // v1.2: 知識クエスト機能のON/OFF（設定から切替可能）
   bool _knowledgeQuestEnabled = true;
@@ -36,8 +38,10 @@ class GameViewModel extends ChangeNotifier {
   GameViewModel({
     PlayerRepository? playerRepository,
     TaskRepository? taskRepository,
+    SettingsRepository? settingsRepository,
   })  : _playerRepository = playerRepository ?? PlayerRepository(),
-        _taskRepository = taskRepository ?? TaskRepository() {
+        _taskRepository = taskRepository ?? TaskRepository(),
+        _settingsRepository = settingsRepository ?? SettingsRepository() {
     loadData();
   }
 
@@ -48,18 +52,12 @@ class GameViewModel extends ChangeNotifier {
   bool get hasSeenConcept => _hasSeenConcept;
   double get fontSizeScale => _fontSizeScale;
 
-  int get fatigueWarnThreshold => 5 + _player.todayTaskLimitOffset;
-  int get fatigueSevereThreshold => 10 + _player.todayTaskLimitOffset;
+  int get fatigueWarnThreshold => FatigueService.warnThreshold(_player);
+  int get fatigueSevereThreshold => FatigueService.severeThreshold(_player);
 
-  String get fatigueStatus {
-    if (_player.dailyTasksCompleted >= fatigueSevereThreshold) return "🌙 今日の英雄は休め";
-    if (_player.dailyTasksCompleted >= fatigueWarnThreshold) return "🍺 十分戦った";
-    return "😄 元気";
-  }
+  String get fatigueStatus => FatigueService.status(_player);
 
-  double get fatigueProgress {
-    return (_player.dailyTasksCompleted / fatigueSevereThreshold).clamp(0.0, 1.0);
-  }
+  double get fatigueProgress => FatigueService.progress(_player);
 
   // --- デイリー/ウィークリーミッション ---
   static const int dailyMissionGoal = 3;
@@ -74,13 +72,8 @@ class GameViewModel extends ChangeNotifier {
   int get streakDays => _player.streakDays;
 
   // --- 称号進捗 ---
-  /// 各称号の現在進捗を返す（GameViewModel._checkTitles と同じ定義源を参照）
   List<({TitleDefinition def, int progress, bool isUnlocked})> get titleProgressList {
-    return kAllTitles.map((def) {
-      final progress = def.getProgress(_player);
-      final isUnlocked = _player.titles.contains(def.id);
-      return (def: def, progress: progress, isUnlocked: isUnlocked);
-    }).toList();
+    return TitleService.getTitleProgressList(_player);
   }
 
   List<Task> get recurringTasks => _tasks.where((t) => t.repeatInterval != RepeatInterval.none).toList();
@@ -272,15 +265,11 @@ class GameViewModel extends ChangeNotifier {
     List<String> bonusMessages = [];
 
     // 疲労補正
-    double fatigueMultiplier = 1.0;
-    int fatigueWarn = 5 + _player.todayTaskLimitOffset;
-    int fatigueSevere = 10 + _player.todayTaskLimitOffset;
+    double fatigueMultiplier = FatigueService.fatigueMultiplier(_player);
 
-    if (_player.dailyTasksCompleted >= fatigueSevere) {
-      fatigueMultiplier = 0.1;
+    if (_player.dailyTasksCompleted >= FatigueService.severeThreshold(_player)) {
       bonusMessages.add("🌙 今日の英雄は十分戦った。宿屋で休んで明日に備えよ！");
-    } else if (_player.dailyTasksCompleted >= fatigueWarn) {
-      fatigueMultiplier = 0.5;
+    } else if (_player.dailyTasksCompleted >= FatigueService.warnThreshold(_player)) {
       bonusMessages.add("🍺 疲れが溜まってきたぞ。宿屋で一息つくか？");
     }
 
@@ -343,7 +332,7 @@ class GameViewModel extends ChangeNotifier {
     if (task.rank == QuestRank.A) _player.totalARankCompleted++;
     if (task.rank == QuestRank.B) _player.totalBRankCompleted++;
 
-    _checkTitles(bonusMessages);
+    TitleService.checkTitles(_player, bonusMessages);
 
     // デイリーミッション達成（3クエスト）
     if (_player.dailyTasksCompleted == dailyMissionGoal) {
@@ -365,21 +354,16 @@ class GameViewModel extends ChangeNotifier {
 
     // 疲労MAXポップアップトリガー（到達した瞬間のみ・1日1回・アプリ再起動後も維持）
     bool showFatiguePopup = false;
-    if (_player.dailyTasksCompleted >= fatigueSevere && !_hasShownFatiguePopupToday) {
+    if (_player.dailyTasksCompleted >= FatigueService.severeThreshold(_player) && !_hasShownFatiguePopupToday) {
       _hasShownFatiguePopupToday = true;
       showFatiguePopup = true;
-      // settingsBoxに日付を永続化してアプリ再起動後もフラグを保持
-      try {
-        Hive.box('settingsBox').put('fatiguePopupDate', DateTime.now().toIso8601String());
-      } catch (_) {}
+      _settingsRepository.saveFatiguePopupDate(DateTime.now());
     }
 
-    // v1.2: 知識クエスト抽選（クイズ出題確率 30%・ON/OFFあり）
+    // v1.2: 知識クエスト抽選
     QuizQuestion? quizQuestion;
-    if (_knowledgeQuestEnabled &&
-        kQuizQuestions.isNotEmpty &&
-        Random().nextDouble() < kKnowledgeQuestProbability) {
-      quizQuestion = kQuizQuestions[Random().nextInt(kQuizQuestions.length)];
+    if (_knowledgeQuestEnabled) {
+      quizQuestion = QuizService.drawQuizQuestion();
     }
 
     _notifyAndSave();
@@ -390,13 +374,13 @@ class GameViewModel extends ChangeNotifier {
       'bonusMessages': bonusMessages,
       'showFatiguePopup': showFatiguePopup,
       'quizQuestion': quizQuestion,
-      'baseExp': expGain, // クイズボーナス計算用
+      'baseExp': expGain,
     };
   }
 
   /// 知識クエスト正解時のボーナスEXP付与（UI側から呼ぶ）
   void awardKnowledgeBonus(int bonusPercent, int baseExp) {
-    final bonus = (baseExp * bonusPercent / 100).round();
+    final bonus = QuizService.calcBonusExp(bonusPercent, baseExp);
     if (bonus > 0) {
       _player.addExp(bonus);
       _notifyAndSave();
@@ -445,107 +429,37 @@ class GameViewModel extends ChangeNotifier {
 
     // デイリーリセット
     if (_player.lastMissionResetDate == null ||
-        !_isSameDay(_player.lastMissionResetDate!, now)) {
+        !DateUtils.isSameDay(_player.lastMissionResetDate!, now)) {
       _player.dailyTasksCompleted = 0;
       _player.todayTaskLimitOffset = _player.nextDayTaskLimitOffset;
       _player.nextDayTaskLimitOffset = 0;
       _player.lastMissionResetDate = now;
       _hasShownFatiguePopupToday = false;
-      // 永続化した疲労フラグも消去（try: settingsBoxが未開放のケース対応）
-      try { Hive.box('settingsBox').delete('fatiguePopupDate'); } catch (_) {}
+      _settingsRepository.deleteFatiguePopupDate();
       changedDate = true;
     }
 
     // ウィークリーリセット（月またぎに対応した正確な判定）
     if (_player.lastMissionResetDate != null &&
-        _isDifferentWeek(_player.lastMissionResetDate!, now)) {
+        DateUtils.isDifferentWeek(_player.lastMissionResetDate!, now)) {
       _player.weeklySRankCompleted = 0;
     }
 
     if (isLogin) {
-      _checkAndUpdateStreak(now);
+      final reward = StreakService.checkAndUpdateStreak(_player, now);
       if (changedDate) {
         _player.coins += 50; // ログインボーナス
         pendingLoginBonusAmount = 50;
         _notifyAndSave();
       }
+      if (reward > 0) {
+        pendingStreakReward = reward;
+        _notifyAndSave();
+      }
     }
-  }
-
-  // --- ストリーク更新 ---
-  void _checkAndUpdateStreak(DateTime now) {
-    final last = _player.lastLoginDate;
-
-    if (last == null) {
-      // 初回ログイン
-      _player.streakDays = 1;
-    } else if (_isSameDay(last, now)) {
-      // 同日の再起動は何もしない
-      return;
-    } else if (_isYesterday(last, now)) {
-      // 昨日ログイン済み → ストリーク継続
-      _player.streakDays++;
-    } else {
-      // 2日以上空白 → リセット
-      _player.streakDays = 1;
-    }
-
-    _player.longestStreak = max(_player.longestStreak, _player.streakDays);
-    _player.lastLoginDate = now;
-
-    // ストリーク報酬
-    final reward = _calcStreakReward(_player.streakDays);
-    if (reward > 0) {
-      _player.coins += reward;
-      pendingStreakReward = reward;
-    }
-  }
-
-  int _calcStreakReward(int days) {
-    if (days == 30) return 5000;
-    if (days == 14) return 2000;
-    if (days == 7)  return 1000;
-    if (days == 5)  return 500;
-    if (days == 3)  return 200;
-    if (days == 2)  return 100;
-    return 0;
-  }
-
-  // --- 日付ユーティリティ ---
-
-  bool _isSameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
-
-  bool _isYesterday(DateTime past, DateTime now) {
-    final yesterday = now.subtract(const Duration(days: 1));
-    return _isSameDay(past, yesterday);
-  }
-
-  /// ISO 週が異なるかどうかを判定（月またぎに対応）
-  bool _isDifferentWeek(DateTime a, DateTime b) {
-    // 各日の月曜日を計算して比較
-    final mondayA = a.subtract(Duration(days: a.weekday - 1));
-    final mondayB = b.subtract(Duration(days: b.weekday - 1));
-    return !_isSameDay(
-      DateTime(mondayA.year, mondayA.month, mondayA.day),
-      DateTime(mondayB.year, mondayB.month, mondayB.day),
-    );
   }
 
   // --- 称号システム ---
-  void _checkTitles(List<String> bonusMessages) {
-    for (final def in kAllTitles) {
-      _unlockTitle(def.id, () => def.getProgress(_player) >= def.requiredCount, bonusMessages);
-    }
-  }
-
-  void _unlockTitle(String targetTitle, bool Function() condition, List<String> messages) {
-    if (!_player.titles.contains(targetTitle) && condition()) {
-      _player.titles.add(targetTitle);
-      messages.add("🏅 称号獲得：『$targetTitle』");
-    }
-  }
-
   void equipTitle(String title) {
     if (_player.titles.contains(title) || title.isEmpty) {
       _player.equippedTitle = title.isEmpty ? null : title;
@@ -562,75 +476,39 @@ class GameViewModel extends ChangeNotifier {
 
   // --- 宿屋システム ---
   String? restAtInn(int innType) {
-    final now = DateTime.now();
-    if (_player.lastRestDate != null &&
-        _isSameDay(_player.lastRestDate!, now)) {
-      return "今日はもう十分休んだ。また明日来な！";
+    final result = FatigueService.restAtInn(_player, innType, DateTime.now());
+    if (result == null) {
+      _notifyAndSave();
     }
-
-    int cost = 0;
-    int limitBonus = 0;
-
-    switch (innType) {
-      case 0:
-        cost = 50;
-        limitBonus = 2;
-        break;
-      case 1:
-        cost = 200;
-        limitBonus = 5;
-        break;
-      case 2:
-        cost = 1000;
-        limitBonus = 12;
-        break;
-      default:
-        return "そんなメニューはないぜ";
-    }
-
-    if (_player.coins < cost) return "金貨が足りないぜ";
-
-    _player.coins -= cost;
-    _player.nextDayTaskLimitOffset = limitBonus;
-    _player.lastRestDate = now;
-    _notifyAndSave();
-    return null;
+    return result;
   }
 
   Future<void> setKnowledgeQuestEnabled(bool enabled) async {
     _knowledgeQuestEnabled = enabled;
-    var box = await Hive.openBox('settingsBox');
-    await box.put('knowledgeQuestEnabled', enabled);
+    await _settingsRepository.setKnowledgeQuestEnabled(enabled);
     notifyListeners();
   }
 
   Future<void> setFontSizeScale(double scale) async {
     _fontSizeScale = scale;
-    var box = await Hive.openBox('settingsBox');
-    await box.put('fontSizeScale', scale);
+    await _settingsRepository.setFontSizeScale(scale);
     notifyListeners();
   }
 
   Future<void> loadData() async {
     _player = await _playerRepository.loadPlayer();
     _tasks = await _taskRepository.loadTasks();
-    var box = await Hive.openBox('tutorialBox');
-    _tutorialStep = box.get('step', defaultValue: 0);
-    _hasSeenConcept = box.get('hasSeenConcept', defaultValue: false);
-    var settingsBox = await Hive.openBox('settingsBox');
-    final saved = settingsBox.get('fontSizeScale', defaultValue: 1.2) as double;
-    _fontSizeScale = saved > 1.2 ? 1.2 : saved;
+    _tutorialStep = await _settingsRepository.getTutorialStep();
+    _hasSeenConcept = await _settingsRepository.getHasSeenConcept();
+    _fontSizeScale = await _settingsRepository.getFontSizeScale();
 
     // クイズ機能 ON/OFF
-    _knowledgeQuestEnabled = settingsBox.get('knowledgeQuestEnabled', defaultValue: true) as bool;
+    _knowledgeQuestEnabled = await _settingsRepository.getKnowledgeQuestEnabled();
 
-    // RISK-I-01: 疲労MAXフラグをアプリ再起動後も維持（日付ベース）
-    final fatiguePopupDate = settingsBox.get('fatiguePopupDate') as String?;
-    if (fatiguePopupDate != null) {
-      final d = DateTime.tryParse(fatiguePopupDate);
-      if (d != null && _isSameDay(d, DateTime.now())) {
-        _hasShownFatiguePopupToday = true;
-      }
+    // 疲労MAXフラグをアプリ再起動後も維持（日付ベース）
+    final fatiguePopupDate = await _settingsRepository.getFatiguePopupDate();
+    if (fatiguePopupDate != null && DateUtils.isSameDay(fatiguePopupDate, DateTime.now())) {
+      _hasShownFatiguePopupToday = true;
     }
 
     _isLoaded = true;
@@ -641,8 +519,7 @@ class GameViewModel extends ChangeNotifier {
   Future<void> completeTutorialStep(int step) async {
     if (_tutorialStep == step) {
       _tutorialStep++;
-      var box = await Hive.openBox('tutorialBox');
-      await box.put('step', _tutorialStep);
+      await _settingsRepository.setTutorialStep(_tutorialStep);
       notifyListeners();
     }
   }
@@ -650,8 +527,7 @@ class GameViewModel extends ChangeNotifier {
   Future<void> markConceptAsSeen() async {
     if (!_hasSeenConcept) {
       _hasSeenConcept = true;
-      var box = await Hive.openBox('tutorialBox');
-      await box.put('hasSeenConcept', true);
+      await _settingsRepository.setHasSeenConcept(true);
       notifyListeners();
     }
   }
@@ -659,9 +535,7 @@ class GameViewModel extends ChangeNotifier {
   Future<void> resetTutorial() async {
     _tutorialStep = 0;
     _hasSeenConcept = false;
-    var box = await Hive.openBox('tutorialBox');
-    await box.put('step', 0);
-    await box.put('hasSeenConcept', false);
+    await _settingsRepository.resetTutorial();
     notifyListeners();
   }
 

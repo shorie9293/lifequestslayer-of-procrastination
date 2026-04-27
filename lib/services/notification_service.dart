@@ -25,10 +25,29 @@ class NotificationService {
 
   Future<void> initialize() async {
     tzdata.initializeTimeZones();
-    // ローカルタイムゾーンを設定（未設定だとスケジュール通知が正しく動作しない）
-    tz.setLocalLocation(tz.local);
 
-    debugPrint('[NotificationService] タイムゾーン: ${tz.local.name}');
+    // 端末の実際のタイムゾーンオフセットを取得
+    final deviceOffset = DateTime.now().timeZoneOffset;
+    final tzLocalOffset = tz.TZDateTime.now(tz.local).timeZoneOffset;
+
+    debugPrint('[NotificationService] 端末オフセット: $deviceOffset');
+    debugPrint('[NotificationService] tz.local: ${tz.local.name} (offset: $tzLocalOffset)');
+
+    // tz.local が端末の実際のオフセットと一致しない場合、
+    // オフセットから正しいタイムゾーンを探索して上書きする
+    if (deviceOffset != tzLocalOffset) {
+      final correctTzName = _findTimezoneByOffset(deviceOffset);
+      if (correctTzName != null) {
+        debugPrint('[NotificationService] タイムゾーンを上書き: ${tz.local.name} → $correctTzName');
+        tz.setLocalLocation(tz.getLocation(correctTzName));
+      } else {
+        debugPrint('[NotificationService] 警告: オフセット $deviceOffset に一致するタイムゾーンが見つかりません');
+      }
+    } else {
+      debugPrint('[NotificationService] タイムゾーンは正しいです: ${tz.local.name}');
+    }
+
+    debugPrint('[NotificationService] 使用タイムゾーン: ${tz.local.name}');
     debugPrint('[NotificationService] 現在時刻: ${tz.TZDateTime.now(tz.local)}');
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
@@ -331,6 +350,60 @@ class NotificationService {
         iOS: DarwinNotificationDetails(),
       ),
     );
+  }
+
+  /// 指定されたオフセットに一致するIANAタイムゾーンを探索する。
+  /// 優先順位: Asia/Tokyo (JST) > Asia/Seoul > その他
+  /// 完全一致するものがなければ null を返す。
+  String? _findTimezoneByOffset(Duration offset) {
+    // よく使われるタイムゾーンを優先的にチェック
+    final preferredZones = [
+      'Asia/Tokyo',
+      'Asia/Seoul',
+      'Asia/Shanghai',
+      'Asia/Taipei',
+      'Asia/Hong_Kong',
+      'Asia/Singapore',
+      'Asia/Kolkata',
+      'Europe/London',
+      'Europe/Berlin',
+      'Europe/Paris',
+      'America/New_York',
+      'America/Chicago',
+      'America/Denver',
+      'America/Los_Angeles',
+      'Pacific/Auckland',
+      'Australia/Sydney',
+      'UTC',
+    ];
+
+    // 優先ゾーンから一致するものを探す
+    for (final zoneName in preferredZones) {
+      try {
+        final location = tz.getLocation(zoneName);
+        final now = tz.TZDateTime.now(location);
+        if (now.timeZoneOffset == offset) {
+          return zoneName;
+        }
+      } catch (_) {
+        // 無効なゾーン名はスキップ
+      }
+    }
+
+    // 全データベースから探索
+    for (final entry in tz.timeZoneDatabase.locations.entries) {
+      try {
+        final location = entry.value;
+        final now = tz.TZDateTime.now(location);
+        if (now.timeZoneOffset == offset) {
+          return entry.key;
+        }
+      } catch (_) {
+        // 無効なゾーンはスキップ
+      }
+    }
+
+    return null;
   }
 
   tz.TZDateTime _nextInstanceOfTime(int hour, int minute) {

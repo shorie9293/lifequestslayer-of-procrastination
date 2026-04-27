@@ -9,6 +9,7 @@ import 'models/task.dart';
 import 'models/player.dart';
 import 'services/notification_service.dart';
 import 'services/iap_service.dart';
+import 'services/quiz_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,6 +33,14 @@ void main() async {
     debugPrint('[main] 通知サービスの初期化が完了しました');
   } catch (e) {
     debugPrint('[main] 通知サービスの初期化に失敗しました（アプリは継続）: $e');
+  }
+
+  // クイズデータの読み込み（assets/data/knowledge_quests.json）
+  try {
+    await QuizService.loadQuestions();
+    debugPrint('[main] クイズデータの読み込みが完了しました（${QuizService.isLoaded ? "${QuizService.drawQuizQuestion() != null ? "読み込み済み" : "空"}" : "未読み込み"}）');
+  } catch (e) {
+    debugPrint('[main] クイズデータの読み込みに失敗しました（アプリは継続）: $e');
   }
 
   runApp(const RPGTodoApp());
