@@ -86,10 +86,21 @@ class SettingsRepository {
     await box.put('skipped', value);
   }
 
+  Future<bool> getTutorialChoiceMade() async {
+    final box = await _openTutorialBox();
+    return box.get('choiceMade', defaultValue: false);
+  }
+
+  Future<void> setTutorialChoiceMade(bool value) async {
+    final box = await _openTutorialBox();
+    await box.put('choiceMade', value);
+  }
+
   Future<void> resetTutorial() async {
     final box = await _openTutorialBox();
     await box.put('step', 0);
     await box.put('hasSeenConcept', false);
     await box.put('skipped', false);
+    await box.put('choiceMade', false);
   }
 }

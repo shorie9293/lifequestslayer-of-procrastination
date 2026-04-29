@@ -212,14 +212,14 @@ class _MainScreenState extends State<MainScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showHelpDialog(context).then((_) {
           viewModel.markConceptAsSeen();
-          // ヘルプダイアログ後、チュートリアル選択ダイアログを表示
-          if (mounted && viewModel.tutorialStep <= 2 && !viewModel.tutorialSkipped && !_isTutorialChoiceShowing) {
+          // ヘルプダイアログ後、チュートリアル選択ダイアログを表示（未選択の場合のみ）
+          if (mounted && viewModel.tutorialStep <= 2 && !viewModel.tutorialChoiceMade && !_isTutorialChoiceShowing) {
             setState(() => _isTutorialChoiceShowing = true);
             _showTutorialChoiceDialog();
           }
         });
       });
-    } else if (viewModel.hasSeenConcept && viewModel.tutorialStep <= 2 && !viewModel.tutorialSkipped && !_isTutorialChoiceShowing) {
+    } else if (viewModel.hasSeenConcept && viewModel.tutorialStep <= 2 && !viewModel.tutorialChoiceMade && !_isTutorialChoiceShowing) {
       _isTutorialChoiceShowing = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _showTutorialChoiceDialog();
@@ -409,7 +409,7 @@ class _MainScreenState extends State<MainScreen> {
             backgroundColor: Colors.black87,
         ),
       ),
-      if (viewModel.tutorialStep <= 2 && !viewModel.tutorialSkipped) ...[
+      if (viewModel.tutorialStep <= 2 && !viewModel.tutorialChoiceMade) ...[
         _buildTutorialOverlay(viewModel.tutorialStep),
         Positioned(
           top: MediaQuery.of(context).padding.top + 8,
@@ -471,6 +471,7 @@ void _showTutorialChoiceDialog() {
           ),
           ElevatedButton(
             onPressed: () {
+              viewModel.markTutorialChoiceMade();
               Navigator.pop(ctx);
               setState(() => _isTutorialChoiceShowing = false);
             },

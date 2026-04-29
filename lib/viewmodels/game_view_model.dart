@@ -66,6 +66,10 @@ class GameViewModel extends ChangeNotifier {
   bool _tutorialSkipped = false;
   bool get tutorialSkipped => _tutorialSkipped;
 
+  // v1.4: チュートリアル選択済みフラグ（スキップ/学ぶの選択後はtrue）
+  bool _tutorialChoiceMade = false;
+  bool get tutorialChoiceMade => _tutorialChoiceMade;
+
   int get fatigueWarnThreshold => FatigueService.warnThreshold(_player);
   int get fatigueSevereThreshold => FatigueService.severeThreshold(_player);
 
@@ -544,6 +548,9 @@ class GameViewModel extends ChangeNotifier {
       // チュートリアルスキップ状態を読み込み
       _tutorialSkipped = await _settingsRepository.getTutorialSkipped();
 
+      // チュートリアル選択済み状態を読み込み
+      _tutorialChoiceMade = await _settingsRepository.getTutorialChoiceMade();
+
       // 疲労MAXフラグをアプリ再起動後も維持（日付ベース）
       final fatiguePopupDate = await _settingsRepository.getFatiguePopupDate();
       if (fatiguePopupDate != null && DateUtils.isSameDay(fatiguePopupDate, DateTime.now())) {
@@ -563,6 +570,7 @@ class GameViewModel extends ChangeNotifier {
       _fontSizeScale = 0.85;
       _knowledgeQuestEnabled = true;
       _tutorialSkipped = false;
+      _tutorialChoiceMade = false;
       _hasShownFatiguePopupToday = false;
     } finally {
       _isLoaded = true;
@@ -589,8 +597,18 @@ class GameViewModel extends ChangeNotifier {
   Future<void> skipTutorial() async {
     _tutorialStep = 3;
     _tutorialSkipped = true;
+    _hasSeenConcept = true;
+    _tutorialChoiceMade = true;
     await _settingsRepository.setTutorialStep(3);
     await _settingsRepository.setTutorialSkipped(true);
+    await _settingsRepository.setHasSeenConcept(true);
+    await _settingsRepository.setTutorialChoiceMade(true);
+    notifyListeners();
+  }
+
+  Future<void> markTutorialChoiceMade() async {
+    _tutorialChoiceMade = true;
+    await _settingsRepository.setTutorialChoiceMade(true);
     notifyListeners();
   }
 
@@ -598,6 +616,7 @@ class GameViewModel extends ChangeNotifier {
     _tutorialStep = 0;
     _hasSeenConcept = false;
     _tutorialSkipped = false;
+    _tutorialChoiceMade = false;
     await _settingsRepository.resetTutorial();
     notifyListeners();
   }
