@@ -443,44 +443,44 @@ class _MainScreenState extends State<MainScreen> {
       ],
     ],
   );
-}
 
-void _showTutorialChoiceDialog() {
-  final viewModel = Provider.of<GameViewModel>(context, listen: false);
-  showDialog(
-    context: context,
-    barrierDismissible: false,
-    builder: (ctx) => AlertDialog(
-      title: const Row(
-        children: [
-          Text('📜', style: TextStyle(fontSize: 24)),
-          SizedBox(width: 8),
-          Text('チュートリアル'),
+  void _showTutorialChoiceDialog() {
+    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Text('📜', style: TextStyle(fontSize: 24)),
+            SizedBox(width: 8),
+            Text('チュートリアル'),
+          ],
+        ),
+        content: const Text('冒険の基本を学びますか？\n（初めてプレイする方は「学ぶ」を推奨）'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              viewModel.skipTutorial();
+              Navigator.pop(ctx);
+              setState(() => _isTutorialChoiceShowing = false);
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.grey),
+            child: const Text('スキップ'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              setState(() => _isTutorialChoiceShowing = false);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber[700],
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('学ぶ'),
+          ),
         ],
       ),
-      content: const Text('冒険の基本を学びますか？\n（初めてプレイする方は「学ぶ」を推奨）'),
-      actions: [
-        TextButton(
-          onPressed: () {
-            viewModel.skipTutorial();
-            Navigator.pop(ctx);
-            setState(() => _isTutorialChoiceShowing = false);
-          },
-          style: TextButton.styleFrom(foregroundColor: Colors.grey),
-          child: const Text('スキップ'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pop(ctx);
-            setState(() => _isTutorialChoiceShowing = false);
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.amber[700],
-            foregroundColor: Colors.white,
-          ),
-          child: const Text('学ぶ'),
-        ),
-      ],
-    ),
-  );
+    );
+  }
 }
