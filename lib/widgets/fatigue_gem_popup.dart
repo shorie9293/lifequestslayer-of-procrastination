@@ -63,9 +63,9 @@ class _FatigueGemDialog extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.15),
+              color: Colors.purple.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.purple.withOpacity(0.4)),
+              border: Border.all(color: Colors.purple.withValues(alpha: 0.4)),
             ),
             child: const Row(
               mainAxisAlignment: MainAxisAlignment.center,

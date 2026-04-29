@@ -30,7 +30,7 @@ class TownScreen extends StatelessWidget {
           image: DecorationImage(
             image: AssetImage(homeData['image']),
             fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.6), BlendMode.darken),
+            colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.6), BlendMode.darken),
           ),
         ),
         child: Stack(
@@ -160,7 +160,7 @@ class TownScreen extends StatelessWidget {
                     ),
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }
@@ -214,7 +214,7 @@ class TownScreen extends StatelessWidget {
                         ),
             ),
           );
-        }).toList(),
+        }),
         if (player.equippedSkin != null)
           Card(
             color: Colors.black54,
@@ -411,7 +411,7 @@ class TownScreen extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(
-          color: isUnlocked ? Colors.amber.withOpacity(0.6) : Colors.white12,
+          color: isUnlocked ? Colors.amber.withValues(alpha: 0.6) : Colors.white12,
           width: 1,
         ),
       ),
@@ -442,7 +442,7 @@ class TownScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withOpacity(0.2),
+                      color: Colors.orange.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(4),
                       border: Border.all(color: Colors.orange, width: 1),
                     ),

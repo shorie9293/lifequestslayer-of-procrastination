@@ -231,7 +231,7 @@ class HomeScreen extends StatelessWidget {
           image: DecorationImage(
             image: const AssetImage('assets/images/home_bg.png'),
             fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.7), BlendMode.darken),
+            colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.7), BlendMode.darken),
           ),
         ),
         child: Column(

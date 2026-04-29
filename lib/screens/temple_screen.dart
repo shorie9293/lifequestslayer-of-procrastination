@@ -22,7 +22,7 @@ class TempleScreen extends StatelessWidget {
           image: DecorationImage(
             image: const AssetImage('assets/images/temple_bg.png'),
             fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.7), BlendMode.darken),
+            colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.7), BlendMode.darken),
           ),
         ),
         child: ListView(
@@ -37,7 +37,7 @@ class TempleScreen extends StatelessWidget {
            if (!canChangeJob)
             Container(
               padding: const EdgeInsets.all(8),
-              color: Colors.red.withOpacity(0.2),
+              color: Colors.red.withValues(alpha: 0.2),
               child: Text(
                 "転職は冒険者レベル10から可能です (現在 Lv.$adventurerLv)",
                 style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
@@ -112,7 +112,7 @@ class TempleScreen extends StatelessWidget {
     final isSkillActive = player.activeSkills.contains(job);
 
     return Card(
-      color: isSelected ? color.withOpacity(0.2) : null,
+      color: isSelected ? color.withValues(alpha: 0.2) : null,
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
         side: isSelected ? BorderSide(color: color, width: 2) : BorderSide.none,
@@ -136,7 +136,7 @@ class TempleScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: isUnlocked ? color.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                      color: isUnlocked ? color.withValues(alpha: 0.1) : Colors.grey.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(icon, size: 32, color: isUnlocked ? color : Colors.grey),

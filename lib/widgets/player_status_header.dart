@@ -168,7 +168,7 @@ class PlayerStatusHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isHot ? Colors.orange.withOpacity(0.2) : Colors.white10,
+        color: isHot ? Colors.orange.withValues(alpha: 0.2) : Colors.white10,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: isHot ? Colors.orange : Colors.white24,
@@ -227,7 +227,7 @@ class PlayerStatusHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isDone ? Colors.green.withOpacity(0.2) : Colors.white10,
+        color: isDone ? Colors.green.withValues(alpha: 0.2) : Colors.white10,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
           color: isDone ? Colors.green : Colors.white24,

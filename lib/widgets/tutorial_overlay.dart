@@ -9,14 +9,14 @@ class TutorialOverlay extends StatefulWidget {
   final Color dialogColor;
 
   const TutorialOverlay({
-    Key? key,
+    super.key,
     required this.targetRect,
     required this.characterName,
     required this.avatarIcon,
     required this.message,
     this.dialogAlignment = Alignment.center,
     this.dialogColor = Colors.white,
-  }) : super(key: key);
+  });
 
   @override
   State<TutorialOverlay> createState() => _TutorialOverlayState();
@@ -176,7 +176,7 @@ class SpotlightPainter extends CustomPainter {
 
     // 1. 背景を暗くする（くり抜き付き）
     final paint = Paint()
-      ..color = Colors.black.withOpacity(0.72)
+      ..color = Colors.black.withValues(alpha: 0.72)
       ..style = PaintingStyle.fill;
 
     final bgPath = Path()..addRect(Rect.fromLTWH(0, 0, size.width, size.height));
@@ -203,7 +203,7 @@ class SpotlightPainter extends CustomPainter {
       targetRect.bottom + pulsePadding,
     );
     final pulsePaint = Paint()
-      ..color = Colors.amberAccent.withOpacity(pulseOpacity)
+      ..color = Colors.amberAccent.withValues(alpha: pulseOpacity)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 3.0 + pulseProgress * 2.0;
     canvas.drawRRect(

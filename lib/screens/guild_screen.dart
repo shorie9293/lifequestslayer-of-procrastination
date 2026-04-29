@@ -223,7 +223,7 @@ class GuildScreen extends StatelessWidget {
           image: DecorationImage(
             image: const AssetImage('assets/images/guild_bg.png'),
             fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(Colors.black.withOpacity(0.7), BlendMode.darken),
+            colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.7), BlendMode.darken),
           ),
         ),
         child: Column(
@@ -883,16 +883,17 @@ class _NotificationSettingsDialogState
                 padding: const EdgeInsets.symmetric(horizontal: 12),
               ),
               onPressed: () async {
+                final messenger = ScaffoldMessenger.of(context);
                 final granted = await _service.requestPermission();
                 if (!granted && mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     const SnackBar(content: Text('通知の許可が得られませんでした')),
                   );
                   return;
                 }
                 await _service.sendTestNotification();
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  messenger.showSnackBar(
                     const SnackBar(content: Text('テスト通知を送信しました！ステータスバーを確認してください')),
                   );
                 }

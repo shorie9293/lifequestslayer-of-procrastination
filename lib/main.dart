@@ -38,7 +38,7 @@ void main() async {
   // クイズデータの読み込み（assets/data/knowledge_quests.json）
   try {
     await QuizService.loadQuestions();
-    debugPrint('[main] クイズデータの読み込みが完了しました（${QuizService.isLoaded ? "${QuizService.drawQuizQuestion() != null ? "読み込み済み" : "空"}" : "未読み込み"}）');
+    debugPrint('[main] クイズデータの読み込みが完了しました（${QuizService.isLoaded ? (QuizService.drawQuizQuestion() != null ? "読み込み済み" : "空") : "未読み込み"}）');
   } catch (e) {
     debugPrint('[main] クイズデータの読み込みに失敗しました（アプリは継続）: $e');
   }

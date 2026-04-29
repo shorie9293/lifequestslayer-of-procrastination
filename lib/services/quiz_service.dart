@@ -9,6 +9,9 @@ class QuizService {
   /// 読み込まれたクイズ問題リスト（loadQuestions() で初期化）
   static List<QuizQuestion> _questions = [];
 
+  /// 乱数生成器（インスタンスを再利用してパフォーマンス向上）
+  static final _rng = Random();
+
   /// クイズ問題が読み込み済みかどうか
   static bool get isLoaded => _questions.isNotEmpty;
 
@@ -27,8 +30,8 @@ class QuizService {
   /// 当選した場合は QuizQuestion を返し、外れた場合は null を返す。
   static QuizQuestion? drawQuizQuestion() {
     if (_questions.isEmpty) return null;
-    if (Random().nextDouble() >= probability) return null;
-    return _questions[Random().nextInt(_questions.length)];
+    if (_rng.nextDouble() >= probability) return null;
+    return _questions[_rng.nextInt(_questions.length)];
   }
 
   /// 正解時のボーナスEXPを計算する。

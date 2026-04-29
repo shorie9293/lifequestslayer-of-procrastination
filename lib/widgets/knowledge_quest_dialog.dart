@@ -63,8 +63,8 @@ class _KnowledgeQuestDialogState extends State<KnowledgeQuestDialog> {
 
   Color _choiceColor(int index) {
     if (!_answered) return Colors.white10;
-    if (index == widget.quest.correctIndex) return Colors.green.withOpacity(0.6);
-    if (index == _selectedIndex) return Colors.red.withOpacity(0.5);
+    if (index == widget.quest.correctIndex) return Colors.green.withValues(alpha: 0.6);
+    if (index == _selectedIndex) return Colors.red.withValues(alpha: 0.5);
     return Colors.white10;
   }
 
@@ -167,8 +167,8 @@ class _KnowledgeQuestDialogState extends State<KnowledgeQuestDialog> {
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: isCorrect
-                      ? Colors.green.withOpacity(0.15)
-                      : Colors.red.withOpacity(0.15),
+                      ? Colors.green.withValues(alpha: 0.15)
+                      : Colors.red.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(

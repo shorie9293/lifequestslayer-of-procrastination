@@ -49,9 +49,13 @@ class _MainScreenState extends State<MainScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       GlobalKey? key;
-      if (step == 0) key = TutorialKeys.fabKey;
-      else if (step == 1) key = TutorialKeys.acceptTaskKey;
-      else if (step == 2 && _currentIndex == 0) key = TutorialKeys.battleCompleteKey;
+      if (step == 0) {
+        key = TutorialKeys.fabKey;
+      } else if (step == 1) {
+        key = TutorialKeys.acceptTaskKey;
+      } else if (step == 2 && _currentIndex == 0) {
+        key = TutorialKeys.battleCompleteKey;
+      }
 
       if (key != null && key.currentContext != null) {
         final box = key.currentContext!.findRenderObject() as RenderBox?;

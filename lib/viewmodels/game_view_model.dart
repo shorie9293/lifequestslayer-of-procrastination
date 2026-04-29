@@ -19,6 +19,9 @@ class GameViewModel extends ChangeNotifier {
   final TaskRepository _taskRepository;
   final SettingsRepository _settingsRepository;
 
+  /// 乱数生成器（インスタンスを再利用してパフォーマンス向上）
+  final _rng = Random();
+
   Player _player = Player();
   List<Task> _tasks = [];
   int _tutorialStep = 0;
@@ -243,11 +246,11 @@ class GameViewModel extends ChangeNotifier {
   /// 戻り値:
   ///   null = 完了失敗（サブタスク未完了など）
   ///   Map = 完了成功。以下のキーを含む:
-  ///     'leveledUp': bool
-  ///     'coinsGained': int
-  ///     'bonusMessages': List<String>
-  ///     'showFatiguePopup': bool  (疲労MAXに到達した瞬間のみ true)
-  ///     'quizQuestion': QuizQuestion? (抽選で出題される場合)
+  ///     `leveledUp` (bool)
+  ///     `coinsGained` (int)
+  ///     `bonusMessages` (List of String)
+  ///     `showFatiguePopup` (bool) 疲労MAXに到達した瞬間のみ true
+  ///     `quizQuestion` (QuizQuestion?) 抽選で出題される場合
   Map<String, dynamic>? completeTask(String taskId) {
     // v1.3: 二重実行防止 — 同じタスクの処理中は即 return
     if (_completingTaskIds.contains(taskId)) return null;
@@ -303,7 +306,7 @@ class GameViewModel extends ChangeNotifier {
       int comboBonus = _player.comboCount * 10;
       expGain += comboBonus;
       if (_player.comboCount > 1) {
-        bonusMessages.add("⚔️ ${_player.comboCount}コンボ！ +${comboBonus} EXP");
+        bonusMessages.add("⚔️ ${_player.comboCount}コンボ！ +$comboBonus EXP");
       }
     } else {
       _player.comboCount = 0;
@@ -332,7 +335,7 @@ class GameViewModel extends ChangeNotifier {
 
     // レアドロップ
     double dropChance = (_player.level * 0.02).clamp(0.01, 0.5);
-    bool isRare = Random().nextDouble() < dropChance;
+    bool isRare = _rng.nextDouble() < dropChance;
     if (isRare) {
       int rareBonus = (coinsGained * 5 * fatigueMultiplier).round();
       if (rareBonus > 0) {
