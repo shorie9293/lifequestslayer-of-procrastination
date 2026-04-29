@@ -1,0 +1,70 @@
+name: 🚀 Deploy to Google Play
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pubspec.yaml'
+  workflow_dispatch:
+    inputs:
+      track:
+        description: '配信トラック'
+        required: true
+        default: 'internal'
+        type: choice
+        options:
+
+jobs:
+  deploy:
+    name: Build & Deploy to Google Play
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🦋 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      - name: 🔐 Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/upload-keystore.jks
+
+      - name: 📝 Create key.properties
+        run: |
+          echo "${{ secrets.KEY_PROPERTIES }}" > android/key.properties
+
+      - name: 🔨 Build App Bundle
+        run: flutter build appbundle --release
+
+      - name: 💎 Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+      - name: 🚀 Deploy to Google Play
+        working-directory: android
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          TRACK="${{ github.event.inputs.track || 'internal' }}"
+          bundle exec fastlane deploy track:${TRACK}
+
+      - name: 📤 Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-aab
+
+          path: build/app/outputs/bundle/release/app-release.aab
