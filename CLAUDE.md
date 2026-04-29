@@ -1,5 +1,7 @@
 # CLAUDE.md
 
+> **⚠️ 最重要方針書**: 本プロジェクトの改善方針は `docs/roadmap.md` に定められている。あらゆる改善作業の前に必ず `docs/roadmap.md` を参照せよ。
+
 ## Project Overview
 
 **rpg_todo** is a Flutter-based RPG-themed task management app. Tasks are presented in a game-like "Adventurer's Guild" interface with a `GameViewModel` managing player state and task logic.

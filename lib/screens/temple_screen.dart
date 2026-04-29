@@ -73,7 +73,7 @@ class TempleScreen extends StatelessWidget {
             Job.cleric,
             "僧侶 (そうりょ)",
             Icons.health_and_safety,
-            "回復・支援。\n特性: 繰り返しタスク (日/週)",
+            "回復・支援。\n特性: 繰り返しクエスト (日/週)",
             Colors.cyan,
             player.currentJob == Job.cleric,
             canChangeJob,
@@ -84,7 +84,7 @@ class TempleScreen extends StatelessWidget {
             Job.wizard,
             "魔法使い (まほうつかい)",
             Icons.auto_fix_high,
-            "知識・管理。\n特性: プロジェクト管理 (サブタスク)",
+            "知識・管理。\n特性: プロジェクト管理 (サブクエスト)",
             Colors.deepPurple,
             player.currentJob == Job.wizard,
             canChangeJob,
@@ -148,12 +148,16 @@ class TempleScreen extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Text(
-                              title,
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: isUnlocked ? (isSelected ? color : Colors.white) : Colors.grey,
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: isUnlocked ? (isSelected ? color : Colors.white) : Colors.grey,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
                               ),
                             ),
                             const SizedBox(width: 8),

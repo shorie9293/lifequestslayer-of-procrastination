@@ -15,58 +15,6 @@ class GuildScreen extends StatelessWidget {
 
   Color _getRankColor(QuestRank rank) => RankColors.forRank(rank);
 
-  void _showFontSizeDialog(BuildContext context) {
-    final viewModel = Provider.of<GameViewModel>(context, listen: false);
-    double current = viewModel.fontSizeScale;
-
-    showDialog(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setState) {
-            return AlertDialog(
-              title: const Row(
-                children: [
-                  Icon(Icons.text_fields, color: Colors.amber),
-                  SizedBox(width: 8),
-                  Text('文字サイズ'),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _fontSizeOption(ctx, setState, viewModel, '大', 1.2, current),
-                  _fontSizeOption(ctx, setState, viewModel, '中', 1.0, current),
-                  _fontSizeOption(ctx, setState, viewModel, '小', 0.85, current),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx),
-                  child: const Text('閉じる'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _fontSizeOption(BuildContext ctx, StateSetter setState, GameViewModel viewModel, String label, double value, double current) {
-    return RadioListTile<double>(
-      title: Text('$label  (Abc あいう)', style: TextStyle(fontSize: 14 * value / 1.0)),
-      value: value,
-      groupValue: current,
-      onChanged: (v) {
-        if (v != null) {
-          setState(() => current = v);
-          viewModel.setFontSizeScale(v);
-        }
-      },
-    );
-  }
-
   void _showTutorialResetDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -117,14 +65,14 @@ class GuildScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'タスク討伐後に30%の確率でクイズが出題されます。\n正解するとEXPボーナスがもらえます！',
+                    'クエスト討伐後に30%の確率でクイズが出題されます。\n正解するとEXPボーナスがもらえます！',
                     style: TextStyle(fontSize: 13, color: Colors.black54),
                   ),
                   const SizedBox(height: 16),
                   SwitchListTile(
                     title: const Text('知識クエストを有効にする'),
                     subtitle: Text(
-                      enabled ? '有効：タスク完了後にクイズが出題されます' : '無効：クイズは表示されません',
+                      enabled ? '有効：クエスト完了後にクイズが出題されます' : '無効：クイズは表示されません',
                       style: TextStyle(
                         fontSize: 12,
                         color: enabled ? Colors.green[700] : Colors.grey,
@@ -196,7 +144,7 @@ class GuildScreen extends StatelessWidget {
       details += " | 繰り返し: ${task.repeatInterval.name}";
     }
     if (task.subTasks.isNotEmpty) {
-      details += " | サブタスク: ${task.subTasks.length}個";
+      details += " | サブクエスト: ${task.subTasks.length}個";
     }
     return details;
   }
@@ -235,8 +183,6 @@ class GuildScreen extends StatelessWidget {
                   context: context,
                   builder: (context) => const NotificationSettingsDialog(),
                 );
-              } else if (value == 'font_size') {
-                _showFontSizeDialog(context);
               } else if (value == 'knowledge_quest') {
                 _showKnowledgeQuestSettingDialog(context);
               } else if (value == 'tutorial_reset') {
@@ -254,12 +200,6 @@ class GuildScreen extends StatelessWidget {
                 value: 'notification',
                 child: Row(
                   children: [Icon(Icons.notifications_none, color: Colors.black54), SizedBox(width: 8), Text('通知設定')],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'font_size',
-                child: Row(
-                  children: [Icon(Icons.text_fields, color: Colors.black54), SizedBox(width: 8), Text('文字サイズ')],
                 ),
               ),
               const PopupMenuItem(
@@ -292,22 +232,24 @@ class GuildScreen extends StatelessWidget {
 
           Expanded(
             child: tasks.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: const [
-                        Text("🏰", style: TextStyle(fontSize: 48)),
-                        SizedBox(height: 12),
-                        Text(
-                          "まだクエストが届いていない。",
-                          style: TextStyle(fontSize: 18, color: Colors.grey),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          "右下の ＋ から最初の依頼を登録しよう！",
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                      ],
+                ? SingleChildScrollView(
+                    child: Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: const [
+                          Text("🏰", style: TextStyle(fontSize: 48)),
+                          SizedBox(height: 12),
+                          Text(
+                            "まだクエストが届いていない。",
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
+                          ),
+                          SizedBox(height: 8),
+                          Text(
+                            "右下の ＋ から最初のクエストを登録しよう！",
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ),
                   )
                   : ListView.builder(
@@ -383,6 +325,14 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     _selectedWeekdays = t != null ? List.from(t.repeatWeekdays) : [];
     _subTasks = t != null ? List<SubTask>.from(t.subTasks.map((s) => SubTask(title: s.title, isCompleted: s.isCompleted))) : [];
     _targetTimeController = TextEditingController(text: t?.targetTimeMinutes?.toString() ?? "");
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _subTaskController.dispose();
+    _targetTimeController.dispose();
+    super.dispose();
   }
 
   void _toggleWeekday(int day) {
@@ -524,7 +474,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                   Expanded(
                     child: TextField(
                       controller: _subTaskController,
-                      decoration: const InputDecoration(labelText: "サブタスク追加 (Wizard Ability)"),
+                       decoration: const InputDecoration(labelText: "サブクエスト追加 (Wizard Ability)"),
                       onSubmitted: (_) => _addSubTask(),
                     ),
                   ),
@@ -643,7 +593,7 @@ class RecurringTasksDialog extends StatelessWidget {
         height: 400,
         child: tasks.isEmpty
             ? const Center(
-                child: Text('繰り返し設定されたタスクはありません', style: TextStyle(color: Colors.grey)),
+                child: Text('繰り返し設定されたクエストはありません', style: TextStyle(color: Colors.grey)),
               )
             : ListView.builder(
                 itemCount: tasks.length,

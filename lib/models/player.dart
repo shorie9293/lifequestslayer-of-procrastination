@@ -153,22 +153,41 @@ class Player {
     return false;
   }
 
+  // v1.3: レベル上限（powオーバーフロー防止）
+  static const int maxLevel = 99;
+
   bool addExp(int amount) {
+    // レベル上限到達時はEXPを加算しない
+    int lvl = jobLevels[currentJob] ?? 1;
+    if (lvl >= maxLevel) return false;
+
     int cExp = jobExps[currentJob] ?? 0;
     cExp += amount;
     
-    int lvl = jobLevels[currentJob] ?? 1;
     int expNext = (50 * pow(1.4, lvl - 1)).round();
+    // v1.3: pow が double.maxFinite を超えた場合のガード
+    if (expNext >= double.maxFinite.toInt() || expNext <= 0) {
+      expNext = double.maxFinite.toInt() ~/ 2;
+    }
     
     bool leveledUp = false;
-    while (cExp >= expNext) {
+    while (cExp >= expNext && lvl < maxLevel) {
       cExp -= expNext;
       lvl++;
       jobLevels[currentJob] = lvl;
       expNext = (50 * pow(1.4, lvl - 1)).round();
+      if (expNext >= double.maxFinite.toInt() || expNext <= 0) {
+        expNext = double.maxFinite.toInt() ~/ 2;
+      }
       leveledUp = true;
     }
-    jobExps[currentJob] = cExp; // Save back
+
+    // レベル上限到達時はEXPを上限値で固定
+    if (lvl >= maxLevel) {
+      cExp = 0;
+    }
+
+    jobExps[currentJob] = cExp;
     return leveledUp;
   }
 }
@@ -181,16 +200,11 @@ class PlayerAdapter extends TypeAdapter<Player> {
 
   @override
   Player read(BinaryReader reader) {
-    try {
-      final version = reader.readByte();
-      if (version < 1 || version > _formatVersion) {
-        throw HiveError('未知のデータバージョン: $version (対応: 1〜$_formatVersion)');
-      }
-      return _readV2(reader);
-    } catch (e) {
-      debugPrint('PlayerAdapter: データ読み込みに失敗。データを初期化します: $e');
-      return Player();
+    final version = reader.readByte();
+    if (version < 1 || version > _formatVersion) {
+      throw HiveError('未知のデータバージョン: $version (対応: 1〜$_formatVersion)');
     }
+    return _readV2(reader);
   }
 
   Player _readV2(BinaryReader reader) {

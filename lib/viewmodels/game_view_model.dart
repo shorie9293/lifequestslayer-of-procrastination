@@ -26,7 +26,7 @@ class GameViewModel extends ChangeNotifier {
   bool _hasSeenConcept = false;
   int? pendingLoginBonusAmount;
   int? pendingStreakReward;
-  double _fontSizeScale = 1.2;
+  double _fontSizeScale = 0.85;
 
   // v1.2: 疲労MAXダイアログは1日1回のみ（settingsBoxに日付を永続化）
   bool _hasShownFatiguePopupToday = false;
@@ -34,6 +34,13 @@ class GameViewModel extends ChangeNotifier {
   // v1.2: 知識クエスト機能のON/OFF（設定から切替可能）
   bool _knowledgeQuestEnabled = true;
   bool get isKnowledgeQuestEnabled => _knowledgeQuestEnabled;
+
+  // v1.3: 保存中の二重呼出し防止フラグ
+  bool _isSaving = false;
+  // v1.3: 保存保留フラグ（保存中に変更があった場合、終了後に再保存）
+  bool _savePending = false;
+  // v1.3: タスク完了処理中の二重実行防止
+  final Set<String> _completingTaskIds = {};
 
   GameViewModel({
     PlayerRepository? playerRepository,
@@ -176,7 +183,7 @@ class GameViewModel extends ChangeNotifier {
 
   String? acceptTask(String taskId) {
     final index = _tasks.indexWhere((t) => t.id == taskId);
-    if (index == -1) return "タスクが見つかりません";
+    if (index == -1) return "クエストが見つかりません";
 
     final task = _tasks[index];
     final currentRankActiveCount = activeTasks.where((t) => t.rank == task.rank).length;
@@ -242,14 +249,24 @@ class GameViewModel extends ChangeNotifier {
   ///     'showFatiguePopup': bool  (疲労MAXに到達した瞬間のみ true)
   ///     'quizQuestion': QuizQuestion? (抽選で出題される場合)
   Map<String, dynamic>? completeTask(String taskId) {
+    // v1.3: 二重実行防止 — 同じタスクの処理中は即 return
+    if (_completingTaskIds.contains(taskId)) return null;
+    _completingTaskIds.add(taskId);
+
     final index = _tasks.indexWhere((t) => t.id == taskId);
-    if (index == -1) return null;
+    if (index == -1) {
+      _completingTaskIds.remove(taskId);
+      return null;
+    }
 
     final task = _tasks[index];
 
     // Wizard: サブタスク完了チェック
     if (_player.canUseSkill(Job.wizard) && task.subTasks.isNotEmpty) {
-      if (task.subTasks.any((s) => !s.isCompleted)) return null;
+      if (task.subTasks.any((s) => !s.isCompleted)) {
+        _completingTaskIds.remove(taskId);
+        return null;
+      }
     }
 
     // Cleric: 繰り返しタスクは isCompleted にしない
@@ -367,6 +384,9 @@ class GameViewModel extends ChangeNotifier {
     }
 
     _notifyAndSave();
+
+    // v1.3: 完了処理のガードを解除
+    _completingTaskIds.remove(taskId);
 
     return {
       'leveledUp': leveledUp,
@@ -501,6 +521,11 @@ class GameViewModel extends ChangeNotifier {
     _tutorialStep = await _settingsRepository.getTutorialStep();
     _hasSeenConcept = await _settingsRepository.getHasSeenConcept();
     _fontSizeScale = await _settingsRepository.getFontSizeScale();
+    // 文字サイズは「小」のみ（大・中は崩れるため廃止）
+    if (_fontSizeScale != 0.85) {
+      _fontSizeScale = 0.85;
+      await _settingsRepository.setFontSizeScale(0.85);
+    }
 
     // クイズ機能 ON/OFF
     _knowledgeQuestEnabled = await _settingsRepository.getKnowledgeQuestEnabled();
@@ -556,7 +581,27 @@ class GameViewModel extends ChangeNotifier {
 
   void _notifyAndSave() {
     notifyListeners();
-    saveData().catchError((Object e) {
+    if (_isSaving) {
+      _savePending = true;
+      return;
+    }
+    _isSaving = true;
+    _savePending = false;
+    saveData().then((_) {
+      _isSaving = false;
+      if (_savePending) {
+        _savePending = false;
+        _isSaving = true;
+        saveData().then((_) {
+          _isSaving = false;
+        }).catchError((Object e) {
+          _isSaving = false;
+          debugPrint('GameViewModel: saveData retry failed: $e');
+        });
+      }
+    }).catchError((Object e) {
+      _isSaving = false;
+      _savePending = false;
       debugPrint('GameViewModel: saveData failed: $e');
     });
   }

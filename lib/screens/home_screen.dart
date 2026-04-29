@@ -37,7 +37,7 @@ class HomeScreen extends StatelessWidget {
           final task = viewModel.activeTasks.firstWhere((t) => t.id == taskId);
           if (task.subTasks.any((s) => !s.isCompleted)) {
              scaffoldMessenger.showSnackBar(
-                const SnackBar(content: Text("サブタスクが残っています！")),
+                const SnackBar(content: Text("サブクエストが残っています！")),
              );
           }
        }
@@ -95,7 +95,10 @@ class HomeScreen extends StatelessWidget {
           child: Opacity(opacity: anim1.value, child: child),
         );
       },
-    );
+    ).then((_) {
+      // ダイアログが他の要因で閉じられた場合、自動 dismiss フラグを立てる
+      effectClosed = true;
+    });
     Future.delayed(const Duration(seconds: 1), () {
       if (effectClosed) return;
       effectClosed = true;

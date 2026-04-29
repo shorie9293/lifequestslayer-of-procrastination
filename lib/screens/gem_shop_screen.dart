@@ -36,9 +36,10 @@ class _GemShopScreenState extends State<GemShopScreen> {
   }
 
   void _onIAPUpdate() async {
+    if (!mounted) return;
     final iap = context.read<IAPService>();
     final gems = await iap.consumePendingGems();
-    if (gems > 0) {
+    if (gems > 0 && mounted) {
       context.read<GameViewModel>().addGems(gems);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -47,6 +48,7 @@ class _GemShopScreenState extends State<GemShopScreen> {
         ),
       );
     }
+    if (!mounted) return;
     // エラー表示
     final err = iap.errorMessage;
     if (err != null) {
@@ -65,6 +67,7 @@ class _GemShopScreenState extends State<GemShopScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        leading: const BackButton(),
         title: const Text('💎 宝石ショップ'),
         actions: [
           Padding(

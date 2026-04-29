@@ -14,20 +14,20 @@ class HelpDialog extends StatelessWidget {
           children: [
             _buildSection(
               icon: Icons.lightbulb,
-              title: 'RPG風タスク管理',
-              content: 'いきなり全てを管理するのではなく、RPGのように少ないタスクから徐々に慣れていくコンセプトです。',
+              title: 'RPG風クエスト管理',
+              content: 'いきなり全てを管理するのではなく、RPGのように少ないクエストから徐々に慣れていくコンセプトです。',
             ),
             const SizedBox(height: 16),
             _buildSection(
               icon: Icons.trending_up,
               title: 'レベルアップとクエスト枠',
-              content: 'まずは少しのタスクから！クエストを討伐（完了）してレベルが上がると、同時に受注できるタスクの数が増えていきます。',
+              content: 'まずは少しのクエストから！クエストを討伐（完了）してレベルが上がると、同時に受注できるクエストの数が増えていきます。',
             ),
             const SizedBox(height: 16),
             _buildSection(
               icon: Icons.switch_account,
               title: '転職と新機能の解放',
-              content: '最初は「冒険者」ですが、レベルが上がると「転職の神殿」で他の職業に転職できます。戦士、僧侶、魔法使いなど、職業を変えることで新しい機能（繰り返しタスクやサブタスクなど）が解放されます。',
+              content: '最初は「冒険者」ですが、レベルが上がると「転職の神殿」で他の職業に転職できます。戦士、僧侶、魔法使いなど、職業を変えることで新しい機能（繰り返しクエストやサブクエストなど）が解放されます。',
             ),
           ],
         ),

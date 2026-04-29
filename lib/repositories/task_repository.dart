@@ -22,12 +22,15 @@ class TaskRepository {
   }
 
   /// タスクをIDキーで冪等保存する。
-  /// clear()+addAll() は保存途中にアプリが終了するとデータが全消失するため、
-  /// putAll() + deleteAll() の2段階に変更。putAll は失敗しても既存データを破壊しない。
+  /// putAll() + deleteAll() の2段階方式。
+  /// 空リスト時も box.clear() で正しく永続化する（全タスク削除の反映）。
   Future<void> saveTasks(List<Task> tasks) async {
     final box = await Hive.openBox<Task>(boxName);
 
-    if (tasks.isEmpty) return;
+    if (tasks.isEmpty) {
+      await box.clear();
+      return;
+    }
 
     // 現在のタスクを一括 upsert
     await box.putAll({for (final t in tasks) t.id: t});

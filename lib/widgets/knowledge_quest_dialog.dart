@@ -122,7 +122,7 @@ class _KnowledgeQuestDialogState extends State<KnowledgeQuestDialog> {
 
             // 選択肢
             ...List.generate(quest.choices.length, (i) {
-              final label = ['A', 'B', 'C', 'D'][i];
+              final label = String.fromCharCode('A'.codeUnitAt(0) + i);
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: InkWell(

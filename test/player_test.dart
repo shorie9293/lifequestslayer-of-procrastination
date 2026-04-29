@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rpg_todo/models/player.dart';
 import 'package:rpg_todo/models/task.dart';
+import 'package:hive/hive.dart';
+import 'dart:io';
 
 // クエストスロット数はゲーム設計として以下を仕様とする:
 //   Lv1: B×1
@@ -71,6 +73,111 @@ void main() {
       final leveledUp = player.addExp(49);
       expect(leveledUp, false);
       expect(player.level, 1);
+    });
+
+    // v1.3: レベル上限テスト
+    test('レベル上限（Lv.99）到達後はEXPを加算しない', () {
+      final player = Player(jobLevels: {Job.adventurer: 99});
+      final leveledUp = player.addExp(999999);
+      expect(leveledUp, false);
+      expect(player.level, 99);
+    });
+
+    test('巨大EXPを与えても無限ループしない', () {
+      final player = Player();
+      // 非常に大きいEXPを与えてもクラッシュ・無限ループしないこと
+      final leveledUp = player.addExp(1000000000);
+      expect(leveledUp, isA<bool>());
+      // レベル上限を超えないこと
+      expect(player.level, lessThanOrEqualTo(Player.maxLevel));
+    });
+  });
+
+  // v1.3: PlayerAdapter の読み書きラウンドトリップテスト
+  group('PlayerAdapter', () {
+    late Box<Player> box;
+
+    setUpAll(() async {
+      // テスト用の一時ディレクトリで Hive を初期化
+      final testDir = Directory('${Directory.systemTemp.path}/hive_test_${DateTime.now().millisecondsSinceEpoch}');
+      if (!testDir.existsSync()) {
+        testDir.createSync(recursive: true);
+      }
+      Hive.init(testDir.path);
+      Hive.registerAdapter(PlayerAdapter());
+      Hive.registerAdapter(JobAdapter());
+    });
+
+    setUp(() async {
+      box = await Hive.openBox<Player>('player_test_box');
+    });
+
+    tearDown(() async {
+      await box.close();
+      await box.deleteFromDisk();
+    });
+
+    test('デフォルトPlayerの読み書きが一致する', () async {
+      final original = Player();
+      await box.put('p1', original);
+      final restored = box.get('p1')!;
+      expect(restored.level, original.level);
+      expect(restored.coins, original.coins);
+      expect(restored.gems, original.gems);
+      expect(restored.streakDays, original.streakDays);
+      expect(restored.longestStreak, original.longestStreak);
+      expect(restored.currentJob, original.currentJob);
+    });
+
+    test('カスタムPlayerの読み書きが一致する（全フィールド）', () async {
+      final original = Player(
+        jobLevels: {Job.adventurer: 5, Job.warrior: 3},
+        jobExps: {Job.adventurer: 200, Job.warrior: 100},
+        activeSkills: {Job.warrior},
+        currentJob: Job.warrior,
+        comboCount: 3,
+        coins: 500,
+        homeItems: ['tent', 'sword'],
+        dailyTasksCompleted: 3,
+        weeklySRankCompleted: 1,
+        totalTasksCompleted: 42,
+        totalSRankCompleted: 2,
+        totalARankCompleted: 10,
+        totalBRankCompleted: 30,
+        titles: ['見習い冒険者'],
+        equippedTitle: '見習い冒険者',
+        equippedSkin: 'skin_warrior',
+        gems: 100,
+        streakDays: 7,
+        longestStreak: 14,
+        lastLoginDate: DateTime(2026, 4, 28),
+      );
+      original.nextDayTaskLimitOffset = 2;
+      original.todayTaskLimitOffset = 1;
+      original.lastRestDate = DateTime(2026, 4, 27);
+      original.lastMissionResetDate = DateTime(2026, 4, 28);
+
+      await box.put('p2', original);
+      final restored = box.get('p2')!;
+      expect(restored.level, original.level);
+      expect(restored.coins, original.coins);
+      expect(restored.gems, original.gems);
+      expect(restored.streakDays, original.streakDays);
+      expect(restored.longestStreak, original.longestStreak);
+      expect(restored.currentJob, original.currentJob);
+      expect(restored.comboCount, original.comboCount);
+      expect(restored.homeItems, original.homeItems);
+      expect(restored.dailyTasksCompleted, original.dailyTasksCompleted);
+      expect(restored.weeklySRankCompleted, original.weeklySRankCompleted);
+      expect(restored.totalTasksCompleted, original.totalTasksCompleted);
+      expect(restored.totalSRankCompleted, original.totalSRankCompleted);
+      expect(restored.totalARankCompleted, original.totalARankCompleted);
+      expect(restored.totalBRankCompleted, original.totalBRankCompleted);
+      expect(restored.titles, original.titles);
+      expect(restored.equippedTitle, original.equippedTitle);
+      expect(restored.equippedSkin, original.equippedSkin);
+      expect(restored.nextDayTaskLimitOffset, original.nextDayTaskLimitOffset);
+      expect(restored.todayTaskLimitOffset, original.todayTaskLimitOffset);
     });
   });
 }

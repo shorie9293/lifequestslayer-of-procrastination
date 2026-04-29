@@ -14,7 +14,7 @@ class SettingsRepository {
 
   Future<double> getFontSizeScale() async {
     final box = await _openSettingsBox();
-    final saved = box.get('fontSizeScale', defaultValue: 1.2) as double;
+    final saved = box.get('fontSizeScale', defaultValue: 0.85) as double;
     return saved > 1.2 ? 1.2 : saved;
   }
 

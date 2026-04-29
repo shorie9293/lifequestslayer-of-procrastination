@@ -24,6 +24,7 @@ class IAPService extends ChangeNotifier {
   List<ProductDetails> _products = [];
   String? _errorMessage;
   int _pendingGems = 0; // 購入完了済みで未付与の宝石数（Hiveに永続化）
+  bool _isConsuming = false; // 二重消費防止フラグ
 
   bool get available => _available;
   bool get loading => _loading;
@@ -96,11 +97,19 @@ class IAPService extends ChangeNotifier {
   }
 
   /// UIが呼び出して宝石をGameViewModelに付与する
+  /// 二重消費防止のため atomic に処理する
   Future<int> consumePendingGems() async {
-    final gems = _pendingGems;
-    _pendingGems = 0;
-    await _pendingBox?.put(_kPendingKey, 0);
-    return gems;
+    if (_isConsuming) return 0;
+    _isConsuming = true;
+    try {
+      final gems = _pendingGems;
+      if (gems <= 0) return 0;
+      _pendingGems = 0;
+      await _pendingBox?.put(_kPendingKey, 0);
+      return gems;
+    } finally {
+      _isConsuming = false;
+    }
   }
 
   void clearError() {
