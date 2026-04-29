@@ -76,9 +76,20 @@ class SettingsRepository {
     await box.put('hasSeenConcept', value);
   }
 
+  Future<bool> getTutorialSkipped() async {
+    final box = await _openTutorialBox();
+    return box.get('skipped', defaultValue: false);
+  }
+
+  Future<void> setTutorialSkipped(bool value) async {
+    final box = await _openTutorialBox();
+    await box.put('skipped', value);
+  }
+
   Future<void> resetTutorial() async {
     final box = await _openTutorialBox();
     await box.put('step', 0);
     await box.put('hasSeenConcept', false);
+    await box.put('skipped', false);
   }
 }

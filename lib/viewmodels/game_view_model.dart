@@ -62,6 +62,10 @@ class GameViewModel extends ChangeNotifier {
   bool get hasSeenConcept => _hasSeenConcept;
   double get fontSizeScale => _fontSizeScale;
 
+  // v1.4: チュートリアルスキップフラグ
+  bool _tutorialSkipped = false;
+  bool get tutorialSkipped => _tutorialSkipped;
+
   int get fatigueWarnThreshold => FatigueService.warnThreshold(_player);
   int get fatigueSevereThreshold => FatigueService.severeThreshold(_player);
 
@@ -537,6 +541,9 @@ class GameViewModel extends ChangeNotifier {
       // クイズ機能 ON/OFF
       _knowledgeQuestEnabled = await _settingsRepository.getKnowledgeQuestEnabled();
 
+      // チュートリアルスキップ状態を読み込み
+      _tutorialSkipped = await _settingsRepository.getTutorialSkipped();
+
       // 疲労MAXフラグをアプリ再起動後も維持（日付ベース）
       final fatiguePopupDate = await _settingsRepository.getFatiguePopupDate();
       if (fatiguePopupDate != null && DateUtils.isSameDay(fatiguePopupDate, DateTime.now())) {
@@ -555,6 +562,7 @@ class GameViewModel extends ChangeNotifier {
       _hasSeenConcept = false;
       _fontSizeScale = 0.85;
       _knowledgeQuestEnabled = true;
+      _tutorialSkipped = false;
       _hasShownFatiguePopupToday = false;
     } finally {
       _isLoaded = true;
@@ -578,9 +586,18 @@ class GameViewModel extends ChangeNotifier {
     }
   }
 
+  Future<void> skipTutorial() async {
+    _tutorialStep = 3;
+    _tutorialSkipped = true;
+    await _settingsRepository.setTutorialStep(3);
+    await _settingsRepository.setTutorialSkipped(true);
+    notifyListeners();
+  }
+
   Future<void> resetTutorial() async {
     _tutorialStep = 0;
     _hasSeenConcept = false;
+    _tutorialSkipped = false;
     await _settingsRepository.resetTutorial();
     notifyListeners();
   }

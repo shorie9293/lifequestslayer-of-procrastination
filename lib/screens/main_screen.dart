@@ -19,6 +19,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
   bool _isHelpDialogShowing = false;
+  bool _isTutorialChoiceShowing = false;
   bool _didJumpToGuildForTutorial = false;
   final PageController _pageController = PageController(initialPage: 0); // スワイプ用のページコントローラー
 
@@ -211,7 +212,17 @@ class _MainScreenState extends State<MainScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showHelpDialog(context).then((_) {
           viewModel.markConceptAsSeen();
+          // ヘルプダイアログ後、チュートリアル選択ダイアログを表示
+          if (mounted && viewModel.tutorialStep <= 2 && !viewModel.tutorialSkipped && !_isTutorialChoiceShowing) {
+            setState(() => _isTutorialChoiceShowing = true);
+            _showTutorialChoiceDialog();
+          }
         });
+      });
+    } else if (viewModel.hasSeenConcept && viewModel.tutorialStep <= 2 && !viewModel.tutorialSkipped && !_isTutorialChoiceShowing) {
+      _isTutorialChoiceShowing = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _showTutorialChoiceDialog();
       });
     } else if (viewModel.pendingLoginBonusAmount != null) {
       final amount = viewModel.pendingLoginBonusAmount!;
@@ -398,8 +409,78 @@ class _MainScreenState extends State<MainScreen> {
             backgroundColor: Colors.black87,
         ),
       ),
-      if (viewModel.tutorialStep <= 2) _buildTutorialOverlay(viewModel.tutorialStep),
+      if (viewModel.tutorialStep <= 2 && !viewModel.tutorialSkipped) ...[
+        _buildTutorialOverlay(viewModel.tutorialStep),
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 8,
+          right: 16,
+          child: SafeArea(
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => viewModel.skipTutorial(),
+                borderRadius: BorderRadius.circular(20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.white30),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.skip_next, color: Colors.white70, size: 18),
+                      SizedBox(width: 4),
+                      Text('スキップ', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
-    );
-  }
+    ],
+  );
+}
+
+void _showTutorialChoiceDialog() {
+  final viewModel = Provider.of<GameViewModel>(context, listen: false);
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (ctx) => AlertDialog(
+      title: const Row(
+        children: [
+          Text('📜', style: TextStyle(fontSize: 24)),
+          SizedBox(width: 8),
+          Text('チュートリアル'),
+        ],
+      ),
+      content: const Text('冒険の基本を学びますか？\n（初めてプレイする方は「学ぶ」を推奨）'),
+      actions: [
+        TextButton(
+          onPressed: () {
+            viewModel.skipTutorial();
+            Navigator.pop(ctx);
+            setState(() => _isTutorialChoiceShowing = false);
+          },
+          style: TextButton.styleFrom(foregroundColor: Colors.grey),
+          child: const Text('スキップ'),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.pop(ctx);
+            setState(() => _isTutorialChoiceShowing = false);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.amber[700],
+            foregroundColor: Colors.white,
+          ),
+          child: const Text('学ぶ'),
+        ),
+      ],
+    ),
+  );
 }
