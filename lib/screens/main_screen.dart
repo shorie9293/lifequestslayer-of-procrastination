@@ -443,8 +443,9 @@ class _MainScreenState extends State<MainScreen> {
       ],
     ],
   );
+}
 
-  void _showTutorialChoiceDialog() {
+void _showTutorialChoiceDialog() {
     final viewModel = Provider.of<GameViewModel>(context, listen: false);
     showDialog(
       context: context,
