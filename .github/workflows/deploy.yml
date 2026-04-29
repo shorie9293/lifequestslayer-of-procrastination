@@ -1,0 +1,89 @@
+name: 🚀 Deploy to Google Play
+
+on:
+  # mainブランチにpushされた時（バージョン更新時など）
+  push:
+    branches: [main]
+    paths:
+      - 'pubspec.yaml'  # バージョン変更時のみ発火
+  # 手動実行も可能
+  workflow_dispatch:
+    inputs:
+      track:
+        description: '配信トラック'
+        required: true
+        default: 'internal'
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
+
+jobs:
+  deploy:
+    name: Build & Deploy to Google Play
+    runs-on: ubuntu-latest
+    
+    steps:
+      # 1. リポジトリチェックアウト
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. Flutterセットアップ
+      - name: 🦋 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+          cache: true
+
+      # 3. Javaセットアップ
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      # 4. 依存関係取得
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      # 5. Keystore復元
+      - name: 🔐 Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/upload-keystore.jks
+
+      # 6. key.properties復元
+      - name: 📝 Create key.properties
+        run: |
+          echo "${{ secrets.KEY_PROPERTIES }}" > android/key.properties
+
+      # 7. AABビルド
+      - name: 🔨 Build App Bundle
+        run: flutter build appbundle --release
+
+      # 8. Rubyセットアップ（Fastlane用）
+      - name: 💎 Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+          bundler-cache: true
+          working-directory: android
+
+      # 9. FastlaneでGoogle Playへデプロイ
+      - name: 🚀 Deploy to Google Play
+        working-directory: android
+        env:
+          GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
+        run: |
+          # 手動実行時は指定されたトラック、自動時はinternal
+          TRACK="${{ github.event.inputs.track || 'internal' }}"
+          bundle exec fastlane deploy track:${TRACK}
+
+      # 10. 成果物アップロード（バックアップ）
+      - name: 📤 Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
