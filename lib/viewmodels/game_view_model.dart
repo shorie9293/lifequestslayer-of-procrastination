@@ -519,29 +519,47 @@ class GameViewModel extends ChangeNotifier {
   }
 
   Future<void> loadData() async {
-    _player = await _playerRepository.loadPlayer();
-    _tasks = await _taskRepository.loadTasks();
-    _tutorialStep = await _settingsRepository.getTutorialStep();
-    _hasSeenConcept = await _settingsRepository.getHasSeenConcept();
-    _fontSizeScale = await _settingsRepository.getFontSizeScale();
-    // 文字サイズは「小」のみ（大・中は崩れるため廃止）
-    if (_fontSizeScale != 0.85) {
+    try {
+      debugPrint('[GameViewModel] loadData 開始');
+      _player = await _playerRepository.loadPlayer();
+      debugPrint('[GameViewModel] player loaded');
+      _tasks = await _taskRepository.loadTasks();
+      debugPrint('[GameViewModel] tasks loaded (${_tasks.length})');
+      _tutorialStep = await _settingsRepository.getTutorialStep();
+      _hasSeenConcept = await _settingsRepository.getHasSeenConcept();
+      _fontSizeScale = await _settingsRepository.getFontSizeScale();
+      // 文字サイズは「小」のみ（大・中は崩れるため廃止）
+      if (_fontSizeScale != 0.85) {
+        _fontSizeScale = 0.85;
+        await _settingsRepository.setFontSizeScale(0.85);
+      }
+
+      // クイズ機能 ON/OFF
+      _knowledgeQuestEnabled = await _settingsRepository.getKnowledgeQuestEnabled();
+
+      // 疲労MAXフラグをアプリ再起動後も維持（日付ベース）
+      final fatiguePopupDate = await _settingsRepository.getFatiguePopupDate();
+      if (fatiguePopupDate != null && DateUtils.isSameDay(fatiguePopupDate, DateTime.now())) {
+        _hasShownFatiguePopupToday = true;
+      }
+
+      _checkAndResetMissions(isLogin: true);
+      debugPrint('[GameViewModel] loadData 完了');
+    } catch (e, stackTrace) {
+      debugPrint('[GameViewModel] loadData エラー: $e');
+      debugPrint('$stackTrace');
+      // フォールバック: デフォルト値でアプリを続行させる
+      _player = Player();
+      _tasks = [];
+      _tutorialStep = 0;
+      _hasSeenConcept = false;
       _fontSizeScale = 0.85;
-      await _settingsRepository.setFontSizeScale(0.85);
+      _knowledgeQuestEnabled = true;
+      _hasShownFatiguePopupToday = false;
+    } finally {
+      _isLoaded = true;
+      notifyListeners();
     }
-
-    // クイズ機能 ON/OFF
-    _knowledgeQuestEnabled = await _settingsRepository.getKnowledgeQuestEnabled();
-
-    // 疲労MAXフラグをアプリ再起動後も維持（日付ベース）
-    final fatiguePopupDate = await _settingsRepository.getFatiguePopupDate();
-    if (fatiguePopupDate != null && DateUtils.isSameDay(fatiguePopupDate, DateTime.now())) {
-      _hasShownFatiguePopupToday = true;
-    }
-
-    _isLoaded = true;
-    _checkAndResetMissions(isLogin: true);
-    notifyListeners();
   }
 
   Future<void> completeTutorialStep(int step) async {

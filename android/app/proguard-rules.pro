@@ -49,6 +49,20 @@
 # ---------------------------------------------------------------------------
 -keep class ** extends io.flutter.embedding.engine.plugins.FlutterPlugin { *; }
 
+# Hive TypeAdapter とモデルクラスを R8 から保護（BUG-001 再発防止）
+# これらのクラスが削除されると Hive が動作不能になりアプリが起動しなくなる
+-keep class * extends hive.typeadapter.TypeAdapter { *; }
+-keep class com.shorie.lifequest.** { *; }
+-keep class **.GeneratedPluginRegistrant { *; }
+
+# Hive がリフレクションでアクセスするフィールドを保護
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}
+
+# Flutter の GeneratedPluginRegistrant を保護
+-keep class io.flutter.plugins.GeneratedPluginRegistrant { *; }
+
 # ---------------------------------------------------------------------------
 # Kotlin metadata / coroutines
 # ---------------------------------------------------------------------------

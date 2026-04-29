@@ -54,8 +54,11 @@ android {
             signingConfig = signingConfigs.getByName("release")
             // R8 code shrinking + resource shrinking for smaller APK/AAB
             // and for Play Console deobfuscation (mapping.txt upload).
-            isMinifyEnabled = true
-            isShrinkResources = true
+            // ⚠️ BUG-001 再発防止: Hive TypeAdapter が R8 で削除され起動不能になるため
+            //    isMinifyEnabled / isShrinkResources は無効化している。
+            //    ProGuard ルールが完全に整備されるまで再有効化禁止。
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

@@ -89,6 +89,39 @@ dependencies {
 
 ---
 
+## BUG-004 | 2026-04-29 | 実機リリースビルドで起動画面フリーズ（BUG-001 再発）
+
+**重要度**: 🔴 Critical  
+**ステータス**: 修正済み（v1.2.1+11 差し戻し修正）
+
+### 症状
+Play Store 内部テスト向けのリリースビルドを実機にインストールしたところ、
+アプリが起動せず、スプラッシュ画面またはローディング表示のまま固まった。
+デバッグビルド（`flutter run`）では発生しなかった。
+
+### 原因（三重の禍津）
+1. **R8コード縮小の再発（BUG-001の再来）**: `android/app/build.gradle.kts` にて `isMinifyEnabled = true` が再有効化されており、HiveのTypeAdapterクラス（`TaskAdapter`, `PlayerAdapter`等）がR8によって削除されていた。コミット `4821af0` のAndroidビルド構成近代化の際に意図せず再有効化。
+2. **通知スケジュールのブロッキング**: `main()` で `notificationService.scheduleAll()` を `runApp()` 前に `await` しており、実機のAndroid 12+環境で `canScheduleExactAlarms()` がブロックすることがあった。
+3. **GameViewModel.loadData() のエラーハンドリング欠如**: `loadData()` が例外を投げても `_isLoaded = true` に到達せず、UIが永遠にローディング表示に留まる構造的欠陥。
+
+### 修正内容
+1. `android/app/build.gradle.kts`: `isMinifyEnabled = false`, `isShrinkResources = false` に戻し、再発防止の警告コメントを追記
+2. `android/app/proguard-rules.pro`: Hive TypeAdapter, GeneratedPluginRegistrant, アプリパッケージ全体の保持ルールを追加（将来minify再開時の備え）
+3. `lib/main.dart`: `scheduleAll()` を `runApp()` 後に `Future.microtask()` で移動
+4. `lib/services/notification_service.dart`: `canScheduleExactAlarms()` に 2秒タイムアウト追加。朝・夜の `_getScheduleMode()` 呼び出しを1回に統合
+5. `lib/viewmodels/game_view_model.dart`: `loadData()` 全体を `try-catch-finally` で保護。例外時はデフォルト値で継続起動。`finally` で必ず `_isLoaded = true`
+
+### 再発防止策（追加）
+- **ビルド設定変更時のチェックリスト必須化**: `android/app/build.gradle.kts` を変更する際は、Bug History の参照とリリースビルド実機確認を必須とする
+- **CIへのリリースビルドスモークテスト追加**: 今後の課題
+- **ProGuardルールの定期的見直し**: 新ライブラリ追加時に ProGuard ルールの充足を確認
+- **起動フローの堅牢化**: 全ChangeNotifierの非同期初期化は try-catch + タイムアウトを必須パターンとする
+
+### 教訓
+**「過去に討伐した禍津は蘇る」**——BUG-001 は単独のコード修正だけでなく、神事（プロセス）の改善を伴わなければ、必ず再来する。本修正ではコードだけでなく再発防止コメントの埋め込みとBug Historyの拡充により、これを防ぐ。
+
+---
+
 ## バグ記録ルール
 
 - バグ発生時は **必ずこのファイルに追記**する

@@ -198,7 +198,11 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin>();
     if (android == null) return false;
     try {
-      final canSchedule = await android.canScheduleExactNotifications();
+      // 実機（特にAndroid 12+の一部端末）でcanScheduleExactNotificationsが
+      // 応答を返さないことがあるため、2秒でタイムアウトさせる
+      final canSchedule = await android
+          .canScheduleExactNotifications()
+          .timeout(const Duration(seconds: 2));
       debugPrint('[NotificationService] SCHEDULE_EXACT_ALARM 権限: $canSchedule');
       return canSchedule ?? false;
     } catch (e) {
@@ -225,13 +229,17 @@ class NotificationService {
       await cancelAll();
       return;
     }
+    // スケジュールモードは1回だけ決定し、朝・夜で使い回す
+    final scheduleMode = await _getScheduleMode();
     await _scheduleMorning(
       hour: await getMorningHour(),
       minute: await getMorningMinute(),
+      scheduleMode: scheduleMode,
     );
     await _scheduleEvening(
       hour: await getEveningHour(),
       minute: await getEveningMinute(),
+      scheduleMode: scheduleMode,
     );
     debugPrint('[NotificationService] 通知をスケジュールしました');
   }
@@ -243,10 +251,13 @@ class NotificationService {
     debugPrint('[NotificationService] 全ての通知をキャンセルしました');
   }
 
-  Future<void> _scheduleMorning({required int hour, required int minute}) async {
+  Future<void> _scheduleMorning({
+    required int hour,
+    required int minute,
+    required AndroidScheduleMode scheduleMode,
+  }) async {
     await _plugin.cancel(_morningId);
     final scheduledDate = _nextInstanceOfTime(hour, minute);
-    final scheduleMode = await _getScheduleMode();
     debugPrint(
       '[NotificationService] 朝の通知をスケジュール: $hour:$minute → $scheduledDate (mode: $scheduleMode)',
     );
@@ -272,10 +283,13 @@ class NotificationService {
     );
   }
 
-  Future<void> _scheduleEvening({required int hour, required int minute}) async {
+  Future<void> _scheduleEvening({
+    required int hour,
+    required int minute,
+    required AndroidScheduleMode scheduleMode,
+  }) async {
     await _plugin.cancel(_eveningId);
     final scheduledDate = _nextInstanceOfTime(hour, minute);
-    final scheduleMode = await _getScheduleMode();
     debugPrint(
       '[NotificationService] 夜の通知をスケジュール: $hour:$minute → $scheduledDate (mode: $scheduleMode)',
     );

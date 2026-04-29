@@ -26,10 +26,11 @@ void main() async {
   // Boxes are opened in Repositories on demand/init.
 
   // 通知サービスの初期化（エラーが発生してもアプリ起動を妨げない）
+  bool notificationInitialized = false;
   try {
     final notificationService = NotificationService();
     await notificationService.initialize();
-    await notificationService.scheduleAll();
+    notificationInitialized = true;
     debugPrint('[main] 通知サービスの初期化が完了しました');
   } catch (e) {
     debugPrint('[main] 通知サービスの初期化に失敗しました（アプリは継続）: $e');
@@ -44,6 +45,19 @@ void main() async {
   }
 
   runApp(const RPGTodoApp());
+
+  // runApp後に通知スケジュールを設定（実機でハングする可能性があるためrunApp後に移動）
+  if (notificationInitialized) {
+    Future.microtask(() async {
+      try {
+        final notificationService = NotificationService();
+        await notificationService.scheduleAll();
+        debugPrint('[main] 通知スケジュールが完了しました');
+      } catch (e) {
+        debugPrint('[main] 通知スケジュールに失敗しました: $e');
+      }
+    });
+  }
 }
 
 class RPGTodoApp extends StatelessWidget {
