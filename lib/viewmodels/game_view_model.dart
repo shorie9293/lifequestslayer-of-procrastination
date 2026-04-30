@@ -527,62 +527,44 @@ class GameViewModel extends ChangeNotifier {
   }
 
   Future<void> loadData() async {
+    // print() は release ビルドでも出力されるため、エラー診断に使用
+    try { _player = await _playerRepository.loadPlayer(); } catch (e, s) { print('[VM] player load error: $e\n$s'); }
+    try { _tasks = await _taskRepository.loadTasks(); } catch (e, s) { print('[VM] tasks load error: $e\n$s'); _tasks = []; }
+    try { _tutorialStep = await _settingsRepository.getTutorialStep(); } catch (e, s) { print('[VM] tutorialStep load error: $e\n$s'); }
+    try { _hasSeenConcept = await _settingsRepository.getHasSeenConcept(); } catch (e, s) { print('[VM] hasSeenConcept load error: $e\n$s'); }
+    try { _fontSizeScale = await _settingsRepository.getFontSizeScale(); } catch (e, s) { print('[VM] fontSizeScale load error: $e\n$s'); }
+    // 文字サイズは「小」のみ（大・中は崩れるため廃止）
+    if (_fontSizeScale != 0.85) {
+      _fontSizeScale = 0.85;
+      try { await _settingsRepository.setFontSizeScale(0.85); } catch (_) {}
+    }
+
+    try { _knowledgeQuestEnabled = await _settingsRepository.getKnowledgeQuestEnabled(); } catch (e, s) { print('[VM] knowledgeQuest load error: $e\n$s'); }
+
+    try { _tutorialSkipped = await _settingsRepository.getTutorialSkipped(); } catch (e, s) { print('[VM] tutorialSkipped load error: $e\n$s'); }
+    try { _tutorialChoiceMade = await _settingsRepository.getTutorialChoiceMade(); } catch (e, s) { print('[VM] tutorialChoiceMade load error: $e\n$s'); }
+
     try {
-      debugPrint('[GameViewModel] loadData 開始');
-      _player = await _playerRepository.loadPlayer();
-      debugPrint('[GameViewModel] player loaded');
-      _tasks = await _taskRepository.loadTasks();
-      debugPrint('[GameViewModel] tasks loaded (${_tasks.length})');
-      _tutorialStep = await _settingsRepository.getTutorialStep();
-      _hasSeenConcept = await _settingsRepository.getHasSeenConcept();
-      _fontSizeScale = await _settingsRepository.getFontSizeScale();
-      // 文字サイズは「小」のみ（大・中は崩れるため廃止）
-      if (_fontSizeScale != 0.85) {
-        _fontSizeScale = 0.85;
-        await _settingsRepository.setFontSizeScale(0.85);
-      }
-
-      // クイズ機能 ON/OFF
-      _knowledgeQuestEnabled = await _settingsRepository.getKnowledgeQuestEnabled();
-
-      // チュートリアルスキップ状態を読み込み
-      _tutorialSkipped = await _settingsRepository.getTutorialSkipped();
-
-      // チュートリアル選択済み状態を読み込み
-      _tutorialChoiceMade = await _settingsRepository.getTutorialChoiceMade();
-
-      // 疲労MAXフラグをアプリ再起動後も維持（日付ベース）
       final fatiguePopupDate = await _settingsRepository.getFatiguePopupDate();
       if (fatiguePopupDate != null && DateUtils.isSameDay(fatiguePopupDate, DateTime.now())) {
         _hasShownFatiguePopupToday = true;
       }
+    } catch (e, s) { print('[VM] fatiguePopup load error: $e\n$s'); }
 
-      // チュートリアル完了済みユーザーの hasSeenConcept 修復
-      // （過去のバグで hasSeenConcept=false が永続化されたユーザーの救済）
-      if (_tutorialStep > 2 && !_hasSeenConcept) {
-        _hasSeenConcept = true;
-        await _settingsRepository.setHasSeenConcept(true);
-      }
-
-      _checkAndResetMissions(isLogin: true);
-      debugPrint('[GameViewModel] loadData 完了');
-    } catch (e, stackTrace) {
-      debugPrint('[GameViewModel] loadData エラー: $e');
-      debugPrint('$stackTrace');
-      // フォールバック: デフォルト値でアプリを続行させる
-      _player = Player();
-      _tasks = [];
-      _tutorialStep = 0;
-      _hasSeenConcept = false;
-      _fontSizeScale = 0.85;
-      _knowledgeQuestEnabled = true;
-      _tutorialSkipped = false;
-      _tutorialChoiceMade = false;
-      _hasShownFatiguePopupToday = false;
-    } finally {
-      _isLoaded = true;
-      notifyListeners();
+    // チュートリアル完了済みユーザーの hasSeenConcept 修復
+    if (_tutorialStep > 2 && !_hasSeenConcept) {
+      _hasSeenConcept = true;
+      try { await _settingsRepository.setHasSeenConcept(true); } catch (_) {}
     }
+
+    try {
+      _checkAndResetMissions(isLogin: true);
+    } catch (e, s) {
+      print('[VM] checkAndResetMissions error: $e\n$s');
+    }
+
+    _isLoaded = true;
+    notifyListeners();
   }
 
   Future<void> completeTutorialStep(int step) async {
