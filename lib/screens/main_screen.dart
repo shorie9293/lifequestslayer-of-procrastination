@@ -409,7 +409,7 @@ class _MainScreenState extends State<MainScreen> {
             backgroundColor: Colors.black87,
         ),
       ),
-      if (viewModel.tutorialStep <= 2 && !viewModel.tutorialChoiceMade) ...[
+      if (viewModel.tutorialStep <= 2 && !viewModel.tutorialSkipped) ...[
         _buildTutorialOverlay(viewModel.tutorialStep),
         Positioned(
           top: MediaQuery.of(context).padding.top + 8,
@@ -461,19 +461,23 @@ void _showTutorialChoiceDialog() {
         content: const Text('冒険の基本を学びますか？\n（初めてプレイする方は「学ぶ」を推奨）'),
         actions: [
           TextButton(
-            onPressed: () {
-              viewModel.skipTutorial();
-              Navigator.pop(ctx);
-              setState(() => _isTutorialChoiceShowing = false);
+            onPressed: () async {
+              await viewModel.skipTutorial();
+              if (mounted) {
+                Navigator.pop(ctx);
+                setState(() => _isTutorialChoiceShowing = false);
+              }
             },
             style: TextButton.styleFrom(foregroundColor: Colors.grey),
             child: const Text('スキップ'),
           ),
           ElevatedButton(
-            onPressed: () {
-              viewModel.markTutorialChoiceMade();
-              Navigator.pop(ctx);
-              setState(() => _isTutorialChoiceShowing = false);
+            onPressed: () async {
+              await viewModel.markTutorialChoiceMade();
+              if (mounted) {
+                Navigator.pop(ctx);
+                setState(() => _isTutorialChoiceShowing = false);
+              }
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.amber[700],

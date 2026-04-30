@@ -557,6 +557,13 @@ class GameViewModel extends ChangeNotifier {
         _hasShownFatiguePopupToday = true;
       }
 
+      // チュートリアル完了済みユーザーの hasSeenConcept 修復
+      // （過去のバグで hasSeenConcept=false が永続化されたユーザーの救済）
+      if (_tutorialStep > 2 && !_hasSeenConcept) {
+        _hasSeenConcept = true;
+        await _settingsRepository.setHasSeenConcept(true);
+      }
+
       _checkAndResetMissions(isLogin: true);
       debugPrint('[GameViewModel] loadData 完了');
     } catch (e, stackTrace) {
