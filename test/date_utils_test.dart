@@ -24,7 +24,8 @@ void main() {
     test('isYesterday - 前日の日付ならtrue', () {
       final today = DateTime(2026, 4, 27);
       final yesterday = DateTime(2026, 4, 26);
-      expect(DateUtils.isYesterday(today, yesterday), true);
+      // isYesterday(past, now): pastがnowの昨日かを判定
+      expect(DateUtils.isYesterday(yesterday, today), true);
     });
 
     test('isYesterday - 同日ならfalse', () {

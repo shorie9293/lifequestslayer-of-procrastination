@@ -14,7 +14,7 @@ import '../services/quiz_service.dart';
 import '../services/fatigue_service.dart';
 import '../utils/date_utils.dart';
 
-class GameViewModel extends ChangeNotifier {
+class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   final PlayerRepository _playerRepository;
   final TaskRepository _taskRepository;
   final SettingsRepository _settingsRepository;
@@ -44,6 +44,11 @@ class GameViewModel extends ChangeNotifier {
   bool _savePending = false;
   // v1.3: タスク完了処理中の二重実行防止
   final Set<String> _completingTaskIds = {};
+
+  // v1.5: ロード失敗フラグ（デフォルト値上書き保存の防止）
+  // - Player/Tasks の読み込みに失敗した場合のみ true
+  // - true の間は _notifyAndSave() をブロックし、初期値での上書きを防ぐ
+  bool _loadFailed = false;
 
   GameViewModel({
     PlayerRepository? playerRepository,
@@ -528,8 +533,15 @@ class GameViewModel extends ChangeNotifier {
 
   Future<void> loadData() async {
     // print() は release ビルドでも出力されるため、エラー診断に使用
-    try { _player = await _playerRepository.loadPlayer(); } catch (e, s) { print('[VM] player load error: $e\n$s'); }
-    try { _tasks = await _taskRepository.loadTasks(); } catch (e, s) { print('[VM] tasks load error: $e\n$s'); _tasks = []; }
+    _loadFailed = false;
+
+    // Player/Tasks の読み込み失敗は _loadFailed を立てる（デフォルト値上書き防止）
+    try { _player = await _playerRepository.loadPlayer(); }
+    catch (e, s) { print('[VM] player load error: $e\n$s'); _loadFailed = true; }
+    try { _tasks = await _taskRepository.loadTasks(); }
+    catch (e, s) { print('[VM] tasks load error: $e\n$s'); _tasks = []; _loadFailed = true; }
+
+    // 設定系の読み込み失敗は _loadFailed を立てない（ゲームデータ保存に影響させない）
     try { _tutorialStep = await _settingsRepository.getTutorialStep(); } catch (e, s) { print('[VM] tutorialStep load error: $e\n$s'); }
     try { _hasSeenConcept = await _settingsRepository.getHasSeenConcept(); } catch (e, s) { print('[VM] hasSeenConcept load error: $e\n$s'); }
     try { _fontSizeScale = await _settingsRepository.getFontSizeScale(); } catch (e, s) { print('[VM] fontSizeScale load error: $e\n$s'); }
@@ -558,13 +570,24 @@ class GameViewModel extends ChangeNotifier {
     }
 
     try {
-      _checkAndResetMissions(isLogin: true);
+      // ロード失敗時は _checkAndResetMissions をスキップ（保存不可のため）
+      if (!_loadFailed) {
+        _checkAndResetMissions(isLogin: true);
+      }
     } catch (e, s) {
       print('[VM] checkAndResetMissions error: $e\n$s');
     }
 
     _isLoaded = true;
     notifyListeners();
+
+    // v1.5: ロード完了後にライフサイクル監視を開始（ロード中の誤保存防止）
+    // テスト環境等で WidgetsBinding が未初期化の場合は安全にスキップ
+    try {
+      WidgetsBinding.instance.addObserver(this);
+    } catch (_) {
+      // WidgetsBinding が利用できない環境（単体テスト等）では監視を省略
+    }
   }
 
   Future<void> completeTutorialStep(int step) async {
@@ -625,8 +648,30 @@ class GameViewModel extends ChangeNotifier {
     await _taskRepository.saveTasks(_tasks);
   }
 
+  // v1.5: ライフサイクル管理 — バックグラウンド移行時に即座に永続化
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      if (!_loadFailed) {
+        saveData().catchError((e) => debugPrint('GameViewModel: lifecycle save failed: $e'));
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _playerRepository.close();
+    _taskRepository.close();
+    super.dispose();
+  }
+
   void _notifyAndSave() {
     notifyListeners();
+
+    // v1.5: ロード失敗時はデフォルト値での上書きを防止するため保存しない
+    if (_loadFailed) return;
+
     if (_isSaving) {
       _savePending = true;
       return;

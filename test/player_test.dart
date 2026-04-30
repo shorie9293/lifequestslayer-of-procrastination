@@ -113,7 +113,7 @@ void main() {
     });
 
     tearDown(() async {
-      await box.close();
+      // deleteFromDisk は内部で close を呼ぶため、事前の close は不要（二重close防止）
       await box.deleteFromDisk();
     });
 
