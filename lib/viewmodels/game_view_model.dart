@@ -648,13 +648,12 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     await _taskRepository.saveTasks(_tasks);
   }
 
-  // v1.5: ライフサイクル管理 — バックグラウンド移行時に即座に永続化
+  // v1.6: ライフサイクル管理 — バックグラウンド移行時に即座に永続化
+  // （破損 Box は Repository 層で自動削除されるため、常に保存を試行）
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
-      if (!_loadFailed) {
-        saveData().catchError((e) => debugPrint('GameViewModel: lifecycle save failed: $e'));
-      }
+      saveData().catchError((e) => debugPrint('GameViewModel: lifecycle save failed: $e'));
     }
   }
 
@@ -669,8 +668,8 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   void _notifyAndSave() {
     notifyListeners();
 
-    // v1.5: ロード失敗時はデフォルト値での上書きを防止するため保存しない
-    if (_loadFailed) return;
+    // v1.6: 破損 Box は Repository 層で自動削除されるため、保存をブロックしない
+    // （旧 v1.5 の _loadFailed ガードはユーザーを永続ブロックに陥れていた）
 
     if (_isSaving) {
       _savePending = true;

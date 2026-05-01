@@ -16,13 +16,35 @@ class PlayerRepository {
 
   Future<Player> loadPlayer() async {
     debugPrint('PlayerRepository: Loading player...');
-    final box = await _getBox();
-    if (box.isNotEmpty) {
-      debugPrint('PlayerRepository: Player found (Lv.${box.getAt(0)!.level})');
-      return box.getAt(0)!;
+    try {
+      final box = await _getBox();
+      if (box.isNotEmpty) {
+        final player = box.getAt(0);
+        if (player != null) {
+          debugPrint('PlayerRepository: Player found (Lv.${player.level})');
+          return player;
+        }
+      }
+    } catch (e) {
+      // v1.6: 破損または旧形式の Box を自動修復（削除して初期化）
+      debugPrint('PlayerRepository: Load failed (corrupted/incompatible data), deleting box: $e');
+      await _closeAndDeleteBox();
     }
     debugPrint('PlayerRepository: No player found, returning default.');
     return Player();
+  }
+
+  /// 破損 Box を削除（次回アクセス時に自動再作成される）
+  Future<void> _closeAndDeleteBox() async {
+    try {
+      if (_box != null && _box!.isOpen) {
+        await _box!.close();
+      }
+      _box = null;
+      await Hive.deleteBoxFromDisk(boxName);
+    } catch (_) {
+      // 削除失敗時も次回起動でリトライされるため無視
+    }
   }
 
   Future<void> savePlayer(Player player) async {

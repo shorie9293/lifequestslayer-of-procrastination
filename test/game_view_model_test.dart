@@ -178,7 +178,7 @@ void main() {
       expect(vm.tasks, isEmpty);
     });
 
-    test('読み込み失敗時は _notifyAndSave がブロックされ、変更が保存されない', () async {
+    test('読み込み失敗時も _notifyAndSave が例外を投げず、ユーザー操作が可能であることを確認', () async {
       // PlayerRepository が失敗する ViewModel を作成
       final vm = GameViewModel(
         playerRepository: FailingPlayerRepository(HiveError('テスト用エラー')),
@@ -188,11 +188,12 @@ void main() {
 
       await _waitForLoad(vm);
 
-      // 操作を試みる（内部で _notifyAndSave が呼ばれるが、_loadFailed=true によりブロックされる）
-      // 例外が発生しないことを確認
+      // v1.6: ロード失敗時もユーザー操作はブロックされず、saveData が実行される
+      // （Repository 層で破損 Box は削除済みのため安全）
       expect(() => vm.addGems(100), returnsNormally);
       expect(() => vm.addTask('テスト', rank: QuestRank.B), returnsNormally);
-      // _loadFailed フラグにより saveData() は呼ばれず、例外も発生しない
+      expect(vm.player.gems, 100);  // 宝石が実際に追加されている
+      expect(vm.tasks.length, 1);    // タスクが実際に追加されている
     });
   });
 
