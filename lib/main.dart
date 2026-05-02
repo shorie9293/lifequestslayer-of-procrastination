@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'viewmodels/game_view_model.dart';
 import 'screens/main_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'package:flutter/gestures.dart';
 import 'models/task.dart';
 import 'models/player.dart';
 import 'services/notification_service.dart';
 import 'services/iap_service.dart';
 import 'services/quiz_service.dart';
+import 'core/error/error_boundary.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -43,6 +44,30 @@ void main() async {
   } catch (e) {
     debugPrint('[main] クイズデータの読み込みに失敗しました（アプリは継続）: $e');
   }
+
+  // ━━━ コード適応神書 適3：エラー境界 ━━━
+
+  // ① Widgetツリー内の例外を捕捉 → フォールバックUIを表示
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    return ErrorBoundaryWidget(
+      error: details.exception,
+      stackTrace: details.stack,
+    );
+  };
+
+  // ② Flutterフレームワーク内の非同期エラー
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    // TODO: ログ送信（天神社ステージで実装）
+  };
+
+  // ③ ゾーン外の非同期エラー（Platformレベル）
+  PlatformDispatcher.instance.onError = (error, stack) {
+    debugPrint('💀 捕捉不能エラー: $error\n$stack');
+    return true; // true = 処理済み（クラッシュさせない）
+  };
+
+  // ━━━ エラー境界 設定完了 ━━━
 
   runApp(const RPGTodoApp());
 

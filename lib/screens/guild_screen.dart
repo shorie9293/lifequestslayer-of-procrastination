@@ -74,6 +74,7 @@ class GuildScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
                   SwitchListTile(
+                    key: AppKeys.guildKnowledgeQuestToggle,
                     title: const Text('知識クエストを有効にする'),
                     subtitle: Text(
                       enabled ? '有効：クエスト完了後にクイズが出題されます' : '無効：クイズは表示されません',
@@ -403,6 +404,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     final player = viewModel.player;
 
     return AlertDialog(
+      key: AppKeys.formTaskDialog,
       title: Text(widget.task == null ? "新規クエスト作成" : "クエスト編集"),
       content: ConstrainedBox(
         constraints: BoxConstraints(
@@ -415,6 +417,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
+              key: AppKeys.formTaskTitle,
               controller: _titleController,
               decoration: const InputDecoration(labelText: "タイトル（長文入力可）"),
               autofocus: true,
@@ -531,11 +534,13 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
       ),
       actions: [
         TextButton(
+          key: AppKeys.formTaskCancel,
           onPressed: () => Navigator.pop(context),
           style: TextButton.styleFrom(foregroundColor: Colors.grey[400]),
           child: const Text("キャンセル", style: TextStyle(fontSize: 16)),
         ),
         ElevatedButton(
+          key: AppKeys.formTaskSubmit,
           onPressed: _saveTask,
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.blueAccent,
@@ -602,6 +607,7 @@ class RecurringTasksDialog extends StatelessWidget {
     final tasks = viewModel.recurringTasks;
 
     return AlertDialog(
+      key: AppKeys.guildRecurringTasksDialog,
       title: const Row(
         children: [
           Icon(Icons.loop, color: Colors.cyan),
@@ -845,6 +851,7 @@ class _NotificationSettingsDialogState
     }
 
     return AlertDialog(
+      key: AppKeys.notificationSettingsDialog,
       title: const Row(
         children: [
           Icon(Icons.notifications_active, color: Colors.amber),

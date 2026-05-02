@@ -4,8 +4,8 @@ import '../viewmodels/game_view_model.dart';
 import '../widgets/help_dialog.dart';
 import '../widgets/tutorial_overlay.dart';
 import '../utils/tutorial_keys.dart';
-import '../core/accessibility/semantic_helper.dart';
 import '../core/testing/widget_keys.dart';
+import '../core/error/error_boundary.dart';
 import 'guild_screen.dart';
 import 'home_screen.dart';
 import 'temple_screen.dart';
@@ -26,10 +26,10 @@ class _MainScreenState extends State<MainScreen> {
   final PageController _pageController = PageController(initialPage: 0); // スワイプ用のページコントローラー
 
   final List<Widget> _screens = [
-    const HomeScreen(),
-    const GuildScreen(),
-    const TempleScreen(),
-    const TownScreen(),
+    const ErrorBoundary(child: HomeScreen()),
+    const ErrorBoundary(child: GuildScreen()),
+    const ErrorBoundary(child: TempleScreen()),
+    const ErrorBoundary(child: TownScreen()),
   ];
 
   @override

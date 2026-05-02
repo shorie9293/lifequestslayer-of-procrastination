@@ -6,6 +6,7 @@ import '../models/player.dart';
 import '../models/task.dart';
 import '../viewmodels/game_view_model.dart';
 import '../core/accessibility/semantic_helper.dart';
+import '../core/testing/widget_keys.dart';
 class PlayerStatusHeader extends StatelessWidget {
   const PlayerStatusHeader({super.key});
 
@@ -19,7 +20,7 @@ class PlayerStatusHeader extends StatelessWidget {
       testId: '${SemanticTypes.section}_player_status',
       label: 'プレイヤーステータス',
       child: Container(
-        key: Key('header_player_status'),
+        key: AppKeys.playerStatusHeader,
         padding: const EdgeInsets.all(16),
       color: Colors.black12,
       child: Column(

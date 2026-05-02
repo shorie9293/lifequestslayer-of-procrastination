@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../viewmodels/game_view_model.dart';
 import '../models/title_definition.dart';
 import 'gem_shop_screen.dart';
-import '../core/accessibility/semantic_helper.dart';
 import '../core/testing/widget_keys.dart';
 
 class TownScreen extends StatelessWidget {
@@ -24,6 +23,7 @@ class TownScreen extends StatelessWidget {
     final homeData = _getHomeData(player);
 
     return Scaffold(
+      key: AppKeys.townScreen,
       appBar: AppBar(
         title: Text("はじまりの街 - ${homeData['name']}"),
       ),
@@ -47,6 +47,7 @@ class TownScreen extends StatelessWidget {
                   const Icon(Icons.monetization_on, color: Colors.amber, size: 28),
                   const SizedBox(width: 6),
                   Text(
+                    key: AppKeys.townCoinBalance,
                     "${player.coins} 金貨",
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.amber),
                   ),
@@ -54,11 +55,13 @@ class TownScreen extends StatelessWidget {
                   const Icon(Icons.diamond, color: Colors.purpleAccent, size: 24),
                   const SizedBox(width: 4),
                   Text(
+                    key: AppKeys.townGemBalance,
                     "${player.gems} 宝石",
                     style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.purpleAccent),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
+                    key: AppKeys.townGemShopButton,
                     icon: const Icon(Icons.add, size: 16),
                     label: const Text('購入'),
                     style: ElevatedButton.styleFrom(
@@ -239,6 +242,7 @@ class TownScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        key: AppKeys.townBuyConfirmDialog,
         title: const Text("購入確認"),
         content: Text("「${item.name}」を ${item.price} 金貨で購入しますか？"),
         actions: [
@@ -265,6 +269,7 @@ class TownScreen extends StatelessWidget {
   // --- 宿屋システム（新機能：疲労回復） ---
   Widget _buildInnSection(BuildContext context, player, GameViewModel viewModel) {
     return Column(
+      key: AppKeys.townInnSection,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Row(
@@ -311,6 +316,7 @@ class TownScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        key: AppKeys.townInnConfirmDialog,
         title: const Text("宿泊確認"),
         content: Text("「$name」に $price 金貨で泊まりますか？\n(※1日1回のみ。明日の疲労バフ上限を引き上げます)"),
         actions: [
@@ -495,6 +501,7 @@ class TownScreen extends StatelessWidget {
       builder: (ctx) {
         List<String> titles = ["", ...player.titles];
         return AlertDialog(
+          key: AppKeys.townTitleSelectDialog,
           title: const Text("称号一覧"),
           content: SizedBox(
             width: double.maxFinite,

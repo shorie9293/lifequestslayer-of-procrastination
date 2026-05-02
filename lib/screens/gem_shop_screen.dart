@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import '../services/iap_service.dart';
 import '../viewmodels/game_view_model.dart';
-import '../core/accessibility/semantic_helper.dart';
 import '../core/testing/widget_keys.dart';
 
 /// 宝石パックの表示名・ボーナス表記
@@ -68,6 +67,7 @@ class _GemShopScreenState extends State<GemShopScreen> {
     final player = viewModel.player;
 
     return Scaffold(
+      key: AppKeys.gemShopScreen,
       appBar: AppBar(
         leading: const BackButton(),
         title: const Text('💎 宝石ショップ'),
@@ -187,6 +187,7 @@ class _GemShopScreenState extends State<GemShopScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        key: AppKeys.gemShopPurchaseConfirm,
         title: const Text('購入確認'),
         content: Text('$label を ${product.price} で購入しますか？'),
         actions: [
@@ -219,6 +220,7 @@ class _GemShopScreenState extends State<GemShopScreen> {
         const SizedBox(height: 12),
         // 金貨交換
         _buildUseCard(
+          key: AppKeys.gemShopExchangeCoin,
           icon: Icons.monetization_on,
           iconColor: Colors.amber,
           title: '金貨に両替',
@@ -233,6 +235,7 @@ class _GemShopScreenState extends State<GemShopScreen> {
         const SizedBox(height: 8),
         // 疲労リセット
         _buildUseCard(
+          key: AppKeys.gemShopResetFatigue,
           icon: Icons.local_hospital,
           iconColor: Colors.greenAccent,
           title: '疲労を即時回復',
@@ -249,6 +252,7 @@ class _GemShopScreenState extends State<GemShopScreen> {
   }
 
   Widget _buildUseCard({
+    Key? key,
     required IconData icon,
     required Color iconColor,
     required String title,
@@ -259,6 +263,7 @@ class _GemShopScreenState extends State<GemShopScreen> {
   }) {
     final canAfford = playerGems >= cost;
     return Card(
+      key: key,
       color: Colors.black54,
       child: ListTile(
         leading: Icon(icon, color: iconColor, size: 32),
@@ -275,6 +280,7 @@ class _GemShopScreenState extends State<GemShopScreen> {
               ? () => showDialog(
                     context: context,
                     builder: (ctx) => AlertDialog(
+                      key: AppKeys.gemShopUseConfirm,
                       title: Text(title),
                       content: Text('💎 $cost 宝石を使いますか？'),
                       actions: [

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../viewmodels/game_view_model.dart';
 import '../models/player.dart';
+import '../core/testing/widget_keys.dart';
 
 class TempleScreen extends StatelessWidget {
   const TempleScreen({super.key});
@@ -14,6 +15,7 @@ class TempleScreen extends StatelessWidget {
     final canChangeJob = adventurerLv >= 10;
 
     return Scaffold(
+      key: AppKeys.templeScreen,
       appBar: AppBar(
         title: const Text('転職の神殿'),
       ),
@@ -55,6 +57,7 @@ class TempleScreen extends StatelessWidget {
             Colors.brown,
             player.currentJob == Job.adventurer,
             true, // Always allowed
+            AppKeys.templeJobCardAdventurer,
           ),
           _buildJobCard(
             context,
@@ -66,6 +69,7 @@ class TempleScreen extends StatelessWidget {
             Colors.red,
             player.currentJob == Job.warrior,
             canChangeJob,
+            AppKeys.templeJobCardWarrior,
           ),
           _buildJobCard(
             context,
@@ -77,6 +81,7 @@ class TempleScreen extends StatelessWidget {
             Colors.cyan,
             player.currentJob == Job.cleric,
             canChangeJob,
+            AppKeys.templeJobCardCleric,
           ),
           _buildJobCard(
             context,
@@ -88,6 +93,7 @@ class TempleScreen extends StatelessWidget {
             Colors.deepPurple,
             player.currentJob == Job.wizard,
             canChangeJob,
+            AppKeys.templeJobCardWizard,
           ),
         ],
       ),
@@ -105,6 +111,7 @@ class TempleScreen extends StatelessWidget {
     Color color,
     bool isSelected,
     bool isUnlocked,
+    Key cardKey,
   ) {
     final player = viewModel.player;
     final level = player.jobLevels[job] ?? 1;
@@ -112,6 +119,7 @@ class TempleScreen extends StatelessWidget {
     final isSkillActive = player.activeSkills.contains(job);
 
     return Card(
+      key: cardKey,
       color: isSelected ? color.withValues(alpha: 0.2) : null,
       margin: const EdgeInsets.only(bottom: 16),
       shape: RoundedRectangleBorder(
@@ -199,6 +207,7 @@ class TempleScreen extends StatelessWidget {
                   children: [
                     const Text("スキル継承 (ON/OFF)"),
                     Switch(
+                      key: AppKeys.templeSkillToggle,
                       value: isSkillActive, 
                       onChanged: (val) {
                         viewModel.toggleSkill(job);

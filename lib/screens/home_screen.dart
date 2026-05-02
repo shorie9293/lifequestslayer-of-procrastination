@@ -10,7 +10,6 @@ import '../models/task.dart';
 import '../data/quiz_data.dart';
 import '../utils/tutorial_keys.dart';
 import '../utils/rank_colors.dart';
-import '../core/accessibility/semantic_helper.dart';
 import '../core/testing/widget_keys.dart';
 
 
@@ -128,6 +127,7 @@ class HomeScreen extends StatelessWidget {
             transitionDuration: const Duration(milliseconds: 400),
             pageBuilder: (context, anim1, anim2) {
               return Center(
+                key: AppKeys.battleLevelUpDialog,
                 child: Material(
                   color: Colors.transparent,
                   child: Container(
@@ -225,6 +225,7 @@ class HomeScreen extends StatelessWidget {
     final tasks = viewModel.activeTasks;
 
     return Scaffold(
+      key: AppKeys.battleScreen,
       appBar: AppBar(
         title: const Text("戦場"),
       ),
@@ -245,6 +246,7 @@ class HomeScreen extends StatelessWidget {
           Expanded(
             child: tasks.isEmpty
                 ? Center(
+                    key: AppKeys.battleEmptyState,
                     child: Text(
                       "クエストがありません。\nギルドで受注してください！",
                       textAlign: TextAlign.center,
@@ -252,6 +254,7 @@ class HomeScreen extends StatelessWidget {
                     ),
                   )
                 : ListView.builder(
+                    key: AppKeys.battleActiveTaskList,
                     padding: const EdgeInsets.all(16),
                     itemCount: tasks.length,
                     itemBuilder: (context, index) {
@@ -262,6 +265,7 @@ class HomeScreen extends StatelessWidget {
                         onSubTaskToggle: (idx, _) => viewModel.toggleSubTask(task.id, idx),
                         actions: [
                           IconButton(
+                            key: AppKeys.battleCancel,
                             icon: const Icon(Icons.undo, color: Colors.grey),
                             onPressed: () {
                               viewModel.cancelTask(task.id);
