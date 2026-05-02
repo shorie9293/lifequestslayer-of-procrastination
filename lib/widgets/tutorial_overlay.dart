@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../core/accessibility/semantic_helper.dart';
+import '../core/testing/widget_keys.dart';
 
 class TutorialOverlay extends StatefulWidget {
   final Rect targetRect;
@@ -48,8 +50,11 @@ class _TutorialOverlayState extends State<TutorialOverlay>
     final arrowTop = widget.targetRect.top - 56;
     final showArrowAbove = arrowTop > 80;
 
-    return IgnorePointer(
-      ignoring: true, // タップはすべて下のUIに貫通させる
+    return SemanticHelper.container(
+      testId: '${SemanticTypes.section}_tutorial',
+      child: IgnorePointer(
+        key: AppKeys.tutorialOverlay,
+        ignoring: true, // タップはすべて下のUIに貫通させる
       child: Stack(
         fit: StackFit.expand,
         children: [
@@ -153,7 +158,7 @@ class _TutorialOverlayState extends State<TutorialOverlay>
           )
         ],
       ),
-    );
+    ));
   }
 }
 

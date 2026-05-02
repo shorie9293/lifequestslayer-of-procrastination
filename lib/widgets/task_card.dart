@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/task.dart';
+import '../core/accessibility/semantic_helper.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
@@ -38,8 +39,11 @@ class TaskCard extends StatelessWidget {
     final cardColor = color ?? (task.status == TaskStatus.active ? Colors.red[900] : const Color(0xFF2A2D34));
     final textColor = (cardColor != null && cardColor.computeLuminance() < 0.5) ? Colors.white : Colors.black87;
 
-    return Card(
-      color: cardColor,
+    return SemanticHelper.container(
+      testId: '${SemanticTypes.listItem}_task_${task.id}',
+      child: Card(
+        key: Key('card_task_${task.id}'),
+        color: cardColor,
       elevation: 8,
       shadowColor: Colors.black.withValues(alpha: 0.5),
       shape: RoundedRectangleBorder(
@@ -78,9 +82,12 @@ class TaskCard extends StatelessWidget {
                     ),
                     child: Icon(Icons.assignment, size: 28, color: textColor),
                   ),
-            title: Text(
-              "[${task.rank.name}] ${task.title}",
-              style: GoogleFonts.vt323(fontSize: 26, color: textColor, fontWeight: FontWeight.bold),
+            title: Semantics(
+              identifier: 'txt_task_title_${task.id}',
+              child: Text(
+                "[${task.rank.name}] ${task.title}",
+                style: GoogleFonts.vt323(fontSize: 26, color: textColor, fontWeight: FontWeight.bold),
+              ),
             ),
             subtitle: subtitle != null
                 ? Padding(
@@ -97,16 +104,22 @@ class TaskCard extends StatelessWidget {
                       final idx = entry.key;
                       final sub = entry.value;
                       return ListTile(
+                        key: Key('subtask_${task.id}_$idx'),
                         dense: true,
                         title: Text(sub.title, style: TextStyle(color: textColor, fontSize: 16)),
-                        leading: Checkbox(
+                        leading: SemanticHelper.toggle(
+                          testId: '${SemanticTypes.toggle}_subtask_${task.id}_$idx',
                           value: sub.isCompleted,
-                          onChanged: onSubTaskToggle != null
-                              ? (val) => onSubTaskToggle!(idx, val)
-                              : null,
-                          checkColor: Colors.black,
-                          activeColor: Colors.amberAccent,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          child: Checkbox(
+                            key: Key('chk_subtask_${task.id}_$idx'),
+                            value: sub.isCompleted,
+                            onChanged: onSubTaskToggle != null
+                                ? (val) => onSubTaskToggle!(idx, val)
+                                : null,
+                            checkColor: Colors.black,
+                            activeColor: Colors.amberAccent,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                          ),
                         ),
                       );
                     }).toList(),
@@ -126,6 +139,6 @@ class TaskCard extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ));
   }
 }

@@ -10,6 +10,8 @@ import '../models/task.dart';
 import '../data/quiz_data.dart';
 import '../utils/tutorial_keys.dart';
 import '../utils/rank_colors.dart';
+import '../core/accessibility/semantic_helper.dart';
+import '../core/testing/widget_keys.dart';
 
 
 class HomeScreen extends StatelessWidget {

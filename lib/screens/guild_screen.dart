@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../core/accessibility/semantic_helper.dart';
+import '../core/testing/widget_keys.dart';
 import '../viewmodels/game_view_model.dart';
 import '../models/task.dart';
 import '../models/player.dart';
@@ -19,10 +21,12 @@ class GuildScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        key: AppKeys.confirmDialog,
         title: const Text('チュートリアルをリセット'),
         content: const Text('チュートリアルを最初からやり直しますか？\n（ゲームデータは消えません）'),
         actions: [
           TextButton(
+            key: AppKeys.closeButton,
             onPressed: () => Navigator.pop(ctx),
             style: TextButton.styleFrom(foregroundColor: Colors.grey),
             child: const Text('キャンセル'),
@@ -89,6 +93,7 @@ class GuildScreen extends StatelessWidget {
               ),
               actions: [
                 TextButton(
+                  key: AppKeys.closeButton,
                   onPressed: () => Navigator.pop(ctx),
                   child: const Text('閉じる'),
                 ),
@@ -173,6 +178,7 @@ class GuildScreen extends StatelessWidget {
               onPressed: () => _showRecurringTasksDialog(context),
             ),
           PopupMenuButton<String>(
+            key: AppKeys.settingsButton,
             icon: const Icon(Icons.settings),
             tooltip: '設定',
             onSelected: (value) {
@@ -232,8 +238,12 @@ class GuildScreen extends StatelessWidget {
 
           Expanded(
             child: tasks.isEmpty
-                ? SingleChildScrollView(
-                    child: Center(
+                ? SemanticHelper.container(
+                    testId: SemanticHelper.createTestId(SemanticTypes.section, 'empty_no_quests'),
+                    label: 'クエストなし',
+                    child: SingleChildScrollView(
+                      key: AppKeys.guildEmptyState,
+                      child: Center(
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: const [
@@ -251,37 +261,44 @@ class GuildScreen extends StatelessWidget {
                         ],
                       ),
                     ),
+                  ),
                   )
                   : ListView.builder(
+                      key: AppKeys.guildQuestList,
                       padding: const EdgeInsets.only(bottom: 80), // FABとの被り対策
                       itemCount: tasks.length,
                       itemBuilder: (context, index) {
                         final task = tasks[index];
-                        return TaskCard(
-                          task: task,
-                          color: _getRankColor(task.rank),
-                          subtitle: _getTaskDetails(task),
-                          actions: [
-                             TextButton(
-                               onPressed: () => _showEditTaskDialog(context, task),
-                               child: const Text("編集", style: TextStyle(color: Colors.grey)),
-                             ),
-                             TextButton(
-                               onPressed: () => _deleteTask(context, task.id),
-                               child: const Text("破棄", style: TextStyle(color: Colors.grey)),
-                             ),
-                             const SizedBox(width: 8),
-                             ElevatedButton(
-                               key: index == 0 ? TutorialKeys.acceptTaskKey : null,
-                               onPressed: () => _acceptTask(context, task.id),
-                               style: ElevatedButton.styleFrom(
-                                 backgroundColor: Colors.amber[700],
-                                 foregroundColor: Colors.white,
-                                 textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                        return SemanticHelper.listItem(
+                          testId: SemanticHelper.createTestId(SemanticTypes.listItem, 'task_$index'),
+                          index: index,
+                          child: TaskCard(
+                            task: task,
+                            color: _getRankColor(task.rank),
+                            subtitle: _getTaskDetails(task),
+                            actions: [
+                               TextButton(
+                                 onPressed: () => _showEditTaskDialog(context, task),
+                                 child: const Text("編集", style: TextStyle(color: Colors.grey)),
                                ),
-                               child: const Text("出発する"),
-                             ),
-                          ],
+                               TextButton(
+                                 key: AppKeys.taskCardDelete,
+                                 onPressed: () => _deleteTask(context, task.id),
+                                 child: const Text("破棄", style: TextStyle(color: Colors.grey)),
+                               ),
+                               const SizedBox(width: 8),
+                               ElevatedButton(
+                                 key: index == 0 ? TutorialKeys.acceptTaskKey : null,
+                                 onPressed: () => _acceptTask(context, task.id),
+                                 style: ElevatedButton.styleFrom(
+                                   backgroundColor: Colors.amber[700],
+                                   foregroundColor: Colors.white,
+                                   textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                                 ),
+                                 child: const Text("出発する"),
+                               ),
+                            ],
+                          ),
                         );
                       },
                     ),
@@ -289,10 +306,14 @@ class GuildScreen extends StatelessWidget {
         ],
       ),
       ),
-      floatingActionButton: FloatingActionButton(
-        key: TutorialKeys.fabKey,
-        onPressed: () => _showCreateTaskDialog(context),
-        child: const Icon(Icons.add),
+      floatingActionButton: SemanticHelper.interactive(
+        testId: SemanticHelper.createTestId(SemanticTypes.button, 'add_task'),
+        hint: '新規クエストを作成',
+        child: FloatingActionButton(
+          key: TutorialKeys.fabKey,
+          onPressed: () => _showCreateTaskDialog(context),
+          child: const Icon(Icons.add),
+        ),
       ),
     );
   }

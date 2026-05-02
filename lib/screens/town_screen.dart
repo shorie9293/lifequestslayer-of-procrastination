@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../viewmodels/game_view_model.dart';
 import '../models/title_definition.dart';
 import 'gem_shop_screen.dart';
+import '../core/accessibility/semantic_helper.dart';
+import '../core/testing/widget_keys.dart';
 
 class TownScreen extends StatelessWidget {
   const TownScreen({super.key});

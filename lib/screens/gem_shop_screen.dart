@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import '../services/iap_service.dart';
 import '../viewmodels/game_view_model.dart';
+import '../core/accessibility/semantic_helper.dart';
+import '../core/testing/widget_keys.dart';
 
 /// 宝石パックの表示名・ボーナス表記
 const _gemTierInfo = {

@@ -4,6 +4,8 @@ import '../viewmodels/game_view_model.dart';
 import '../widgets/help_dialog.dart';
 import '../widgets/tutorial_overlay.dart';
 import '../utils/tutorial_keys.dart';
+import '../core/accessibility/semantic_helper.dart';
+import '../core/testing/widget_keys.dart';
 import 'guild_screen.dart';
 import 'home_screen.dart';
 import 'temple_screen.dart';
@@ -246,6 +248,7 @@ class _MainScreenState extends State<MainScreen> {
                     Text('💰 +$amount 金貨', style: const TextStyle(color: Colors.amber, fontSize: 48, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 32),
                     ElevatedButton(
+                      key: AppKeys.tutorialReward,
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[800], foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
                       onPressed: () => Navigator.of(context).pop(),
                       child: const Text('ありがたき幸せ！', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -326,6 +329,7 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                       const SizedBox(height: 24),
                       ElevatedButton(
+                        key: AppKeys.closeButton,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.orange[900],
@@ -369,6 +373,7 @@ class _MainScreenState extends State<MainScreen> {
           ),
           // BottomNavigationBarを追加（Add BottomNavigationBar for smartphones）
           bottomNavigationBar: BottomNavigationBar(
+            key: AppKeys.tabBar,
             currentIndex: _currentIndex,
             onTap: (index) {
               setState(() {
@@ -418,6 +423,7 @@ class _MainScreenState extends State<MainScreen> {
             child: Material(
               color: Colors.transparent,
               child: InkWell(
+                key: AppKeys.tutorialSkip,
                 onTap: () => viewModel.skipTutorial(),
                 borderRadius: BorderRadius.circular(20),
                 child: Container(
@@ -461,6 +467,7 @@ void _showTutorialChoiceDialog() {
         content: const Text('冒険の基本を学びますか？\n（初めてプレイする方は「学ぶ」を推奨）'),
         actions: [
           TextButton(
+            key: AppKeys.tutorialSkip,
             onPressed: () async {
               await viewModel.skipTutorial();
               if (mounted) {
@@ -472,6 +479,7 @@ void _showTutorialChoiceDialog() {
             child: const Text('スキップ'),
           ),
           ElevatedButton(
+            key: AppKeys.tutorialUnderstood,
             onPressed: () async {
               await viewModel.markTutorialChoiceMade();
               if (mounted) {

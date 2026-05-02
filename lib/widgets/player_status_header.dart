@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../models/player.dart';
 import '../models/task.dart';
 import '../viewmodels/game_view_model.dart';
-
+import '../core/accessibility/semantic_helper.dart';
 class PlayerStatusHeader extends StatelessWidget {
   const PlayerStatusHeader({super.key});
 
@@ -15,8 +15,12 @@ class PlayerStatusHeader extends StatelessWidget {
     final player = viewModel.player;
     final activeTasks = viewModel.activeTasks;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
+    return SemanticHelper.container(
+      testId: '${SemanticTypes.section}_player_status',
+      label: 'プレイヤーステータス',
+      child: Container(
+        key: Key('header_player_status'),
+        padding: const EdgeInsets.all(16),
       color: Colors.black12,
       child: Column(
         children: [
@@ -129,7 +133,7 @@ class PlayerStatusHeader extends StatelessWidget {
           _buildBadgeRow(viewModel),
         ],
       ),
-    );
+    ));
   }
 
   Widget _buildBadgeRow(GameViewModel viewModel) {
