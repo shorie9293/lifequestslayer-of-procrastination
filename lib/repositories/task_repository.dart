@@ -2,7 +2,15 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import '../models/task.dart';
 
-class TaskRepository {
+/// タスクデータ永続化の抽象インターフェース
+/// 試練時はMockを注入することで、Hiveに依存しないWidgetテストが可能になる
+abstract class ITaskRepository {
+  Future<List<Task>> loadTasks();
+  Future<void> saveTasks(List<Task> tasks);
+  Future<void> close();
+}
+
+class TaskRepository implements ITaskRepository {
   static const String boxName = 'tasksBox';
 
   // v1.5: Box インスタンスをキャッシュして毎回の openBox を回避
@@ -14,6 +22,7 @@ class TaskRepository {
     return _box!;
   }
 
+  @override
   Future<List<Task>> loadTasks() async {
     try {
       final box = await _getBox();
@@ -56,6 +65,7 @@ class TaskRepository {
   /// タスクをIDキーで冪等保存する。
   /// putAll() + deleteAll() の2段階方式。
   /// 空リスト時も box.clear() で正しく永続化する（全タスク削除の反映）。
+  @override
   Future<void> saveTasks(List<Task> tasks) async {
     final box = await _getBox();
 
@@ -79,7 +89,7 @@ class TaskRepository {
     await box.flush();
   }
 
-  // v1.5: リソース解放（dispose 時に呼ぶ）
+  @override
   Future<void> close() async {
     if (_box != null && _box!.isOpen) {
       await _box!.close();

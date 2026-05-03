@@ -186,9 +186,9 @@ class TempleScreen extends StatelessWidget {
                           style: TextStyle(color: isUnlocked ? Colors.white70 : Colors.grey),
                         ),
                         if (!isUnlocked)
-                           Text(
+                           const Text(
                              "冒険者Lv.10 解放",
-                             style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                             style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
                            ),
                       ],
                     ),

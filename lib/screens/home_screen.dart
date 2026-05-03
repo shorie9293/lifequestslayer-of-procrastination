@@ -245,12 +245,12 @@ class HomeScreen extends StatelessWidget {
           // Active Tasks (Monsters)
           Expanded(
             child: tasks.isEmpty
-                ? Center(
+                ? const Center(
                     key: AppKeys.battleEmptyState,
                     child: Text(
                       "クエストがありません。\nギルドで受注してください！",
                       textAlign: TextAlign.center,
-                      style: const TextStyle(fontSize: 20, color: Colors.grey),
+                      style: TextStyle(fontSize: 20, color: Colors.grey),
                     ),
                   )
                 : ListView.builder(

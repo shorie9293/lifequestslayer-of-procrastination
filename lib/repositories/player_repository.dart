@@ -2,7 +2,15 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import '../models/player.dart';
 
-class PlayerRepository {
+/// プレイヤーデータ永続化の抽象インターフェース
+/// 試練時はMockを注入することで、Hiveに依存しないWidgetテストが可能になる
+abstract class IPlayerRepository {
+  Future<Player> loadPlayer();
+  Future<void> savePlayer(Player player);
+  Future<void> close();
+}
+
+class PlayerRepository implements IPlayerRepository {
   static const String boxName = 'playerBox';
 
   // v1.5: Box インスタンスをキャッシュして毎回の openBox を回避
@@ -14,6 +22,7 @@ class PlayerRepository {
     return _box!;
   }
 
+  @override
   Future<Player> loadPlayer() async {
     debugPrint('PlayerRepository: Loading player...');
     try {
@@ -47,6 +56,7 @@ class PlayerRepository {
     }
   }
 
+  @override
   Future<void> savePlayer(Player player) async {
     debugPrint('PlayerRepository: Saving player (Lv.${player.level})...');
     final box = await _getBox();
@@ -56,7 +66,7 @@ class PlayerRepository {
     debugPrint('PlayerRepository: Player saved and flushed.');
   }
 
-  // v1.5: リソース解放（dispose 時に呼ぶ）
+  @override
   Future<void> close() async {
     if (_box != null && _box!.isOpen) {
       await _box!.close();
