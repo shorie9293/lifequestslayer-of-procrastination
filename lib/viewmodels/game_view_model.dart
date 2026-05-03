@@ -15,8 +15,8 @@ import '../services/fatigue_service.dart';
 import '../utils/date_utils.dart';
 
 class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
-  final PlayerRepository _playerRepository;
-  final TaskRepository _taskRepository;
+  final IPlayerRepository _playerRepository;
+  final ITaskRepository _taskRepository;
   final SettingsRepository _settingsRepository;
 
   /// 乱数生成器（インスタンスを再利用してパフォーマンス向上）
@@ -51,8 +51,8 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   bool _loadFailed = false;
 
   GameViewModel({
-    PlayerRepository? playerRepository,
-    TaskRepository? taskRepository,
+    IPlayerRepository? playerRepository,
+    ITaskRepository? taskRepository,
     SettingsRepository? settingsRepository,
   })  : _playerRepository = playerRepository ?? PlayerRepository(),
         _taskRepository = taskRepository ?? TaskRepository(),
