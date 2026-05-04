@@ -67,6 +67,10 @@ class GuildScreen extends StatelessWidget {
     if (task.subTasks.isNotEmpty) {
       details += " | サブクエスト: ${task.subTasks.length}個";
     }
+    if (task.deadline != null) {
+      final d = task.deadline!;
+      details += " | 期限: ${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}";
+    }
     return details;
   }
 

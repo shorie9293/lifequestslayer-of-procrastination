@@ -42,6 +42,9 @@ class AppKeys {
   static const Key formTaskDetail = Key('txt_task_detail');
   static const Key formTaskSubmit = Key('btn_submit_task');
   static const Key formTaskCancel = Key('btn_cancel_task');
+  static const Key formTaskDeadline = Key('picker_deadline');
+  static const Key formTaskDeadlineClear = Key('btn_deadline_clear');
+  static const Key formTaskTargetTime = Key('txt_target_time');
 
   // ━━━ メインタブバー ━━━
   static const Key tabBar = Key('tab_main');

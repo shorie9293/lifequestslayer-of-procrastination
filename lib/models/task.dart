@@ -96,8 +96,9 @@ class Task {
   List<int> repeatWeekdays; // 1=Mon, ..., 7=Sun
   DateTime? lastCompletedAt;
   List<SubTask> subTasks;
-  int? targetTimeMinutes; // 目標時間（分）
+  int? targetTimeMinutes; // 見積もり時間（分）
   DateTime? activeAt;     // タスク開始日時（アクティブ化した日時）
+  DateTime? deadline;      // 完成期限
 
   Task({
     required this.id,
@@ -111,6 +112,7 @@ class Task {
     List<SubTask>? subTasks,
     this.targetTimeMinutes,
     this.activeAt,
+    this.deadline,
   }) : subTasks = subTasks ?? [], repeatWeekdays = repeatWeekdays ?? [];
 }
 
@@ -134,6 +136,7 @@ class TaskAdapter extends TypeAdapter<Task> {
     try {
       task.targetTimeMinutes = reader.read();
       task.activeAt = reader.read();
+      task.deadline = reader.read();
     } catch (e) {
       // 過去のデータを読み込んだ場合のフォールバック
     }
@@ -153,5 +156,6 @@ class TaskAdapter extends TypeAdapter<Task> {
     writer.write(obj.subTasks);
     writer.write(obj.targetTimeMinutes);
     writer.write(obj.activeAt);
+    writer.write(obj.deadline);
   }
 }

@@ -169,7 +169,7 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     useMaterial3: true,
   );
 
-  void addTask(String title, {QuestRank rank = QuestRank.B, RepeatInterval repeatInterval = RepeatInterval.none, List<int>? repeatWeekdays, List<SubTask>? subTasks, int? targetTimeMinutes}) {
+  void addTask(String title, {QuestRank rank = QuestRank.B, RepeatInterval repeatInterval = RepeatInterval.none, List<int>? repeatWeekdays, List<SubTask>? subTasks, int? targetTimeMinutes, DateTime? deadline}) {
     final newTask = Task(
       id: const Uuid().v4(),
       title: title,
@@ -178,13 +178,14 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
       repeatWeekdays: repeatWeekdays,
       subTasks: subTasks,
       targetTimeMinutes: targetTimeMinutes,
+      deadline: deadline,
     );
     _tasks.add(newTask);
     if (_tutorialStep == 0) completeTutorialStep(0);
     _notifyAndSave();
   }
 
-  void editTask(String taskId, String title, {QuestRank rank = QuestRank.B, RepeatInterval repeatInterval = RepeatInterval.none, List<int>? repeatWeekdays, List<SubTask>? subTasks, int? targetTimeMinutes}) {
+  void editTask(String taskId, String title, {QuestRank rank = QuestRank.B, RepeatInterval repeatInterval = RepeatInterval.none, List<int>? repeatWeekdays, List<SubTask>? subTasks, int? targetTimeMinutes, DateTime? deadline}) {
     final index = _tasks.indexWhere((t) => t.id == taskId);
     if (index != -1) {
       _tasks[index].title = title;
@@ -193,6 +194,7 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
       _tasks[index].repeatWeekdays = repeatWeekdays ?? [];
       _tasks[index].subTasks = subTasks ?? [];
       _tasks[index].targetTimeMinutes = targetTimeMinutes;
+      _tasks[index].deadline = deadline;
       _notifyAndSave();
     }
   }
