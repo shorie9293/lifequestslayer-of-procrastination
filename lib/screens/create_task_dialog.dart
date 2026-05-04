@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../core/testing/widget_keys.dart';
+import '../core/accessibility/semantic_helper.dart';
 import '../viewmodels/game_view_model.dart';
 import '../models/task.dart';
 import '../models/player.dart';
@@ -22,6 +23,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
   late List<SubTask> _subTasks;
   final _subTaskController = TextEditingController();
   late final TextEditingController _targetTimeController;
+  DateTime? _deadline;
 
   @override
   void initState() {
@@ -33,6 +35,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     _selectedWeekdays = t != null ? List.from(t.repeatWeekdays) : [];
     _subTasks = t != null ? List<SubTask>.from(t.subTasks.map((s) => SubTask(title: s.title, isCompleted: s.isCompleted))) : [];
     _targetTimeController = TextEditingController(text: t?.targetTimeMinutes?.toString() ?? "");
+    _deadline = t?.deadline;
   }
 
   @override
@@ -93,6 +96,22 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     }
   }
 
+  Future<void> _pickDeadline() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _deadline ?? now,
+      firstDate: now,
+      lastDate: DateTime(now.year + 5),
+      helpText: "完成期限を選択",
+      cancelText: "キャンセル",
+      confirmText: "決定",
+    );
+    if (picked != null) {
+      setState(() => _deadline = picked);
+    }
+  }
+
   void _saveTask() {
     if (_titleController.text.isEmpty) return;
 
@@ -111,6 +130,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
         repeatWeekdays: _selectedWeekdays.isNotEmpty ? _selectedWeekdays : null,
         subTasks: _subTasks.isNotEmpty ? _subTasks : null,
         targetTimeMinutes: targetTime,
+        deadline: _deadline,
       );
     } else {
       vm.editTask(
@@ -121,6 +141,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
         repeatWeekdays: _selectedWeekdays.isNotEmpty ? _selectedWeekdays : null,
         subTasks: _subTasks.isNotEmpty ? _subTasks : null,
         targetTimeMinutes: targetTime,
+        deadline: _deadline,
       );
     }
     Navigator.pop(context);
@@ -153,13 +174,52 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                 ),
                 const SizedBox(height: 16),
                 TextField(
+                  key: AppKeys.formTaskTargetTime,
                   controller: _targetTimeController,
                   decoration: const InputDecoration(
-                    labelText: "目標時間（分）",
+                    labelText: "見積もり時間（分）",
                     hintText: "例: 30 (時間内にクリアでボーナス)",
                   ),
                   keyboardType: TextInputType.number,
                 ),
+                const SizedBox(height: 16),
+                // 完成期限（適応神書 原則③+④：Semantics + Key の二重網）
+                SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(SemanticTypes.button, 'deadline_picker'),
+                  label: "完成期限を選択",
+                  hint: "タップして期限日を選択します",
+                  child: InkWell(
+                    key: AppKeys.formTaskDeadline,
+                    onTap: _pickDeadline,
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: "完成期限",
+                        suffixIcon: Icon(Icons.calendar_today),
+                      ),
+                      child: Text(
+                        _deadline != null
+                            ? "${_deadline!.year}/${_deadline!.month.toString().padLeft(2, '0')}/${_deadline!.day.toString().padLeft(2, '0')}"
+                            : "期限なし",
+                        style: TextStyle(
+                          color: _deadline != null ? Colors.white : Colors.grey,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                if (_deadline != null)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: SemanticHelper.interactive(
+                      testId: SemanticHelper.createTestId(SemanticTypes.button, 'deadline_clear'),
+                      label: "期限をクリア",
+                      child: TextButton(
+                        key: AppKeys.formTaskDeadlineClear,
+                        onPressed: () => setState(() => _deadline = null),
+                        child: const Text("期限をクリア", style: TextStyle(fontSize: 12)),
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 16),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
