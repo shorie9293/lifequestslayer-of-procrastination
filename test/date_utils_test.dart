@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rpg_todo/utils/date_utils.dart';
+import 'package:rpg_todo/core/utils/date_utils.dart';
 
 void main() {
   group('DateUtils', () {
@@ -48,7 +48,7 @@ void main() {
 
     test('isDifferentWeek - 異なる週ならtrue', () {
       final d1 = DateTime(2026, 4, 27); // 月
-      final d2 = DateTime(2026, 5, 4);  // 次の週の月曜
+      final d2 = DateTime(2026, 5, 4); // 次の週の月曜
       expect(DateUtils.isDifferentWeek(d1, d2), true);
     });
   });

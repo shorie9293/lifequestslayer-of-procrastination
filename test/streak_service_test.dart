@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rpg_todo/services/streak_service.dart';
+import 'package:rpg_todo/domain/services/streak_service.dart';
 
 void main() {
   group('StreakService', () {

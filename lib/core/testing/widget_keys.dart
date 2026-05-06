@@ -60,6 +60,8 @@ class AppKeys {
   static const Key battleActiveTaskList = Key('list_active_tasks');
   static const Key battleEmptyState = Key('empty_no_battles');
   static const Key battleLevelUpDialog = Key('dlg_level_up');
+  static const Key battleReportDialog = Key('dlg_battle_report');
+  static const Key battleReportClose = Key('btn_battle_report_close');
 
   // ━━━ 神殿（転職） ━━━
   static const Key templeScreen = Key('screen_temple');
@@ -98,7 +100,8 @@ class AppKeys {
   static const Key helpDialog = Key('dlg_help');
   static const Key knowledgeQuestDialog = Key('dlg_knowledge_quest');
   static const Key fatigueGemPopup = Key('dlg_fatigue_gem');
-  static const Key notificationSettingsDialog = Key('dlg_notification_settings');
+  static const Key notificationSettingsDialog =
+      Key('dlg_notification_settings');
 
   // ━━━ 汎用 ━━━
   static const Key backButton = Key('btn_back');

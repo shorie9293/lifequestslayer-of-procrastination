@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rpg_todo/models/player.dart';
-import 'package:rpg_todo/models/task.dart';
+import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/domain/models/task.dart';
 import 'package:hive/hive.dart';
 import 'dart:io';
 
@@ -99,7 +99,8 @@ void main() {
 
     setUpAll(() async {
       // テスト用の一時ディレクトリで Hive を初期化
-      final testDir = Directory('${Directory.systemTemp.path}/hive_test_${DateTime.now().millisecondsSinceEpoch}');
+      final testDir = Directory(
+          '${Directory.systemTemp.path}/hive_test_${DateTime.now().millisecondsSinceEpoch}');
       if (!testDir.existsSync()) {
         testDir.createSync(recursive: true);
       }

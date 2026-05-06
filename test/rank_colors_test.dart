@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
-import 'package:rpg_todo/utils/rank_colors.dart';
-import 'package:rpg_todo/models/task.dart';
+import 'package:rpg_todo/core/theme/rank_colors.dart';
+import 'package:rpg_todo/domain/models/task.dart';
 
 void main() {
   group('RankColors', () {

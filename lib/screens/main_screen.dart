@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../viewmodels/game_view_model.dart';
-import '../widgets/help_dialog.dart';
-import '../widgets/tutorial_overlay.dart';
-import '../utils/tutorial_keys.dart';
+import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
+import 'package:rpg_todo/features/shared/widgets/tutorial_overlay.dart';
+import 'package:rpg_todo/core/testing/tutorial_keys.dart';
 import '../core/testing/widget_keys.dart';
 import '../core/error/error_boundary.dart';
-import 'guild_screen.dart';
-import 'home_screen.dart';
-import 'temple_screen.dart';
-import 'town_screen.dart';
+import '../core/accessibility/semantic_helper.dart';
+import 'package:rpg_todo/features/guild/presentation/guild_screen.dart';
+import 'package:rpg_todo/features/battle/presentation/battle_screen.dart';
+import 'package:rpg_todo/features/temple/presentation/temple_screen.dart';
+import 'package:rpg_todo/features/town/presentation/town_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -23,10 +24,11 @@ class _MainScreenState extends State<MainScreen> {
   bool _isHelpDialogShowing = false;
   bool _isTutorialChoiceShowing = false;
   bool _didJumpToGuildForTutorial = false;
-  final PageController _pageController = PageController(initialPage: 0); // スワイプ用のページコントローラー
+  final PageController _pageController =
+      PageController(initialPage: 0); // スワイプ用のページコントローラー
 
   final List<Widget> _screens = [
-    const ErrorBoundary(child: HomeScreen()),
+    const ErrorBoundary(child: BattleScreen()),
     const ErrorBoundary(child: GuildScreen()),
     const ErrorBoundary(child: TempleScreen()),
     const ErrorBoundary(child: TownScreen()),
@@ -113,9 +115,13 @@ class _MainScreenState extends State<MainScreen> {
         final screenWidth = MediaQuery.of(context).size.width;
         final screenHeight = MediaQuery.of(context).size.height;
         final tabWidth = screenWidth / 4;
-        final rect = Rect.fromLTWH(0,
-            screenHeight - kBottomNavigationBarHeight - MediaQuery.of(context).padding.bottom,
-            tabWidth, kBottomNavigationBarHeight);
+        final rect = Rect.fromLTWH(
+            0,
+            screenHeight -
+                kBottomNavigationBarHeight -
+                MediaQuery.of(context).padding.bottom,
+            tabWidth,
+            kBottomNavigationBarHeight);
         if (_tutorialRect != rect || _renderedTutorialStep != step) {
           setState(() {
             _tutorialRect = rect;
@@ -156,19 +162,23 @@ class _MainScreenState extends State<MainScreen> {
     Alignment align = Alignment.center;
 
     if (step == 0) {
-      character = "阿国"; icon = "💃";
+      character = "阿国";
+      icon = "💃";
       message = "新入りさんでありんすね！\nまずは右下の「＋」ボタンを押して、\n最初のクエストを登録するでありんす！";
       align = const Alignment(0, -0.2);
     } else if (step == 1) {
-      character = "幸村"; icon = "🔥";
+      character = "幸村";
+      icon = "🔥";
       message = "よくやったでござる！\n次は登録したクエストの「受注」ボタンを\nタップして、いざ出陣用意じゃ！";
       align = const Alignment(0, -0.5);
     } else if (step == 2 && _currentIndex != 0) {
-      character = "官兵衛"; icon = "🧠";
+      character = "官兵衛";
+      icon = "🧠";
       message = "クエストを受注したな。\nでは下のメニューから「戦場」へ移動し、\n討伐の準備を整えるでござる。";
       align = const Alignment(0, 0);
     } else if (step == 2 && _currentIndex == 0) {
-      character = "誾千代"; icon = "⚡";
+      character = "誾千代";
+      icon = "⚡";
       message = "ここが戦場じゃ！\n準備ができたらクエストの「討伐(⚔️)」ボタンを\n押して任務を完了させるのじゃ！";
       align = const Alignment(0, -0.5);
     }
@@ -215,13 +225,19 @@ class _MainScreenState extends State<MainScreen> {
         showHelpDialog(context).then((_) {
           viewModel.markConceptAsSeen();
           // ヘルプダイアログ後、チュートリアル選択ダイアログを表示（未選択の場合のみ）
-          if (mounted && viewModel.tutorialStep <= 2 && !viewModel.tutorialChoiceMade && !_isTutorialChoiceShowing) {
+          if (mounted &&
+              viewModel.tutorialStep <= 2 &&
+              !viewModel.tutorialChoiceMade &&
+              !_isTutorialChoiceShowing) {
             setState(() => _isTutorialChoiceShowing = true);
             _showTutorialChoiceDialog();
           }
         });
       });
-    } else if (viewModel.hasSeenConcept && viewModel.tutorialStep <= 2 && !viewModel.tutorialChoiceMade && !_isTutorialChoiceShowing) {
+    } else if (viewModel.hasSeenConcept &&
+        viewModel.tutorialStep <= 2 &&
+        !viewModel.tutorialChoiceMade &&
+        !_isTutorialChoiceShowing) {
       _isTutorialChoiceShowing = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _showTutorialChoiceDialog();
@@ -243,15 +259,34 @@ class _MainScreenState extends State<MainScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('＼ 本日の恩賞 ／', style: TextStyle(color: Colors.amberAccent, fontSize: 24, fontWeight: FontWeight.bold)),
+                    const Text('＼ 本日の恩賞 ／',
+                        style: TextStyle(
+                            color: Colors.amberAccent,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold)),
                     const SizedBox(height: 16),
-                    Text('💰 +$amount 金貨', style: const TextStyle(color: Colors.amber, fontSize: 48, fontWeight: FontWeight.bold)),
+                    Text('💰 +$amount 金貨',
+                        style: const TextStyle(
+                            color: Colors.amber,
+                            fontSize: 48,
+                            fontWeight: FontWeight.bold)),
                     const SizedBox(height: 32),
-                    ElevatedButton(
+                    SemanticHelper.interactive(
+                      testId: SemanticHelper.createTestId(
+                          SemanticTypes.button, 'claim_login_bonus'),
+                      label: 'ボーナスを受け取る',
+                      child: ElevatedButton(
                       key: AppKeys.tutorialReward,
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[800], foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber[800],
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 24, vertical: 12)),
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('ありがたき幸せ！', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      child: const Text('ありがたき幸せ！',
+                          style: TextStyle(
+                              fontSize: 18, fontWeight: FontWeight.bold)),
+                    ),
                     ),
                   ],
                 ),
@@ -295,8 +330,16 @@ class _MainScreenState extends State<MainScreen> {
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: streak >= 30
-                          ? [Colors.purple[900]!, Colors.amber[700]!, Colors.purple[900]!]
-                          : [Colors.orange[900]!, Colors.deepOrange[700]!, Colors.orange[900]!],
+                          ? [
+                              Colors.purple[900]!,
+                              Colors.amber[700]!,
+                              Colors.purple[900]!
+                            ]
+                          : [
+                              Colors.orange[900]!,
+                              Colors.deepOrange[700]!,
+                              Colors.orange[900]!
+                            ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
@@ -312,7 +355,8 @@ class _MainScreenState extends State<MainScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(milestoneEmoji, style: const TextStyle(fontSize: 56)),
+                      Text(milestoneEmoji,
+                          style: const TextStyle(fontSize: 56)),
                       const SizedBox(height: 8),
                       Text(
                         '$streak日連続ログイン！',
@@ -325,18 +369,29 @@ class _MainScreenState extends State<MainScreen> {
                       const SizedBox(height: 16),
                       Text(
                         '💰 +$reward 金貨',
-                        style: const TextStyle(color: Colors.amber, fontSize: 40, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                            color: Colors.amber,
+                            fontSize: 40,
+                            fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 24),
-                      ElevatedButton(
+                      SemanticHelper.interactive(
+                        testId: SemanticHelper.createTestId(
+                            SemanticTypes.button, 'claim_streak_reward'),
+                        label: 'ストリーク報酬を受け取る',
+                        child: ElevatedButton(
                         key: AppKeys.closeButton,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.orange[900],
-                          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 28, vertical: 12),
                         ),
                         onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('受け取る！', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                        child: const Text('受け取る！',
+                            style: TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
                       ),
                     ],
                   ),
@@ -347,7 +402,8 @@ class _MainScreenState extends State<MainScreen> {
           transitionBuilder: (context, anim1, anim2, child) {
             return Transform.scale(
               scale: Curves.elasticOut.transform(anim1.value),
-              child: Opacity(opacity: anim1.value.clamp(0.0, 1.0), child: child),
+              child:
+                  Opacity(opacity: anim1.value.clamp(0.0, 1.0), child: child),
             );
           },
         );
@@ -365,8 +421,9 @@ class _MainScreenState extends State<MainScreen> {
                 _currentIndex = index;
               });
               if (viewModel.tutorialStep <= 2) {
-                 _renderedTutorialStep = -1; // Force tutorial update on tab change
-                 _updateTutorialRect(viewModel.tutorialStep);
+                _renderedTutorialStep =
+                    -1; // Force tutorial update on tab change
+                _updateTutorialRect(viewModel.tutorialStep);
               }
             },
             children: _screens,
@@ -380,8 +437,8 @@ class _MainScreenState extends State<MainScreen> {
                 _currentIndex = index;
               });
               if (viewModel.tutorialStep <= 2) {
-                 _renderedTutorialStep = -1;
-                 _updateTutorialRect(viewModel.tutorialStep);
+                _renderedTutorialStep = -1;
+                _updateTutorialRect(viewModel.tutorialStep);
               }
               // タブがタップされたときにスワイプアニメーションでページを切り替える
               _pageController.animateToPage(
@@ -412,46 +469,54 @@ class _MainScreenState extends State<MainScreen> {
             selectedItemColor: Colors.amber[700],
             unselectedItemColor: Colors.grey,
             backgroundColor: Colors.black87,
+          ),
         ),
-      ),
-      if (viewModel.tutorialStep <= 2 && !viewModel.tutorialSkipped) ...[
-        _buildTutorialOverlay(viewModel.tutorialStep),
-        Positioned(
-          top: MediaQuery.of(context).padding.top + 8,
-          right: 16,
-          child: SafeArea(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                key: AppKeys.tutorialSkip,
-                onTap: () => viewModel.skipTutorial(),
-                borderRadius: BorderRadius.circular(20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white30),
+        if (viewModel.tutorialStep <= 2 && !viewModel.tutorialSkipped) ...[
+          _buildTutorialOverlay(viewModel.tutorialStep),
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            right: 16,
+            child: SafeArea(
+              child: Material(
+                color: Colors.transparent,
+                child: SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'skip_tutorial'),
+                  label: 'チュートリアルをスキップ',
+                  child: InkWell(
+                  key: AppKeys.tutorialSkip,
+                  onTap: () => viewModel.skipTutorial(),
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.black54,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white30),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.skip_next, color: Colors.white70, size: 18),
+                        SizedBox(width: 4),
+                        Text('スキップ',
+                            style:
+                                TextStyle(color: Colors.white70, fontSize: 14)),
+                      ],
+                    ),
                   ),
-                  child: const Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.skip_next, color: Colors.white70, size: 18),
-                      SizedBox(width: 4),
-                      Text('スキップ', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                    ],
-                  ),
+                ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ],
-    ],
-  );
-}
+    );
+  }
 
-void _showTutorialChoiceDialog() {
+  void _showTutorialChoiceDialog() {
     final viewModel = Provider.of<GameViewModel>(context, listen: false);
     showDialog(
       context: context,
@@ -469,9 +534,10 @@ void _showTutorialChoiceDialog() {
           TextButton(
             key: AppKeys.tutorialSkip,
             onPressed: () async {
+              final navigator = Navigator.of(ctx);
               await viewModel.skipTutorial();
               if (mounted) {
-                Navigator.pop(ctx);
+                navigator.pop();
                 setState(() => _isTutorialChoiceShowing = false);
               }
             },
@@ -481,9 +547,10 @@ void _showTutorialChoiceDialog() {
           ElevatedButton(
             key: AppKeys.tutorialUnderstood,
             onPressed: () async {
+              final navigator = Navigator.of(ctx);
               await viewModel.markTutorialChoiceMade();
               if (mounted) {
-                Navigator.pop(ctx);
+                navigator.pop();
                 setState(() => _isTutorialChoiceShowing = false);
               }
             },

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rpg_todo/services/quiz_service.dart';
-import 'package:rpg_todo/data/quiz_data.dart';
+import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
+import 'package:rpg_todo/features/battle/data/quiz_data.dart';
 
 void main() {
   group('QuizService', () {

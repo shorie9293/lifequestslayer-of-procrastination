@@ -1,7 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rpg_todo/services/title_service.dart';
-import 'package:rpg_todo/models/player.dart';
-import 'package:rpg_todo/models/title_definition.dart';
+import 'package:rpg_todo/domain/services/title_service.dart';
+import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/domain/models/title_definition.dart';
 
 void main() {
   group('TitleService', () {

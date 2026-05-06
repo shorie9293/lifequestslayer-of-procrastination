@@ -96,8 +96,8 @@ class ErrorBoundaryWidget extends StatelessWidget {
               Text(
                 '$error',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+                      color: Colors.grey[600],
+                    ),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),

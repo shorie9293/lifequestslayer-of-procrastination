@@ -5,7 +5,7 @@
 // 統合テスト (integration_test) は別途整備予定。
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rpg_todo/models/player.dart';
+import 'package:rpg_todo/domain/models/player.dart';
 
 void main() {
   group('Player smoke test', () {

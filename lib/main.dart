@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'screens/main_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import 'models/task.dart';
-import 'models/player.dart';
-import 'services/notification_service.dart';
-import 'services/iap_service.dart';
-import 'services/quiz_service.dart';
-import 'core/error/error_boundary.dart';
+import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/core/infrastructure/notification_service.dart';
+import 'package:rpg_todo/core/infrastructure/iap_service.dart';
+import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
+import 'package:rpg_todo/core/error/error_boundary.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -40,7 +40,8 @@ void main() async {
   // クイズデータの読み込み（assets/data/knowledge_quests.json）
   try {
     await QuizService.loadQuestions();
-    debugPrint('[main] クイズデータの読み込みが完了しました（${QuizService.isLoaded ? (QuizService.drawQuizQuestion() != null ? "読み込み済み" : "空") : "未読み込み"}）');
+    debugPrint(
+        '[main] クイズデータの読み込みが完了しました（${QuizService.isLoaded ? (QuizService.drawQuizQuestion() != null ? "読み込み済み" : "空") : "未読み込み"}）');
   } catch (e) {
     debugPrint('[main] クイズデータの読み込みに失敗しました（アプリは継続）: $e');
   }
@@ -110,7 +111,9 @@ class RPGTodoApp extends StatelessWidget {
               },
             ),
             theme: viewModel.currentTheme.copyWith(
-              textTheme: GoogleFonts.dotGothic16TextTheme(viewModel.currentTheme.textTheme).apply(
+              textTheme: GoogleFonts.dotGothic16TextTheme(
+                      viewModel.currentTheme.textTheme)
+                  .apply(
                 bodyColor: Colors.white,
                 displayColor: Colors.white,
               ),
@@ -118,7 +121,8 @@ class RPGTodoApp extends StatelessWidget {
             home: const MainScreen(),
             builder: (context, child) {
               return MediaQuery(
-                data: MediaQuery.of(context).copyWith(textScaler: TextScaler.linear(viewModel.fontSizeScale)),
+                data: MediaQuery.of(context).copyWith(
+                    textScaler: TextScaler.linear(viewModel.fontSizeScale)),
                 child: child!,
               );
             },

@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rpg_todo/services/fatigue_service.dart';
-import 'package:rpg_todo/models/player.dart';
+import 'package:rpg_todo/domain/services/fatigue_service.dart';
+import 'package:rpg_todo/domain/models/player.dart';
 
 void main() {
   group('FatigueService', () {
@@ -26,17 +26,17 @@ void main() {
 
     test('status - dailyTasksCompleted=0で元気', () {
       final player = Player()..dailyTasksCompleted = 0;
-      expect(FatigueService.status(player), '😄 元気');
+      expect(FatigueService.status(player), '😊 快調');
     });
 
     test('status - dailyTasksCompleted=5でwarn', () {
       final player = Player()..dailyTasksCompleted = 5;
-      expect(FatigueService.status(player), '🍺 十分戦った');
+      expect(FatigueService.status(player), '😐 やや疲れ');
     });
 
     test('status - dailyTasksCompleted=10でsevere', () {
       final player = Player()..dailyTasksCompleted = 10;
-      expect(FatigueService.status(player), '🌙 今日の英雄は休め');
+      expect(FatigueService.status(player), '😵 限界');
     });
 
     test('progress - dailyTasksCompleted=5で0.5', () {

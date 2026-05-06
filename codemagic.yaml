@@ -1,0 +1,112 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 高天原 Codemagic 神事設定
+# 現世: rpg-task (RPG風タスク管理)
+# Bundle ID: com.shorie.rpgTodo
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+definitions:
+  # ── 共通: Flutter 環境変数 ──
+  flutter_env: &flutter_env
+    flutter: 3.27.x          # 既存 CI と一致
+    xcode: latest
+    cocoapods: default
+
+  # ── 共通: キャッシュ ──
+  pub_cache: &pub_cache
+    cache_paths:
+      - ~/.pub-cache
+      - $FCI_BUILD_DIR/ios/Pods
+
+  # ── 共通: スクリプト（取得 → 解析 → 試験） ──
+  pre_build_scripts: &pre_build_scripts
+    - name: Get Flutter packages
+      script: flutter pub get
+    - name: iOS pod install
+      script: cd ios && pod install --repo-update
+    - name: Static analysis
+      script: flutter analyze
+    - name: Run tests
+      script: flutter test --no-pub
+      ignore_failure: false
+
+workflows:
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # iOS ビルド & TestFlight 降臨
+  # トリガー: main への push（pubspec.yaml 変更時）
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ios-deploy:
+    name: 🍎 iOS Build & TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      groups:
+        - appstore_credentials   # Codemagic UI で設定（後述）
+      <<: *flutter_env
+    cache:
+      <<: *pub_cache
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+      cancel_previous_builds: true
+    scripts:
+      - <<: *pre_build_scripts
+      - name: Set build number from pubspec
+        script: |
+          BUILD_NUM=$(grep '^version:' pubspec.yaml | sed 's/.*+//')
+          echo "Build number: $BUILD_NUM"
+          cd ios
+          agvtool new-version -all $BUILD_NUM
+      - name: Build iOS (without local code signing)
+        script: |
+          flutter build ios --release --no-codesign
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - build/ios/xcarchive/*.xcarchive
+    publishing:
+      app_store_connect:
+        auth: integration          # Codemagic UI 統合認証
+
+        # TestFlight 自動提出
+        submit_to_testflight: true
+        expire_build_submitted_for_review: true
+
+        # 任意: App Store 審査への自動提出（最初はコメントアウト推奨）
+        # submit_to_app_store: false
+        # cancel_previous_submissions: true
+        # release_type: MANUAL
+
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  # iOS 手動ビルド（workflow_dispatch 代替）
+  # Codemagic UI から手動起動
+  # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ios-build-only:
+    name: 🧪 iOS Build Only (Test)
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      groups:
+        - appstore_credentials
+      <<: *flutter_env
+    cache:
+      <<: *pub_cache
+    # 手動起動のみ（自動トリガーなし）
+    scripts:
+      - <<: *pre_build_scripts
+      - name: Set build number
+        script: |
+          BUILD_NUM=$(grep '^version:' pubspec.yaml | sed 's/.*+//')
+          cd ios
+          agvtool new-version -all $BUILD_NUM
+      - name: Build iOS (without local code signing)
+        script: |
+          flutter build ios --release --no-codesign
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - build/ios/xcarchive/*.xcarchive
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
