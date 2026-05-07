@@ -11,8 +11,8 @@ class TutorialResetDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       key: AppKeys.confirmDialog,
-      title: const Text('チュートリアルをリセット'),
-      content: const Text('チュートリアルを最初からやり直しますか？\n（ゲームデータは消えません）'),
+      title: const Text('導きの書をリセット'),
+      content: const Text('導きの書を最初からやり直しますか？\n（ゲームデータは消えません）'),
       actions: [
         TextButton(
           key: AppKeys.closeButton,
@@ -25,7 +25,7 @@ class TutorialResetDialog extends StatelessWidget {
             Provider.of<GameViewModel>(context, listen: false).resetTutorial();
             Navigator.pop(context);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('🔄 チュートリアルをリセットしました')),
+              const SnackBar(content: Text('🔄 導きの書をリセットしました')),
             );
           },
           style: ElevatedButton.styleFrom(

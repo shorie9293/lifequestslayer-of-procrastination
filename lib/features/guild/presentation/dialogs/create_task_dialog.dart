@@ -168,7 +168,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
 
     return AlertDialog(
       key: AppKeys.formTaskDialog,
-      title: Text(widget.task == null ? "新規クエスト作成" : "クエスト編集"),
+      title: Text(widget.task == null ? "新規依頼作成" : "依頼編集"),
       content: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.55,
@@ -307,7 +307,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                         child: TextField(
                           controller: _subTaskController,
                           decoration: const InputDecoration(
-                              labelText: "サブクエスト追加 (Wizard Ability)"),
+                              labelText: "サブ依頼追加 (Wizard Ability)"),
                           onSubmitted: (_) => _addSubTask(),
                         ),
                       ),

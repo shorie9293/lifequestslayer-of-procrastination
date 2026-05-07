@@ -209,7 +209,7 @@ class _NotificationSettingsDialogState
             enabled: _enabled,
             leading: const Text('🍺', style: TextStyle(fontSize: 22)),
             title: const Text('夜の催促'),
-            subtitle: const Text('「討伐報告を忘れるでないぞ！」'),
+            subtitle: const Text('「仕留めた報告を忘れるでないぞ！」'),
             trailing: TextButton(
               onPressed: _enabled ? () => _pickTime(isMorning: false) : null,
               child: Text(

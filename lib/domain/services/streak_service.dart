@@ -4,7 +4,7 @@ import 'package:rpg_todo/domain/models/player.dart';
 /// ストリーク（連続ログインボーナス）の計算と報酬付与を担当するサービス。
 class StreakService {
   /// ストリークを更新し、報酬を付与する。
-  /// 戻り値: 付与された金貨の量（0の場合は報酬なし）
+  /// 戻り値: 付与された文の量（0の場合は報酬なし）
   static int checkAndUpdateStreak(Player player, DateTime now) {
     final last = player.lastLoginDate;
 

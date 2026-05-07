@@ -40,7 +40,7 @@ class BattleScreen extends StatelessWidget {
         final task = viewModel.activeTasks.firstWhere((t) => t.id == taskId);
         if (task.subTasks.any((s) => !s.isCompleted)) {
           scaffoldMessenger.showSnackBar(
-            const SnackBar(content: Text("サブクエストが残っています！")),
+            const SnackBar(content: Text("サブ依頼が残っています！")),
           );
         }
       }
@@ -55,22 +55,22 @@ class BattleScreen extends StatelessWidget {
 
     // 討伐成功メッセージ (SnackBar)
     if (bonusMessages.isNotEmpty) {
-      scaffoldMessenger.showSnackBar(SnackBar(
-        content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text("討伐成功！ $coinsGained 金貨を獲得しました！"),
+          scaffoldMessenger.showSnackBar(SnackBar(
+            content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+              Text("見事仕留めた！ $coinsGained 文を獲得しました！"),
               const SizedBox(height: 4),
               ...bonusMessages.map((msg) => Text(msg,
                   style: const TextStyle(
                       fontWeight: FontWeight.bold, color: Colors.amberAccent))),
             ]),
-        duration: const Duration(seconds: 4),
-      ));
+            duration: const Duration(seconds: 4),
+          ));
     } else {
       scaffoldMessenger.showSnackBar(
-        SnackBar(content: Text("討伐成功！ $coinsGained 金貨を獲得しました！")),
+        SnackBar(content: Text("見事仕留めた！ $coinsGained 文を獲得しました！")),
       );
     }
 
@@ -149,7 +149,7 @@ class BattleScreen extends StatelessWidget {
     return Scaffold(
       key: AppKeys.battleScreen,
       appBar: AppBar(
-        title: const Text("戦場"),
+        title: const Text("修練場"),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -171,7 +171,7 @@ class BattleScreen extends StatelessWidget {
                   ? const Center(
                       key: AppKeys.battleEmptyState,
                       child: Text(
-                        "クエストがありません。\nギルドで受注してください！",
+                        "依頼がありません。\n寄合所で受注してください！",
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 20, color: Colors.grey),
                       ),
@@ -217,7 +217,7 @@ class BattleScreen extends StatelessWidget {
                             SemanticHelper.interactive(
                               testId: SemanticHelper.createTestId(
                                   SemanticTypes.button, 'cancel_task'),
-                              label: 'クエストをギルドに戻す',
+                              label: '依頼を寄合所に戻す',
                               child: IconButton(
                                 key: AppKeys.battleCancel,
                                 icon: const Icon(Icons.undo, color: Colors.grey),
@@ -225,16 +225,16 @@ class BattleScreen extends StatelessWidget {
                                   viewModel.cancelTask(task.id);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                        content: Text("クエストをギルドに戻しました")),
+                                        content: Text("依頼を寄合所に戻しました")),
                                   );
                                 },
-                                tooltip: "ギルドに戻す",
+                                tooltip: "寄合所に戻す",
                               ),
                             ),
                             SemanticHelper.interactive(
                               testId: SemanticHelper.createTestId(
                                   SemanticTypes.button, 'complete_task'),
-                              label: '討伐！',
+                              label: '討つ！',
                               child: IconButton(
                                 key: index == 0
                                     ? TutorialKeys.battleCompleteKey
@@ -242,7 +242,7 @@ class BattleScreen extends StatelessWidget {
                                 icon: const Text('⚔️',
                                     style: TextStyle(fontSize: 24)),
                                 onPressed: () => _completeTask(context, task.id),
-                                tooltip: "討伐！",
+                                tooltip: "討つ！",
                               ),
                             ),
                           ],

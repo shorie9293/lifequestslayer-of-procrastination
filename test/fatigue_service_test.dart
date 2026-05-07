@@ -72,7 +72,7 @@ void main() {
     test('restAtInn - コインが足りない場合はエラー', () {
       final player = Player()..coins = 0;
       final result = FatigueService.restAtInn(player, 0, DateTime.now());
-      expect(result, '金貨が足りないぜ');
+      expect(result, '文が足りないぜ');
     });
 
     test('restAtInn - コインが足りる場合は成功', () {

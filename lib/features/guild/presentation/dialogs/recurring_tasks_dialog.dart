@@ -28,7 +28,7 @@ class RecurringTasksDialog extends StatelessWidget {
         height: 400,
         child: tasks.isEmpty
             ? const Center(
-                child: Text('繰り返し設定されたクエストはありません',
+                child: Text('繰り返し設定された依頼はありません',
                     style: TextStyle(color: Colors.grey)),
               )
             : ListView.builder(

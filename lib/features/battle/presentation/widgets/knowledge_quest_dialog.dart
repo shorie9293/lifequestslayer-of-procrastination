@@ -30,7 +30,7 @@ class _KnowledgeQuestDialogState extends State<KnowledgeQuestDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'クエスト討伐後に30%の確率でクイズが出題されます。\n正解するとEXPボーナスがもらえます！',
+            'クエストを仕留めた後に30%の確率でクイズが出題されます。\n正解するとEXPボーナスがもらえます！',
             style: TextStyle(fontSize: 13, color: Colors.black54),
           ),
           const SizedBox(height: 16),

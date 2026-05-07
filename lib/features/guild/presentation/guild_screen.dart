@@ -55,7 +55,7 @@ class GuildScreen extends StatelessWidget {
   void _deleteTask(BuildContext context, String taskId) {
     Provider.of<GameViewModel>(context, listen: false).deleteTask(taskId);
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("クエストを破棄しました。")),
+      const SnackBar(content: Text("依頼を破棄しました。")),
     );
   }
 
@@ -65,7 +65,7 @@ class GuildScreen extends StatelessWidget {
       details += " | 繰り返し: ${task.repeatInterval.name}";
     }
     if (task.subTasks.isNotEmpty) {
-      details += " | サブクエスト: ${task.subTasks.length}個";
+      details += " | サブ依頼: ${task.subTasks.length}個";
     }
     if (task.deadline != null) {
       final d = task.deadline!;
@@ -82,7 +82,7 @@ class GuildScreen extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("冒険者ギルド"),
+        title: const Text("寄合所"),
         actions: [
           if (viewModel.player.canUseSkill(Job.cleric))
             IconButton(
@@ -155,7 +155,7 @@ class GuildScreen extends StatelessWidget {
                   children: [
                     Icon(Icons.replay, color: Colors.black54),
                     SizedBox(width: 8),
-                    Text('チュートリアルをリセット')
+                    Text('導きの書をリセット')
                   ],
                 ),
               ),
@@ -202,23 +202,23 @@ class GuildScreen extends StatelessWidget {
                   ? SemanticHelper.container(
                       testId: SemanticHelper.createTestId(
                           SemanticTypes.section, 'empty_no_quests'),
-                      label: 'クエストなし',
+                      label: '依頼なし',
                       child: const SingleChildScrollView(
                         key: AppKeys.guildEmptyState,
                         child: Center(
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text("🏰", style: TextStyle(fontSize: 48)),
+                              Text("🏯", style: TextStyle(fontSize: 48)),
                               SizedBox(height: 12),
                               Text(
-                                "まだクエストが届いていない。",
+                                "まだ依頼が届いていない。",
                                 style:
                                     TextStyle(fontSize: 18, color: Colors.grey),
                               ),
                               SizedBox(height: 8),
                               Text(
-                                "右下の ＋ から最初のクエストを登録しよう！",
+                                "右下の ＋ から最初の依頼を登録しよう！",
                                 style:
                                     TextStyle(fontSize: 14, color: Colors.grey),
                               ),
@@ -279,7 +279,7 @@ class GuildScreen extends StatelessWidget {
       ),
       floatingActionButton: SemanticHelper.interactive(
         testId: SemanticHelper.createTestId(SemanticTypes.button, 'add_task'),
-        hint: '新規クエストを作成',
+        hint: '新規依頼を作成',
         child: FloatingActionButton(
           key: TutorialKeys.fabKey,
           onPressed: () => _showCreateTaskDialog(context),

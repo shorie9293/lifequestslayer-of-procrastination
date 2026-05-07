@@ -74,7 +74,7 @@ class FatigueService {
         return 'そんなメニューはないぜ';
     }
 
-    if (player.coins < cost) return '金貨が足りないぜ';
+    if (player.coins < cost) return '文が足りないぜ';
 
     player.coins -= cost;
     player.nextDayTaskLimitOffset = limitBonus;

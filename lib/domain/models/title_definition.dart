@@ -18,31 +18,31 @@ class TitleDefinition {
 /// アプリ全体で参照する称号定義リスト（GameViewModel._checkTitles と TownScreen の両方が利用）
 final List<TitleDefinition> kAllTitles = [
   TitleDefinition(
-    id: '見習い冒険者',
+    id: '駆け出しの侍',
     condition: '累計クエストを10回討伐',
     requiredCount: 10,
     getProgress: (p) => p.totalTasksCompleted,
   ),
   TitleDefinition(
-    id: 'ベテラン',
+    id: '歴戦の武士',
     condition: '累計クエストを100回討伐',
     requiredCount: 100,
     getProgress: (p) => p.totalTasksCompleted,
   ),
   TitleDefinition(
-    id: 'ゴブリンスレイヤー',
+    id: '鬼退治',
     condition: 'Bランククエストを50回討伐',
     requiredCount: 50,
     getProgress: (p) => p.totalBRankCompleted,
   ),
   TitleDefinition(
-    id: 'エリートハンター',
+    id: '大物祓い',
     condition: 'Aランククエストを20回討伐',
     requiredCount: 20,
     getProgress: (p) => p.totalARankCompleted,
   ),
   TitleDefinition(
-    id: '竜殺し',
+    id: '龍神討ち',
     condition: 'Sランククエストを5回討伐',
     requiredCount: 5,
     getProgress: (p) => p.totalSRankCompleted,

@@ -153,9 +153,9 @@ void main() {
     test('PlayerRepository 読み込み失敗時に loadData がクラッシュせず isLoaded=true になる',
         () async {
       final vm = GameViewModel(
-        playerRepository: FailingPlayerRepository(HiveError('テスト用エラー')),
-        taskRepository: TaskRepository(),
-        settingsRepository: SettingsRepository(),
+        pr: FailingPlayerRepository(HiveError('テスト用エラー')),
+        tr: TaskRepository(),
+        sr: SettingsRepository(),
       );
 
       await _waitForLoad(vm);
@@ -169,9 +169,9 @@ void main() {
     test('TaskRepository 読み込み失敗時に loadData がクラッシュせず isLoaded=true になる',
         () async {
       final vm = GameViewModel(
-        playerRepository: PlayerRepository(),
-        taskRepository: FailingTaskRepository(HiveError('テスト用エラー')),
-        settingsRepository: SettingsRepository(),
+        pr: PlayerRepository(),
+        tr: FailingTaskRepository(HiveError('テスト用エラー')),
+        sr: SettingsRepository(),
       );
 
       await _waitForLoad(vm);
@@ -183,9 +183,9 @@ void main() {
     test('読み込み失敗時も _notifyAndSave が例外を投げず、ユーザー操作が可能であることを確認', () async {
       // PlayerRepository が失敗する ViewModel を作成
       final vm = GameViewModel(
-        playerRepository: FailingPlayerRepository(HiveError('テスト用エラー')),
-        taskRepository: TaskRepository(),
-        settingsRepository: SettingsRepository(),
+        pr: FailingPlayerRepository(HiveError('テスト用エラー')),
+        tr: TaskRepository(),
+        sr: SettingsRepository(),
       );
 
       await _waitForLoad(vm);
@@ -599,7 +599,7 @@ void main() {
       // 基本10 + デイリー200 = 210
       expect(result!['coinsGained'], 210);
       expect(result['bonusMessages'],
-          contains('📅 デイリーミッション達成！ +200金貨'));
+          contains('📅 デイリーミッション達成！ +200文'));
       expect(vm.player.dailyTasksCompleted, 3);
     });
 
@@ -636,7 +636,7 @@ void main() {
       // 基本100 + ウィークリー500 = 600
       expect(result!['coinsGained'], 600);
       expect(result['bonusMessages'],
-          contains('🏆 ウィークリーSランク達成！ +500金貨'));
+          contains('🏆 ウィークリーSランク達成！ +500文'));
       expect(vm.player.weeklySRankCompleted, 1);
     });
 

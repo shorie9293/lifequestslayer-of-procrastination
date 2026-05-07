@@ -18,7 +18,7 @@ class TempleScreen extends StatelessWidget {
     return Scaffold(
       key: AppKeys.templeScreen,
       appBar: AppBar(
-        title: const Text('転職の神殿'),
+        title: const Text('社'),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -43,7 +43,7 @@ class TempleScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 color: Colors.red.withValues(alpha: 0.2),
                 child: Text(
-                  "転職は冒険者レベル10から可能です (現在 Lv.$adventurerLv)",
+                  "転職は浪人レベル10から可能です (現在 Lv.$adventurerLv)",
                   style: const TextStyle(
                       color: Colors.redAccent, fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
@@ -54,7 +54,7 @@ class TempleScreen extends StatelessWidget {
               context,
               viewModel,
               Job.adventurer,
-              "冒険者 (Adventurer)",
+              "浪人",
               Icons.hiking,
               "基本の職業。まずはここから。",
               Colors.brown,
@@ -66,7 +66,7 @@ class TempleScreen extends StatelessWidget {
               context,
               viewModel,
               Job.warrior,
-              "戦士 (せんし)",
+              "侍",
               Icons.shield,
               "攻撃特化。\n特性: コンボボーナス (連続達成でEXP増)",
               Colors.red,
@@ -78,7 +78,7 @@ class TempleScreen extends StatelessWidget {
               context,
               viewModel,
               Job.cleric,
-              "僧侶 (そうりょ)",
+              "法師",
               Icons.health_and_safety,
               "回復・支援。\n特性: 繰り返しクエスト (日/週)",
               Colors.cyan,
@@ -90,7 +90,7 @@ class TempleScreen extends StatelessWidget {
               context,
               viewModel,
               Job.wizard,
-              "魔法使い (まほうつかい)",
+              "陰陽師",
               Icons.auto_fix_high,
               "知識・管理。\n特性: プロジェクト管理 (サブクエスト)",
               Colors.deepPurple,

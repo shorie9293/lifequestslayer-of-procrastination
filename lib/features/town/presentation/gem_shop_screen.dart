@@ -254,18 +254,18 @@ class _GemShopScreenState extends State<GemShopScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        // 金貨交換
+        // 文交換
         _buildUseCard(
           key: AppKeys.gemShopExchangeCoin,
           icon: Icons.monetization_on,
           iconColor: Colors.amber,
-          title: '金貨に両替',
-          description: '10宝石 → 1,000金貨',
+          title: '文に両替',
+          description: '10宝石 → 1,000文',
           cost: 10,
           playerGems: player.gems,
           onConfirm: () {
             final ok = viewModel.exchangeGemsForCoins(10);
-            _showResult(context, ok, '1,000金貨を受け取った！', '宝石が足りません');
+            _showResult(context, ok, '1,000文を受け取った！', '宝石が足りません');
           },
         ),
         const SizedBox(height: 8),
