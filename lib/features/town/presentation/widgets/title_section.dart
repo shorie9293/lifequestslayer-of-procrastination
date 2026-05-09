@@ -3,7 +3,7 @@ import 'package:rpg_todo/domain/models/title_definition.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
-import 'package:rpg_todo/core/accessibility/semantic_helper.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 称号セクション
 class TitleSection extends StatelessWidget {

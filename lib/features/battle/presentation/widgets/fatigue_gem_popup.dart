@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/features/town/presentation/gem_shop_screen.dart';
-import 'package:rpg_todo/core/accessibility/semantic_helper.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 疲労MAX到達時に表示するポップアップ（1日1回）
 ///

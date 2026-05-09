@@ -44,6 +44,13 @@ class TutorialService {
     await _settingsRepository.resetTutorial();
   }
 
+  /// Marks job tutorial as seen. Returns true if state was actually changed.
+  Future<bool> markJobTutorialSeen(bool current) async {
+    if (current) return false;
+    await _settingsRepository.setJobTutorialCompleted(true);
+    return true;
+  }
+
   /// If step > 2 and [hasSeen] is false, persist the fix and return true.
   Future<bool> repairSeenConcept(int step, bool hasSeen) async {
     if (step > 2 && !hasSeen) {

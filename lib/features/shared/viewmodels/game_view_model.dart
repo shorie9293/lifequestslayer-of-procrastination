@@ -29,6 +29,7 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   int _tutorialStep = 0;
   bool _isLoaded = false, _sawConcept = false, _tutSkipped = false, _tutChosen = false;
   bool _fatiguePopupToday = false, _kqEnabled = true, _saving = false, _pending = false, _loadFailed = false;
+  bool _showJobTutorial = false, _jobTutorialCompleted = false;
   int? pendingLoginBonusAmount, pendingStreakReward;
   double _fontSize = 0.85;
 
@@ -52,6 +53,8 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   String get fatigueStatus => FatigueService.status(_player);
   double get fatigueProgress => FatigueService.progress(_player);
   int get fatigueLevel => FatigueService.fatigueLevel(_player);
+  bool get showJobTutorial => _showJobTutorial;
+  bool get jobTutorialCompleted => _jobTutorialCompleted;
   static const int dailyMissionGoal = 3;
   static const int weeklyMissionGoal = 1;
   int get dailyMissionProgress => _player.dailyTasksCompleted.clamp(0, dailyMissionGoal);
@@ -62,6 +65,27 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   int get dailyEstimatedMinutes => activeTasks.fold(0, (s, t) => s + (t.targetTimeMinutes ?? 0));
   int get guildEstimatedMinutes => guildTasks.fold(0, (s, t) => s + (t.targetTimeMinutes ?? 0));
   List<({TitleDefinition def, int progress, bool isUnlocked})> get titleProgressList => TitleService.getTitleProgressList(_player);
+  /// 過去の完了タスクから推定時間を計算（神託5: 魔導書解析）
+  /// 同ランクの完了タスク + 類似タイトルの完了タスク の targetTimeMinutes 平均を返す
+  int? estimateMinutes(String title, QuestRank rank) {
+    final completed = _tasks.where((t) => t.isCompleted && t.targetTimeMinutes != null).toList();
+    if (completed.isEmpty) return null;
+
+    // 同ランクの完了タスク
+    final sameRank = completed.where((t) => t.rank == rank).toList();
+    // 類似タイトル（タイトルに含まれる単語が一致）の完了タスク（異ランクも含む）
+    final titleWords = title.split(RegExp(r'[\s　,、。．.]+')).where((w) => w.isNotEmpty).toList();
+    final similarTitle = completed.where((t) =>
+        t.id != '' && titleWords.any((w) => w.length >= 2 && t.title.contains(w))).toList();
+
+    // 合併（重複除去）
+    final relevant = <Task>{...sameRank, ...similarTitle}.toList();
+    if (relevant.isEmpty) return null;
+
+    final total = relevant.fold<int>(0, (sum, t) => sum + t.targetTimeMinutes!);
+    return total ~/ relevant.length;
+  }
+
   List<Task> get recurringTasks => _tasks.where((t) => t.repeatInterval != RepeatInterval.none).toList();
   List<Task> get guildTasks => _tasks.where((t) => t.status == TaskStatus.inGuild && !t.isCompleted).toList();
   ThemeData get currentTheme => GameThemes.forJob(_player.currentJob);
@@ -77,6 +101,14 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
 
   void addTask(String title, {QuestRank rank = QuestRank.B, RepeatInterval repeatInterval = RepeatInterval.none, List<int>? repeatWeekdays, List<SubTask>? subTasks, int? targetTimeMinutes, DateTime? deadline}) {
     _tasks.add(Task(id: const Uuid().v4(), title: title, rank: rank, repeatInterval: repeatInterval, repeatWeekdays: repeatWeekdays, subTasks: subTasks, targetTimeMinutes: targetTimeMinutes, deadline: deadline));
+    if (_tutorialStep == 0) completeTutorialStep(0);
+    _save();
+  }
+
+  void addTasks(List<String> titles, QuestRank rank) {
+    for (final title in titles) {
+      _tasks.add(Task(id: const Uuid().v4(), title: title, rank: rank));
+    }
     if (_tutorialStep == 0) completeTutorialStep(0);
     _save();
   }
@@ -120,6 +152,13 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     if (_tutorialStep == 2) completeTutorialStep(2);
     _checkMissions();
     if (r.shouldResetFatiguePopup) { _fatiguePopupToday = true; _settingsRepository.saveFatiguePopupDate(DateTime.now()); }
+    // 職業チュートリアル発動条件: 冒険者Lv10到達かつ未完了
+    if (r.leveledUp &&
+        _player.currentJob == Job.adventurer &&
+        (_player.jobLevels[Job.adventurer] ?? 1) >= 10 &&
+        !_jobTutorialCompleted) {
+      _showJobTutorial = true;
+    }
     _save();
     _completing.remove(id);
     return {'leveledUp': r.leveledUp, 'coinsGained': r.coinsGained, 'bonusMessages': r.bonusMessages, 'showFatiguePopup': r.showFatiguePopup, 'quizQuestion': r.quizQuestion, 'baseExp': r.expGain};
@@ -152,6 +191,14 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
 
   Future<void> completeTutorialStep(int step) async { final n = await _tutorial.advanceStep(_tutorialStep, step); if (n != null) { _tutorialStep = n; notifyListeners(); } }
   Future<void> markConceptAsSeen() async { if (await _tutorial.markSeen(_sawConcept)) { _sawConcept = true; notifyListeners(); } }
+  Future<void> markJobTutorialSeen() async {
+    if (await _tutorial.markJobTutorialSeen(_jobTutorialCompleted)) {
+      _jobTutorialCompleted = true;
+      _showJobTutorial = false;
+      notifyListeners();
+    }
+  }
+  void dismissJobTutorial() { _showJobTutorial = false; notifyListeners(); }
   Future<void> skipTutorial() async { await _tutorial.persistSkip(); _tutorialStep = 3; _tutSkipped = true; _sawConcept = true; _tutChosen = true; notifyListeners(); }
   Future<void> markTutorialChoiceMade() async { await _tutorial.persistChoiceMade(); _tutChosen = true; notifyListeners(); }
   Future<void> resetTutorial() async { await _tutorial.resetAll(); _tutorialStep = 0; _sawConcept = false; _tutSkipped = false; _tutChosen = false; notifyListeners(); }
@@ -179,6 +226,37 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     try { s(await l()); } catch (e, st) { if (label.isNotEmpty) debugPrint('[VM] $label load error: $e\n$st'); }
   }
 
+  /// 神託1: 今日が期限のギルドタスクを自動配備する
+  /// loadData() の末尾で呼ばれ、期限当日のタスクをランク優先順（S > A > B）で戦場に送り出す
+  void _autoDeployTodaysTasks() {
+    // 1) ギルドタスクのうち、期限が今日のものを抽出
+    final today = DateTime.now();
+    final todaysTasks = guildTasks.where((t) =>
+      t.deadline != null && DateUtils.isSameDay(t.deadline!, today)
+    ).toList();
+
+    if (todaysTasks.isEmpty) {
+      debugPrint('[神託] 今日が期限のギルドタスクはありません');
+      return;
+    }
+
+    // 2) ランク優先順でソート（S > A > B）
+    const rankOrder = {QuestRank.S: 0, QuestRank.A: 1, QuestRank.B: 2};
+    todaysTasks.sort((a, b) => rankOrder[a.rank]!.compareTo(rankOrder[b.rank]!));
+
+    // 3) acceptTask() で自動配備（acceptTask内でキャパシティチェック済み）
+    int deployedCount = 0;
+    for (final task in todaysTasks) {
+      final result = acceptTask(task.id);
+      if (result == null) {
+        deployedCount++;
+      }
+    }
+
+    // 4) 結果をログ出力
+    debugPrint('[神託] 自動配備完了: $deployedCount 件のタスクを戦場に送り出しました');
+  }
+
   Future<void> loadData() async {
     _loadFailed = false;
     try { _player = await _playerRepository.loadPlayer(); } catch (e, s) { debugPrint('[VM] player load error: $e\n$s'); _loadFailed = true; }
@@ -189,6 +267,7 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     await _load(_settingsRepository.getKnowledgeQuestEnabled, (v) => _kqEnabled = v, label: 'knowledgeQuest');
     await _load(_settingsRepository.getTutorialSkipped, (v) => _tutSkipped = v, label: 'tutorialSkipped');
     await _load(_settingsRepository.getTutorialChoiceMade, (v) => _tutChosen = v, label: 'tutorialChoiceMade');
+    await _load(_settingsRepository.getJobTutorialCompleted, (v) => _jobTutorialCompleted = v, label: 'jobTutorialCompleted');
     if (_fontSize != 0.85) { _fontSize = 0.85; try { await _settingsRepository.setFontSizeScale(0.85); } catch (_) {} }
     try { final d = await _settingsRepository.getFatiguePopupDate(); if (d != null && DateUtils.isSameDay(d, DateTime.now())) { _fatiguePopupToday = true; } } catch (e, s) { debugPrint('[VM] fatiguePopup load error: $e\n$s'); }
     if (await _tutorial.repairSeenConcept(_tutorialStep, _sawConcept)) { _sawConcept = true; }
@@ -196,5 +275,7 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     _isLoaded = true;
     notifyListeners();
     try { WidgetsBinding.instance.addObserver(this); } catch (_) {}
+    // 神託1: 今日期限のタスクを自動配備
+    try { _autoDeployTodaysTasks(); } catch (e, s) { debugPrint('[VM] autoDeployTodaysTasks error: $e\n$s'); }
   }
 }

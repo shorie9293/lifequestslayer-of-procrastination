@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:rpg_todo/core/accessibility/semantic_helper.dart';
 import 'package:rpg_todo/features/town/presentation/widgets/shop_item.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 /// キャラクリエイト（装飾）セクション
 class SkinSection extends StatelessWidget {

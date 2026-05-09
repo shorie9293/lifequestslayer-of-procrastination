@@ -3,14 +3,14 @@ import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
-import 'package:rpg_todo/core/error/error_boundary.dart';
-import 'package:rpg_todo/core/accessibility/semantic_helper.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_screen.dart';
 import 'package:rpg_todo/features/battle/presentation/battle_screen.dart';
 import 'package:rpg_todo/features/temple/presentation/temple_screen.dart';
 import 'package:rpg_todo/features/town/presentation/town_screen.dart';
 import 'widgets/main_bottom_nav.dart';
 import 'widgets/main_tutorial_controller.dart';
+import 'package:rpg_todo/features/temple/presentation/dialogs/job_tutorial_dialog.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -108,6 +108,23 @@ class _MainScreenState extends State<MainScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) { vm.clearPendingLoginBonus(); _showLoginBonusDialog(vm.pendingLoginBonusAmount!); });
     } else if (vm.pendingStreakReward != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) { vm.clearPendingStreakReward(); _showStreakRewardDialog(vm.pendingStreakReward!, vm.streakDays); });
+    } else if (vm.showJobTutorial) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          showJobTutorialDialog(
+            context,
+            onClose: () {
+              vm.markJobTutorialSeen();
+              setState(() {});
+            },
+            jobTutorialCompleted: vm.jobTutorialCompleted,
+            onSkip: () {
+              vm.markJobTutorialSeen();
+              setState(() {});
+            },
+          );
+        }
+      });
     }
 
     return Stack(children: [

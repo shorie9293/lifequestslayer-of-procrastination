@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
-import 'package:rpg_todo/core/accessibility/semantic_helper.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/widgets/widgets/player_avatar_section.dart';
 import 'package:rpg_todo/features/shared/widgets/widgets/rank_slot_display.dart';
 import 'package:rpg_todo/features/shared/widgets/widgets/fatigue_gauge.dart';
 import 'package:rpg_todo/features/shared/widgets/widgets/exp_progress_bar.dart';
 import 'package:rpg_todo/features/shared/widgets/widgets/badge_row.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class PlayerStatusHeader extends StatelessWidget {
   const PlayerStatusHeader({super.key});

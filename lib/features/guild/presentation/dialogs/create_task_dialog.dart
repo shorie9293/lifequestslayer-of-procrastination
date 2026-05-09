@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
-import 'package:rpg_todo/core/accessibility/semantic_helper.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// クエスト作成/編集ダイアログ
 class CreateTaskDialog extends StatefulWidget {
@@ -24,6 +24,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
   final _subTaskController = TextEditingController();
   late final TextEditingController _targetTimeController;
   DateTime? _deadline;
+  int? _estimatedMinutes;
 
   @override
   void initState() {
@@ -40,6 +41,20 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     _targetTimeController =
         TextEditingController(text: t?.targetTimeMinutes?.toString() ?? "");
     _deadline = t?.deadline;
+    _updateEstimate();
+    _titleController.addListener(_updateEstimate);
+  }
+
+  void _updateEstimate() {
+    final title = _titleController.text;
+    if (title.isEmpty) {
+      setState(() => _estimatedMinutes = null);
+      return;
+    }
+    final vm = Provider.of<GameViewModel>(context, listen: false);
+    setState(() {
+      _estimatedMinutes = vm.estimateMinutes(title, _selectedRank);
+    });
   }
 
   @override
@@ -196,6 +211,18 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                   ),
                   keyboardType: TextInputType.number,
                 ),
+                if (_estimatedMinutes != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      "📖 魔導書解析: 過去の実績から約$_estimatedMinutes分と推定",
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.amber[200],
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 16),
                 // 完成期限（適応神書 原則③+④：Semantics + Key の二重網）
                 SemanticHelper.interactive(
@@ -251,8 +278,10 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                             child: Text(rank.name),
                           );
                         }).toList(),
-                        onChanged: (val) =>
-                            setState(() => _selectedRank = val!),
+                        onChanged: (val) {
+                          setState(() => _selectedRank = val!);
+                          _updateEstimate();
+                        },
                       ),
                     ),
                     const SizedBox(width: 8),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rpg_todo/core/accessibility/semantic_helper.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
@@ -12,9 +11,11 @@ import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'dialogs/tutorial_reset_dialog.dart';
 import 'dialogs/create_task_dialog.dart';
+import 'dialogs/bulk_create_task_dialog.dart';
 import 'dialogs/recurring_tasks_dialog.dart';
 import 'dialogs/notification_settings_dialog.dart';
 import 'package:rpg_todo/features/battle/presentation/widgets/knowledge_quest_dialog.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class GuildScreen extends StatelessWidget {
   const GuildScreen({super.key});
@@ -84,6 +85,14 @@ class GuildScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("寄合所"),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.post_add),
+            tooltip: '一括依頼作成',
+            onPressed: () => showDialog(
+              context: context,
+              builder: (context) => const BulkCreateTaskDialog(),
+            ),
+          ),
           if (viewModel.player.canUseSkill(Job.cleric))
             IconButton(
               icon: const Icon(Icons.loop),

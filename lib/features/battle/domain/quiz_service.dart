@@ -34,6 +34,20 @@ class QuizService {
     return _questions[_rng.nextInt(_questions.length)];
   }
 
+  /// 期限切れタスク用の強制クイズを抽選する（高難易度・高ボーナス優先）。
+  /// 通常の drawQuizQuestion と異なり、常に100%の確率で出題し、
+  /// 高い expBonusPercent の問題を優先的に選ぶ。
+  static QuizQuestion? drawHardQuizQuestion() {
+    if (_questions.isEmpty) return null;
+
+    // expBonusPercent の高い順にソートし、上位50%からランダム選択
+    final sorted = List<QuizQuestion>.from(_questions)
+      ..sort((a, b) => b.expBonusPercent.compareTo(a.expBonusPercent));
+    final topHalfCount = (sorted.length / 2).ceil();
+    final topHalf = sorted.sublist(0, topHalfCount);
+    return topHalf[_rng.nextInt(topHalf.length)];
+  }
+
   /// 正解時のボーナスEXPを計算する。
   static int calcBonusExp(int bonusPercent, int baseExp) {
     return (baseExp * bonusPercent / 100).round();

@@ -10,6 +10,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  takamagahara_ui:
+    path: ../../packages/takamagahara_ui
+  takamagahara_core:
+    path: ../../packages/takamagahara_core
 
   cupertino_icons: ^1.0.8
   provider: ^6.1.5+1

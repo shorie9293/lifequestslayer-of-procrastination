@@ -146,7 +146,18 @@ class TaskCompletionService {
 
     // 知識クエスト抽選
     QuizQuestion? quizQuestion;
-    if (knowledgeQuestEnabled) {
+    final isOverdue = task.deadline != null && task.deadline!.isBefore(DateTime.now());
+
+    if (isOverdue) {
+      // 期限切れペナルティ: 強制クイズ + EXP減少
+      quizQuestion = QuizService.drawHardQuizQuestion();
+      bonusMessages.add("⏰ 期限切れ！クイズに答えてペナルティを軽減せよ！");
+
+      // EXPペナルティ: 期限超過時間に応じて減少（最低50%まで）
+      final overdueHours = DateTime.now().difference(task.deadline!).inHours;
+      final penaltyRate = (1.0 - (overdueHours * 0.01)).clamp(0.5, 1.0);
+      expGain = (expGain * penaltyRate).round();
+    } else if (knowledgeQuestEnabled) {
       quizQuestion = QuizService.drawQuizQuestion();
     }
 

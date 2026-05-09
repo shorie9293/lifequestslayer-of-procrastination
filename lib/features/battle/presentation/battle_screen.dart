@@ -10,7 +10,7 @@ import 'package:rpg_todo/features/battle/data/quiz_data.dart';
 import 'package:rpg_todo/core/testing/tutorial_keys.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
-import 'package:rpg_todo/core/accessibility/semantic_helper.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class BattleScreen extends StatelessWidget {
   const BattleScreen({super.key});

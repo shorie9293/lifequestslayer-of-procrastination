@@ -96,6 +96,12 @@ class AppKeys {
   // ━━━ プレイヤーステータスヘッダー ━━━
   static const Key playerStatusHeader = Key('header_player_status');
 
+  // ━━━ 一括作成ダイアログ ━━━
+  static const Key bulkCreateTaskDialog = Key('dlg_bulk_create_task');
+  static const Key bulkCreateTaskInput = Key('txt_bulk_task_input');
+  static const Key bulkCreateTaskRank = Key('dd_bulk_task_rank');
+  static const Key bulkCreateTaskSubmit = Key('btn_bulk_task_submit');
+
   // ━━━ ダイアログ類 ━━━
   static const Key helpDialog = Key('dlg_help');
   static const Key knowledgeQuestDialog = Key('dlg_knowledge_quest');

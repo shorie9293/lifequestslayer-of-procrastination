@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
-import 'package:rpg_todo/core/accessibility/semantic_helper.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class TempleScreen extends StatelessWidget {
   const TempleScreen({super.key});
@@ -13,7 +13,12 @@ class TempleScreen extends StatelessWidget {
     final viewModel = Provider.of<GameViewModel>(context);
     final player = viewModel.player;
     final adventurerLv = player.jobLevels[Job.adventurer] ?? 1;
-    final canChangeJob = adventurerLv >= 10;
+    final currentJobLv = player.level;
+    // 浪人Lv10で他職への転職が解禁される
+    final canUnlockOtherJobs = adventurerLv >= 10;
+    // 他職にいる場合、その職業でLv10にならないと他に転職できない
+    final canLeaveCurrentJob = player.currentJob == Job.adventurer || currentJobLv >= 10;
+    final canChangeJob = canUnlockOtherJobs && canLeaveCurrentJob;
 
     return Scaffold(
       key: AppKeys.templeScreen,
@@ -209,16 +214,18 @@ class TempleScreen extends StatelessWidget {
                               color: isUnlocked ? Colors.white70 : Colors.grey),
                         ),
                         if (!isUnlocked)
-                          const Text(
-                            "冒険者Lv.10 解放",
-                            style: TextStyle(
+                          Text(
+                            (player.jobLevels[Job.adventurer] ?? 1) < 10
+                                ? '浪人Lv.10 解放'
+                                : '現在の職業でLv.10 解放',
+                            style: const TextStyle(
                                 color: Colors.redAccent,
                                 fontWeight: FontWeight.bold),
                           ),
-                      ],
-                    ),
-                  ),
-                  if (isSelected) Icon(Icons.check_circle, color: color),
+              ],
+            ),
+          ),
+          if (isSelected) Icon(Icons.check_circle, color: color),
                   if (!isSelected && !isUnlocked)
                     const Icon(Icons.lock, color: Colors.grey),
                 ],

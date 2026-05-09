@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
-import 'package:rpg_todo/core/accessibility/semantic_helper.dart';
 import 'package:rpg_todo/features/town/presentation/gem_shop_screen.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 金貨・宝石残高＋宝石ショップへのボタンを表示するバー
 class CoinGemBalanceBar extends StatelessWidget {

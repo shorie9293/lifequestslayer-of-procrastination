@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:rpg_todo/core/accessibility/semantic_helper.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class TutorialOverlay extends StatefulWidget {
   final Rect targetRect;

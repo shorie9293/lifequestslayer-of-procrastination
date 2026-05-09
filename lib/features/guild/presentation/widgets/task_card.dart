@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rpg_todo/domain/models/task.dart';
-import 'package:rpg_todo/core/accessibility/semantic_helper.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 class TaskCard extends StatelessWidget {
   final Task task;
@@ -12,7 +12,9 @@ class TaskCard extends StatelessWidget {
   final Function(int index, bool? value)? onSubTaskToggle;
   final String? subtitle;
 
-  const TaskCard({
+  final bool isUrgent;
+
+  TaskCard({
     super.key,
     required this.task,
     required this.actions,
@@ -21,7 +23,9 @@ class TaskCard extends StatelessWidget {
     this.initiallyExpanded = false,
     this.onSubTaskToggle,
     this.subtitle,
-  });
+  }) : isUrgent = task.status == TaskStatus.inGuild &&
+           task.deadline != null &&
+           task.deadline!.isBefore(DateTime.now().add(const Duration(days: 1)));
 
   String _getRankEnemyEmoji(QuestRank rank) {
     switch (rank) {
@@ -144,15 +148,33 @@ class TaskCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                title: Semantics(
-                  identifier: 'txt_task_title_${task.id}',
-                  child: Text(
-                    "[${task.rank.name}] ${task.title}",
-                    style: GoogleFonts.vt323(
-                        fontSize: 26,
-                        color: textColor,
-                        fontWeight: FontWeight.bold),
-                  ),
+                title: Row(
+                  children: [
+                    Expanded(
+                      child: Semantics(
+                        identifier: 'txt_task_title_${task.id}',
+                        child: Text(
+                          "[${task.rank.name}] ${task.title}",
+                          style: GoogleFonts.vt323(
+                              fontSize: 26,
+                              color: textColor,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    if (isUrgent)
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: const Text('緊急',
+                            style: TextStyle(
+                                fontSize: 11, fontWeight: FontWeight.bold)),
+                      ),
+                  ],
                 ),
                 subtitle: subtitle != null
                     ? Padding(

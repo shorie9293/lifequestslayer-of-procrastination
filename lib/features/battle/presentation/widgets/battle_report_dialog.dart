@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/features/battle/data/quiz_data.dart';
-import 'package:rpg_todo/core/accessibility/semantic_helper.dart';
 import 'battle_result_header.dart';
 import 'bonus_message_list.dart';
 import 'level_up_section.dart';
 import 'knowledge_quest_section.dart';
 import 'fatigue_warning_section.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 class BattleReportDialog extends StatefulWidget {
   final int coinsGained;

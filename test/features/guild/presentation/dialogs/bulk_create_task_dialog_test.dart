@@ -1,0 +1,213 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
+import 'package:hive/hive.dart';
+import 'dart:io';
+import 'package:rpg_todo/features/guild/presentation/dialogs/bulk_create_task_dialog.dart';
+import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/features/shared/data/player_repository.dart';
+import 'package:rpg_todo/features/guild/data/task_repository.dart';
+import 'package:rpg_todo/core/testing/widget_keys.dart';
+
+void _safeRegisterAdapter<T>(TypeAdapter<T> adapter) {
+  try {
+    Hive.registerAdapter(adapter);
+  } on HiveError {}
+}
+
+Future<GameViewModel> createLoadedViewModel() async {
+  final vm = GameViewModel();
+  final start = DateTime.now();
+  while (!vm.isLoaded) {
+    if (DateTime.now().difference(start) > const Duration(seconds: 5)) {
+      throw Exception('GameViewModel load timeout');
+    }
+    await Future.delayed(const Duration(milliseconds: 50));
+  }
+  await Future.delayed(const Duration(milliseconds: 50));
+  return vm;
+}
+
+void main() {
+  late Directory testDir;
+
+  setUpAll(() async {
+    testDir = Directory(
+        '${Directory.systemTemp.path}/bulk_dlg_test_${DateTime.now().millisecondsSinceEpoch}');
+    Hive.init(testDir.path);
+    _safeRegisterAdapter(TaskAdapter());
+    _safeRegisterAdapter(TaskStatusAdapter());
+    _safeRegisterAdapter(QuestionRankAdapter());
+    _safeRegisterAdapter(PlayerAdapter());
+    _safeRegisterAdapter(JobAdapter());
+    _safeRegisterAdapter(RepeatIntervalAdapter());
+    _safeRegisterAdapter(SubTaskAdapter());
+  });
+
+  tearDownAll(() async {
+    await Hive.close();
+    if (testDir.existsSync()) {
+      testDir.deleteSync(recursive: true);
+    }
+  });
+
+  tearDown(() async {
+    try {
+      await Hive.deleteBoxFromDisk(PlayerRepository.boxName);
+    } catch (_) {}
+    try {
+      await Hive.deleteBoxFromDisk(TaskRepository.boxName);
+    } catch (_) {}
+    try {
+      await Hive.deleteBoxFromDisk('settingsBox');
+    } catch (_) {}
+    try {
+      await Hive.deleteBoxFromDisk('tutorialBox');
+    } catch (_) {}
+  });
+
+  group('BulkCreateTaskDialog', () {
+    testWidgets('ダイアログが正しい要素で表示される', (tester) async {
+      final vm = await createLoadedViewModel();
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<GameViewModel>.value(
+          value: vm,
+          child: MaterialApp(
+            home: Builder(
+              builder: (context) => ElevatedButton(
+                onPressed: () => showDialog(
+                  context: context,
+                  builder: (_) => const BulkCreateTaskDialog(),
+                ),
+                child: const Text('開く'),
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // ダイアログを開く
+      await tester.tap(find.text('開く'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // ダイアログが表示されていることを確認
+      expect(find.byKey(AppKeys.bulkCreateTaskDialog), findsOneWidget);
+      expect(find.text('一括依頼作成'), findsOneWidget);
+      expect(find.byKey(AppKeys.bulkCreateTaskInput), findsOneWidget);
+      expect(find.byKey(AppKeys.bulkCreateTaskRank), findsOneWidget);
+      expect(find.byKey(AppKeys.bulkCreateTaskSubmit), findsOneWidget);
+      expect(find.text('キャンセル'), findsOneWidget);
+    });
+
+    testWidgets('空テキストで一括登録ボタンを押すとエラー', (tester) async {
+      final vm = await createLoadedViewModel();
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<GameViewModel>.value(
+          value: vm,
+          child: const MaterialApp(
+            home: _DialogLauncher(),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('開く'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 空のまま一括登録
+      await tester.tap(find.byKey(AppKeys.bulkCreateTaskSubmit));
+      await tester.pump();
+
+      expect(find.text('依頼内容を入力してください'), findsOneWidget);
+      expect(vm.tasks, isEmpty);
+    });
+
+    testWidgets('複数行の入力を一括登録できる', (tester) async {
+      final vm = await createLoadedViewModel();
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<GameViewModel>.value(
+          value: vm,
+          child: const MaterialApp(
+            home: _DialogLauncher(),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('開く'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // テキスト入力
+      final inputField = tester.widget<TextField>(
+        find.byKey(AppKeys.bulkCreateTaskInput),
+      );
+      inputField.controller!.text = 'クエストA\nクエストB\nクエストC';
+      await tester.pump();
+
+      // 一括登録
+      await tester.tap(find.byKey(AppKeys.bulkCreateTaskSubmit));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(vm.tasks.length, 3);
+      expect(vm.tasks[0].title, 'クエストA');
+      expect(vm.tasks[1].title, 'クエストB');
+      expect(vm.tasks[2].title, 'クエストC');
+      expect(vm.tasks.every((t) => t.rank == QuestRank.B), true);
+    });
+
+    testWidgets('空行は無視されて有効な行のみ登録される', (tester) async {
+      final vm = await createLoadedViewModel();
+
+      await tester.pumpWidget(
+        ChangeNotifierProvider<GameViewModel>.value(
+          value: vm,
+          child: const MaterialApp(
+            home: _DialogLauncher(),
+          ),
+        ),
+      );
+
+      await tester.tap(find.text('開く'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final inputField = tester.widget<TextField>(
+        find.byKey(AppKeys.bulkCreateTaskInput),
+      );
+      inputField.controller!.text = 'タスク1\n\nタスク2\n   \nタスク3';
+      await tester.pump();
+
+      await tester.tap(find.byKey(AppKeys.bulkCreateTaskSubmit));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+
+      expect(vm.tasks.length, 3);
+    });
+  });
+}
+
+class _DialogLauncher extends StatelessWidget {
+  const _DialogLauncher();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: ElevatedButton(
+          onPressed: () => showDialog(
+            context: context,
+            builder: (_) => const BulkCreateTaskDialog(),
+          ),
+          child: const Text('開く'),
+        ),
+      ),
+    );
+  }
+}

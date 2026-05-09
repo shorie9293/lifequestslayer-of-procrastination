@@ -10,7 +10,7 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/core/infrastructure/notification_service.dart';
 import 'package:rpg_todo/core/infrastructure/iap_service.dart';
 import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
-import 'package:rpg_todo/core/error/error_boundary.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
