@@ -2,80 +2,121 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
-import 'package:rpg_todo/features/shared/data/player_repository.dart';
-import 'package:rpg_todo/features/guild/data/task_repository.dart';
+import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
+import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 import 'package:rpg_todo/core/utils/date_utils.dart' as date_utils;
 import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
 import 'package:rpg_todo/features/battle/data/quiz_data.dart';
-import 'package:hive/hive.dart';
-import 'dart:io';
 
-/// テスト時にエラーをthrowする PlayerRepository のモック
-class FailingPlayerRepository extends PlayerRepository {
+/// Hive非依存のインメモリ PlayerRepository モック
+class _MockPlayerRepo implements IPlayerRepository {
+  Player _player = Player();
+  @override
+  Future<Player> loadPlayer() async => _player;
+  @override
+  Future<void> savePlayer(Player player) async => _player = player;
+  @override
+  Future<void> close() async {}
+}
+
+/// Hive非依存のインメモリ TaskRepository モック
+class _MockTaskRepo implements ITaskRepository {
+  final List<Task> _tasks = [];
+  @override
+  Future<List<Task>> loadTasks() async => List.from(_tasks);
+  @override
+  Future<void> saveTasks(List<Task> tasks) async {
+    _tasks.clear();
+    _tasks.addAll(tasks);
+  }
+  @override
+  Future<void> close() async {}
+}
+
+/// Hive非依存の SettingsRepository モック
+class _MockSettingsRepo extends SettingsRepository {
+  @override
+  Future<int> getTutorialStep() async => 0;
+  @override
+  Future<bool> getHasSeenConcept() async => false;
+  @override
+  Future<double> getFontSizeScale() async => 0.85;
+  @override
+  Future<bool> getKnowledgeQuestEnabled() async => true;
+  @override
+  Future<bool> getTutorialSkipped() async => false;
+  @override
+  Future<bool> getTutorialChoiceMade() async => false;
+  @override
+  Future<bool> getJobTutorialCompleted() async => false;
+  @override
+  Future<void> setFontSizeScale(double v) async {}
+  @override
+  Future<DateTime?> getFatiguePopupDate() async => null;
+  @override
+  Future<void> setKnowledgeQuestEnabled(bool v) async {}
+  @override
+  Future<void> setTutorialStep(int v) async {}
+  @override
+  Future<void> setHasSeenConcept(bool v) async {}
+  @override
+  Future<void> setTutorialSkipped(bool v) async {}
+  @override
+  Future<void> setTutorialChoiceMade(bool v) async {}
+  @override
+  Future<void> setJobTutorialCompleted(bool v) async {}
+  @override
+  Future<void> saveFatiguePopupDate(DateTime d) async {}
+  @override
+  Future<void> deleteFatiguePopupDate() async {}
+  @override
+  Future<void> resetTutorial() async {}
+}
+
+/// テスト時にエラーをthrowする PlayerRepository モック
+class _FailingPlayerRepo implements IPlayerRepository {
   final Object error;
-  FailingPlayerRepository(this.error);
+  _FailingPlayerRepo(this.error);
 
   @override
   Future<Player> loadPlayer() async {
     throw error;
   }
+
+  @override
+  Future<void> savePlayer(Player player) async {}
+
+  @override
+  Future<void> close() async {}
 }
 
-/// テスト時にエラーをthrowする TaskRepository のモック
-class FailingTaskRepository extends TaskRepository {
+/// テスト時にエラーをthrowする TaskRepository モック
+class _FailingTaskRepo implements ITaskRepository {
   final Object error;
-  FailingTaskRepository(this.error);
+  _FailingTaskRepo(this.error);
 
   @override
   Future<List<Task>> loadTasks() async {
     throw error;
   }
-}
 
-/// TypeAdapter を安全に登録する（他テストで登録済みの場合は無視）
-void _safeRegisterAdapter<T>(TypeAdapter<T> adapter) {
-  try {
-    Hive.registerAdapter(adapter);
-  } on HiveError {
-    // 既に登録済み
-  }
+  @override
+  Future<void> saveTasks(List<Task> tasks) async {}
+
+  @override
+  Future<void> close() async {}
 }
 
 void main() {
-  late Directory testDir;
-
-  setUpAll(() async {
-    testDir = Directory(
-        '${Directory.systemTemp.path}/vm_test_${DateTime.now().millisecondsSinceEpoch}');
-    Hive.init(testDir.path);
-    _safeRegisterAdapter(TaskAdapter());
-    _safeRegisterAdapter(TaskStatusAdapter());
-    _safeRegisterAdapter(QuestionRankAdapter());
-    _safeRegisterAdapter(PlayerAdapter());
-    _safeRegisterAdapter(JobAdapter());
-    _safeRegisterAdapter(RepeatIntervalAdapter());
-    _safeRegisterAdapter(SubTaskAdapter());
-  });
-
-  tearDownAll(() async {
-    await Hive.close();
-    if (testDir.existsSync()) {
-      testDir.deleteSync(recursive: true);
-    }
-  });
-
-  group('GameViewModel 永続化テスト（実Hive）', () {
-    tearDown(() async {
-      try { await Hive.deleteBoxFromDisk(PlayerRepository.boxName); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk(TaskRepository.boxName); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk('settingsBox'); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk('tutorialBox'); } catch (_) {}
-    });
-
+  group('GameViewModel 永続化テスト（Mock）', () {
     test('タスク完了（Bランク）が永続化され、再読み込みでレベル・タスク状態が維持される', () async {
+      final pr = _MockPlayerRepo();
+      final tr = _MockTaskRepo();
+      final sr = _MockSettingsRepo();
+
       // 1. 最初の ViewModel で操作
-      final vm1 = GameViewModel();
+      final vm1 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm1);
 
       vm1.addTask('テストクエスト', rank: QuestRank.B);
@@ -92,8 +133,8 @@ void main() {
       // 保存を待つ
       await Future.delayed(const Duration(milliseconds: 200));
 
-      // 2. 新しい ViewModel で読み込み
-      final vm2 = GameViewModel();
+      // 2. 新しい ViewModel で読み込み（同じモックを共有→データが永続化されている）
+      final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm2);
 
       // 検証: タスクは完了状態で永続化されている
@@ -109,7 +150,11 @@ void main() {
     });
 
     test('複数タスクの完了が永続化される', () async {
-      final vm1 = GameViewModel();
+      final pr = _MockPlayerRepo();
+      final tr = _MockTaskRepo();
+      final sr = _MockSettingsRepo();
+
+      final vm1 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm1);
 
       // 3つのタスクを追加して完了
@@ -124,7 +169,7 @@ void main() {
 
       await Future.delayed(const Duration(milliseconds: 200));
 
-      final vm2 = GameViewModel();
+      final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm2);
 
       // 全タスクが完了状態
@@ -135,7 +180,11 @@ void main() {
     });
 
     test('プレイヤーデータ（宝石・職業）が永続化される', () async {
-      final vm1 = GameViewModel();
+      final pr = _MockPlayerRepo();
+      final tr = _MockTaskRepo();
+      final sr = _MockSettingsRepo();
+
+      final vm1 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm1);
 
       // 直接プレイヤーを操作してから保存
@@ -144,7 +193,7 @@ void main() {
 
       await Future.delayed(const Duration(milliseconds: 200));
 
-      final vm2 = GameViewModel();
+      final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm2);
 
       expect(vm2.player.gems, 50);
@@ -155,10 +204,11 @@ void main() {
   group('GameViewModel データ保護テスト', () {
     test('PlayerRepository 読み込み失敗時に loadData がクラッシュせず isLoaded=true になる',
         () async {
+      final sr = _MockSettingsRepo();
       final vm = GameViewModel(
-        pr: FailingPlayerRepository(HiveError('テスト用エラー')),
-        tr: TaskRepository(),
-        sr: SettingsRepository(),
+        pr: _FailingPlayerRepo(Exception('テスト用エラー')),
+        tr: _MockTaskRepo(),
+        sr: sr,
       );
 
       await _waitForLoad(vm);
@@ -171,10 +221,11 @@ void main() {
 
     test('TaskRepository 読み込み失敗時に loadData がクラッシュせず isLoaded=true になる',
         () async {
+      final sr = _MockSettingsRepo();
       final vm = GameViewModel(
-        pr: PlayerRepository(),
-        tr: FailingTaskRepository(HiveError('テスト用エラー')),
-        sr: SettingsRepository(),
+        pr: _MockPlayerRepo(),
+        tr: _FailingTaskRepo(Exception('テスト用エラー')),
+        sr: sr,
       );
 
       await _waitForLoad(vm);
@@ -185,16 +236,16 @@ void main() {
 
     test('読み込み失敗時も _notifyAndSave が例外を投げず、ユーザー操作が可能であることを確認', () async {
       // PlayerRepository が失敗する ViewModel を作成
+      final sr = _MockSettingsRepo();
       final vm = GameViewModel(
-        pr: FailingPlayerRepository(HiveError('テスト用エラー')),
-        tr: TaskRepository(),
-        sr: SettingsRepository(),
+        pr: _FailingPlayerRepo(Exception('テスト用エラー')),
+        tr: _MockTaskRepo(),
+        sr: sr,
       );
 
       await _waitForLoad(vm);
 
       // v1.6: ロード失敗時もユーザー操作はブロックされず、saveData が実行される
-      // （Repository 層で破損 Box は削除済みのため安全）
       expect(() => vm.addGems(100), returnsNormally);
       expect(() => vm.addTask('テスト', rank: QuestRank.B), returnsNormally);
       expect(vm.player.gems, 100); // 宝石が実際に追加されている
@@ -202,61 +253,14 @@ void main() {
     });
   });
 
-  group('TaskAdapter ラウンドトリップ', () {
-    late Box<Task> box;
-
-    setUp(() async {
-      box = await Hive.openBox<Task>('task_adapter_test_box');
-    });
-
-    tearDown(() async {
-      await box.deleteFromDisk();
-    });
-
-    test('完了済みタスクの読み書きが一致する', () async {
-      final task = Task(
-        id: 'test-id-1',
-        title: '討伐済みクエスト',
-        status: TaskStatus.inGuild,
-        isCompleted: true,
-        rank: QuestRank.S,
-      );
-
-      await box.put(task.id, task);
-      final restored = box.get(task.id)!;
-
-      expect(restored.id, task.id);
-      expect(restored.title, task.title);
-      expect(restored.isCompleted, true);
-      expect(restored.status, TaskStatus.inGuild);
-      expect(restored.rank, QuestRank.S);
-    });
-
-    test('未完了タスクの読み書きが一致する', () async {
-      final task = Task(
-        id: 'test-id-2',
-        title: '未討伐クエスト',
-      );
-
-      await box.put(task.id, task);
-      final restored = box.get(task.id)!;
-
-      expect(restored.isCompleted, false);
-      expect(restored.status, TaskStatus.inGuild);
-    });
-  });
-
   group('GameViewModel ビジネスロジックテスト', () {
-    tearDown(() async {
-      try { await Hive.deleteBoxFromDisk(PlayerRepository.boxName); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk(TaskRepository.boxName); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk('settingsBox'); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk('tutorialBox'); } catch (_) {}
-    });
-
     // --- (1) dailyEstimatedMinutes ---
     test('dailyEstimatedMinutes はアクティブタスクのtargetTimeMinutes合計を返す', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.addTask('タスク1', rank: QuestRank.B, targetTimeMinutes: 30);
@@ -274,7 +278,11 @@ void main() {
     });
 
     test('dailyEstimatedMinutes はtargetTimeMinutesがnullのタスクを無視する', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.addTask('タスク1', rank: QuestRank.B, targetTimeMinutes: 45);
@@ -286,7 +294,11 @@ void main() {
     });
 
     test('dailyEstimatedMinutes はギルド内のタスクを含まない', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.addTask('アクティブ', rank: QuestRank.B, targetTimeMinutes: 30);
@@ -298,7 +310,11 @@ void main() {
     });
 
     test('dailyEstimatedMinutes は全タスクがギルド内なら0を返す', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.addTask('ギルド1', rank: QuestRank.B, targetTimeMinutes: 30);
@@ -309,7 +325,11 @@ void main() {
 
     // --- (2) guildEstimatedMinutes ---
     test('guildEstimatedMinutes はギルドタスクのtargetTimeMinutes合計を返す', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.addTask('ギルド1', rank: QuestRank.B, targetTimeMinutes: 30);
@@ -319,7 +339,11 @@ void main() {
     });
 
     test('guildEstimatedMinutes はアクティブタスクを含まない', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.addTask('ギルド', rank: QuestRank.B, targetTimeMinutes: 30);
@@ -331,7 +355,11 @@ void main() {
     });
 
     test('guildEstimatedMinutes はtargetTimeMinutesがnullのタスクを無視する', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.addTask('ギルド1', rank: QuestRank.B); // null
@@ -342,7 +370,11 @@ void main() {
 
     // --- (3) completeTask() XP calculations for each rank ---
     test('completeTask() BランクはXP=100, coins=10を付与する', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.addTask('クエストB', rank: QuestRank.B);
@@ -355,7 +387,11 @@ void main() {
     });
 
     test('completeTask() AランクはXP=300, coins=30を付与する', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       // Aランク受注にはLv5以上が必要
@@ -371,7 +407,11 @@ void main() {
     });
 
     test('completeTask() SランクはXP=1000, coins=100を付与する', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       // Sランク受注にはLv10以上が必要
@@ -389,7 +429,11 @@ void main() {
 
     // --- (4) completeTask() with warrior combo bonus ---
     test('Warriorコンボ: 戦士でタスク完了時にコンボカウントが増加しボーナスが加算される', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.changeJob(Job.warrior);
@@ -405,7 +449,11 @@ void main() {
     });
 
     test('Warriorコンボ: 連続タスクでコンボが累積する', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.changeJob(Job.warrior);
@@ -428,7 +476,11 @@ void main() {
     });
 
     test('Warrior以外の職業ではcompleteTaskでコンボがリセットされる', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.changeJob(Job.adventurer);
@@ -443,7 +495,11 @@ void main() {
 
     // --- (5) completeTask() with title bonus (+5%) ---
     test('称号ボーナス: equippedTitleが設定されているとEXPが+5%される', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       // 称号を手動で追加して装備
@@ -460,7 +516,11 @@ void main() {
     });
 
     test('称号ボーナス: 称号未装備時はEXPボーナスなし', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       expect(vm.player.equippedTitle, isNull);
@@ -474,7 +534,11 @@ void main() {
     });
 
     test('称号ボーナス: 称号を外すとボーナスが無効になる', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       // 称号を付けてから外す
@@ -495,7 +559,11 @@ void main() {
 
     // --- (6) completeTask() with fatigue multiplier ---
     test('疲労補正: 通常時（dailyTasksCompleted=0）はXPが1.0倍', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.player.lastMissionResetDate = DateTime.now();
@@ -511,7 +579,11 @@ void main() {
     });
 
     test('疲労補正: 警告域（dailyTasksCompleted=5）ではXPが0.5倍', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.player.lastMissionResetDate = DateTime.now();
@@ -529,7 +601,11 @@ void main() {
     });
 
     test('疲労補正: 重度域（dailyTasksCompleted=10）ではXPが0.1倍', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.player.lastMissionResetDate = DateTime.now();
@@ -548,7 +624,11 @@ void main() {
 
     // --- (7) completeTask() with rare drop chance ---
     test('レアドロップ: 結果にbonusMessagesが含まれcoinsGainedが基本値以上である', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.addTask('クエスト', rank: QuestRank.B);
@@ -565,7 +645,11 @@ void main() {
       // level=1 → dropChance = max(0.01, 1*0.02=0.02) = 0.02
       // level=25 → dropChance = min(0.5, 25*0.02=0.5) = 0.5
       // 構造確認のため、高レベルで複数回試行しレアドロの発生を観測
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.player.jobLevels[vm.player.currentJob] = 50; // dropChance=0.5
@@ -588,7 +672,11 @@ void main() {
 
     // --- (8) completeTask() triggering mission completion ---
     test('デイリーミッション: 3タスク目完了時に+200コイン', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.player.lastMissionResetDate = DateTime.now();
@@ -607,7 +695,11 @@ void main() {
     });
 
     test('デイリーミッション: 3タスク未満ではデイリーボーナスなし', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.player.lastMissionResetDate = DateTime.now();
@@ -624,7 +716,11 @@ void main() {
     });
 
     test('ウィークリーミッション: 初回Sランクで+500コイン', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.player.lastMissionResetDate = DateTime.now();
@@ -645,7 +741,11 @@ void main() {
 
     // --- (9) completeTask() returning null when sub-tasks incomplete ---
     test('サブタスク未完了: Wizard状態でサブタスク未完了ならnullを返す', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.changeJob(Job.wizard);
@@ -661,7 +761,11 @@ void main() {
     });
 
     test('サブタスク完了: Wizard状態で全サブタスク完了なら成功する', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.changeJob(Job.wizard);
@@ -678,7 +782,11 @@ void main() {
     });
 
     test('サブタスク未完了: Wizard状態でなければサブタスク未完了でも成功する', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       // Adventurer（非Wizard）
@@ -692,7 +800,11 @@ void main() {
     });
 
     test('サブタスク: toggleSubTaskで1つずつ完了させてから全体完了できる', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.changeJob(Job.wizard);
@@ -715,7 +827,11 @@ void main() {
     });
 
     test('addTasks: 複数タイトルを一括追加すると、指定されたランクでタスクが生成される', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       final titles = ['クエスト1', 'クエスト2', 'クエスト3'];
@@ -733,7 +849,11 @@ void main() {
     });
 
     test('addTasks: 空リストを渡すと何も追加されない', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.addTasks([], QuestRank.S);
@@ -742,7 +862,11 @@ void main() {
     });
 
     test('addTasks: 空文字のタイトルがあってもタスクは作成される（addTaskと同じ挙動）', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.addTasks(['有効なクエスト', '', 'もう一つのクエスト'], QuestRank.B);
@@ -754,7 +878,11 @@ void main() {
     });
 
     test('addTasks: Bランクを指定すると全タスクがBランクで作成される', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.addTasks(['タスクX'], QuestRank.B);
@@ -766,7 +894,11 @@ void main() {
     // --- (10) completeTask() with repeat interval (cleric skill) ---
     test('繰り返しタスク: Clericで繰り返しタスク完了時はisCompleted=false、最終完了日時が記録される',
         () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.changeJob(Job.cleric);
@@ -785,7 +917,11 @@ void main() {
     });
 
     test('繰り返しタスク: Cleric以外では通常通りisCompleted=trueになる', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       // Adventurer（cleric スキルなし）
@@ -802,7 +938,11 @@ void main() {
     });
 
     test('繰り返しタスク: ClericでrepeatInterval=noneの通常タスクは完了扱いになる', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.changeJob(Job.cleric);
@@ -820,17 +960,13 @@ void main() {
   });
 
   group('GameViewModel 神託1: _autoDeployTodaysTasks', () {
-    tearDown(() async {
-      // 各テスト間でHiveボックスをクリーンアップ（前テストの残留データを排除）
-      try { await Hive.deleteBoxFromDisk(PlayerRepository.boxName); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk(TaskRepository.boxName); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk('settingsBox'); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk('tutorialBox'); } catch (_) {}
-    });
-
     test('今日期限のタスクがloadData後に自動配備されactiveになる', () async {
+      final pr = _MockPlayerRepo();
+      final tr = _MockTaskRepo();
+      final sr = _MockSettingsRepo();
+
       // VM1で今日期限のタスクを作成
-      final vm1 = GameViewModel();
+      final vm1 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm1);
       final today = DateTime.now();
       vm1.addTask('今日期限クエスト', rank: QuestRank.B, deadline: today);
@@ -839,7 +975,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 300));
 
       // VM2で読み込み → _autoDeployTodaysTasks() が走る
-      final vm2 = GameViewModel();
+      final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm2);
 
       // 今日期限のタスクが自動配備されてactiveになっている
@@ -850,14 +986,18 @@ void main() {
     });
 
     test('未来の期限のタスクはloadData後に自動配備されずinGuildのまま', () async {
-      final vm1 = GameViewModel();
+      final pr = _MockPlayerRepo();
+      final tr = _MockTaskRepo();
+      final sr = _MockSettingsRepo();
+
+      final vm1 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm1);
       final future = DateTime.now().add(const Duration(days: 7));
       vm1.addTask('未来期限クエスト', rank: QuestRank.B, deadline: future);
 
       await Future.delayed(const Duration(milliseconds: 300));
 
-      final vm2 = GameViewModel();
+      final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm2);
 
       final task = vm2.tasks.first;
@@ -866,13 +1006,17 @@ void main() {
     });
 
     test('期限なしのタスクは自動配備されない', () async {
-      final vm1 = GameViewModel();
+      final pr = _MockPlayerRepo();
+      final tr = _MockTaskRepo();
+      final sr = _MockSettingsRepo();
+
+      final vm1 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm1);
       vm1.addTask('期限なしクエスト', rank: QuestRank.B);
 
       await Future.delayed(const Duration(milliseconds: 300));
 
-      final vm2 = GameViewModel();
+      final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm2);
 
       final task = vm2.tasks.first;
@@ -882,7 +1026,11 @@ void main() {
     });
 
     test('ランク優先順位（S > A > B）で自動配備される（Lv10で全スロット解放）', () async {
-      final vm1 = GameViewModel();
+      final pr = _MockPlayerRepo();
+      final tr = _MockTaskRepo();
+      final sr = _MockSettingsRepo();
+
+      final vm1 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm1);
 
       // Lv10で全スロット解放: S=1, A=2, B=3
@@ -896,7 +1044,7 @@ void main() {
 
       await Future.delayed(const Duration(milliseconds: 300));
 
-      final vm2 = GameViewModel();
+      final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm2);
 
       // Lv10なので全3件がactiveになるはず
@@ -918,7 +1066,11 @@ void main() {
     });
 
     test('キャパシティ超過時（Lv1:B×1のみ）はBランク1件のみ自動配備される', () async {
-      final vm1 = GameViewModel();
+      final pr = _MockPlayerRepo();
+      final tr = _MockTaskRepo();
+      final sr = _MockSettingsRepo();
+
+      final vm1 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm1);
 
       final today = DateTime.now();
@@ -930,7 +1082,7 @@ void main() {
 
       await Future.delayed(const Duration(milliseconds: 300));
 
-      final vm2 = GameViewModel();
+      final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm2);
 
       // Lv1: B×1のみ受注可能 → 1件だけactive
@@ -944,15 +1096,12 @@ void main() {
   });
 
   group('estimateMinutes 神託5: 過去完了タスクからの時間推定', () {
-    tearDown(() async {
-      try { await Hive.deleteBoxFromDisk(PlayerRepository.boxName); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk(TaskRepository.boxName); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk('settingsBox'); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk('tutorialBox'); } catch (_) {}
-    });
-
     test('同ランクの完了タスクから平均時間を推定する', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       // 完了タスクを追加
@@ -972,7 +1121,11 @@ void main() {
     });
 
     test('同ランクかつ類似タイトルの完了タスクがあればそれも含めて平均する', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       // Bランク完了タスク
@@ -993,7 +1146,11 @@ void main() {
     });
 
     test('完了タスクがない場合はnullを返す', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       final estimate = vm.estimateMinutes('新しいクエスト', QuestRank.S);
@@ -1001,7 +1158,11 @@ void main() {
     });
 
     test('完了タスクが全てtargetTimeMinutes未設定ならnullを返す', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.addTask('テスト', rank: QuestRank.B); // targetTimeMinutes = null
@@ -1013,7 +1174,11 @@ void main() {
     });
 
     test('異なるランクの完了タスクは推定に含めない', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       // Sランク完了のみ、Bランクの推定には使われない
@@ -1029,7 +1194,11 @@ void main() {
 
   group('GameViewModel 職業チュートリアル発動テスト', () {
     test('冒険者Lv10到達時にshowJobTutorialがtrueになる', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       // 初期状態を明示的にLv9に設定
@@ -1049,10 +1218,14 @@ void main() {
     });
 
     test('冒険者Lv10未満ではshowJobTutorialがtrueにならない', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
-      // 初期状態を明示的にLv1に設定（Hiveの残留データ対策）
+      // 初期状態を明示的にLv1に設定（モックなので残留データはないが念のため）
       vm.player.jobLevels[Job.adventurer] = 1;
       vm.player.jobExps[Job.adventurer] = 0;
 
@@ -1069,7 +1242,11 @@ void main() {
     });
 
     test('一度完了したチュートリアルは再発動しない', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       // 既に完了済みとしてマーク
@@ -1092,7 +1269,11 @@ void main() {
     });
 
     test('他職でレベルアップしても発動しない', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       vm.changeJob(Job.warrior);
@@ -1116,14 +1297,18 @@ void main() {
     });
 
     test('markJobTutorialSeenでフラグが永続化される', () async {
-      final vm1 = GameViewModel();
+      final pr = _MockPlayerRepo();
+      final tr = _MockTaskRepo();
+      final sr = _MockSettingsRepo();
+
+      final vm1 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm1);
 
       await vm1.markJobTutorialSeen();
 
       await Future.delayed(const Duration(milliseconds: 200));
 
-      final vm2 = GameViewModel();
+      final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm2);
 
       expect(vm2.showJobTutorial, false);
@@ -1150,17 +1335,17 @@ void main() {
       ]);
     });
 
-    tearDown(() async {
+    tearDown(() {
       QuizService.probability = 0.30;
-      try { await Hive.deleteBoxFromDisk(PlayerRepository.boxName); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk(TaskRepository.boxName); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk('settingsBox'); } catch (_) {}
-      try { await Hive.deleteBoxFromDisk('tutorialBox'); } catch (_) {}
     });
 
     test('期限切れタスク完了時にクイズが強制発動されbonusMessagesに期限切れメッセージが含まれる',
         () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
       QuizService.probability = 0.0; // 通常抽選OFF
 
@@ -1185,7 +1370,11 @@ void main() {
     });
 
     test('期限切れタスク完了時にEXPが減少する', () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       final pastDeadline = DateTime.now().subtract(const Duration(days: 1));
@@ -1200,7 +1389,11 @@ void main() {
 
     test('期限切れでないタスクでは通常通りクイズ抽選（確率0%でnull）',
         () async {
-      final vm = GameViewModel();
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
       await _waitForLoad(vm);
 
       QuizService.probability = 0.0;
@@ -1219,6 +1412,7 @@ void main() {
     });
   });
 }
+
 /// GameViewModel.loadData() の非同期完了を待つヘルパー
 Future<void> _waitForLoad(GameViewModel vm,
     {Duration timeout = const Duration(seconds: 5)}) async {

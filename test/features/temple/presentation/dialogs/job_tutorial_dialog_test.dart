@@ -1,56 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/temple/presentation/dialogs/job_tutorial_dialog.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
-import 'package:rpg_todo/domain/models/player.dart';
-import 'package:rpg_todo/domain/models/task.dart';
-import 'package:rpg_todo/features/shared/data/player_repository.dart';
-import 'package:rpg_todo/features/guild/data/task_repository.dart';
-import 'package:rpg_todo/features/shared/data/settings_repository.dart';
-import 'package:rpg_todo/core/testing/widget_keys.dart';
-import 'package:hive/hive.dart';
-import 'dart:io';
 
-/// TypeAdapter を安全に登録する（他テストで登録済みの場合は無視）
-void _safeRegisterAdapter<T>(TypeAdapter<T> adapter) {
-  try {
-    Hive.registerAdapter(adapter);
-  } on HiveError {
-    // 既に登録済み
-  }
-}
-
+/// テスト用のDI注入済みGameViewModelを生成せずとも、
+/// JobTutorialDialog は自己完結したWidgetのためHive依存不要。
 void main() {
-  late Directory testDir;
-
-  setUpAll(() async {
-    testDir = Directory(
-        '${Directory.systemTemp.path}/job_tut_test_${DateTime.now().millisecondsSinceEpoch}');
-    Hive.init(testDir.path);
-    _safeRegisterAdapter(TaskAdapter());
-    _safeRegisterAdapter(TaskStatusAdapter());
-    _safeRegisterAdapter(QuestionRankAdapter());
-    _safeRegisterAdapter(PlayerAdapter());
-    _safeRegisterAdapter(JobAdapter());
-    _safeRegisterAdapter(RepeatIntervalAdapter());
-    _safeRegisterAdapter(SubTaskAdapter());
-  });
-
-  setUp(() async {
-    try {
-      await Hive.deleteBoxFromDisk('tutorialBox');
-      await Hive.deleteBoxFromDisk('settingsBox');
-    } catch (_) {}
-  });
-
-  tearDownAll(() async {
-    await Hive.close();
-    if (testDir.existsSync()) {
-      testDir.deleteSync(recursive: true);
-    }
-  });
-
   Future<void> pumpJobTutorialDialog(WidgetTester tester,
       {bool jobTutorialCompleted = false}) async {
     // JobTutorialDialog は showJobTutorialDialog() 関数で表示される
@@ -173,7 +127,7 @@ void main() {
 
       // 4ページ目：寺院への導線
       expect(find.text('🏛️ 寺院へ'), findsOneWidget);
-      expect(find.textContaining('社（つかさ）'), findsWidgets);
+      expect(find.textContaining('「社」タブ'), findsWidgets);
       expect(find.text('閉じる'), findsOneWidget);
 
       // 閉じるを押す

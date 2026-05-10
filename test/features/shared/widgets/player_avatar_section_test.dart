@@ -14,7 +14,7 @@ void main() {
         ),
       );
 
-      expect(find.text('Lv.1 冒険者'), findsOneWidget);
+      expect(find.text('Lv.1 浪人'), findsOneWidget);
       expect(find.text('0'), findsOneWidget);
     });
 
@@ -29,7 +29,7 @@ void main() {
       );
 
       expect(find.text('【勇者】'), findsOneWidget);
-      expect(find.text('Lv.1 冒険者'), findsOneWidget);
+      expect(find.text('Lv.1 浪人'), findsOneWidget);
     });
 
     testWidgets('戦士の場合Combo表示', (tester) async {

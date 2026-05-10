@@ -1,117 +1,144 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
-import 'package:hive/hive.dart';
-import 'dart:io';
 import 'package:rpg_todo/features/guild/presentation/guild_screen.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
-import 'package:rpg_todo/features/shared/data/player_repository.dart';
-import 'package:rpg_todo/features/guild/data/task_repository.dart';
+import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
+import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
+import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 
-/// TypeAdapter を安全に登録する（他テストで登録済みの場合は無視）
-void _safeRegisterAdapter<T>(TypeAdapter<T> adapter) {
-  try {
-    Hive.registerAdapter(adapter);
-  } on HiveError {
-    // 既に登録済み
+// ━━━ DI Mock リポジトリ（Hive非依存） ━━━
+
+class _MockPlayerRepository implements IPlayerRepository {
+  @override
+  Future<Player> loadPlayer() async => Player();
+  @override
+  Future<void> savePlayer(Player player) async {}
+  @override
+  Future<void> close() async {}
+}
+
+class _MockTaskRepository implements ITaskRepository {
+  @override
+  Future<List<Task>> loadTasks() async => [];
+  @override
+  Future<void> saveTasks(List<Task> tasks) async {}
+  @override
+  Future<void> close() async {}
+}
+
+/// SettingsRepository は具象クラスのため extend して全Hiveメソッドをオーバーライド
+class _MockSettingsRepository extends SettingsRepository {
+  @override
+  Future<double> getFontSizeScale() async => 0.85;
+  @override
+  Future<void> setFontSizeScale(double scale) async {}
+  @override
+  Future<bool> getKnowledgeQuestEnabled() async => true;
+  @override
+  Future<void> setKnowledgeQuestEnabled(bool enabled) async {}
+  @override
+  Future<void> saveFatiguePopupDate(DateTime date) async {}
+  @override
+  Future<DateTime?> getFatiguePopupDate() async => null;
+  @override
+  Future<void> deleteFatiguePopupDate() async {}
+  @override
+  Future<int> getTutorialStep() async => 0;
+  @override
+  Future<void> setTutorialStep(int step) async {}
+  @override
+  Future<bool> getHasSeenConcept() async => false;
+  @override
+  Future<void> setHasSeenConcept(bool value) async {}
+  @override
+  Future<bool> getTutorialSkipped() async => false;
+  @override
+  Future<void> setTutorialSkipped(bool value) async {}
+  @override
+  Future<bool> getTutorialChoiceMade() async => false;
+  @override
+  Future<void> setTutorialChoiceMade(bool value) async {}
+  @override
+  Future<bool> getJobTutorialCompleted() async => false;
+  @override
+  Future<void> setJobTutorialCompleted(bool value) async {}
+  @override
+  Future<void> resetTutorial() async {}
+}
+
+/// テスト用のDI注入済みGameViewModelを生成し、ロード完了まで待つ
+/// tester.runAsync() 内で呼び出す必要あり（非同期loadDataとの衝突回避）
+Future<GameViewModel> createLoadedViewModel() async {
+  final vm = GameViewModel(
+    pr: _MockPlayerRepository(),
+    tr: _MockTaskRepository(),
+    sr: _MockSettingsRepository(),
+  );
+  final start = DateTime.now();
+  while (!vm.isLoaded) {
+    if (DateTime.now().difference(start) > const Duration(seconds: 5)) {
+      throw Exception('GameViewModel のロードがタイムアウトしました');
+    }
+    await Future.delayed(const Duration(milliseconds: 10));
   }
+  // loadData() 内の後続処理（autoDeploy等）の完了を待つ
+  await Future.delayed(const Duration(milliseconds: 50));
+  return vm;
+}
+
+/// GuildScreen をポンプするヘルパー
+Future<void> pumpGuildScreen(WidgetTester tester, GameViewModel vm) async {
+  await tester.pumpWidget(
+    ChangeNotifierProvider<GameViewModel>.value(
+      value: vm,
+      child: const MaterialApp(
+        home: GuildScreen(),
+      ),
+    ),
+  );
+  // 画面が完全に描画されるのを待つ
+  await tester.pump();
+  await tester.pump();
 }
 
 void main() {
   group('GuildScreen 見積もり時間表示テスト', () {
-    late Directory testDir;
-
-    setUpAll(() async {
-      testDir = Directory(
-          '${Directory.systemTemp.path}/guild_screen_test_${DateTime.now().millisecondsSinceEpoch}');
-      Hive.init(testDir.path);
-      _safeRegisterAdapter(TaskAdapter());
-      _safeRegisterAdapter(TaskStatusAdapter());
-      _safeRegisterAdapter(QuestionRankAdapter());
-      _safeRegisterAdapter(PlayerAdapter());
-      _safeRegisterAdapter(JobAdapter());
-      _safeRegisterAdapter(RepeatIntervalAdapter());
-      _safeRegisterAdapter(SubTaskAdapter());
-    });
-
-    tearDownAll(() async {
-      await Hive.close();
-      if (testDir.existsSync()) {
-        testDir.deleteSync(recursive: true);
-      }
-    });
-
-    tearDown(() async {
-      try {
-        await Hive.deleteBoxFromDisk(PlayerRepository.boxName);
-      } catch (_) {}
-      try {
-        await Hive.deleteBoxFromDisk(TaskRepository.boxName);
-      } catch (_) {}
-      try {
-        await Hive.deleteBoxFromDisk('settingsBox');
-      } catch (_) {}
-      try {
-        await Hive.deleteBoxFromDisk('tutorialBox');
-      } catch (_) {}
-    });
-
-    /// GameViewModel のロード完了を待つヘルパー
-    Future<GameViewModel> createLoadedViewModel() async {
-      final vm = GameViewModel();
-      final start = DateTime.now();
-      while (!vm.isLoaded) {
-        if (DateTime.now().difference(start) > const Duration(seconds: 5)) {
-          throw Exception('GameViewModel のロードがタイムアウトしました');
-        }
-        await Future.delayed(const Duration(milliseconds: 50));
-      }
-      await Future.delayed(const Duration(milliseconds: 50));
-      return vm;
-    }
-
-    /// GuildScreen をポンプするヘルパー
-    Future<void> pumpGuildScreen(WidgetTester tester, GameViewModel vm) async {
-      await tester.pumpWidget(
-        ChangeNotifierProvider<GameViewModel>.value(
-          value: vm,
-          child: const MaterialApp(
-            home: GuildScreen(),
-          ),
-        ),
-      );
-      // 画面が完全に描画されるのを待つ
-      await tester.pump();
-      await tester.pump();
-    }
-
     // ━━━ 見積もり表示あり ━━━
 
     testWidgets(
         'ギルドタスクに targetTimeMinutes がある場合、'
         '「未着手の依頼（見積もり）: XX分」が表示される', (tester) async {
-      final vm = await        createLoadedViewModel();
+      late GameViewModel vm;
 
-      // 見積もり時間付きのタスクを追加（受注しない → guildTasks に留まる）
-      vm.addTask('討伐クエスト', rank: QuestRank.B, targetTimeMinutes: 45);
+      await tester.runAsync(() async {
+        vm = await createLoadedViewModel();
 
-      await        pumpGuildScreen(tester, vm);
+        // 見積もり時間付きのタスクを追加（受注しない → guildTasks に留まる）
+        vm.addTask('討伐クエスト', rank: QuestRank.B, targetTimeMinutes: 45);
+      });
+
+      await pumpGuildScreen(tester, vm);
 
       // 見積もり時間のテキストが表示されていることを確認（完全一致）
       expect(find.text('未着手の依頼（見積もり）: 45分'), findsOneWidget);
     });
 
     testWidgets('複数ギルドタスクの見積もりが合計表示される', (tester) async {
-      final vm = await        createLoadedViewModel();
+      late GameViewModel vm;
 
-      vm.addTask('クエストA', rank: QuestRank.B, targetTimeMinutes: 20);
-      vm.addTask('クエストB', rank: QuestRank.A, targetTimeMinutes: 35);
-      vm.addTask('クエストC', rank: QuestRank.S, targetTimeMinutes: 60);
+      await tester.runAsync(() async {
+        vm = await createLoadedViewModel();
 
-      await        pumpGuildScreen(tester, vm);
+        vm.addTask('クエストA', rank: QuestRank.B, targetTimeMinutes: 20);
+        vm.addTask('クエストB', rank: QuestRank.A, targetTimeMinutes: 35);
+        vm.addTask('クエストC', rank: QuestRank.S, targetTimeMinutes: 60);
+      });
+
+      await pumpGuildScreen(tester, vm);
 
       // 合計115分が表示されていることを確認
       expect(find.text('未着手の依頼（見積もり）: 115分'), findsOneWidget);
@@ -120,13 +147,17 @@ void main() {
     testWidgets(
         'ギルドタスクの一部だけ targetTimeMinutes がある場合、'
         'あるものだけ合計される', (tester) async {
-      final vm = await        createLoadedViewModel();
+      late GameViewModel vm;
 
-      // 見積もりありのタスクと、なしのタスクを混在させる
-      vm.addTask('見積もりあり', rank: QuestRank.B, targetTimeMinutes: 30);
-      vm.addTask('見積もりなし', rank: QuestRank.B);
+      await tester.runAsync(() async {
+        vm = await createLoadedViewModel();
 
-      await        pumpGuildScreen(tester, vm);
+        // 見積もりありのタスクと、なしのタスクを混在させる
+        vm.addTask('見積もりあり', rank: QuestRank.B, targetTimeMinutes: 30);
+        vm.addTask('見積もりなし', rank: QuestRank.B);
+      });
+
+      await pumpGuildScreen(tester, vm);
 
       // 30分のみの合計が表示される
       expect(find.text('未着手の依頼（見積もり）: 30分'), findsOneWidget);
@@ -137,12 +168,16 @@ void main() {
     testWidgets(
         'ギルドタスクの targetTimeMinutes が null の場合、見積もり表示は出ない',
         (tester) async {
-      final vm = await        createLoadedViewModel();
+      late GameViewModel vm;
 
-      // targetTimeMinutes なしのタスクを追加
-      vm.addTask('テストクエスト', rank: QuestRank.B);
+      await tester.runAsync(() async {
+        vm = await createLoadedViewModel();
 
-      await        pumpGuildScreen(tester, vm);
+        // targetTimeMinutes なしのタスクを追加
+        vm.addTask('テストクエスト', rank: QuestRank.B);
+      });
+
+      await pumpGuildScreen(tester, vm);
 
       // 見積もり時間のテキストが表示されていないことを確認
       expect(
@@ -157,10 +192,14 @@ void main() {
     });
 
     testWidgets('タスクがない場合は見積もり表示が出ない', (tester) async {
-      final vm = await        createLoadedViewModel();
+      late GameViewModel vm;
 
-      // タスクなし
-      await        pumpGuildScreen(tester, vm);
+      await tester.runAsync(() async {
+        vm = await createLoadedViewModel();
+        // タスクを追加しない
+      });
+
+      await pumpGuildScreen(tester, vm);
 
       // 見積もり表示は存在しない
       expect(
