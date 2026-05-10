@@ -15,14 +15,19 @@ class PlayerAvatarSection extends StatelessWidget {
           width: 48,
           height: 48,
           decoration: BoxDecoration(
-            color: Colors.white12,
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.grey, width: 2),
+            border: Border.all(color: Colors.amber.shade700, width: 2),
           ),
           alignment: Alignment.center,
-          child: Text(
-            getSkinIcon(player.equippedSkin),
-            style: const TextStyle(fontSize: 24),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/images/${skinIconPath(player.equippedSkin)}',
+              width: 48,
+              height: 48,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const Icon(
+                Icons.person, color: Colors.white54, size: 28),
+            ),
           ),
         ),
         const SizedBox(width: 12),
@@ -89,11 +94,13 @@ String getJobName(Job job) {
   }
 }
 
-/// スキンIDに対応する絵文字を返す
-String getSkinIcon(String? skinId) {
-  if (skinId == "skin_1") return "🧥";
-  if (skinId == "skin_2") return "🎖️";
-  if (skinId == "skin_3") return "🪄";
-  if (skinId == "skin_4") return "👑";
-  return "👤";
+/// スキンIDに対応するアイコン画像パスを返す（和風アイコン）
+String skinIconPath(String? skinId) {
+  switch (skinId) {
+    case "skin_1": return "skin_icon_1.png";
+    case "skin_2": return "skin_icon_2.png";
+    case "skin_3": return "skin_icon_3.png";
+    case "skin_4": return "skin_icon_4.png";
+    default: return "skin_icon_default.png";
+  }
 }
