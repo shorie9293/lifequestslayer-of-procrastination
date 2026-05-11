@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/core/infrastructure/notification_service.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 通知設定ダイアログ
 class NotificationSettingsDialog extends StatefulWidget {
@@ -82,17 +83,27 @@ class _NotificationSettingsDialogState
             '設定画面を開きますか？',
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('キャンセル'),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber[700],
-                foregroundColor: Colors.white,
+            SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(
+                  SemanticTypes.button, 'cancel_perm_denied'),
+              label: 'キャンセル',
+              child: TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('キャンセル'),
               ),
-              child: const Text('設定を開く'),
+            ),
+            SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(
+                  SemanticTypes.button, 'open_settings'),
+              label: '設定画面を開く',
+              child: ElevatedButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.amber[700],
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('設定を開く'),
+              ),
             ),
           ],
         ),
@@ -118,17 +129,27 @@ class _NotificationSettingsDialogState
               '許可しない場合でも通知は届きますが、数分程度遅れることがあります。',
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('このまま続ける'),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber[700],
-                  foregroundColor: Colors.white,
+              SemanticHelper.interactive(
+                testId: SemanticHelper.createTestId(
+                    SemanticTypes.button, 'continue_without_exact'),
+                label: '正確な通知なしで続ける',
+                child: TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('このまま続ける'),
                 ),
-                child: const Text('設定を開く'),
+              ),
+              SemanticHelper.interactive(
+                testId: SemanticHelper.createTestId(
+                    SemanticTypes.button, 'open_alarm_settings'),
+                label: 'アラーム設定を開く',
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.amber[700],
+                    foregroundColor: Colors.white,
+                  ),
+                  child: const Text('設定を開く'),
+                ),
               ),
             ],
           ),
@@ -195,12 +216,17 @@ class _NotificationSettingsDialogState
             leading: const Text('☀️', style: TextStyle(fontSize: 22)),
             title: const Text('朝の伝令'),
             subtitle: const Text('「本日の依頼書が届いておるぞ！」'),
-            trailing: TextButton(
-              onPressed: _enabled ? () => _pickTime(isMorning: true) : null,
-              child: Text(
-                _fmt(_morningHour, _morningMinute),
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            trailing: SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(
+                  SemanticTypes.button, 'pick_morning_time'),
+              label: '朝の通知時刻を変更',
+              child: TextButton(
+                onPressed: _enabled ? () => _pickTime(isMorning: true) : null,
+                child: Text(
+                  _fmt(_morningHour, _morningMinute),
+                  style:
+                      const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
             contentPadding: EdgeInsets.zero,
@@ -210,12 +236,17 @@ class _NotificationSettingsDialogState
             leading: const Text('🍺', style: TextStyle(fontSize: 22)),
             title: const Text('夜の催促'),
             subtitle: const Text('「仕留めた報告を忘れるでないぞ！」'),
-            trailing: TextButton(
-              onPressed: _enabled ? () => _pickTime(isMorning: false) : null,
-              child: Text(
-                _fmt(_eveningHour, _eveningMinute),
-                style:
-                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            trailing: SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(
+                  SemanticTypes.button, 'pick_evening_time'),
+              label: '夜の通知時刻を変更',
+              child: TextButton(
+                onPressed: _enabled ? () => _pickTime(isMorning: false) : null,
+                child: Text(
+                  _fmt(_eveningHour, _eveningMinute),
+                  style:
+                      const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
             contentPadding: EdgeInsets.zero,
@@ -226,49 +257,66 @@ class _NotificationSettingsDialogState
                 const Icon(Icons.bug_report, color: Colors.orange, size: 22),
             title: const Text('テスト通知を送信'),
             subtitle: const Text('即座に通知を表示して動作確認'),
-            trailing: ElevatedButton.icon(
-              icon: const Icon(Icons.send, size: 16),
-              label: const Text('送信'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange[700],
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 12),
+            trailing: SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(
+                  SemanticTypes.button, 'send_test_notification'),
+              label: 'テスト通知を送信',
+              child: ElevatedButton.icon(
+                icon: const Icon(Icons.send, size: 16),
+                label: const Text('送信'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange[700],
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                ),
+                onPressed: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  final granted = await _service.requestPermission();
+                  if (!granted && mounted) {
+                    messenger.showSnackBar(
+                      const SnackBar(
+                          content: Text('通知の許可が得られませんでした')),
+                    );
+                    return;
+                  }
+                  await _service.sendTestNotification();
+                  if (mounted) {
+                    messenger.showSnackBar(
+                      const SnackBar(
+                          content: Text(
+                              'テスト通知を送信しました！ステータスバーを確認してください')),
+                    );
+                  }
+                },
               ),
-              onPressed: () async {
-                final messenger = ScaffoldMessenger.of(context);
-                final granted = await _service.requestPermission();
-                if (!granted && mounted) {
-                  messenger.showSnackBar(
-                    const SnackBar(content: Text('通知の許可が得られませんでした')),
-                  );
-                  return;
-                }
-                await _service.sendTestNotification();
-                if (mounted) {
-                  messenger.showSnackBar(
-                    const SnackBar(
-                        content: Text('テスト通知を送信しました！ステータスバーを確認してください')),
-                  );
-                }
-              },
             ),
             contentPadding: EdgeInsets.zero,
           ),
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          style: TextButton.styleFrom(foregroundColor: Colors.grey[400]),
-          child: const Text('キャンセル'),
-        ),
-        ElevatedButton(
-          onPressed: _save,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.amber[700],
-            foregroundColor: Colors.white,
+        SemanticHelper.interactive(
+          testId: SemanticHelper.createTestId(
+              SemanticTypes.button, 'cancel_notification_settings'),
+          label: '通知設定をキャンセル',
+          child: TextButton(
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(foregroundColor: Colors.grey[400]),
+            child: const Text('キャンセル'),
           ),
-          child: const Text('保存'),
+        ),
+        SemanticHelper.interactive(
+          testId: SemanticHelper.createTestId(
+              SemanticTypes.button, 'save_notification_settings'),
+          label: '通知設定を保存',
+          child: ElevatedButton(
+            onPressed: _save,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber[700],
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('保存'),
+          ),
         ),
       ],
     );

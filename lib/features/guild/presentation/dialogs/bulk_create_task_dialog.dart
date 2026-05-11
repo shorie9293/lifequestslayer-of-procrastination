@@ -4,7 +4,6 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
-
 /// 一括クエスト作成ダイアログ
 /// 複数のタスクを一度に登録するためのテキストエリアとランクセレクターを提供する。
 class BulkCreateTaskDialog extends StatefulWidget {
@@ -111,22 +110,32 @@ class _BulkCreateTaskDialogState extends State<BulkCreateTaskDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          key: AppKeys.formTaskCancel,
-          onPressed: () => Navigator.pop(context),
-          style: TextButton.styleFrom(foregroundColor: Colors.grey[400]),
-          child: const Text("キャンセル", style: TextStyle(fontSize: 16)),
-        ),
-        ElevatedButton(
-          key: AppKeys.bulkCreateTaskSubmit,
-          onPressed: _submit,
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blueAccent,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        SemanticHelper.interactive(
+          testId: SemanticHelper.createTestId(
+              SemanticTypes.button, 'cancel_bulk_create'),
+          label: '一括作成をキャンセル',
+          child: TextButton(
+            key: AppKeys.formTaskCancel,
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(foregroundColor: Colors.grey[400]),
+            child: const Text("キャンセル", style: TextStyle(fontSize: 16)),
           ),
-          child: const Text("一括登録",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        ),
+        SemanticHelper.interactive(
+          testId: SemanticHelper.createTestId(
+              SemanticTypes.button, 'submit_bulk_create'),
+          label: '一括登録する',
+          child: ElevatedButton(
+            key: AppKeys.bulkCreateTaskSubmit,
+            onPressed: _submit,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blueAccent,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text("一括登録",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+          ),
         ),
       ],
     );

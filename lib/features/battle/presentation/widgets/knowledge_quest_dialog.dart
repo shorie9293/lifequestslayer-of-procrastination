@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 知識クエスト設定ダイアログ
 class KnowledgeQuestDialog extends StatefulWidget {
@@ -34,30 +35,42 @@ class _KnowledgeQuestDialogState extends State<KnowledgeQuestDialog> {
             style: TextStyle(fontSize: 13, color: Colors.black54),
           ),
           const SizedBox(height: 16),
-          SwitchListTile(
-            key: AppKeys.guildKnowledgeQuestToggle,
-            title: const Text('知識クエストを有効にする'),
-            subtitle: Text(
-              enabled ? '有効：クエスト完了後にクイズが出題されます' : '無効：クイズは表示されません',
-              style: TextStyle(
-                fontSize: 12,
-                color: enabled ? Colors.green[700] : Colors.grey,
-              ),
-            ),
+          SemanticHelper.toggle(
+            testId: SemanticHelper.createTestId(
+                SemanticTypes.toggle, 'knowledge_quest_enable'),
             value: enabled,
-            activeColor: Colors.amber[700],
-            onChanged: (v) {
-              viewModel.setKnowledgeQuestEnabled(v);
-              setState(() {});
-            },
+            child: SwitchListTile(
+              key: AppKeys.guildKnowledgeQuestToggle,
+              title: const Text('知識クエストを有効にする'),
+              subtitle: Text(
+                enabled
+                    ? '有効：クエスト完了後にクイズが出題されます'
+                    : '無効：クイズは表示されません',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: enabled ? Colors.green[700] : Colors.grey,
+                ),
+              ),
+              value: enabled,
+              activeColor: Colors.amber[700],
+              onChanged: (v) {
+                viewModel.setKnowledgeQuestEnabled(v);
+                setState(() {});
+              },
+            ),
           ),
         ],
       ),
       actions: [
-        TextButton(
-          key: AppKeys.closeButton,
-          onPressed: () => Navigator.pop(context),
-          child: const Text('閉じる'),
+        SemanticHelper.interactive(
+          testId: SemanticHelper.createTestId(
+              SemanticTypes.button, 'close_knowledge_quest'),
+          label: '知識クエスト設定を閉じる',
+          child: TextButton(
+            key: AppKeys.closeButton,
+            onPressed: () => Navigator.pop(context),
+            child: const Text('閉じる'),
+          ),
         ),
       ],
     );

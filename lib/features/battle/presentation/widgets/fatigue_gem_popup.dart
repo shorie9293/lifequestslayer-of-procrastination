@@ -106,35 +106,48 @@ class _FatigueGemDialog extends StatelessWidget {
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('今日は休む', style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.diamond, size: 16),
-            label: Text(canAfford ? '回復する (50💎)' : '宝石を購入する'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  canAfford ? Colors.purple[700] : Colors.blueGrey[700],
-              foregroundColor: Colors.white,
+          SemanticHelper.interactive(
+            testId: SemanticHelper.createTestId(
+                SemanticTypes.button, 'rest_today'),
+            label: '今日は休む',
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('今日は休む',
+                  style: TextStyle(color: Colors.white54)),
             ),
-            onPressed: () {
-              if (canAfford) {
-                final success =
-                    context.read<GameViewModel>().resetFatigueWithGems();
-                Navigator.of(context).pop();
-                if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('⚡ 疲労がリセットされた！さらなる討伐へ！')),
+          ),
+          SemanticHelper.interactive(
+            testId: SemanticHelper.createTestId(
+                SemanticTypes.button, 'recover_fatigue'),
+            label: canAfford ? '50宝石で疲労回復' : '宝石を購入する',
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.diamond, size: 16),
+              label: Text(canAfford ? '回復する (50💎)' : '宝石を購入する'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    canAfford ? Colors.purple[700] : Colors.blueGrey[700],
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                if (canAfford) {
+                  final success =
+                      context.read<GameViewModel>().resetFatigueWithGems();
+                  Navigator.of(context).pop();
+                  if (success) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content:
+                              Text('⚡ 疲労がリセットされた！さらなる討伐へ！')),
+                    );
+                  }
+                } else {
+                  Navigator.of(context).pop();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const GemShopScreen()),
                   );
                 }
-              } else {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const GemShopScreen()),
-                );
-              }
-            },
+              },
+            ),
           ),
         ],
       ),

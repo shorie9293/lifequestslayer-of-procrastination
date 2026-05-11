@@ -87,13 +87,18 @@ class _BattleReportDialogState extends State<BattleReportDialog> {
                 if (widget.fatigueWarning != null)
                   FatigueWarningSection(fatigueWarning: widget.fatigueWarning),
                 const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4A90D9),
-                    padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'close_report'),
+                  label: '戦果報告を閉じる',
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4A90D9),
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                    ),
+                    child: const Text('閉じる', style: TextStyle(fontSize: 16)),
                   ),
-                  child: const Text('閉じる', style: TextStyle(fontSize: 16)),
                 ),
               ],
             ),

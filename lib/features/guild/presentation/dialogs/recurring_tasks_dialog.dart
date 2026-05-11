@@ -4,6 +4,7 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'create_task_dialog.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 定期任務一覧ダイアログ
 class RecurringTasksDialog extends StatelessWidget {
@@ -59,24 +60,34 @@ class RecurringTasksDialog extends StatelessWidget {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          IconButton(
-                            icon: const Icon(Icons.edit,
-                                color: Colors.grey, size: 20),
-                            onPressed: () {
-                              Navigator.pop(context);
-                              showDialog(
-                                context: context,
-                                builder: (context) =>
-                                    CreateTaskDialog(task: task),
-                              );
-                            },
+                          SemanticHelper.interactive(
+                            testId: SemanticHelper.createTestId(
+                                SemanticTypes.button, 'edit_${task.id}'),
+                            label: '定期任務を編集',
+                            child: IconButton(
+                              icon: const Icon(Icons.edit,
+                                  color: Colors.grey, size: 20),
+                              onPressed: () {
+                                Navigator.pop(context);
+                                showDialog(
+                                  context: context,
+                                  builder: (context) =>
+                                      CreateTaskDialog(task: task),
+                                );
+                              },
+                            ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.delete,
-                                color: Colors.redAccent, size: 20),
-                            onPressed: () {
-                              viewModel.deleteTask(task.id);
-                            },
+                          SemanticHelper.interactive(
+                            testId: SemanticHelper.createTestId(
+                                SemanticTypes.button, 'delete_${task.id}'),
+                            label: '定期任務を削除',
+                            child: IconButton(
+                              icon: const Icon(Icons.delete,
+                                  color: Colors.redAccent, size: 20),
+                              onPressed: () {
+                                viewModel.deleteTask(task.id);
+                              },
+                            ),
                           ),
                         ],
                       ),
@@ -87,9 +98,14 @@ class RecurringTasksDialog extends StatelessWidget {
               ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('閉じる'),
+        SemanticHelper.interactive(
+          testId: SemanticHelper.createTestId(
+              SemanticTypes.button, 'close_recurring_tasks'),
+          label: '定期任務一覧を閉じる',
+          child: TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('閉じる'),
+          ),
         ),
       ],
     );
