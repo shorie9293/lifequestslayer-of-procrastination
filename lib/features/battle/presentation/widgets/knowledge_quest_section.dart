@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/features/battle/data/quiz_data.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 /// 戦果報告書内にインライン表示される知識クエストセクション
 class KnowledgeQuestSection extends StatefulWidget {
@@ -93,11 +94,15 @@ class _KnowledgeQuestSectionState extends State<KnowledgeQuestSection> {
             final label = String.fromCharCode('A'.codeUnitAt(0) + i);
             return Padding(
               padding: const EdgeInsets.only(bottom: 6),
-              child: InkWell(
-                key: Key('quiz_choice_$i'),
-                onTap: () => _onChoiceTap(i),
-                borderRadius: BorderRadius.circular(8),
-                child: AnimatedContainer(
+              child: SemanticHelper.interactive(
+                testId: SemanticHelper.createTestId(
+                    SemanticTypes.button, 'quiz_choice_$i'),
+                label: '選択肢 ${String.fromCharCode('A'.codeUnitAt(0) + i)}',
+                child: InkWell(
+                  key: Key('quiz_choice_$i'),
+                  onTap: () => _onChoiceTap(i),
+                  borderRadius: BorderRadius.circular(8),
+                  child: AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   decoration: BoxDecoration(
@@ -123,7 +128,8 @@ class _KnowledgeQuestSectionState extends State<KnowledgeQuestSection> {
                         const Icon(Icons.cancel, color: Colors.redAccent, size: 16),
                     ],
                   ),
-                ),
+              ),
+            ),
               ),
             );
           }),
@@ -162,10 +168,15 @@ class _KnowledgeQuestSectionState extends State<KnowledgeQuestSection> {
               const SizedBox(height: 8),
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {},
-                  child: const Text('次へ',
-                      style: TextStyle(color: Colors.white38, fontSize: 11)),
+                child: SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'next_quiz'),
+                  label: '次の問題へ',
+                  child: TextButton(
+                    onPressed: () {},
+                    child: const Text('次へ',
+                        style: TextStyle(color: Colors.white38, fontSize: 11)),
+                  ),
                 ),
               ),
             ],

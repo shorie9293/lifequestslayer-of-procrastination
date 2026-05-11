@@ -15,24 +15,34 @@ class TutorialResetDialog extends StatelessWidget {
       title: const Text('導きの書をリセット'),
       content: const Text('導きの書を最初からやり直しますか？\n（ゲームデータは消えません）'),
       actions: [
-        TextButton(
-          key: AppKeys.closeButton,
-          onPressed: () => Navigator.pop(context),
-          style: TextButton.styleFrom(foregroundColor: Colors.grey),
-          child: const Text('キャンセル'),
+        SemanticHelper.interactive(
+          testId: SemanticHelper.createTestId(
+              SemanticTypes.button, 'cancel_tutorial_reset'),
+          label: 'キャンセル',
+          child: TextButton(
+            key: AppKeys.closeButton,
+            onPressed: () => Navigator.pop(context),
+            style: TextButton.styleFrom(foregroundColor: Colors.grey),
+            child: const Text('キャンセル'),
+          ),
         ),
-        ElevatedButton(
-          onPressed: () {
-            Provider.of<GameViewModel>(context, listen: false).resetTutorial();
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('🔄 導きの書をリセットしました')),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber[700],
-              foregroundColor: Colors.white),
-          child: const Text('リセット'),
+        SemanticHelper.interactive(
+          testId: SemanticHelper.createTestId(
+              SemanticTypes.button, 'confirm_tutorial_reset'),
+          label: 'チュートリアルをリセット',
+          child: ElevatedButton(
+            onPressed: () {
+              Provider.of<GameViewModel>(context, listen: false).resetTutorial();
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('🔄 導きの書をリセットしました')),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.amber[700],
+                foregroundColor: Colors.white),
+            child: const Text('リセット'),
+          ),
         ),
       ],
     );

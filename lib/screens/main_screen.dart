@@ -146,25 +146,35 @@ class _MainScreenState extends State<MainScreen> {
         title: const Row(children: [Text('📜', style: TextStyle(fontSize: 24)), SizedBox(width: 8), Text('導きの書')]),
         content: const Text('修練の基本を指南を受けますか？\n（初めてプレイする方は「指南を受ける」を推奨）'),
         actions: [
-          TextButton(
-            key: AppKeys.tutorialSkip,
-            onPressed: () async {
-              final nav = Navigator.of(ctx);
-              await vm.skipTutorial();
-              if (mounted) { nav.pop(); setState(() => _isTutorialChoiceShowing = false); }
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.grey),
-            child: const Text('略する'),
+          SemanticHelper.interactive(
+            testId: SemanticHelper.createTestId(
+                SemanticTypes.button, 'skip_tutorial_inline'),
+            label: 'チュートリアルを略する',
+            child: TextButton(
+              key: AppKeys.tutorialSkip,
+              onPressed: () async {
+                final nav = Navigator.of(ctx);
+                await vm.skipTutorial();
+                if (mounted) { nav.pop(); setState(() => _isTutorialChoiceShowing = false); }
+              },
+              style: TextButton.styleFrom(foregroundColor: Colors.grey),
+              child: const Text('略する'),
+            ),
           ),
-          ElevatedButton(
-            key: AppKeys.tutorialUnderstood,
-            onPressed: () async {
-              final nav = Navigator.of(ctx);
-              await vm.markTutorialChoiceMade();
-              if (mounted) { nav.pop(); setState(() => _isTutorialChoiceShowing = false); }
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], foregroundColor: Colors.white),
-            child: const Text('指南を受ける'),
+          SemanticHelper.interactive(
+            testId: SemanticHelper.createTestId(
+                SemanticTypes.button, 'start_tutorial_inline'),
+            label: 'チュートリアルを開始',
+            child: ElevatedButton(
+              key: AppKeys.tutorialUnderstood,
+              onPressed: () async {
+                final nav = Navigator.of(ctx);
+                await vm.markTutorialChoiceMade();
+                if (mounted) { nav.pop(); setState(() => _isTutorialChoiceShowing = false); }
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], foregroundColor: Colors.white),
+              child: const Text('指南を受ける'),
+            ),
           ),
         ],
       ),

@@ -153,7 +153,7 @@ class NotificationService {
 
   Future<int> getMorningHour() async {
     final box = await _openBox();
-    return box.get(_keyMorningHour, defaultValue: 8) as int;
+    return box.get(_keyMorningHour, defaultValue: 9) as int;
   }
 
   Future<int> getMorningMinute() async {
@@ -222,7 +222,10 @@ class NotificationService {
     return AndroidScheduleMode.inexactAllowWhileIdle;
   }
 
-  Future<void> scheduleAll() async {
+  Future<void> scheduleAll({
+    bool morningEnabled = true,
+    bool eveningEnabled = true,
+  }) async {
     final enabled = await isEnabled();
     if (!enabled) {
       await cancelAll();
@@ -230,17 +233,29 @@ class NotificationService {
     }
     // スケジュールモードは1回だけ決定し、朝・夜で使い回す
     final scheduleMode = await _getScheduleMode();
-    await _scheduleMorning(
-      hour: await getMorningHour(),
-      minute: await getMorningMinute(),
-      scheduleMode: scheduleMode,
-    );
-    await _scheduleEvening(
-      hour: await getEveningHour(),
-      minute: await getEveningMinute(),
-      scheduleMode: scheduleMode,
-    );
-    debugPrint('[NotificationService] 通知をスケジュールしました');
+
+    if (morningEnabled) {
+      await _scheduleMorning(
+        hour: await getMorningHour(),
+        minute: await getMorningMinute(),
+        scheduleMode: scheduleMode,
+      );
+    } else {
+      await _plugin.cancel(_morningId);
+    }
+
+    if (eveningEnabled) {
+      await _scheduleEvening(
+        hour: await getEveningHour(),
+        minute: await getEveningMinute(),
+        scheduleMode: scheduleMode,
+      );
+    } else {
+      await _plugin.cancel(_eveningId);
+    }
+
+    debugPrint('[NotificationService] 通知をスケジュールしました'
+        '（朝: ${morningEnabled ? "ON" : "OFF"}, 夜: ${eveningEnabled ? "ON" : "OFF"}）');
   }
 
   Future<void> cancelAll() async {
@@ -262,8 +277,8 @@ class NotificationService {
     );
     await _plugin.zonedSchedule(
       _morningId,
-      '📜 ギルドより伝令！',
-      '本日の依頼書が届いておるぞ！冒険者よ、今こそ立ち上がれ！',
+      '🌅 暁の刻',
+      '暁の刻だ。本日もクエストが待っておるぞ。戦場へ赴け！',
       scheduledDate,
       const NotificationDetails(
         android: AndroidNotificationDetails(
@@ -294,8 +309,8 @@ class NotificationService {
     );
     await _plugin.zonedSchedule(
       _eveningId,
-      '🍺 酒場より催促！',
-      '今日の討伐報告を忘れるでないぞ！未完のクエストはないか確かめよ！',
+      '🌙 宵の刻',
+      '宵の刻。本日の戦果を記録せよ。お疲れ様であった。',
       scheduledDate,
       const NotificationDetails(
         android: AndroidNotificationDetails(

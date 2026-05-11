@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class HelpDialog extends StatelessWidget {
   const HelpDialog({super.key});
@@ -36,15 +37,20 @@ class HelpDialog extends StatelessWidget {
         ),
       ),
       actions: [
-        ElevatedButton(
-          onPressed: () => Navigator.pop(context),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.amber,
-            foregroundColor: Colors.black,
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        SemanticHelper.interactive(
+          testId: SemanticHelper.createTestId(
+              SemanticTypes.button, 'close_help_dialog'),
+          label: '理解した',
+          child: ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber,
+              foregroundColor: Colors.black,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: const Text('理解した！',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
           ),
-          child: const Text('理解した！',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
         ),
       ],
     );

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 Future<void> showTutorialChoiceDialog(
     BuildContext context, VoidCallback onDismiss) {
@@ -19,30 +20,40 @@ Future<void> showTutorialChoiceDialog(
       ),
       content: const Text('冒険の基本を学びますか？\n（初めてプレイする方は「学ぶ」を推奨）'),
       actions: [
-        TextButton(
-          key: AppKeys.tutorialSkip,
-          onPressed: () async {
-            final navigator = Navigator.of(ctx);
-            await viewModel.skipTutorial();
-            navigator.pop();
-            onDismiss();
-          },
-          style: TextButton.styleFrom(foregroundColor: Colors.grey),
-          child: const Text('スキップ'),
-        ),
-        ElevatedButton(
-          key: AppKeys.tutorialUnderstood,
-          onPressed: () async {
-            final navigator = Navigator.of(ctx);
-            await viewModel.markTutorialChoiceMade();
-            navigator.pop();
-            onDismiss();
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.amber[700],
-            foregroundColor: Colors.white,
+        SemanticHelper.interactive(
+          testId: SemanticHelper.createTestId(
+              SemanticTypes.button, 'skip_tutorial_choice'),
+          label: 'チュートリアルをスキップ',
+          child: TextButton(
+            key: AppKeys.tutorialSkip,
+            onPressed: () async {
+              final navigator = Navigator.of(ctx);
+              await viewModel.skipTutorial();
+              navigator.pop();
+              onDismiss();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.grey),
+            child: const Text('スキップ'),
           ),
-          child: const Text('学ぶ'),
+        ),
+        SemanticHelper.interactive(
+          testId: SemanticHelper.createTestId(
+              SemanticTypes.button, 'start_tutorial'),
+          label: 'チュートリアルを学ぶ',
+          child: ElevatedButton(
+            key: AppKeys.tutorialUnderstood,
+            onPressed: () async {
+              final navigator = Navigator.of(ctx);
+              await viewModel.markTutorialChoiceMade();
+              navigator.pop();
+              onDismiss();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.amber[700],
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('学ぶ'),
+          ),
         ),
       ],
     ),

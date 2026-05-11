@@ -114,4 +114,26 @@ class SettingsRepository {
     await box.put('choiceMade', false);
     await box.put('jobTutorialCompleted', false);
   }
+
+  // ── 通知設定（個別ON/OFF） ──────────────────────────────
+
+  Future<bool> getMorningNotificationEnabled() async {
+    final box = await _openSettingsBox();
+    return box.get('morningNotificationEnabled', defaultValue: true) as bool;
+  }
+
+  Future<void> setMorningNotificationEnabled(bool enabled) async {
+    final box = await _openSettingsBox();
+    await box.put('morningNotificationEnabled', enabled);
+  }
+
+  Future<bool> getEveningNotificationEnabled() async {
+    final box = await _openSettingsBox();
+    return box.get('eveningNotificationEnabled', defaultValue: true) as bool;
+  }
+
+  Future<void> setEveningNotificationEnabled(bool enabled) async {
+    final box = await _openSettingsBox();
+    await box.put('eveningNotificationEnabled', enabled);
+  }
 }

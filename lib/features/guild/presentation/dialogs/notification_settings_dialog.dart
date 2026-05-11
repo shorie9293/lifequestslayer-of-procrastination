@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/core/infrastructure/notification_service.dart';
+import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 通知設定ダイアログ
@@ -15,9 +16,12 @@ class NotificationSettingsDialog extends StatefulWidget {
 class _NotificationSettingsDialogState
     extends State<NotificationSettingsDialog> {
   final _service = NotificationService();
+  final _settingsRepository = SettingsRepository();
 
   bool _enabled = true;
-  int _morningHour = 8;
+  bool _morningEnabled = true;
+  bool _eveningEnabled = true;
+  int _morningHour = 9;
   int _morningMinute = 0;
   int _eveningHour = 21;
   int _eveningMinute = 0;
@@ -36,8 +40,14 @@ class _NotificationSettingsDialogState
     final mm = await _service.getMorningMinute();
     final eh = await _service.getEveningHour();
     final em = await _service.getEveningMinute();
+    final morningEnabled =
+        await _settingsRepository.getMorningNotificationEnabled();
+    final eveningEnabled =
+        await _settingsRepository.getEveningNotificationEnabled();
     setState(() {
       _enabled = enabled;
+      _morningEnabled = morningEnabled;
+      _eveningEnabled = eveningEnabled;
       _morningHour = mh;
       _morningMinute = mm;
       _eveningHour = eh;
@@ -160,6 +170,11 @@ class _NotificationSettingsDialogState
       }
     }
 
+    await _settingsRepository.setMorningNotificationEnabled(
+        _enabled && _morningEnabled);
+    await _settingsRepository.setEveningNotificationEnabled(
+        _enabled && _eveningEnabled);
+
     await _service.saveSettings(
       enabled: _enabled,
       morningHour: _morningHour,
@@ -167,7 +182,10 @@ class _NotificationSettingsDialogState
       eveningHour: _eveningHour,
       eveningMinute: _eveningMinute,
     );
-    await _service.scheduleAll();
+    await _service.scheduleAll(
+      morningEnabled: _enabled && _morningEnabled,
+      eveningEnabled: _enabled && _eveningEnabled,
+    );
     if (mounted) {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -210,47 +228,73 @@ class _NotificationSettingsDialogState
             onChanged: (v) => setState(() => _enabled = v),
             contentPadding: EdgeInsets.zero,
           ),
-          const Divider(),
-          ListTile(
-            enabled: _enabled,
-            leading: const Text('☀️', style: TextStyle(fontSize: 22)),
-            title: const Text('朝の伝令'),
-            subtitle: const Text('「本日の依頼書が届いておるぞ！」'),
-            trailing: SemanticHelper.interactive(
-              testId: SemanticHelper.createTestId(
-                  SemanticTypes.button, 'pick_morning_time'),
-              label: '朝の通知時刻を変更',
-              child: TextButton(
-                onPressed: _enabled ? () => _pickTime(isMorning: true) : null,
-                child: Text(
-                  _fmt(_morningHour, _morningMinute),
-                  style:
-                      const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+          if (_enabled) ...[
+            const Divider(),
+            SwitchListTile(
+              title: const Text('☀️ 朝の伝令（暁の刻）'),
+              subtitle: Text(
+                _morningEnabled
+                    ? '「暁の刻だ。戦場へ赴け！」'
+                    : '朝の通知は無効',
+                style: const TextStyle(fontSize: 12),
               ),
+              value: _morningEnabled,
+              onChanged: (v) => setState(() => _morningEnabled = v),
+              contentPadding: EdgeInsets.zero,
             ),
-            contentPadding: EdgeInsets.zero,
-          ),
-          ListTile(
-            enabled: _enabled,
-            leading: const Text('🍺', style: TextStyle(fontSize: 22)),
-            title: const Text('夜の催促'),
-            subtitle: const Text('「仕留めた報告を忘れるでないぞ！」'),
-            trailing: SemanticHelper.interactive(
-              testId: SemanticHelper.createTestId(
-                  SemanticTypes.button, 'pick_evening_time'),
-              label: '夜の通知時刻を変更',
-              child: TextButton(
-                onPressed: _enabled ? () => _pickTime(isMorning: false) : null,
-                child: Text(
-                  _fmt(_eveningHour, _eveningMinute),
-                  style:
-                      const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            if (_morningEnabled)
+              ListTile(
+                leading: const Text('☀️', style: TextStyle(fontSize: 22)),
+                title: const Text('朝の伝令'),
+                subtitle: const Text('「暁の刻だ。戦場へ赴け！」'),
+                trailing: SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'pick_morning_time'),
+                  label: '朝の通知時刻を変更',
+                  child: TextButton(
+                    onPressed: () => _pickTime(isMorning: true),
+                    child: Text(
+                      _fmt(_morningHour, _morningMinute),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
                 ),
+                contentPadding: EdgeInsets.zero,
               ),
+            SwitchListTile(
+              title: const Text('🌙 夜の催促（宵の刻）'),
+              subtitle: Text(
+                _eveningEnabled
+                    ? '「宵の刻。本日の戦果を記録せよ。」'
+                    : '夜の通知は無効',
+                style: const TextStyle(fontSize: 12),
+              ),
+              value: _eveningEnabled,
+              onChanged: (v) => setState(() => _eveningEnabled = v),
+              contentPadding: EdgeInsets.zero,
             ),
-            contentPadding: EdgeInsets.zero,
-          ),
+            if (_eveningEnabled)
+              ListTile(
+                leading: const Text('🌙', style: TextStyle(fontSize: 22)),
+                title: const Text('夜の催促'),
+                subtitle: const Text('「宵の刻。戦果を記録せよ。」'),
+                trailing: SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'pick_evening_time'),
+                  label: '夜の通知時刻を変更',
+                  child: TextButton(
+                    onPressed: () => _pickTime(isMorning: false),
+                    child: Text(
+                      _fmt(_eveningHour, _eveningMinute),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                contentPadding: EdgeInsets.zero,
+              ),
+          ],
           const Divider(),
           ListTile(
             leading:

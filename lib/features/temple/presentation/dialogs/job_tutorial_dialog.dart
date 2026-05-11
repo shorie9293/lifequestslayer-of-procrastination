@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 /// 職業説明チュートリアルダイアログ。
 /// 冒険者Lv10到達時に表示され、全4職業の説明とマスタリー解説を行う。
@@ -330,42 +331,62 @@ class _JobTutorialDialogState extends State<JobTutorialDialog> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           // スキップボタン（常に表示）
-          TextButton(
-            onPressed: widget.onSkip,
-            child: const Text('スキップ',
-                style: TextStyle(color: Colors.grey, fontSize: 14)),
+          SemanticHelper.interactive(
+            testId: SemanticHelper.createTestId(
+                SemanticTypes.button, 'skip_job_tutorial'),
+            label: '職業チュートリアルをスキップ',
+            child: TextButton(
+              onPressed: widget.onSkip,
+              child: const Text('スキップ',
+                  style: TextStyle(color: Colors.grey, fontSize: 14)),
+            ),
           ),
           Row(
             children: [
               // 戻るボタン
               if (_currentPage > 0)
-                TextButton(
-                  onPressed: _previousPage,
-                  child: const Text('← 戻る',
-                      style: TextStyle(color: Colors.white70, fontSize: 14)),
+                SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'prev_job_page'),
+                  label: '前のページ',
+                  child: TextButton(
+                    onPressed: _previousPage,
+                    child: const Text('← 戻る',
+                        style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  ),
                 ),
               const SizedBox(width: 8),
               // 次へ / 閉じる
               _currentPage < _totalPages - 1
-                  ? ElevatedButton(
-                      onPressed: _nextPage,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber[700],
-                        foregroundColor: Colors.white,
+                  ? SemanticHelper.interactive(
+                      testId: SemanticHelper.createTestId(
+                          SemanticTypes.button, 'next_job_page'),
+                      label: '次のページ',
+                      child: ElevatedButton(
+                        onPressed: _nextPage,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber[700],
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('次へ →',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14)),
                       ),
-                      child: const Text('次へ →',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14)),
                     )
-                  : ElevatedButton(
-                      onPressed: widget.onClose,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber[700],
-                        foregroundColor: Colors.white,
+                  : SemanticHelper.interactive(
+                      testId: SemanticHelper.createTestId(
+                          SemanticTypes.button, 'close_job_tutorial'),
+                      label: '職業チュートリアルを閉じる',
+                      child: ElevatedButton(
+                        onPressed: widget.onClose,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber[700],
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('閉じる',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 14)),
                       ),
-                      child: const Text('閉じる',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14)),
                     ),
             ],
           ),
