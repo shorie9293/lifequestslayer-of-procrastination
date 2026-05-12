@@ -68,6 +68,10 @@ class _MockSettingsRepository extends SettingsRepository {
   Future<void> setJobTutorialCompleted(bool value) async {}
   @override
   Future<void> resetTutorial() async {}
+  @override
+  Future<bool> getDebugModeEnabled() async => false;
+  @override
+  Future<void> setDebugModeEnabled(bool v) async {}
 }
 
 /// テスト用のDI注入済みGameViewModelを生成し、ロード完了まで待つ

@@ -71,6 +71,10 @@ class _MockSettingsRepo extends SettingsRepository {
   Future<void> saveFatiguePopupDate(DateTime d) async {}
   @override
   Future<void> deleteFatiguePopupDate() async {}
+  @override
+  Future<bool> getDebugModeEnabled() async => false;
+  @override
+  Future<void> setDebugModeEnabled(bool v) async {}
 }
 
 class _DialogLauncher extends StatelessWidget {
