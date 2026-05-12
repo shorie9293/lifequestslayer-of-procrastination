@@ -17,6 +17,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: 📦 Setup local packages
+        run: |
+          mkdir -p ../../packages
+          git clone --depth 1 https://github.com/shorie9293/takamagahara.git /tmp/takamagahara 2>/dev/null || \
+            git clone --depth 1 https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/shorie9293/takamagahara.git /tmp/takamagahara
+          cp -r /tmp/takamagahara/packages/takamagahara_core ../../packages/
+          cp -r /tmp/takamagahara/packages/takamagahara_ui ../../packages/
+          rm -rf /tmp/takamagahara
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
