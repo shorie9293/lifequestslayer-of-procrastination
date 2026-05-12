@@ -153,7 +153,7 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void changeJob(Job j) { _player.currentJob = j; _save(); }
-  void toggleSkill(Job j) { if (!_player.isMastered(j)) return; if (_player.activeSkills.contains(j)) { _player.activeSkills.remove(j); } else { _player.activeSkills.add(j); } _save(); }
+  void toggleSkill(Job j) { if (!_debugMode && !_player.isMastered(j)) return; if (_player.activeSkills.contains(j)) { _player.activeSkills.remove(j); } else { _player.activeSkills.add(j); } _save(); }
 
   Map<String, dynamic>? completeTask(String id) {
     if (_completing.contains(id)) return null;
@@ -179,10 +179,10 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
 
   void awardKnowledgeBonus(int pct, int base) { final b = QuizService.calcBonusExp(pct, base); if (b > 0) { _player.addExp(b); _save(); } }
   void addGems(int a) { _player.gems += a; _save(); }
-  bool spendGems(int a) { if (_player.gems < a) return false; _player.gems -= a; _save(); return true; }
-  bool exchangeGemsForCoins(int a) { if (!spendGems(a)) return false; _player.coins += a * 100; _save(); return true; }
-  bool resetFatigueWithGems() { if (!spendGems(50)) return false; _player.dailyTasksCompleted = 0; _save(); return true; }
-  void buyShopItem(String id, int price) { if (_player.coins >= price && !_player.homeItems.contains(id)) { _player.coins -= price; _player.homeItems.add(id); _save(); } }
+  bool spendGems(int a) { if (_debugMode) return true; if (_player.gems < a) return false; _player.gems -= a; _save(); return true; }
+  bool exchangeGemsForCoins(int a) { if (_debugMode) { _player.coins += a * 100; _save(); return true; } if (!spendGems(a)) return false; _player.coins += a * 100; _save(); return true; }
+  bool resetFatigueWithGems() { if (_debugMode) { _player.dailyTasksCompleted = 0; _save(); return true; } if (!spendGems(50)) return false; _player.dailyTasksCompleted = 0; _save(); return true; }
+  void buyShopItem(String id, int price) { if (_debugMode || (_player.coins >= price && !_player.homeItems.contains(id))) { if (!_debugMode) _player.coins -= price; _player.homeItems.add(id); _save(); } }
   void _checkMissions({bool login = false}) {
     final now = DateTime.now(); bool changed = false;
     if (_player.lastMissionResetDate == null || !DateUtils.isSameDay(_player.lastMissionResetDate!, now)) {
@@ -198,7 +198,17 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
 
   void equipTitle(String t) { if (_player.titles.contains(t) || t.isEmpty) { _player.equippedTitle = t.isEmpty ? null : t; _save(); } }
   void equipSkin(String s) { if (_player.homeItems.contains(s) || s.isEmpty) { _player.equippedSkin = s.isEmpty ? null : s; _save(); } }
-  String? restAtInn(int t) { final r = FatigueService.restAtInn(_player, t, DateTime.now()); if (r == null) _save(); return r; }
+  String? restAtInn(int t) {
+    if (_debugMode) {
+      _player.nextDayTaskLimitOffset = t == 2 ? 12 : t == 1 ? 5 : 2;
+      _player.lastRestDate = DateTime.now();
+      _save();
+      return null;
+    }
+    final r = FatigueService.restAtInn(_player, t, DateTime.now());
+    if (r == null) _save();
+    return r;
+  }
   Future<void> setKnowledgeQuestEnabled(bool v) async { _kqEnabled = v; await _settingsRepository.setKnowledgeQuestEnabled(v); notifyListeners(); }
   Future<void> setFontSizeScale(double v) async { _fontSize = v; await _settingsRepository.setFontSizeScale(v); notifyListeners(); }
 
