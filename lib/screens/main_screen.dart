@@ -132,6 +132,21 @@ class _MainScreenState extends State<MainScreen> {
         body: PageView(controller: _pageController, onPageChanged: _onPageChanged, children: _screens),
         bottomNavigationBar: MainBottomNav(currentIndex: _currentIndex, onTabChanged: (i) => _onPageChanged(i, animate: true)),
       ),
+      // デバッグモード起動ボタン（右上ギアアイコン）
+      Positioned(
+        top: MediaQuery.of(context).padding.top + 4,
+        right: 4,
+        child: SafeArea(
+          child: Semantics(
+            label: 'デバッグモード',
+            child: IconButton(
+              icon: Icon(Icons.settings, color: vm.isDebugMode ? Colors.amber : Colors.white24, size: 20),
+              onPressed: vm.isDebugMode ? null : () => _showDebugPasswordDialog(vm),
+              tooltip: vm.isDebugMode ? 'デバッグモード有効' : 'デバッグモード',
+            ),
+          ),
+        ),
+      ),
       if (vm.tutorialStep <= 2 && !vm.tutorialSkipped) ...[
         _tutorialController.buildTutorialOverlay(vm.tutorialStep, _currentIndex),
         _skipTutorialBtn(vm),
@@ -244,6 +259,49 @@ class _MainScreenState extends State<MainScreen> {
         )),
       ),
       transitionBuilder: (ctx, a1, a2, c) => Transform.scale(scale: Curves.elasticOut.transform(a1.value), child: Opacity(opacity: a1.value.clamp(0.0, 1.0), child: c)),
+    );
+  }
+
+  void _showDebugPasswordDialog(GameViewModel vm) {
+    final controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('デバッグモード'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text('合言葉を入力せよ'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: controller,
+              obscureText: true,
+              decoration: const InputDecoration(
+                hintText: '合言葉',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('戻る')),
+          ElevatedButton(
+            onPressed: () {
+              if (vm.tryEnableDebugMode(controller.text)) {
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('デバッグモード起動！制限解除されました'), duration: Duration(seconds: 2)),
+                );
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('合言葉が違います'), duration: Duration(seconds: 1)),
+                );
+              }
+            },
+            child: const Text('起動'),
+          ),
+        ],
+      ),
     );
   }
 }

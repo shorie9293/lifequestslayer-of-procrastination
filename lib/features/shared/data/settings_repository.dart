@@ -136,4 +136,22 @@ class SettingsRepository {
     final box = await _openSettingsBox();
     await box.put('eveningNotificationEnabled', enabled);
   }
+
+  // ── デバッグモード ─────────────────────────────────────
+
+  Future<bool> getDebugModeEnabled() async {
+    try {
+      final box = await _openSettingsBox();
+      return box.get('debugModeEnabled', defaultValue: false) as bool;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> setDebugModeEnabled(bool enabled) async {
+    try {
+      final box = await _openSettingsBox();
+      await box.put('debugModeEnabled', enabled);
+    } catch (_) {}
+  }
 }

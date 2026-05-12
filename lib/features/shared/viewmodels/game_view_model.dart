@@ -32,6 +32,7 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   bool _showJobTutorial = false, _jobTutorialCompleted = false;
   int? pendingLoginBonusAmount, pendingStreakReward;
   double _fontSize = 0.85;
+  bool _debugMode = false;
 
   GameViewModel({IPlayerRepository? pr, ITaskRepository? tr, SettingsRepository? sr})
     : _playerRepository = pr ?? PlayerRepository(),
@@ -55,6 +56,7 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   int get fatigueLevel => FatigueService.fatigueLevel(_player);
   bool get showJobTutorial => _showJobTutorial;
   bool get jobTutorialCompleted => _jobTutorialCompleted;
+  bool get isDebugMode => _debugMode;
   static const int dailyMissionGoal = 3;
   static const int weeklyMissionGoal = 1;
   int get dailyMissionProgress => _player.dailyTasksCompleted.clamp(0, dailyMissionGoal);
@@ -124,7 +126,7 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     final i = _tasks.indexWhere((t) => t.id == id);
     if (i == -1) return "クエストが見つかりません";
     final t = _tasks[i];
-    if (!_player.canAcceptQuest(t.rank, activeTasks.where((x) => x.rank == t.rank).length)) return "${t.rank.name}ランクのキャパシティオーバー！";
+    if (!_debugMode && !_player.canAcceptQuest(t.rank, activeTasks.where((x) => x.rank == t.rank).length)) return "${t.rank.name}ランクのキャパシティオーバー！";
     _tasks[i].status = TaskStatus.active;
     _tasks[i].activeAt = DateTime.now();
     if (_tutorialStep == 1) completeTutorialStep(1);
@@ -134,6 +136,17 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
 
   void deleteTask(String id) { _tasks.removeWhere((t) => t.id == id); _save(); }
   void cancelTask(String id) { final i = _tasks.indexWhere((t) => t.id == id); if (i != -1) { _tasks[i].status = TaskStatus.inGuild; _save(); } }
+
+  /// デバッグモード：パスワード「11111111」で解除
+  bool tryEnableDebugMode(String password) {
+    if (password == '11111111') {
+      _debugMode = true;
+      _settingsRepository.setDebugModeEnabled(true);
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
   void toggleSubTask(String id, int idx) {
     final i = _tasks.indexWhere((t) => t.id == id);
     if (i != -1 && idx >= 0 && idx < _tasks[i].subTasks.length) { _tasks[i].subTasks[idx].isCompleted = !_tasks[i].subTasks[idx].isCompleted; _save(); }
@@ -268,6 +281,7 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     await _load(_settingsRepository.getTutorialSkipped, (v) => _tutSkipped = v, label: 'tutorialSkipped');
     await _load(_settingsRepository.getTutorialChoiceMade, (v) => _tutChosen = v, label: 'tutorialChoiceMade');
     await _load(_settingsRepository.getJobTutorialCompleted, (v) => _jobTutorialCompleted = v, label: 'jobTutorialCompleted');
+    await _load(_settingsRepository.getDebugModeEnabled, (v) => _debugMode = v, label: 'debugMode');
     if (_fontSize != 0.85) { _fontSize = 0.85; try { await _settingsRepository.setFontSizeScale(0.85); } catch (_) {} }
     try { final d = await _settingsRepository.getFatiguePopupDate(); if (d != null && DateUtils.isSameDay(d, DateTime.now())) { _fatiguePopupToday = true; } } catch (e, s) { debugPrint('[VM] fatiguePopup load error: $e\n$s'); }
     if (await _tutorial.repairSeenConcept(_tutorialStep, _sawConcept)) { _sawConcept = true; }

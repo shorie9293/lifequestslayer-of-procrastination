@@ -71,6 +71,10 @@ class _MockSettingsRepo extends SettingsRepository {
   Future<void> deleteFatiguePopupDate() async {}
   @override
   Future<void> resetTutorial() async {}
+  @override
+  Future<bool> getDebugModeEnabled() async => false;
+  @override
+  Future<void> setDebugModeEnabled(bool v) async {}
 }
 
 /// テスト時にエラーをthrowする PlayerRepository モック
@@ -732,8 +736,8 @@ void main() {
 
       final result = vm.completeTask(vm.tasks[0].id);
       expect(result, isNotNull);
-      // 基本100 + ウィークリー500 = 600
-      expect(result!['coinsGained'], 600);
+      // 基本100 + ウィークリー500 = 600（レアドロップで増加する場合あり）
+      expect(result!['coinsGained'], greaterThanOrEqualTo(600));
       expect(result['bonusMessages'],
           contains('🏆 ウィークリーSランク達成！ +500文'));
       expect(vm.player.weeklySRankCompleted, 1);
