@@ -229,6 +229,45 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   void clearPendingStreakReward() { pendingStreakReward = null; notifyListeners(); }
   Future<void> saveData() async { await _playerRepository.savePlayer(_player); await _taskRepository.saveTasks(_tasks); }
 
+  // ── デバッグモード操作 ─────────────────────────────────────
+
+  /// コインを直接設定（デバッグモードのみ）
+  void debugSetCoins(int amount) {
+    if (!_debugMode) return;
+    _player.coins = amount.clamp(0, 99999999);
+    _save();
+  }
+
+  /// Gemを直接設定（デバッグモードのみ）
+  void debugSetGems(int amount) {
+    if (!_debugMode) return;
+    _player.gems = amount.clamp(0, 99999);
+    _save();
+  }
+
+  /// EXPを追加（デバッグモードのみ）
+  void debugAddExp(int amount) {
+    if (!_debugMode) return;
+    _player.addExp(amount);
+    _save();
+  }
+
+  /// 全アクティブタスクを即時完了（デバッグモードのみ）
+  void debugCompleteAllActive() {
+    if (!_debugMode) return;
+    for (final task in activeTasks.toList()) {
+      completeTask(task.id);
+    }
+  }
+
+  /// テスト用タスクを3件追加（デバッグモードのみ）
+  void debugAddTestTasks() {
+    if (!_debugMode) return;
+    addTask('デバッグ：魔物討伐（Slimeを3匹倒せ）', rank: QuestRank.B, targetTimeMinutes: 15);
+    addTask('デバッグ：素材収集（薬草を10個集めよ）', rank: QuestRank.B, targetTimeMinutes: 30);
+    addTask('デバッグ：古代遺跡の調査', rank: QuestRank.A, targetTimeMinutes: 60);
+  }
+
   @override void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) saveData().catchError((e) => debugPrint('GameViewModel: lifecycle save failed: $e'));
   }

@@ -7,6 +7,7 @@ import 'package:rpg_todo/features/guild/presentation/guild_screen.dart';
 import 'package:rpg_todo/features/battle/presentation/battle_screen.dart';
 import 'package:rpg_todo/features/temple/presentation/temple_screen.dart';
 import 'package:rpg_todo/features/town/presentation/town_screen.dart';
+import 'package:rpg_todo/features/shared/widgets/debug_panel.dart';
 import 'widgets/main_bottom_nav.dart';
 import 'widgets/main_tutorial_controller.dart';
 import 'package:rpg_todo/features/temple/presentation/dialogs/job_tutorial_dialog.dart';
@@ -141,8 +142,8 @@ class _MainScreenState extends State<MainScreen> {
             label: 'デバッグモード',
             child: IconButton(
               icon: Icon(Icons.settings, color: vm.isDebugMode ? Colors.amber : Colors.white24, size: 20),
-              onPressed: vm.isDebugMode ? null : () => _showDebugPasswordDialog(vm),
-              tooltip: vm.isDebugMode ? 'デバッグモード有効' : 'デバッグモード',
+              onPressed: vm.isDebugMode ? () => _showDebugPanel(vm) : () => _showDebugPasswordDialog(vm),
+              tooltip: vm.isDebugMode ? 'デバッグパネルを開く' : 'デバッグモード',
             ),
           ),
         ),
@@ -302,6 +303,14 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showDebugPanel(GameViewModel vm) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (_) => DebugPanel(vm: vm),
     );
   }
 }
