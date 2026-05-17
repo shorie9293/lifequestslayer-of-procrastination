@@ -16,6 +16,8 @@ import 'package:rpg_todo/core/utils/date_utils.dart';
 import 'package:rpg_todo/features/shared/domain/game_themes.dart';
 import 'package:rpg_todo/features/shared/domain/task_completion_service.dart';
 import 'package:rpg_todo/features/shared/domain/tutorial_service.dart';
+import 'package:rpg_todo/features/kozuchi/domain/kozuchi_quest_model.dart';
+import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
 
 class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   final IPlayerRepository _playerRepository;
@@ -31,6 +33,8 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   bool _fatiguePopupToday = false, _kqEnabled = true, _saving = false, _pending = false, _loadFailed = false;
   bool _showJobTutorial = false, _jobTutorialCompleted = false;
   int? pendingLoginBonusAmount, pendingStreakReward;
+  IKozuchiQuestService? _kozuchiQuestService;
+  KozuchiQuest? _kozuchiQuest;
   double _fontSize = 0.85;
   bool _debugMode = false;
 
@@ -57,6 +61,11 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   bool get showJobTutorial => _showJobTutorial;
   bool get jobTutorialCompleted => _jobTutorialCompleted;
   bool get isDebugMode => _debugMode;
+  IKozuchiQuestService? get kozuchiQuestService => _kozuchiQuestService;
+  set kozuchiQuestService(IKozuchiQuestService? service) {
+    _kozuchiQuestService = service;
+  }
+  KozuchiQuest? get kozuchiQuest => _kozuchiQuest;
   static const int dailyMissionGoal = 3;
   static const int weeklyMissionGoal = 1;
   int get dailyMissionProgress => _player.dailyTasksCompleted.clamp(0, dailyMissionGoal);
@@ -227,6 +236,22 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   Future<void> resetTutorial() async { await _tutorial.resetAll(); _tutorialStep = 0; _sawConcept = false; _tutSkipped = false; _tutChosen = false; notifyListeners(); }
   void clearPendingLoginBonus() { pendingLoginBonusAmount = null; notifyListeners(); }
   void clearPendingStreakReward() { pendingStreakReward = null; notifyListeners(); }
+
+  Future<void> refreshKozuchiQuest() async {
+    if (_kozuchiQuestService == null) {
+      _kozuchiQuest = null;
+      notifyListeners();
+      return;
+    }
+    try {
+      _kozuchiQuest = await _kozuchiQuestService!.fetchActiveQuest();
+    } catch (e) {
+      debugPrint('[Kozuchi] refresh error: $e');
+      _kozuchiQuest = null;
+    }
+    notifyListeners();
+  }
+
   Future<void> saveData() async { await _playerRepository.savePlayer(_player); await _taskRepository.saveTasks(_tasks); }
 
   // ── デバッグモード操作 ─────────────────────────────────────

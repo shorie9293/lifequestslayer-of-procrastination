@@ -9,6 +9,8 @@ import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/kozuchi/domain/kozuchi_quest_model.dart';
+import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
 
 // ━━━ DI Mock リポジトリ（Hive非依存） ━━━
 
@@ -92,6 +94,16 @@ Future<GameViewModel> createLoadedViewModel() async {
   // loadData() 内の後続処理（autoDeploy等）の完了を待つ
   await Future.delayed(const Duration(milliseconds: 50));
   return vm;
+}
+
+/// KozuchiQuestService のモック
+class MockKozuchiQuestService implements IKozuchiQuestService {
+  KozuchiQuest? quest;
+
+  MockKozuchiQuestService({this.quest});
+
+  @override
+  Future<KozuchiQuest?> fetchActiveQuest() async => quest;
 }
 
 /// GuildScreen をポンプするヘルパー
@@ -218,6 +230,78 @@ void main() {
 
       // 空状態が表示されている（AppKeyで検証）
       expect(find.byKey(AppKeys.guildEmptyState), findsOneWidget);
+    });
+  });
+
+  group('GuildScreen KozuchiQuest セクション', () {
+    testWidgets(
+        'KozuchiQuest が null の時は Kozuchi セクションが表示されない',
+        (tester) async {
+      late GameViewModel vm;
+
+      await tester.runAsync(() async {
+        vm = await createLoadedViewModel();
+        vm.refreshKozuchiQuest();
+        // KozuchiQuestService は null なのでセクションは表示されない
+      });
+
+      await pumpGuildScreen(tester, vm);
+
+      expect(find.byKey(AppKeys.kozuchiSection), findsNothing);
+    });
+
+    testWidgets(
+        'KozuchiQuest がある時は KozuchiQuestCard が表示される',
+        (tester) async {
+      late GameViewModel vm;
+
+      await tester.runAsync(() async {
+        vm = await createLoadedViewModel();
+        // KozuchiQuestService をモックで注入
+        vm.kozuchiQuestService = MockKozuchiQuestService(
+          quest: KozuchiQuest(
+            title: '朝の祈り',
+            description: '新しい一日への感謝と祈りを捧げよ',
+            suggestedOffering: 100,
+            guardianDeityEmoji: '🦊',
+            guardianDeityLabel: '稲荷神',
+          ),
+        );
+        await vm.refreshKozuchiQuest();
+      });
+
+      await pumpGuildScreen(tester, vm);
+
+      // Kozuchiセクションが表示されている
+      expect(find.byKey(AppKeys.kozuchiSection), findsOneWidget);
+      expect(find.byKey(AppKeys.kozuchiQuestCard), findsOneWidget);
+    });
+
+    testWidgets(
+        'KozuchiQuest が完了状態の時も表示される',
+        (tester) async {
+      late GameViewModel vm;
+
+      await tester.runAsync(() async {
+        vm = await createLoadedViewModel();
+        vm.kozuchiQuestService = MockKozuchiQuestService(
+          quest: KozuchiQuest(
+            title: '完了した試練',
+            description: '完了テスト',
+            suggestedOffering: 50,
+            guardianDeityEmoji: '🐉',
+            guardianDeityLabel: '龍神',
+            isCompleted: true,
+          ),
+        );
+        await vm.refreshKozuchiQuest();
+      });
+
+      await pumpGuildScreen(tester, vm);
+
+      expect(find.byKey(AppKeys.kozuchiSection), findsOneWidget);
+      expect(find.text('完了した試練'), findsOneWidget);
+      expect(find.text('✅ 達成済み'), findsOneWidget);
     });
   });
 }

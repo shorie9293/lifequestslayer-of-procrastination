@@ -9,6 +9,7 @@ import 'package:rpg_todo/features/shared/widgets/player_status_header.dart';
 import 'widgets/task_card.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
+import 'package:rpg_todo/features/kozuchi/presentation/widgets/kozuchi_quest_card.dart';
 import 'dialogs/tutorial_reset_dialog.dart';
 import 'dialogs/create_task_dialog.dart';
 import 'dialogs/bulk_create_task_dialog.dart';
@@ -206,82 +207,106 @@ class GuildScreen extends StatelessWidget {
                   ],
                 ),
               ),
+            // Kozuchi試練セクション
             Expanded(
-              child: tasks.isEmpty
-                  ? SemanticHelper.container(
-                      testId: SemanticHelper.createTestId(
-                          SemanticTypes.section, 'empty_no_quests'),
-                      label: '依頼なし',
-                      child: const SingleChildScrollView(
-                        key: AppKeys.guildEmptyState,
-                        child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text("🏯", style: TextStyle(fontSize: 48)),
-                              SizedBox(height: 12),
-                              Text(
-                                "まだ依頼が届いていない。",
-                                style:
-                                    TextStyle(fontSize: 18, color: Colors.grey),
-                              ),
-                              SizedBox(height: 8),
-                              Text(
-                                "右下の ＋ から最初の依頼を登録しよう！",
-                                style:
-                                    TextStyle(fontSize: 14, color: Colors.grey),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    )
-                  : ListView.builder(
-                      key: AppKeys.guildQuestList,
-                      padding: const EdgeInsets.only(bottom: 80),
-                      itemCount: tasks.length,
-                      itemBuilder: (context, index) {
-                        final task = tasks[index];
-                        return SemanticHelper.listItem(
+              child: Builder(
+                builder: (context) {
+                  final hasKozuchiQuest = viewModel.kozuchiQuest != null;
+                  final itemCount = (hasKozuchiQuest ? 1 : 0) +
+                      (tasks.isEmpty ? 1 : tasks.length);
+
+                  return ListView.builder(
+                    key: tasks.isEmpty && !hasKozuchiQuest
+                        ? AppKeys.guildEmptyState
+                        : AppKeys.guildQuestList,
+                    padding: const EdgeInsets.only(bottom: 80),
+                    itemCount: itemCount,
+                    itemBuilder: (context, index) {
+                      // Kozuchi quest card (always first if present)
+                      if (hasKozuchiQuest && index == 0) {
+                        return KozuchiQuestCard(
+                          key: AppKeys.kozuchiSection,
+                          quest: viewModel.kozuchiQuest!,
+                        );
+                      }
+
+                      final adjustedIndex =
+                          hasKozuchiQuest ? index - 1 : index;
+
+                      // Empty state
+                      if (tasks.isEmpty) {
+                        return SemanticHelper.container(
                           testId: SemanticHelper.createTestId(
-                              SemanticTypes.listItem, 'task_$index'),
-                          index: index,
-                          child: TaskCard(
-                            task: task,
-                            color: _getRankColor(task.rank),
-                            subtitle: _getTaskDetails(task),
-                            actions: [
-                              TextButton(
-                                onPressed: () =>
-                                    _showEditTaskDialog(context, task),
-                                child: const Text("編集",
-                                    style: TextStyle(color: Colors.grey)),
-                              ),
-                              TextButton(
-                                key: AppKeys.taskCardDelete,
-                                onPressed: () => _deleteTask(context, task.id),
-                                child: const Text("破棄",
-                                    style: TextStyle(color: Colors.grey)),
-                              ),
-                              const SizedBox(width: 8),
-                              ElevatedButton(
-                                key: index == 0
-                                    ? TutorialKeys.acceptTaskKey
-                                    : null,
-                                onPressed: () => _acceptTask(context, task.id),
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.amber[700],
-                                  foregroundColor: Colors.white,
-                                  textStyle: const TextStyle(
-                                      fontWeight: FontWeight.bold),
+                              SemanticTypes.section, 'empty_no_quests'),
+                          label: '依頼なし',
+                          child: const Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text("🏯", style: TextStyle(fontSize: 48)),
+                                SizedBox(height: 12),
+                                Text(
+                                  "まだ依頼が届いていない。",
+                                  style: TextStyle(
+                                      fontSize: 18, color: Colors.grey),
                                 ),
-                                child: const Text("出発する"),
-                              ),
-                            ],
+                                SizedBox(height: 8),
+                                Text(
+                                  "右下の ＋ から最初の依頼を登録しよう！",
+                                  style: TextStyle(
+                                      fontSize: 14, color: Colors.grey),
+                                ),
+                              ],
+                            ),
                           ),
                         );
-                      },
-                    ),
+                      }
+
+                      // Task card
+                      final task = tasks[adjustedIndex];
+                      return SemanticHelper.listItem(
+                        testId: SemanticHelper.createTestId(
+                            SemanticTypes.listItem, 'task_$adjustedIndex'),
+                        index: adjustedIndex,
+                        child: TaskCard(
+                          task: task,
+                          color: _getRankColor(task.rank),
+                          subtitle: _getTaskDetails(task),
+                          actions: [
+                            TextButton(
+                              onPressed: () =>
+                                  _showEditTaskDialog(context, task),
+                              child: const Text("編集",
+                                  style: TextStyle(color: Colors.grey)),
+                            ),
+                            TextButton(
+                              key: AppKeys.taskCardDelete,
+                              onPressed: () => _deleteTask(context, task.id),
+                              child: const Text("破棄",
+                                  style: TextStyle(color: Colors.grey)),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              key: adjustedIndex == 0
+                                  ? TutorialKeys.acceptTaskKey
+                                  : null,
+                              onPressed: () =>
+                                  _acceptTask(context, task.id),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber[700],
+                                foregroundColor: Colors.white,
+                                textStyle: const TextStyle(
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              child: const Text("出発する"),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
+              ),
             ),
           ],
         ),

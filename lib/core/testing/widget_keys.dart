@@ -109,6 +109,15 @@ class AppKeys {
   static const Key notificationSettingsDialog =
       Key('dlg_notification_settings');
 
+  // ━━━ Kozuchi試練 ━━━
+  static const Key kozuchiQuestCard = Key('card_kozuchi_quest');
+  static const Key kozuchiSection = Key('sec_kozuchi');
+  static const Key kozuchiQuestTitle = Key('txt_kozuchi_quest_title');
+  static const Key kozuchiQuestDescription = Key('txt_kozuchi_quest_description');
+  static const Key kozuchiGuardianDeity = Key('txt_kozuchi_guardian_deity');
+  static const Key kozuchiOffering = Key('txt_kozuchi_offering');
+  static const Key kozuchiStatus = Key('txt_kozuchi_status');
+
   // ━━━ 汎用 ━━━
   static const Key backButton = Key('btn_back');
   static const Key closeButton = Key('btn_close');
