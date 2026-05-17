@@ -18,6 +18,7 @@ import 'package:rpg_todo/features/shared/domain/task_completion_service.dart';
 import 'package:rpg_todo/features/shared/domain/tutorial_service.dart';
 import 'package:rpg_todo/features/kozuchi/domain/kozuchi_quest_model.dart';
 import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
+import 'package:rpg_todo/features/town/domain/town_scale.dart';
 
 class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   final IPlayerRepository _playerRepository;
@@ -74,6 +75,9 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   bool get isWeeklyMissionComplete => _player.weeklySRankCompleted >= weeklyMissionGoal;
   int get streakDays => _player.streakDays;
   int get dailyEstimatedMinutes => activeTasks.fold(0, (s, t) => s + (t.targetTimeMinutes ?? 0));
+
+  /// 町の発展段階（冒険者レベルに応じて変化）
+  TownScale get townScale => TownScale.fromLevel(_player.level);
   int get guildEstimatedMinutes => guildTasks.fold(0, (s, t) => s + (t.targetTimeMinutes ?? 0));
   List<({TitleDefinition def, int progress, bool isUnlocked})> get titleProgressList => TitleService.getTitleProgressList(_player);
   /// 過去の完了タスクから推定時間を計算（神託5: 魔導書解析）
