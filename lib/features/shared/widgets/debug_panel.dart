@@ -108,7 +108,7 @@ class _DebugPanelState extends State<DebugPanel> {
                     decoration: InputDecoration(
                       isDense: true,
                       labelText: 'コイン 現在: ${p.coins}',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ),

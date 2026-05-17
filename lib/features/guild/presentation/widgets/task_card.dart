@@ -23,8 +23,7 @@ class TaskCard extends StatelessWidget {
     this.initiallyExpanded = false,
     this.onSubTaskToggle,
     this.subtitle,
-  }) : isUrgent = task.status == TaskStatus.inGuild &&
-           task.deadline != null &&
+  }) : isUrgent = task.deadline != null &&
            task.deadline!.isBefore(DateTime.now().add(const Duration(days: 1)));
 
   String _getRankEnemyEmoji(QuestRank rank) {
@@ -47,6 +46,70 @@ class TaskCard extends StatelessWidget {
       case QuestRank.B:
         return Colors.brown.shade300; // 銅の輝き
     }
+  }
+
+  /// 修練場（active）の敵アバターを構築。
+  /// 緊急時は炎エフェクト＋拡大で一段階強化する。
+  Widget _buildEnemyAvatar(Color textColor) {
+    final bool enhanceUrgent = isUrgent; // 修練場の緊急タスクを炎で強化
+    final double size = enhanceUrgent ? 64.0 : 56.0;
+    final double emojiSize = enhanceUrgent ? 30.0 : 26.0;
+    final Color borderColor = enhanceUrgent
+        ? Colors.deepOrange
+        : _getRankBorderColor(task.rank);
+    final double borderWidth = enhanceUrgent ? 3.0 : 2.5;
+    final Color glowColor = enhanceUrgent
+        ? Colors.orange
+        : _getRankBorderColor(task.rank);
+    final double glowAlpha = enhanceUrgent ? 0.9 : 0.7;
+    final double blurRadius = enhanceUrgent ? 20.0 : 14.0;
+
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: borderColor, width: borderWidth),
+        boxShadow: [
+          BoxShadow(
+            color: glowColor.withValues(alpha: glowAlpha),
+            blurRadius: blurRadius,
+            spreadRadius: enhanceUrgent ? 5 : 3,
+          ),
+          if (enhanceUrgent)
+            BoxShadow(
+              color: Colors.red.withValues(alpha: 0.4),
+              blurRadius: 28,
+              spreadRadius: 8,
+            ),
+        ],
+      ),
+      child: Container(
+        margin: EdgeInsets.all(enhanceUrgent ? 2.0 : 3.0),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1A2E),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: glowColor.withValues(alpha: 0.3),
+              blurRadius: 6,
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              _getRankEnemyEmoji(task.rank),
+              style: TextStyle(fontSize: emojiSize),
+            ),
+            if (enhanceUrgent)
+              const Text('🔥', style: TextStyle(fontSize: 12)),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -86,45 +149,7 @@ class TaskCard extends StatelessWidget {
                 tilePadding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 leading: task.status == TaskStatus.active
-                    ? Container(
-                        width: 56,
-                        height: 56,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: _getRankBorderColor(task.rank),
-                            width: 2.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: _getRankBorderColor(task.rank)
-                                  .withValues(alpha: 0.7),
-                              blurRadius: 14,
-                              spreadRadius: 3,
-                            ),
-                          ],
-                        ),
-                        child: Container(
-                          margin: const EdgeInsets.all(3),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1A1A2E),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: _getRankBorderColor(task.rank)
-                                    .withValues(alpha: 0.3),
-                                blurRadius: 6,
-                              ),
-                            ],
-                          ),
-                          child: Center(
-                            child: Text(
-                              _getRankEnemyEmoji(task.rank),
-                              style: const TextStyle(fontSize: 26),
-                            ),
-                          ),
-                        ),
-                      )
+                    ? _buildEnemyAvatar(textColor)
                     : Container(
                         width: 48,
                         height: 48,
