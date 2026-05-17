@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/shared/domain/difficulty_estimator.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
@@ -84,29 +85,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
       return;
     }
 
-    QuestRank newRank = QuestRank.B;
-    int length = title.length;
-
-    if (length > 30 ||
-        title.contains("実装") ||
-        title.contains("開発") ||
-        title.contains("会議") ||
-        title.contains("資料")) {
-      newRank = QuestRank.A;
-    } else if (length > 15 ||
-        title.contains("作成") ||
-        title.contains("買い物") ||
-        title.contains("連絡")) {
-      newRank = QuestRank.B;
-    }
-
-    if (title.contains("本番") ||
-        title.contains("デプロイ") ||
-        title.contains("リリース") ||
-        title.contains("重要")) {
-      newRank = QuestRank.S;
-    }
-
+    final newRank = DifficultyEstimator.estimateRank(title);
     setState(() {
       _selectedRank = newRank;
     });
