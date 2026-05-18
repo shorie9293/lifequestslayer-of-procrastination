@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
+import 'package:rpg_todo/features/character_customization/presentation/equipment_tab.dart';
 import 'widgets/coin_gem_balance_bar.dart';
 import 'widgets/home_shop_section.dart';
 import 'widgets/skin_section.dart';
@@ -29,40 +30,100 @@ class TownScreen extends StatelessWidget {
     final next = scale.nextScale;
     final nextLv = scale.nextLevelForUpgrade;
 
-    return Scaffold(
-      key: AppKeys.townScreen,
-      appBar: AppBar(title: Text("${scale.displayName} — ${hd['name']}")),
-      body: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage(hd['image']!),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.6), BlendMode.darken),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        key: AppKeys.townScreen,
+        appBar: AppBar(
+          title: Text("${scale.displayName} — ${hd['name']}"),
+          bottom: const TabBar(
+            labelColor: Color(0xFFFFD700),
+            unselectedLabelColor: Colors.white54,
+            indicatorColor: Color(0xFFFFD700),
+            tabs: [
+              Tab(icon: Icon(Icons.location_city), text: '町'),
+              Tab(icon: Icon(Icons.face), text: '装備'),
+            ],
           ),
         ),
-        child: Column(
+        body: TabBarView(
           children: [
-            CoinGemBalanceBar(player: player),
-            // 町発展情報バー
-            _TownScaleBar(scale: scale, nextScale: next, nextLevel: nextLv),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    HomeShopSection(viewModel: viewModel, player: player),
-                    const SizedBox(height: 24),
-                    SkinSection(viewModel: viewModel, player: player),
-                    const SizedBox(height: 24),
-                    InnSection(viewModel: viewModel, player: player),
-                    const SizedBox(height: 24),
-                    TitleSection(viewModel: viewModel, player: player),
-                  ],
-                ),
-              ),
+            // ── 町タブ（既存コンテンツ） ──
+            _TownTab(
+              player: player,
+              viewModel: viewModel,
+              hd: hd,
+              scale: scale,
+              nextScale: next,
+              nextLevel: nextLv,
+            ),
+            // ── 装備タブ（新規：5部位カスタマイズ） ──
+            EquipmentTab(
+              currentSkin: player.characterSkin,
+              playerLevel: player.level,
+              streakDays: player.streakDays,
+              totalTasks: player.totalTasksCompleted,
+              titles: player.titles,
+              onEquip: (slot, skinId) {
+                viewModel.equipCharacterSkin(slot, skinId);
+              },
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// 町タブ — TownScreen の既存コンテンツを抽出
+class _TownTab extends StatelessWidget {
+  final dynamic player;
+  final dynamic viewModel;
+  final Map<String, String> hd;
+  final TownScale scale;
+  final TownScale? nextScale;
+  final int? nextLevel;
+
+  const _TownTab({
+    required this.player,
+    required this.viewModel,
+    required this.hd,
+    required this.scale,
+    required this.nextScale,
+    required this.nextLevel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage(hd['image']!),
+          fit: BoxFit.cover,
+          colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.6), BlendMode.darken),
+        ),
+      ),
+      child: Column(
+        children: [
+          CoinGemBalanceBar(player: player),
+          _TownScaleBar(scale: scale, nextScale: nextScale, nextLevel: nextLevel),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  HomeShopSection(viewModel: viewModel, player: player),
+                  const SizedBox(height: 24),
+                  SkinSection(viewModel: viewModel, player: player),
+                  const SizedBox(height: 24),
+                  InnSection(viewModel: viewModel, player: player),
+                  const SizedBox(height: 24),
+                  TitleSection(viewModel: viewModel, player: player),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

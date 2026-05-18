@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/title_definition.dart';
+import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
 import 'package:rpg_todo/features/shared/data/player_repository.dart';
 import 'package:rpg_todo/features/guild/data/task_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
@@ -211,6 +212,10 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
 
   void equipTitle(String t) { if (_player.titles.contains(t) || t.isEmpty) { _player.equippedTitle = t.isEmpty ? null : t; _save(); } }
   void equipSkin(String s) { if (_player.homeItems.contains(s) || s.isEmpty) { _player.equippedSkin = s.isEmpty ? null : s; _save(); } }
+  void equipCharacterSkin(SkinSlot slot, String skinId) {
+    _player.characterSkin = _player.characterSkin.withSlot(slot, skinId);
+    _save();
+  }
   String? restAtInn(int t) {
     if (_debugMode) {
       _player.nextDayTaskLimitOffset = t == 2 ? 12 : t == 1 ? 5 : 2;

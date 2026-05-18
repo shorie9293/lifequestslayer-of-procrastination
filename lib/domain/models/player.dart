@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:hive/hive.dart';
 import 'task.dart';
+import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
 
 enum Job {
   warrior,
@@ -51,7 +52,8 @@ class Player {
   int totalBRankCompleted;
   List<String> titles;
   String? equippedTitle;
-  String? equippedSkin; // 追加: 装備中のスキンID
+  String? equippedSkin; // 追加: 装備中のスキンID（旧ショップスキン）
+  CharacterSkin characterSkin; // 追加: 5部位カスタマイズ
   int gems; // プレミアム通貨（課金で取得）
 
   // --- ストリーク（連続ログイン） ---
@@ -80,11 +82,12 @@ class Player {
     List<String>? titles,
     this.equippedTitle,
     this.equippedSkin,
+    CharacterSkin? characterSkin,
     this.gems = 0,
     this.streakDays = 0,
     this.longestStreak = 0,
     this.lastLoginDate,
-  })  : jobLevels = jobLevels ?? {Job.adventurer: 1},
+  })  : characterSkin = characterSkin ?? CharacterSkin(), jobLevels = jobLevels ?? {Job.adventurer: 1},
         jobExps = jobExps ?? {Job.adventurer: 0},
         activeSkills = activeSkills ?? {},
         homeItems = homeItems ?? [],
@@ -192,7 +195,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
   @override
   final int typeId = 3;
 
-  static const int _formatVersion = 2;
+  static const int _formatVersion = 3;
 
   @override
   Player read(BinaryReader reader) {
@@ -229,6 +232,11 @@ class PlayerAdapter extends TypeAdapter<Player> {
 
     if (reader.availableBytes > 0) {
       player.equippedSkin = reader.read();
+    }
+    if (reader.availableBytes >= 4) {
+      player.characterSkin = CharacterSkin.fromMap(
+        (reader.readMap()).cast<String, dynamic>(),
+      );
     }
     if (reader.availableBytes >= 4) {
       player.gems = reader.readInt();
@@ -269,6 +277,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.writeList(obj.titles);
     writer.write(obj.equippedTitle);
     writer.write(obj.equippedSkin);
+    writer.writeMap(obj.characterSkin.toMap());
     writer.writeInt(obj.gems);
     writer.writeInt(obj.streakDays);
     writer.writeInt(obj.longestStreak);
