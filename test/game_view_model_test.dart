@@ -1529,6 +1529,92 @@ void main() {
       expect(vm.player.currentJob, Job.warrior);
     });
   });
+
+  // ━━━ O2: 緊急依頼書表示 ━━━
+  group('urgentGuildTasks 緊急依頼書', () {
+    test('期限が24時間以内のギルドタスクを返す', () async {
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
+      await _waitForLoad(vm);
+
+      final now = DateTime.now();
+      // 期限が1時間後（緊急）
+      vm.addTask('緊急クエスト', rank: QuestRank.A,
+          deadline: now.add(const Duration(hours: 1)));
+      // 期限が25時間後（緊急ではない）
+      vm.addTask('通常クエスト', rank: QuestRank.B,
+          deadline: now.add(const Duration(hours: 25)));
+      // 期限なし
+      vm.addTask('期限なしクエスト', rank: QuestRank.B);
+
+      final urgent = vm.urgentGuildTasks;
+      expect(urgent.length, 1);
+      expect(urgent.first.title, '緊急クエスト');
+    });
+
+    test('期限切れのギルドタスクも含む', () async {
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
+      await _waitForLoad(vm);
+
+      final now = DateTime.now();
+      // 期限が1時間前（期限切れ）
+      vm.addTask('期限切れクエスト', rank: QuestRank.A,
+          deadline: now.subtract(const Duration(hours: 1)));
+
+      final urgent = vm.urgentGuildTasks;
+      expect(urgent.length, 1);
+      expect(urgent.first.title, '期限切れクエスト');
+    });
+
+    test('アクティブなタスクは含まない', () async {
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
+      await _waitForLoad(vm);
+
+      final now = DateTime.now();
+      vm.player.jobLevels[Job.adventurer] = 10;
+      vm.addTask('緊急クエスト', rank: QuestRank.B,
+          deadline: now.add(const Duration(hours: 1)));
+      // アクティブ化
+      vm.acceptTask(vm.tasks[0].id);
+
+      final urgent = vm.urgentGuildTasks;
+      expect(urgent.isEmpty, true);
+    });
+
+    test('緊急度順（期限が近い順）にソートされる', () async {
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
+      await _waitForLoad(vm);
+
+      final now = DateTime.now();
+      vm.addTask('3時間後', rank: QuestRank.B,
+          deadline: now.add(const Duration(hours: 3)));
+      vm.addTask('1時間後', rank: QuestRank.A,
+          deadline: now.add(const Duration(hours: 1)));
+      vm.addTask('5時間後', rank: QuestRank.B,
+          deadline: now.add(const Duration(hours: 5)));
+
+      final urgent = vm.urgentGuildTasks;
+      expect(urgent.length, 3);
+      expect(urgent[0].title, '1時間後');
+      expect(urgent[1].title, '3時間後');
+      expect(urgent[2].title, '5時間後');
+    });
+  });
 }
 Future<void> _waitForLoad(GameViewModel vm,
     {Duration timeout = const Duration(seconds: 5)}) async {

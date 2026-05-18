@@ -81,6 +81,17 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   TownScale get townScale => TownScale.fromLevel(_player.level);
   int get guildEstimatedMinutes => guildTasks.fold(0, (s, t) => s + (t.targetTimeMinutes ?? 0));
   List<({TitleDefinition def, int progress, bool isUnlocked})> get titleProgressList => TitleService.getTitleProgressList(_player);
+
+  /// O2: 緊急依頼書 — 期限が24時間以内のギルドタスクを緊急度順で返す
+  /// 期限切れ（過去）のタスクも含む。アクティブなタスクは含まない。
+  List<Task> get urgentGuildTasks {
+    final now = DateTime.now();
+    final threshold = now.add(const Duration(hours: 24));
+    return guildTasks
+        .where((t) => t.deadline != null && t.deadline!.isBefore(threshold))
+        .toList()
+      ..sort((a, b) => a.deadline!.compareTo(b.deadline!));
+  }
   /// 過去の完了タスクから推定時間を計算（神託5: 魔導書解析）
   /// 同ランクの完了タスク + 類似タイトルの完了タスク の targetTimeMinutes 平均を返す
   int? estimateMinutes(String title, QuestRank rank) {

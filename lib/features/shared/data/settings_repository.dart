@@ -154,4 +154,27 @@ class SettingsRepository {
       await box.put('debugModeEnabled', enabled);
     } catch (_) {}
   }
+
+  // ── 魔導書解析AI（Griffon） ────────────────────────────
+
+  /// 魔導書解析AI（GriffonEstimator）の有効/無効フラグ。
+  ///
+  /// デフォルトは false（キーワードベース推定のみ）。
+  /// AI推定が有効な場合、タスク作成時に過去の完了タスク履歴から
+  /// 難易度と見積もり時間をAIが提案する。
+  Future<bool> getGriffonEnabled() async {
+    try {
+      final box = await _openSettingsBox();
+      return box.get('griffonEnabled', defaultValue: false) as bool;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> setGriffonEnabled(bool enabled) async {
+    try {
+      final box = await _openSettingsBox();
+      await box.put('griffonEnabled', enabled);
+    } catch (_) {}
+  }
 }

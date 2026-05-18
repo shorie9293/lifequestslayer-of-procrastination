@@ -53,4 +53,42 @@ void main() {
       expect(await repository.getEveningNotificationEnabled(), true);
     });
   });
+
+  group('SettingsRepository - 魔導書解析AI（Griffon）', () {
+    late SettingsRepository repository;
+    late String hivePath;
+
+    setUp(() async {
+      repository = SettingsRepository();
+      hivePath =
+          '${Directory.systemTemp.path}/hive_test_${DateTime.now().millisecondsSinceEpoch}';
+      Hive.init(hivePath);
+    });
+
+    tearDown(() async {
+      await Hive.close();
+      final dir = Directory(hivePath);
+      if (await dir.exists()) {
+        await dir.delete(recursive: true);
+      }
+    });
+
+    test('griffonEnabled defaults to false', () async {
+      final enabled = await repository.getGriffonEnabled();
+      expect(enabled, false);
+    });
+
+    test('griffonEnabled can be set to true and re-read', () async {
+      await repository.setGriffonEnabled(true);
+      final enabled = await repository.getGriffonEnabled();
+      expect(enabled, true);
+    });
+
+    test('griffonEnabled can be set to false and re-read', () async {
+      await repository.setGriffonEnabled(true);
+      await repository.setGriffonEnabled(false);
+      final enabled = await repository.getGriffonEnabled();
+      expect(enabled, false);
+    });
+  });
 }

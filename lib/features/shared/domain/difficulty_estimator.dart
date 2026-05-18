@@ -1,9 +1,13 @@
 import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/features/shared/domain/griffon_estimator.dart';
 
 /// クエストタイトルから難易度ランクを推定するユーティリティクラス。
 ///
-/// Sランク（最重要・緊急）→ Aランク（重要・中規模）→ Bランク（通常・軽量）
+/// Phase 1: Sランク（最重要・緊急）→ Aランク（重要・中規模）→ Bランク（通常・軽量）
 /// の順にキーワードマッチングを行う。
+///
+/// Phase 2: [GriffonEstimator] を用いた魔導書解析AIによる推定をサポート。
+/// AI推定が利用可能な場合はそれを優先し、フォールバックとしてキーワード推定を使用する。
 class DifficultyEstimator {
   DifficultyEstimator._();
 
@@ -79,5 +83,32 @@ class DifficultyEstimator {
 
     // デフォルト
     return QuestRank.B;
+  }
+
+  /// [estimateRank] と同じ推定を行うが、結果に [GriffonEstimation] を返す。
+  ///
+  /// キーワードベース推定のみを使う場合に使用する。
+  /// estimatedMinutes は常に null、source は [EstimationSource.keyword]。
+  static GriffonEstimation estimateRankWithSource(String title) {
+    return GriffonEstimation.fromKeyword(estimateRank(title));
+  }
+
+  /// AI（魔導書）推定を試み、フォールバックとしてキーワード推定を使用する。
+  ///
+  /// [griffon] が null の場合はキーワード推定にフォールバックする。
+  /// [pastTaskTitles] は AI 推定時の類似タスク判定に使用される。
+  static Future<GriffonEstimation> estimateWithAI(
+    String title,
+    List<String> pastTaskTitles,
+    GriffonEstimator? griffon,
+  ) async {
+    if (griffon != null) {
+      try {
+        return await griffon.estimate(title, pastTaskTitles);
+      } catch (_) {
+        // AI推定失敗時はキーワード推定にフォールバック
+      }
+    }
+    return GriffonEstimation.fromKeyword(estimateRank(title));
   }
 }
