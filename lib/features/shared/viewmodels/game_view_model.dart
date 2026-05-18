@@ -166,7 +166,35 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     if (i != -1 && idx >= 0 && idx < _tasks[i].subTasks.length) { _tasks[i].subTasks[idx].isCompleted = !_tasks[i].subTasks[idx].isCompleted; _save(); }
   }
 
-  void changeJob(Job j) { _player.currentJob = j; _save(); }
+  /// 転職制限（G1）:
+  /// - 浪人Lv10未満では他職に転職不可
+  /// - 他職にいる場合、現在の職業でLv10にならないと別の他職に転職不可
+  /// - 浪人への転職は常に可能
+  /// - デバッグモードでは制限なし
+  void changeJob(Job j) {
+    if (_debugMode) {
+      _player.currentJob = j;
+      _save();
+      return;
+    }
+    // 浪人への転職は常に許可
+    if (j == Job.adventurer) {
+      _player.currentJob = j;
+      _save();
+      return;
+    }
+    // 浪人から他職へ：浪人Lv10必要
+    if (_player.currentJob == Job.adventurer) {
+      final adventurerLv = _player.jobLevels[Job.adventurer] ?? 1;
+      if (adventurerLv < 10) return;
+    } else {
+      // 他職から別の他職へ：現在の職業Lv10必要
+      final currentLv = _player.jobLevels[_player.currentJob] ?? 1;
+      if (currentLv < 10) return;
+    }
+    _player.currentJob = j;
+    _save();
+  }
   void toggleSkill(Job j) { if (!_debugMode && !_player.isMastered(j)) return; if (_player.activeSkills.contains(j)) { _player.activeSkills.remove(j); } else { _player.activeSkills.add(j); } _save(); }
 
   Map<String, dynamic>? completeTask(String id) {

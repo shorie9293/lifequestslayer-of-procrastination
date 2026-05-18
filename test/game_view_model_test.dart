@@ -192,6 +192,7 @@ void main() {
 
       // 直接プレイヤーを操作してから保存
       vm1.addGems(50);
+      vm1.player.jobLevels[Job.adventurer] = 10; // 転職制限：浪人Lv10必要
       vm1.changeJob(Job.warrior);
 
       await Future.delayed(const Duration(milliseconds: 200));
@@ -441,6 +442,7 @@ void main() {
       );
       await _waitForLoad(vm);
 
+      vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
       vm.changeJob(Job.warrior);
       vm.addTask('クエスト', rank: QuestRank.B);
       vm.acceptTask(vm.tasks[0].id);
@@ -461,6 +463,7 @@ void main() {
       );
       await _waitForLoad(vm);
 
+      vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
       vm.changeJob(Job.warrior);
 
       // 1回目
@@ -753,6 +756,7 @@ void main() {
       );
       await _waitForLoad(vm);
 
+      vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
       vm.changeJob(Job.wizard);
 
       vm.addTask('サブタスク付き', rank: QuestRank.B, subTasks: [
@@ -773,6 +777,7 @@ void main() {
       );
       await _waitForLoad(vm);
 
+      vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
       vm.changeJob(Job.wizard);
 
       vm.addTask('サブタスク付き', rank: QuestRank.B, subTasks: [
@@ -812,6 +817,7 @@ void main() {
       );
       await _waitForLoad(vm);
 
+      vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
       vm.changeJob(Job.wizard);
 
       vm.addTask('サブタスク付き', rank: QuestRank.B, subTasks: [
@@ -906,6 +912,7 @@ void main() {
       );
       await _waitForLoad(vm);
 
+      vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
       vm.changeJob(Job.cleric);
 
       vm.addTask('毎日クエスト', rank: QuestRank.B,
@@ -950,6 +957,7 @@ void main() {
       );
       await _waitForLoad(vm);
 
+      vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
       vm.changeJob(Job.cleric);
 
       vm.addTask('通常クエスト', rank: QuestRank.B);
@@ -1281,12 +1289,14 @@ void main() {
       );
       await _waitForLoad(vm);
 
+      // 転職制限：浪人Lv10必要、テスト用に一時的に設定
+      vm.player.jobLevels[Job.adventurer] = 10;
       vm.changeJob(Job.warrior);
 
       // 戦士Lv9→Lv10
       vm.player.jobLevels[Job.warrior] = 9;
       vm.player.jobExps[Job.warrior] = 700;
-      // 冒険者レベルはLv1のまま
+      // 冒険者レベルはLv1のまま（テスト条件）
       vm.player.jobLevels[Job.adventurer] = 1;
 
       vm.addTask('修行', rank: QuestRank.B);
@@ -1416,9 +1426,110 @@ void main() {
           reason: '期限内タスクに期限切れメッセージはない');
     });
   });
-}
 
-/// GameViewModel.loadData() の非同期完了を待つヘルパー
+  // ━━━ G1: 転職制限 ━━━
+  group('changeJob 転職制限', () {
+    test('浪人Lv1では他職に転職できない', () async {
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
+      await _waitForLoad(vm);
+      // 浪人Lv1（デフォルト）
+      expect(vm.player.jobLevels[Job.adventurer], 1);
+      expect(vm.player.currentJob, Job.adventurer);
+
+      vm.changeJob(Job.warrior);
+      // 転職できないので冒険者のまま
+      expect(vm.player.currentJob, Job.adventurer);
+    });
+
+    test('浪人Lv10で他職に転職できる', () async {
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
+      await _waitForLoad(vm);
+      // 浪人Lv10に設定
+      vm.player.jobLevels[Job.adventurer] = 10;
+
+      vm.changeJob(Job.warrior);
+      expect(vm.player.currentJob, Job.warrior);
+    });
+
+    test('他職Lv5では別の他職に転職できない（現在の職業Lv10必要）', () async {
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
+      await _waitForLoad(vm);
+      // 浪人Lv10→侍に転職
+      vm.player.jobLevels[Job.adventurer] = 10;
+      vm.changeJob(Job.warrior);
+      expect(vm.player.currentJob, Job.warrior);
+      // 侍Lv5（Lv10未満）
+      vm.player.jobLevels[Job.warrior] = 5;
+
+      // 陰陽師に転職しようとするが、侍Lv10未満なので不可
+      vm.changeJob(Job.wizard);
+      expect(vm.player.currentJob, Job.warrior,
+          reason: '現在の職業Lv10未満では他職に転職不可');
+    });
+
+    test('他職Lv10で別の他職に転職できる', () async {
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
+      await _waitForLoad(vm);
+      // 浪人Lv10→侍に転職
+      vm.player.jobLevels[Job.adventurer] = 10;
+      vm.changeJob(Job.warrior);
+      expect(vm.player.currentJob, Job.warrior);
+      // 侍Lv10に設定
+      vm.player.jobLevels[Job.warrior] = 10;
+
+      vm.changeJob(Job.wizard);
+      expect(vm.player.currentJob, Job.wizard);
+    });
+
+    test('浪人は常に転職可能（自分自身）', () async {
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
+      await _waitForLoad(vm);
+      // 侍Lv10
+      vm.player.jobLevels[Job.adventurer] = 10;
+      vm.changeJob(Job.warrior);
+      vm.player.jobLevels[Job.warrior] = 10;
+
+      // 浪人に戻る（常に可能）
+      vm.changeJob(Job.adventurer);
+      expect(vm.player.currentJob, Job.adventurer);
+    });
+
+    test('デバッグモードでは転職制限が無効', () async {
+      final vm = GameViewModel(
+        pr: _MockPlayerRepo(),
+        tr: _MockTaskRepo(),
+        sr: _MockSettingsRepo(),
+      );
+      await _waitForLoad(vm);
+      // 浪人Lv1でデバッグモード有効化
+      vm.tryEnableDebugMode('11111111');
+      expect(vm.isDebugMode, true);
+
+      vm.changeJob(Job.warrior);
+      expect(vm.player.currentJob, Job.warrior);
+    });
+  });
+}
 Future<void> _waitForLoad(GameViewModel vm,
     {Duration timeout = const Duration(seconds: 5)}) async {
   final start = DateTime.now();
