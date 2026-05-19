@@ -136,7 +136,7 @@ class TaskAdapter extends TypeAdapter<Task> {
       repeatWeekdays: (reader.read() as List?)?.cast<int>() ?? [],
       lastCompletedAt: reader
           .read(), // DateTime adapter is built-in or primitive? DateTime is supported by Hive generally
-      subTasks: (reader.read() as List).cast<SubTask>(),
+      subTasks: (reader.read() as List?)?.cast<SubTask>() ?? [],
     );
     try {
       task.targetTimeMinutes = reader.read();

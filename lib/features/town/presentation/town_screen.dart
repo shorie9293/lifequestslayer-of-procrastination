@@ -47,6 +47,7 @@ class TownScreen extends StatelessWidget {
           ),
         ),
         body: TabBarView(
+          physics: const NeverScrollableScrollPhysics(),
           children: [
             // ── 町タブ（既存コンテンツ） ──
             _TownTab(

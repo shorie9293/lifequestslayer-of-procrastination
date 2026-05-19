@@ -207,35 +207,80 @@ class PlayerAdapter extends TypeAdapter<Player> {
   }
 
   Player _readV2(BinaryReader reader) {
-    final player = Player(
-      jobLevels: (reader.readMap()).cast<Job, int>(),
-      jobExps: (reader.readMap()).cast<Job, int>(),
-      activeSkills: (reader.readList()).cast<Job>().toSet(),
-      currentJob: reader.read(),
-      comboCount: reader.readInt(),
-    );
+    // デフォルト値で初期化。古いフォーマット(v1,v2)のデータでも
+    // 各フィールドを availableBytes でガードしながら安全に読み取る。
+    final player = Player();
 
-    player.coins = reader.readInt();
-    player.homeItems = (reader.readList()).cast<String>();
-    player.dailyTasksCompleted = reader.readInt();
-    player.weeklySRankCompleted = reader.readInt();
-    player.lastMissionResetDate = reader.read();
-    player.nextDayTaskLimitOffset = reader.readInt();
-    player.todayTaskLimitOffset = reader.readInt();
-    player.lastRestDate = reader.read();
-    player.totalTasksCompleted = reader.readInt();
-    player.totalSRankCompleted = reader.readInt();
-    player.totalARankCompleted = reader.readInt();
-    player.totalBRankCompleted = reader.readInt();
-    player.titles = (reader.readList()).cast<String>();
-    player.equippedTitle = reader.read();
+    if (reader.availableBytes > 0) {
+      player.jobLevels =
+          (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 1};
+    }
+    if (reader.availableBytes > 0) {
+      player.jobExps =
+          (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 0};
+    }
+    if (reader.availableBytes > 0) {
+      player.activeSkills =
+          (reader.readList() as List?)?.cast<Job>().toSet() ?? {};
+    }
+    if (reader.availableBytes > 0) {
+      player.currentJob = (reader.read() as Job?) ?? Job.adventurer;
+    }
+    if (reader.availableBytes >= 4) {
+      player.comboCount = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.coins = reader.readInt();
+    }
+    if (reader.availableBytes > 0) {
+      player.homeItems =
+          (reader.readList() as List?)?.cast<String>() ?? [];
+    }
+    if (reader.availableBytes >= 4) {
+      player.dailyTasksCompleted = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.weeklySRankCompleted = reader.readInt();
+    }
+    if (reader.availableBytes > 0) {
+      player.lastMissionResetDate = reader.read();
+    }
+    if (reader.availableBytes >= 4) {
+      player.nextDayTaskLimitOffset = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.todayTaskLimitOffset = reader.readInt();
+    }
+    if (reader.availableBytes > 0) {
+      player.lastRestDate = reader.read();
+    }
+    if (reader.availableBytes >= 4) {
+      player.totalTasksCompleted = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.totalSRankCompleted = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.totalARankCompleted = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.totalBRankCompleted = reader.readInt();
+    }
+    if (reader.availableBytes > 0) {
+      player.titles =
+          (reader.readList() as List?)?.cast<String>() ?? [];
+    }
+    if (reader.availableBytes > 0) {
+      player.equippedTitle = reader.read();
+    }
 
+    // 以下、v3以降で追加されたフィールド（元からavailableBytesチェックあり）
     if (reader.availableBytes > 0) {
       player.equippedSkin = reader.read();
     }
     if (reader.availableBytes >= 4) {
       player.characterSkin = CharacterSkin.fromMap(
-        (reader.readMap()).cast<String, dynamic>(),
+        (reader.readMap() as Map?)?.cast<String, dynamic>() ?? {},
       );
     }
     if (reader.availableBytes >= 4) {
