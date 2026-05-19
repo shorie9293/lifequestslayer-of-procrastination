@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android < 12 の自動バックアップルール -->
+<!-- Hiveデータベース（プレイヤー情報、タスク、職業、レベル等）をバックアップ対象に含める -->
+<full-backup-content>
+    <!-- Hive データベースディレクトリを含める -->
+    <include domain="database" path="." />
+    <include domain="sharedpref" path="." />
+    <include domain="file" path="." />
+</full-backup-content>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ のデータ抽出ルール -->
+<!-- クラウドバックアップとデバイス移行の両方でデータを保持 -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="database" path="." />
+        <include domain="sharedpref" path="." />
+        <include domain="file" path="." />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="database" path="." />
+        <include domain="sharedpref" path="." />
+        <include domain="file" path="." />
+    </device-transfer>
+</data-extraction-rules>
