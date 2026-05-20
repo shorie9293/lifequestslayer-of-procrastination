@@ -103,7 +103,7 @@ void main() {
     });
 
     test('デフォルトのファイルパスが正しく設定される', () {
-      final service = FileKozuchiQuestService();
+      const service = FileKozuchiQuestService();
 
       // デフォルトパスを確認するために、内部のパスをリフレクションなしで検証。
       // パスがコンストラクタで保持されていることをテストするため、

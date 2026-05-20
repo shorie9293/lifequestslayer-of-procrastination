@@ -15,7 +15,7 @@ void main() {
         status: TaskStatus.active,
         deadline: DateTime.now().add(const Duration(hours: 2)),
       );
-      final card = TaskCard(task: task, actions: []);
+      final card = TaskCard(task: task, actions: const []);
       expect(card.isUrgent, isTrue);
     });
 
@@ -27,7 +27,7 @@ void main() {
         status: TaskStatus.inGuild,
         deadline: DateTime.now().add(const Duration(hours: 12)),
       );
-      final card = TaskCard(task: task, actions: []);
+      final card = TaskCard(task: task, actions: const []);
       expect(card.isUrgent, isTrue);
     });
 
@@ -39,7 +39,7 @@ void main() {
         status: TaskStatus.active,
         deadline: DateTime.now().add(const Duration(hours: 25)),
       );
-      final card = TaskCard(task: task, actions: []);
+      final card = TaskCard(task: task, actions: const []);
       expect(card.isUrgent, isFalse);
     });
 
@@ -51,7 +51,7 @@ void main() {
         status: TaskStatus.active,
         deadline: null,
       );
-      final card = TaskCard(task: task, actions: []);
+      final card = TaskCard(task: task, actions: const []);
       expect(card.isUrgent, isFalse);
     });
 
@@ -63,7 +63,7 @@ void main() {
         status: TaskStatus.active,
         deadline: DateTime.now().subtract(const Duration(hours: 1)),
       );
-      final card = TaskCard(task: task, actions: []);
+      final card = TaskCard(task: task, actions: const []);
       expect(card.isUrgent, isTrue);
     });
   });
@@ -76,7 +76,7 @@ void main() {
         rank: QuestRank.S,
         status: TaskStatus.active,
       );
-      final card = TaskCard(task: task, actions: []);
+      final card = TaskCard(task: task, actions: const []);
       // _getRankEnemyEmoji は private だが、active タスクでは leading に表示されている
       // ウィジェットテストで確認するのが適切なため、ここでは構造の検証に留める
       expect(card.task.rank, QuestRank.S);
@@ -89,7 +89,7 @@ void main() {
         rank: QuestRank.A,
         status: TaskStatus.active,
       );
-      final card = TaskCard(task: task, actions: []);
+      final card = TaskCard(task: task, actions: const []);
       expect(card.task.rank, QuestRank.A);
     });
 
@@ -100,7 +100,7 @@ void main() {
         rank: QuestRank.B,
         status: TaskStatus.active,
       );
-      final card = TaskCard(task: task, actions: []);
+      final card = TaskCard(task: task, actions: const []);
       expect(card.task.rank, QuestRank.B);
     });
   });

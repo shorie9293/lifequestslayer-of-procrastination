@@ -30,13 +30,13 @@ void main() {
     setUp(() {
       estimator = FakeGriffonEstimator({
         '本番デプロイの最終確認と手順書作成':
-            GriffonEstimation(rank: QuestRank.S, estimatedMinutes: 120),
+            const GriffonEstimation(rank: QuestRank.S, estimatedMinutes: 120),
         '週次レポートの作成と提出':
-            GriffonEstimation(rank: QuestRank.A, estimatedMinutes: 45),
+            const GriffonEstimation(rank: QuestRank.A, estimatedMinutes: 45),
         '買い物リストの作成':
-            GriffonEstimation(rank: QuestRank.B, estimatedMinutes: 15),
+            const GriffonEstimation(rank: QuestRank.B, estimatedMinutes: 15),
         'コードレビュー':
-            GriffonEstimation(rank: QuestRank.A, estimatedMinutes: 30),
+            const GriffonEstimation(rank: QuestRank.A, estimatedMinutes: 30),
       });
     });
 
@@ -91,13 +91,13 @@ void main() {
     setUp(() {
       griffonEstimator = FakeGriffonEstimator({
         '本番デプロイの最終確認と手順書作成':
-            GriffonEstimation(rank: QuestRank.S, estimatedMinutes: 120),
+            const GriffonEstimation(rank: QuestRank.S, estimatedMinutes: 120),
         '週次レポートの作成と提出':
-            GriffonEstimation(rank: QuestRank.A, estimatedMinutes: 45),
+            const GriffonEstimation(rank: QuestRank.A, estimatedMinutes: 45),
         '買い物リストの作成':
-            GriffonEstimation(rank: QuestRank.B, estimatedMinutes: 15),
+            const GriffonEstimation(rank: QuestRank.B, estimatedMinutes: 15),
         'コードレビュー':
-            GriffonEstimation(rank: QuestRank.A, estimatedMinutes: 30),
+            const GriffonEstimation(rank: QuestRank.A, estimatedMinutes: 30),
       });
     });
 

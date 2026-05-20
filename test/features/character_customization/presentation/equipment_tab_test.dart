@@ -15,7 +15,7 @@ Widget buildEquipmentTab({
   return MaterialApp(
     home: Scaffold(
       body: EquipmentTab(
-        currentSkin: skin ?? CharacterSkin(),
+        currentSkin: skin ?? const CharacterSkin(),
         playerLevel: level,
         streakDays: streakDays,
         totalTasks: totalTasks,

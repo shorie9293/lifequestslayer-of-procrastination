@@ -23,7 +23,7 @@ void main() {
 
   group('CharacterSkin', () {
     test('デフォルトは全スロットが "default"', () {
-      final skin = CharacterSkin();
+      const skin = CharacterSkin();
       expect(skin.faceId, 'default');
       expect(skin.hairId, 'default');
       expect(skin.armorId, 'default');
@@ -32,7 +32,7 @@ void main() {
     });
 
     test('カスタム値で初期化できる', () {
-      final skin = CharacterSkin(
+      const skin = CharacterSkin(
         faceId: 'warrior_face',
         hairId: 'spiky',
         armorId: 'iron_armor',
@@ -47,7 +47,7 @@ void main() {
     });
 
     test('copyWith で一部だけ変更できる', () {
-      final skin = CharacterSkin(
+      const skin = CharacterSkin(
         faceId: 'warrior_face',
         armorId: 'iron_armor',
       );
@@ -59,9 +59,9 @@ void main() {
     });
 
     test('等価比較が正しく動作する', () {
-      final a = CharacterSkin(faceId: 'warrior_face', armorId: 'iron_armor');
-      final b = CharacterSkin(faceId: 'warrior_face', armorId: 'iron_armor');
-      final c = CharacterSkin(faceId: 'warrior_face', armorId: 'gold_armor');
+      const a = CharacterSkin(faceId: 'warrior_face', armorId: 'iron_armor');
+      const b = CharacterSkin(faceId: 'warrior_face', armorId: 'iron_armor');
+      const c = CharacterSkin(faceId: 'warrior_face', armorId: 'gold_armor');
 
       expect(a, equals(b));
       expect(a, isNot(equals(c)));
@@ -70,13 +70,13 @@ void main() {
     });
 
     test('getSlot で指定スロットの値を取得できる', () {
-      final skin = CharacterSkin(weaponId: 'katana');
+      const skin = CharacterSkin(weaponId: 'katana');
       expect(skin.getSlot(SkinSlot.weapon), 'katana');
       expect(skin.getSlot(SkinSlot.face), 'default');
     });
 
     test('withSlot で指定スロットだけ変更した新しいCharacterSkinを返す', () {
-      final skin = CharacterSkin();
+      const skin = CharacterSkin();
       final updated = skin.withSlot(SkinSlot.hair, 'ponytail');
 
       expect(updated.hairId, 'ponytail');
@@ -84,7 +84,7 @@ void main() {
     });
 
     test('toMap / fromMap で永続化・復元できる', () {
-      final original = CharacterSkin(
+      const original = CharacterSkin(
         faceId: 'warrior_face',
         hairId: 'spiky',
         armorId: 'iron_armor',
@@ -107,7 +107,7 @@ void main() {
 
   group('SkinDefinition', () {
     test('スキン定義の生成とプロパティ', () {
-      final def = SkinDefinition(
+      const def = SkinDefinition(
         id: 'iron_armor',
         slot: SkinSlot.armor,
         name: '鉄の鎧',
@@ -124,7 +124,7 @@ void main() {
     });
 
     test('isUnlocked が条件に基づいて判定する', () {
-      final def = SkinDefinition(
+      const def = SkinDefinition(
         id: 'flame_crown',
         slot: SkinSlot.hair,
         name: '炎の冠',
@@ -142,7 +142,7 @@ void main() {
     });
 
     test('requiredTitle で称号による解放判定', () {
-      final def = SkinDefinition(
+      const def = SkinDefinition(
         id: 'dragon_helm',
         slot: SkinSlot.face,
         name: '竜の兜',
@@ -157,7 +157,7 @@ void main() {
     });
 
     test('requiredLevel でレベルによる解放判定', () {
-      final def = SkinDefinition(
+      const def = SkinDefinition(
         id: 'royal_armor',
         slot: SkinSlot.armor,
         name: '王家の鎧',
@@ -173,7 +173,7 @@ void main() {
     });
 
     test('requiredTotalTasks で討伐数による解放判定', () {
-      final def = SkinDefinition(
+      const def = SkinDefinition(
         id: 'veteran_shield',
         slot: SkinSlot.shield,
         name: '歴戦の盾',
@@ -188,7 +188,7 @@ void main() {
     });
 
     test('複合条件（AND）の判定', () {
-      final def = SkinDefinition(
+      const def = SkinDefinition(
         id: 'master_sword',
         slot: SkinSlot.weapon,
         name: '免許皆伝の剣',

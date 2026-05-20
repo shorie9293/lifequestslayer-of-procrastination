@@ -6,7 +6,7 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 
 void main() {
   group('KozuchiQuestCard', () {
-    final sampleQuest = KozuchiQuest(
+    const sampleQuest = KozuchiQuest(
       title: '朝の祈り',
       description: '新しい一日への感謝と祈りを捧げよ',
       suggestedOffering: 100,
@@ -14,7 +14,7 @@ void main() {
       guardianDeityLabel: '稲荷神',
     );
 
-    final completedQuest = KozuchiQuest(
+    const completedQuest = KozuchiQuest(
       title: '朝の祈り',
       description: '新しい一日への感謝と祈りを捧げよ',
       suggestedOffering: 100,
@@ -25,7 +25,7 @@ void main() {
 
     testWidgets('ヘッダー「🧘 Kozuchi試練」が表示される', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: KozuchiQuestCard(quest: sampleQuest),
           ),
@@ -37,7 +37,7 @@ void main() {
 
     testWidgets('試練のタイトルが表示される', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: KozuchiQuestCard(quest: sampleQuest),
           ),
@@ -50,7 +50,7 @@ void main() {
 
     testWidgets('試練の説明が表示される', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: KozuchiQuestCard(quest: sampleQuest),
           ),
@@ -66,7 +66,7 @@ void main() {
 
     testWidgets('守護神の絵文字と名前が表示される', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: KozuchiQuestCard(quest: sampleQuest),
           ),
@@ -80,7 +80,7 @@ void main() {
 
     testWidgets('喜捨目安額が表示される', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: KozuchiQuestCard(quest: sampleQuest),
           ),
@@ -93,7 +93,7 @@ void main() {
 
     testWidgets('未完了時は「未達成」ステータスが表示される', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: KozuchiQuestCard(quest: sampleQuest),
           ),
@@ -106,7 +106,7 @@ void main() {
 
     testWidgets('完了時は「達成済み」ステータスが表示される', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: KozuchiQuestCard(quest: completedQuest),
           ),
@@ -119,7 +119,7 @@ void main() {
 
     testWidgets('カードのkeyが正しく設定されている', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: KozuchiQuestCard(quest: sampleQuest),
           ),
@@ -131,7 +131,7 @@ void main() {
 
     testWidgets('金色/紫色を基調とした特別カードが表示されること', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: KozuchiQuestCard(quest: sampleQuest),
           ),

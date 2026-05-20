@@ -42,7 +42,7 @@ void main() {
       QuizService.probability = 0.30;
     });
 
-    Task _makeTask({
+    Task makeTask({
       required String id,
       QuestRank rank = QuestRank.B,
       DateTime? deadline,
@@ -57,7 +57,7 @@ void main() {
     }
 
     test('期限切れタスク完了時に強制クイズ（drawHardQuizQuestion）が呼ばれる', () {
-      final task = _makeTask(
+      final task = makeTask(
         id: 'overdue-1',
         deadline: DateTime.now().subtract(const Duration(hours: 1)),
       );
@@ -79,7 +79,7 @@ void main() {
     });
 
     test('期限切れタスクでknowledgeQuestEnabled=falseでもクイズが発動する', () {
-      final task = _makeTask(
+      final task = makeTask(
         id: 'overdue-2',
         deadline: DateTime.now().subtract(const Duration(days: 1)),
       );
@@ -102,7 +102,7 @@ void main() {
 
     test('期限切れでないタスクでは通常通りクイズ抽選（確率0%なのでnull）', () {
       final futureDeadline = DateTime.now().add(const Duration(days: 1));
-      final task = _makeTask(
+      final task = makeTask(
         id: 'not-overdue',
         deadline: futureDeadline,
       );
@@ -124,7 +124,7 @@ void main() {
     });
 
     test('deadlineがnullのタスクは期限切れ処理なし', () {
-      final task = _makeTask(
+      final task = makeTask(
         id: 'no-deadline',
         deadline: null,
       );
@@ -146,7 +146,7 @@ void main() {
 
     test('期限切れタスク完了時にEXPが減少するペナルティがある', () {
       // Bランク基本EXP=100
-      final task = _makeTask(
+      final task = makeTask(
         id: 'overdue-penalty',
         rank: QuestRank.B,
         deadline: DateTime.now().subtract(const Duration(days: 2)),

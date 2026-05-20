@@ -259,7 +259,7 @@ void main() {
         vm = await createLoadedViewModel();
         // KozuchiQuestService をモックで注入
         vm.kozuchiQuestService = MockKozuchiQuestService(
-          quest: KozuchiQuest(
+          quest: const KozuchiQuest(
             title: '朝の祈り',
             description: '新しい一日への感謝と祈りを捧げよ',
             suggestedOffering: 100,
@@ -285,7 +285,7 @@ void main() {
       await tester.runAsync(() async {
         vm = await createLoadedViewModel();
         vm.kozuchiQuestService = MockKozuchiQuestService(
-          quest: KozuchiQuest(
+          quest: const KozuchiQuest(
             title: '完了した試練',
             description: '完了テスト',
             suggestedOffering: 50,

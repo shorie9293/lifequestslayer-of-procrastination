@@ -87,7 +87,7 @@ class Player {
     this.streakDays = 0,
     this.longestStreak = 0,
     this.lastLoginDate,
-  })  : characterSkin = characterSkin ?? CharacterSkin(), jobLevels = jobLevels ?? {Job.adventurer: 1},
+  })  : characterSkin = characterSkin ?? const CharacterSkin(), jobLevels = jobLevels ?? {Job.adventurer: 1},
         jobExps = jobExps ?? {Job.adventurer: 0},
         activeSkills = activeSkills ?? {},
         homeItems = homeItems ?? [],

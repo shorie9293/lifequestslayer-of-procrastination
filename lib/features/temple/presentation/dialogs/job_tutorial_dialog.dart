@@ -101,24 +101,24 @@ class _JobTutorialDialogState extends State<JobTutorialDialog> {
 
   // ─── 1ページ目: 祝福 ───
   Widget _buildPage1(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
+    return const Padding(
+      padding: EdgeInsets.all(24),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Text('🌸 祝福',
+          Text('🌸 祝福',
               style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: Colors.amber)),
-          const SizedBox(height: 20),
-          const Text(
+          SizedBox(height: 20),
+          Text(
             '修行、お疲れ様でありんす！\n浪人Lv.10到達、誠におめでとうございます。',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 16, color: Colors.white70),
           ),
-          const SizedBox(height: 20),
-          const Text(
+          SizedBox(height: 20),
+          Text(
             'この地「社（つかさ）」では、\n新たな4つの道が開かれ申す。\n\n自らの天命に従い、\nさらなる高みを目指すがよい。',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: Colors.white54),
