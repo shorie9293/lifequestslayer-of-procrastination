@@ -16,7 +16,7 @@ class _MockPlayerRepository implements IPlayerRepository {
   _MockPlayerRepository(this._player);
 
   @override
-  Future<Player> loadPlayer() async => _player;
+  Future<Player?> loadPlayer() async => _player;
   @override
   Future<void> savePlayer(Player player) async {}
   @override

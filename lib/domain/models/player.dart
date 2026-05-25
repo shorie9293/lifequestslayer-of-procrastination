@@ -201,7 +201,13 @@ class PlayerAdapter extends TypeAdapter<Player> {
   Player read(BinaryReader reader) {
     final version = reader.readByte();
     if (version < 1 || version > _formatVersion) {
-      throw HiveError('未知のデータバージョン: $version (対応: 1〜$_formatVersion)');
+      // v1.3-fix: 未知のバージョンは例外を投げず、デフォルト値で安全に読み取る。
+      // データ破損時にも全データを削除せず、次回起動時の修復を期待する。
+      try {
+        return _readV2(reader); // best-effort: 読み取れるだけ読み取る
+      } catch (_) {
+        return Player(); // 復元不能ならデフォルトプレイヤー
+      }
     }
     return _readV2(reader);
   }

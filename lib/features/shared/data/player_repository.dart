@@ -16,7 +16,7 @@ class PlayerRepository implements IPlayerRepository {
   }
 
   @override
-  Future<Player> loadPlayer() async {
+  Future<Player?> loadPlayer() async {
     debugPrint('PlayerRepository: Loading player...');
     try {
       final box = await _getBox();
@@ -28,27 +28,17 @@ class PlayerRepository implements IPlayerRepository {
         }
       }
     } catch (e) {
-      // v1.6: 破損または旧形式の Box を自動修復（削除して初期化）
+      // v1.3-fix: 読み込み失敗時はBoxを削除せずnullを返す。
+      // データ破損でも保存データは保持し、次回起動時の修復を期待する。
       debugPrint(
-          'PlayerRepository: Load failed (corrupted/incompatible data), deleting box: $e');
-      await _closeAndDeleteBox();
+          'PlayerRepository: Load failed (player data may be corrupted): $e');
+      return null;
     }
-    debugPrint('PlayerRepository: No player found, returning default.');
-    return Player();
+    debugPrint('PlayerRepository: No player found, returning null.');
+    return null;
   }
 
-  /// 破損 Box を削除（次回アクセス時に自動再作成される）
-  Future<void> _closeAndDeleteBox() async {
-    try {
-      if (_box != null && _box!.isOpen) {
-        await _box!.close();
-      }
-      _box = null;
-      await Hive.deleteBoxFromDisk(boxName);
-    } catch (_) {
-      // 削除失敗時も次回起動でリトライされるため無視
-    }
-  }
+
 
   @override
   Future<void> savePlayer(Player player) async {

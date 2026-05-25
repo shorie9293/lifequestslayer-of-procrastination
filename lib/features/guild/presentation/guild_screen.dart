@@ -77,10 +77,124 @@ class GuildScreen extends StatelessWidget {
     return details;
   }
 
+  /// 残り時間表示の文字列（日本語）を生成
+  String _formatTimeRemaining(Duration diff) {
+    if (diff.isNegative) {
+      return '期限切れ';
+    }
+    final hours = diff.inHours;
+    final minutes = diff.inMinutes % 60;
+    if (hours > 0) {
+      return 'あと${hours}時間${minutes > 0 ? '${minutes}分' : ''}';
+    }
+    if (minutes > 0) {
+      return 'あと${minutes}分';
+    }
+    return 'まもなく締切';
+  }
+
+  /// 緊急セクションウィジェット（24時間以内の期限タスク）
+  Widget _buildUrgentSection(List<Task> urgentTasks) {
+    return Container(
+      key: AppKeys.guildUrgentSection,
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF8B0000), Color(0xFF4A0000)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.orangeAccent, width: 1.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ヘッダー
+          const Row(
+            children: [
+              Text('🔥', style: TextStyle(fontSize: 20)),
+              SizedBox(width: 8),
+              Text(
+                '緊急依頼',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.orangeAccent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // 緊急タスク一覧
+          ...urgentTasks.map((task) {
+            final diff = task.deadline!.difference(DateTime.now());
+            final timeStr = _formatTimeRemaining(diff);
+            final isExpired = diff.isNegative;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.access_time,
+                      size: 16, color: Colors.orangeAccent),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      task.title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: isExpired
+                          ? Colors.red.shade900
+                          : Colors.orange.shade900,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      timeStr,
+                      style: TextStyle(
+                        color: isExpired ? Colors.redAccent : Colors.amber,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<GameViewModel>(context);
     final tasks = viewModel.guildTasks;
+
+    final now = DateTime.now();
+    final urgentTasks = tasks.where((t) =>
+        t.deadline != null &&
+        t.deadline!.isAfter(now) &&
+        t.deadline!.difference(now).inHours < 24).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -212,11 +326,16 @@ class GuildScreen extends StatelessWidget {
               child: Builder(
                 builder: (context) {
                   final hasKozuchiQuest = viewModel.kozuchiQuest != null;
+                  final hasUrgent = urgentTasks.isNotEmpty;
+                  final remainingTasks = hasUrgent
+                      ? tasks.where((t) => !urgentTasks.contains(t)).toList()
+                      : tasks;
                   final itemCount = (hasKozuchiQuest ? 1 : 0) +
-                      (tasks.isEmpty ? 1 : tasks.length);
+                      (hasUrgent ? 1 : 0) +
+                      (remainingTasks.isEmpty ? 1 : remainingTasks.length);
 
                   return ListView.builder(
-                    key: tasks.isEmpty && !hasKozuchiQuest
+                    key: tasks.isEmpty && !hasKozuchiQuest && !hasUrgent
                         ? AppKeys.guildEmptyState
                         : AppKeys.guildQuestList,
                     padding: const EdgeInsets.only(bottom: 80),
@@ -230,11 +349,19 @@ class GuildScreen extends StatelessWidget {
                         );
                       }
 
+                      final kozuchiOffset = hasKozuchiQuest ? 1 : 0;
+
+                      // Urgent section (after Kozuchi, before regular tasks)
+                      if (hasUrgent && index == kozuchiOffset) {
+                        return _buildUrgentSection(urgentTasks);
+                      }
+
+                      final urgentOffset = hasUrgent ? 1 : 0;
                       final adjustedIndex =
-                          hasKozuchiQuest ? index - 1 : index;
+                          index - kozuchiOffset - urgentOffset;
 
                       // Empty state
-                      if (tasks.isEmpty) {
+                      if (remainingTasks.isEmpty) {
                         return SemanticHelper.container(
                           testId: SemanticHelper.createTestId(
                               SemanticTypes.section, 'empty_no_quests'),
@@ -263,7 +390,7 @@ class GuildScreen extends StatelessWidget {
                       }
 
                       // Task card
-                      final task = tasks[adjustedIndex];
+                      final task = remainingTasks[adjustedIndex];
                       return SemanticHelper.listItem(
                         testId: SemanticHelper.createTestId(
                             SemanticTypes.listItem, 'task_$adjustedIndex'),

@@ -1,9 +1,18 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart';
 
-class TaskCard extends StatelessWidget {
+class TaskCard extends StatefulWidget {
+  // ━━━ 緊急度カラー定数 ━━━
+  /// 6時間超：余裕あり（青）
+  static const Color urgencyColorBlue = Color(0xFF42A5F5);
+  /// 1〜6時間：注意（黄）
+  static const Color urgencyColorYellow = Color(0xFFFFCA28);
+  /// 1時間未満または期限切れ：緊急（赤）
+  static const Color urgencyColorRed = Color(0xFFEF5350);
+
   final Task task;
   final Widget? trailing;
   final List<Widget> actions;
@@ -25,6 +34,74 @@ class TaskCard extends StatelessWidget {
     this.subtitle,
   }) : isUrgent = task.deadline != null &&
            task.deadline!.isBefore(DateTime.now().add(const Duration(days: 1)));
+
+  /// 期限に基づく緊急度カラー
+  /// - 期限なしまたは24時間超：null（通常表示）
+  /// - 6時間超：青
+  /// - 1〜6時間：黄
+  /// - 1時間未満または期限切れ：赤
+  Color? get urgencyColor {
+    if (task.deadline == null) return null;
+    final diff = task.deadline!.difference(DateTime.now());
+    if (diff.inHours >= 24) return null;
+    if (diff.inHours > 6) return urgencyColorBlue;
+    if (diff.inHours > 1) return urgencyColorYellow;
+    return urgencyColorRed;
+  }
+
+  @override
+  State<TaskCard> createState() => _TaskCardState();
+}
+
+class _TaskCardState extends State<TaskCard> {
+  late Timer _timer;
+  String _countdownText = '';
+  Color? _currentUrgencyColor;
+
+  @override
+  void initState() {
+    super.initState();
+    _updateCountdown();
+    _timer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) _updateCountdown();
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  void _updateCountdown() {
+    final deadline = widget.task.deadline;
+    if (deadline == null) {
+      setState(() {
+        _countdownText = '';
+        _currentUrgencyColor = null;
+      });
+      return;
+    }
+
+    final diff = deadline.difference(DateTime.now());
+    final color = widget.urgencyColor;
+    setState(() {
+      _currentUrgencyColor = color;
+      if (diff.isNegative) {
+        _countdownText = '⚠ 期限切れ';
+      } else if (diff.inHours > 0) {
+        final mins = diff.inMinutes % 60;
+        _countdownText = '⏱ あと${diff.inHours}時間'
+            '${mins > 0 ? '${mins}分' : ''}';
+      } else if (diff.inMinutes > 0) {
+        _countdownText = '⏱ あと${diff.inMinutes}分';
+      } else {
+        _countdownText = '⏱ まもなく締切';
+      }
+    });
+  }
+
+  Task get _task => widget.task;
 
   String _getRankEnemyEmoji(QuestRank rank) {
     switch (rank) {
@@ -51,16 +128,16 @@ class TaskCard extends StatelessWidget {
   /// 修練場（active）の敵アバターを構築。
   /// 緊急時は炎エフェクト＋拡大で一段階強化する。
   Widget _buildEnemyAvatar(Color textColor) {
-    final bool enhanceUrgent = isUrgent; // 修練場の緊急タスクを炎で強化
+    final bool enhanceUrgent = widget.isUrgent;
     final double size = enhanceUrgent ? 64.0 : 56.0;
     final double emojiSize = enhanceUrgent ? 30.0 : 26.0;
     final Color borderColor = enhanceUrgent
         ? Colors.deepOrange
-        : _getRankBorderColor(task.rank);
+        : _getRankBorderColor(_task.rank);
     final double borderWidth = enhanceUrgent ? 3.0 : 2.5;
     final Color glowColor = enhanceUrgent
         ? Colors.orange
-        : _getRankBorderColor(task.rank);
+        : _getRankBorderColor(_task.rank);
     final double glowAlpha = enhanceUrgent ? 0.9 : 0.7;
     final double blurRadius = enhanceUrgent ? 20.0 : 14.0;
 
@@ -101,7 +178,7 @@ class TaskCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
-              _getRankEnemyEmoji(task.rank),
+              _getRankEnemyEmoji(_task.rank),
               style: TextStyle(fontSize: emojiSize),
             ),
             if (enhanceUrgent)
@@ -114,25 +191,28 @@ class TaskCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = color ??
-        (task.status == TaskStatus.active
+    final cardColor = widget.color ??
+        (_task.status == TaskStatus.active
             ? Colors.red[900]
             : const Color(0xFF2A2D34));
     final textColor = (cardColor != null && cardColor.computeLuminance() < 0.5)
         ? Colors.white
         : Colors.black87;
+    final urgencyBorderColor = _currentUrgencyColor;
 
     return SemanticHelper.container(
-        testId: '${SemanticTypes.listItem}_task_${task.id}',
+        testId: '${SemanticTypes.listItem}_task_${_task.id}',
         child: Card(
-          key: Key('card_task_${task.id}'),
+          key: Key('card_task_${_task.id}'),
           color: cardColor,
           elevation: 8,
           shadowColor: Colors.black.withValues(alpha: 0.5),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
             side: BorderSide(
-                color: Colors.white.withValues(alpha: 0.1), width: 1.5),
+                color: urgencyBorderColor ??
+                    Colors.white.withValues(alpha: 0.1),
+                width: urgencyBorderColor != null ? 2.0 : 1.5),
           ),
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: ClipRRect(
@@ -141,14 +221,14 @@ class TaskCard extends StatelessWidget {
               data:
                   Theme.of(context).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
-                initiallyExpanded: initiallyExpanded,
+                initiallyExpanded: widget.initiallyExpanded,
                 collapsedIconColor: textColor,
                 iconColor: textColor,
                 collapsedTextColor: textColor,
                 textColor: textColor,
                 tilePadding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                leading: task.status == TaskStatus.active
+                leading: _task.status == TaskStatus.active
                     ? _buildEnemyAvatar(textColor)
                     : Container(
                         width: 48,
@@ -156,7 +236,7 @@ class TaskCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: _getRankBorderColor(task.rank)
+                            color: _getRankBorderColor(_task.rank)
                                 .withValues(alpha: 0.4),
                             width: 1.5,
                           ),
@@ -173,66 +253,87 @@ class TaskCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                title: Row(
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Semantics(
-                        identifier: 'txt_task_title_${task.id}',
-                        child: Text(
-                          "[${task.rank.name}] ${task.title}",
-                          style: GoogleFonts.vt323(
-                              fontSize: 26,
-                              color: textColor,
-                              fontWeight: FontWeight.bold),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Semantics(
+                            identifier: 'txt_task_title_${_task.id}',
+                            child: Text(
+                              "[${_task.rank.name}] ${_task.title}",
+                              style: GoogleFonts.vt323(
+                                  fontSize: 26,
+                                  color: textColor,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ),
                         ),
-                      ),
+                        if (widget.isUrgent)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: const Text('緊急',
+                                style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold)),
+                          ),
+                      ],
                     ),
-                    if (isUrgent)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(4),
+                    // カウントダウン表示
+                    if (_countdownText.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          _countdownText,
+                          style: TextStyle(
+                            color: _currentUrgencyColor ?? Colors.white70,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
-                        child: const Text('緊急',
-                            style: TextStyle(
-                                fontSize: 11, fontWeight: FontWeight.bold)),
                       ),
                   ],
                 ),
-                subtitle: subtitle != null
+                subtitle: widget.subtitle != null
                     ? Padding(
                         padding: const EdgeInsets.only(top: 4.0),
-                        child: Text(subtitle!,
+                        child: Text(widget.subtitle!,
                             style: TextStyle(
                                 color: textColor.withValues(alpha: 0.7),
                                 fontSize: 13)),
                       )
                     : null,
                 children: [
-                  if (task.subTasks.isNotEmpty)
+                  if (_task.subTasks.isNotEmpty)
                     Container(
                       color: Colors.black.withValues(alpha: 0.1),
                       child: Column(
-                        children: task.subTasks.asMap().entries.map((entry) {
+                        children:
+                            _task.subTasks.asMap().entries.map((entry) {
                           final idx = entry.key;
                           final sub = entry.value;
                           return ListTile(
-                            key: Key('subtask_${task.id}_$idx'),
+                            key: Key('subtask_${_task.id}_$idx'),
                             dense: true,
                             title: Text(sub.title,
-                                style:
-                                    TextStyle(color: textColor, fontSize: 16)),
+                                style: TextStyle(
+                                    color: textColor, fontSize: 16)),
                             leading: SemanticHelper.toggle(
                               testId:
-                                  '${SemanticTypes.toggle}_subtask_${task.id}_$idx',
+                                  '${SemanticTypes.toggle}_subtask_${_task.id}_$idx',
                               value: sub.isCompleted,
                               child: Checkbox(
-                                key: Key('chk_subtask_${task.id}_$idx'),
+                                key: Key('chk_subtask_${_task.id}_$idx'),
                                 value: sub.isCompleted,
-                                onChanged: onSubTaskToggle != null
-                                    ? (val) => onSubTaskToggle!(idx, val)
+                                onChanged: widget.onSubTaskToggle != null
+                                    ? (val) =>
+                                        widget.onSubTaskToggle!(idx, val)
                                     : null,
                                 checkColor: Colors.black,
                                 activeColor: Colors.amberAccent,
@@ -252,7 +353,7 @@ class TaskCard extends StatelessWidget {
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
-                      children: actions,
+                      children: widget.actions,
                     ),
                   ),
                 ],

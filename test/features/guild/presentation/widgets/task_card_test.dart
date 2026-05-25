@@ -104,4 +104,78 @@ void main() {
       expect(card.task.rank, QuestRank.B);
     });
   });
+
+  group('TaskCard 期限カウントダウン', () {
+    test('期限が6時間超の場合は青色', () {
+      final task = Task(
+        id: 'cd-1',
+        title: '余裕討伐',
+        rank: QuestRank.B,
+        status: TaskStatus.active,
+        deadline: DateTime.now().add(const Duration(hours: 10)),
+      );
+      final card = TaskCard(task: task, actions: const []);
+      expect(card.urgencyColor, equals(TaskCard.urgencyColorBlue));
+    });
+
+    test('期限が1-6時間の場合は黄色', () {
+      final task = Task(
+        id: 'cd-2',
+        title: '注意討伐',
+        rank: QuestRank.B,
+        status: TaskStatus.active,
+        deadline: DateTime.now().add(const Duration(hours: 3)),
+      );
+      final card = TaskCard(task: task, actions: const []);
+      expect(card.urgencyColor, equals(TaskCard.urgencyColorYellow));
+    });
+
+    test('期限が1時間未満の場合は赤色', () {
+      final task = Task(
+        id: 'cd-3',
+        title: '緊急討伐',
+        rank: QuestRank.A,
+        status: TaskStatus.active,
+        deadline: DateTime.now().add(const Duration(minutes: 30)),
+      );
+      final card = TaskCard(task: task, actions: const []);
+      expect(card.urgencyColor, equals(TaskCard.urgencyColorRed));
+    });
+
+    test('期限切れの場合も赤色', () {
+      final task = Task(
+        id: 'cd-4',
+        title: '期限切れ討伐',
+        rank: QuestRank.A,
+        status: TaskStatus.active,
+        deadline: DateTime.now().subtract(const Duration(hours: 1)),
+      );
+      final card = TaskCard(task: task, actions: const []);
+      expect(card.urgencyColor, equals(TaskCard.urgencyColorRed));
+    });
+
+    test('期限なしの場合は緊急色が null', () {
+      final task = Task(
+        id: 'cd-5',
+        title: '期限なし討伐',
+        rank: QuestRank.B,
+        status: TaskStatus.active,
+        deadline: null,
+      );
+      final card = TaskCard(task: task, actions: const []);
+      expect(card.urgencyColor, isNull);
+    });
+
+    test('期限が24時間超の場合は緊急色が null', () {
+      final task = Task(
+        id: 'cd-6',
+        title: '遠い討伐',
+        rank: QuestRank.B,
+        status: TaskStatus.active,
+        deadline: DateTime.now().add(const Duration(hours: 30)),
+      );
+      final card = TaskCard(task: task, actions: const []);
+      expect(card.urgencyColor, isNull);
+    });
+  });
 }

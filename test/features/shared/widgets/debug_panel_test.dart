@@ -12,7 +12,7 @@ import 'package:rpg_todo/features/shared/widgets/debug_panel.dart';
 
 class _MockPlayerRepo implements IPlayerRepository {
   Player _player = Player();
-  @override Future<Player> loadPlayer() async => _player;
+  @override Future<Player?> loadPlayer() async => _player;
   @override Future<void> savePlayer(Player player) async => _player = player;
   @override Future<void> close() async {}
 }

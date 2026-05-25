@@ -14,7 +14,7 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 
 class _MockPlayerRepository implements IPlayerRepository {
   @override
-  Future<Player> loadPlayer() async => Player();
+  Future<Player?> loadPlayer() async => Player();
   @override
   Future<void> savePlayer(Player player) async {}
   @override

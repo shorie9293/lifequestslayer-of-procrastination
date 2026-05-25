@@ -15,6 +15,7 @@ class TaskCompletionResult {
   final bool showFatiguePopup;
   final bool shouldResetFatiguePopup;
   final QuizQuestion? quizQuestion;
+  final bool isOverdueBoss;
 
   const TaskCompletionResult({
     required this.leveledUp,
@@ -24,6 +25,7 @@ class TaskCompletionResult {
     required this.showFatiguePopup,
     required this.shouldResetFatiguePopup,
     this.quizQuestion,
+    this.isOverdueBoss = false,
   });
 }
 
@@ -147,18 +149,28 @@ class TaskCompletionService {
     // 知識クエスト抽選
     QuizQuestion? quizQuestion;
     final isOverdue = task.deadline != null && task.deadline!.isBefore(DateTime.now());
+    bool isOverdueBoss = false;
 
     if (isOverdue) {
-      // 期限切れペナルティ: 強制クイズ + EXP減少
+      // 期限切れペナルティ: 強制クイズ + EXP/coins 半減
       quizQuestion = QuizService.drawHardQuizQuestion();
-      bonusMessages.add("⏰ 期限切れ！クイズに答えてペナルティを軽減せよ！");
+      bonusMessages.add("⏰ 期限切れ！時の番人が現れた！クイズに答えて打ち破れ！");
+      isOverdueBoss = true;
 
-      // EXPペナルティ: 期限超過時間に応じて減少（最低50%まで）
-      final overdueHours = DateTime.now().difference(task.deadline!).inHours;
-      final penaltyRate = (1.0 - (overdueHours * 0.01)).clamp(0.5, 1.0);
-      expGain = (expGain * penaltyRate).round();
+      // 倍ペナルティ: 報酬一律半減
+      expGain = (expGain * 0.5).round();
+      coinsGained = (coinsGained * 0.5).round();
     } else if (knowledgeQuestEnabled) {
       quizQuestion = QuizService.drawQuizQuestion();
+    }
+
+    // ReverseBonus: 期限内・残り1時間以内でXP 1.5倍
+    if (!isOverdue && task.deadline != null) {
+      final remaining = task.deadline!.difference(DateTime.now());
+      if (remaining.inMinutes <= 60 && remaining.inMinutes > 0) {
+        expGain = (expGain * 1.5).round();
+        bonusMessages.add("🔥 ギリギリ討伐ボーナス！報酬1.5倍！");
+      }
     }
 
     return TaskCompletionResult(
@@ -169,6 +181,7 @@ class TaskCompletionService {
       showFatiguePopup: showFatiguePopup,
       shouldResetFatiguePopup: shouldResetFatiguePopup,
       quizQuestion: quizQuestion,
+      isOverdueBoss: isOverdueBoss,
     );
   }
 }

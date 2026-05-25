@@ -166,6 +166,116 @@ void main() {
       expect(result!.expGain, lessThan(100),
           reason: '期限切れタスクではEXPが減少するペナルティがあるべき');
     });
+
+    test('期限切れタスクではcoinsも半減する（倍ペナルティ）', () {
+      final task = makeTask(
+        id: 'overdue-coin-penalty',
+        rank: QuestRank.A, // Aランク基本coins=30
+        deadline: DateTime.now().subtract(const Duration(hours: 2)),
+      );
+      final player = Player();
+      player.jobLevels[player.currentJob] = 1;
+
+      final result = service.complete(
+        task: task,
+        player: player,
+        hasShownFatiguePopupToday: false,
+        knowledgeQuestEnabled: false,
+      );
+
+      expect(result, isNotNull);
+      // Aランク基本30文 → 期限切れで半減 → 15文（小数点切捨て）
+      expect(result!.coinsGained, equals(15),
+          reason: '期限切れタスクではcoinsも半減（倍ペナルティ）すべき');
+    });
+
+    test('期限内・残り1時間以内でReverseBonus（XP 1.5倍）が発動する', () {
+      final task = makeTask(
+        id: 'reverse-bonus',
+        rank: QuestRank.B,
+        deadline: DateTime.now().add(const Duration(minutes: 30)),
+      );
+      final player = Player();
+      player.jobLevels[player.currentJob] = 1;
+
+      final result = service.complete(
+        task: task,
+        player: player,
+        hasShownFatiguePopupToday: false,
+        knowledgeQuestEnabled: false,
+      );
+
+      expect(result, isNotNull);
+      // Bランク基本100 * 1.5 = 150
+      expect(result!.expGain, equals(150),
+          reason: '期限内・残り1時間以内はReverseBonusでXP1.5倍');
+      expect(result.bonusMessages,
+          anyElement(contains('ギリギリ')),
+          reason: 'ReverseBonusのボーナスメッセージが含まれるべき');
+    });
+
+    test('期限内・残り2時間ではReverseBonusは発動しない', () {
+      final task = makeTask(
+        id: 'no-bonus-2h',
+        rank: QuestRank.B,
+        deadline: DateTime.now().add(const Duration(hours: 2)),
+      );
+      final player = Player();
+      player.jobLevels[player.currentJob] = 1;
+
+      final result = service.complete(
+        task: task,
+        player: player,
+        hasShownFatiguePopupToday: false,
+        knowledgeQuestEnabled: false,
+      );
+
+      expect(result, isNotNull);
+      // Bランク基本100（ボーナスなし）
+      expect(result!.expGain, equals(100),
+          reason: '残り2時間ではReverseBonusは発動しない');
+      expect(result.bonusMessages,
+          isNot(anyElement(contains('ギリギリ'))),
+          reason: 'ボーナスメッセージは含まれないべき');
+    });
+
+    test('期限切れタスクではisOverdueBoss=trueが返る', () {
+      final task = makeTask(
+        id: 'overdue-boss-flag',
+        deadline: DateTime.now().subtract(const Duration(hours: 1)),
+      );
+      final player = Player();
+
+      final result = service.complete(
+        task: task,
+        player: player,
+        hasShownFatiguePopupToday: false,
+        knowledgeQuestEnabled: false,
+      );
+
+      expect(result, isNotNull);
+      expect(result!.isOverdueBoss, isTrue,
+          reason: '期限切れタスクではisOverdueBoss=trueが返るべき');
+    });
+
+    test('期限内タスクではisOverdueBoss=falseが返る', () {
+      final task = makeTask(
+        id: 'normal-boss-flag',
+        deadline: DateTime.now().add(const Duration(days: 1)),
+      );
+      final player = Player();
+
+      final result = service.complete(
+        task: task,
+        player: player,
+        hasShownFatiguePopupToday: false,
+        knowledgeQuestEnabled: false,
+      );
+
+      expect(result, isNotNull);
+      expect(result!.isOverdueBoss, isFalse,
+          reason: '期限内タスクではisOverdueBoss=falseが返るべき');
+    });
   });
 
   group('QuizService - drawHardQuizQuestion', () {

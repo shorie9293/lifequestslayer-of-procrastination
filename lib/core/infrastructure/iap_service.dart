@@ -15,7 +15,7 @@ const _kPendingBoxName = 'iapPendingBox';
 const _kPendingKey = 'pendingGems';
 
 class IAPService extends ChangeNotifier {
-  final InAppPurchase _iap = InAppPurchase.instance;
+  late final InAppPurchase _iap;
   StreamSubscription<List<PurchaseDetails>>? _subscription;
   Box? _pendingBox;
 
@@ -32,10 +32,29 @@ class IAPService extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   int get pendingGems => _pendingGems;
 
+  /// テスト用：InAppPurchase を介さず Hive box を注入する。
+  /// initialize() の代わりに使用することで、platform channel 非依存でテスト可能。
+  @visibleForTesting
+  Future<void> initializeForTest(Box box) async {
+    _pendingBox = box;
+    _pendingGems = box.get(_kPendingKey, defaultValue: 0) as int? ?? 0;
+    _loading = false;
+  }
+
   Future<void> initialize() async {
     // 未付与宝石をHiveから復元（クラッシュ後の保護）
     _pendingBox = await Hive.openBox(_kPendingBoxName);
     _pendingGems = _pendingBox?.get(_kPendingKey, defaultValue: 0) as int? ?? 0;
+
+    try {
+      _iap = InAppPurchase.instance;
+    } catch (e) {
+      debugPrint('IAPService: InAppPurchase unavailable (test/unsupported): $e');
+      _available = false;
+      _loading = false;
+      notifyListeners();
+      return;
+    }
 
     _available = await _iap.isAvailable();
     if (!_available) {
@@ -80,8 +99,14 @@ class IAPService extends ChangeNotifier {
           final gems = kGemProducts[purchase.productID] ?? 0;
           if (gems > 0) {
             _pendingGems += gems;
-            // completePurchase より先に永続化して、クラッシュ時の未付与を防ぐ
-            await _pendingBox?.put(_kPendingKey, _pendingGems);
+            // v1.3-fix: Hive書き込み失敗時もメモリ上の値は保持し、
+            // 次回の consumePendingGems 呼び出しでクラッシュ前の状態を復元可能にする
+            try {
+              await _pendingBox?.put(_kPendingKey, _pendingGems);
+            } catch (e) {
+              debugPrint('IAPService: Failed to persist pending gems: $e');
+              // メモリ上の _pendingGems は保持。次回 consumePendingGems() で付与される
+            }
             notifyListeners();
           }
           await _iap.completePurchase(purchase);

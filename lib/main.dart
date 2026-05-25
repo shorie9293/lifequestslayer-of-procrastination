@@ -3,6 +3,12 @@ import 'dart:ui';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/theme_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
+import 'package:rpg_todo/core/di/injection.dart';
 import 'screens/main_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:rpg_todo/domain/models/task.dart';
@@ -25,6 +31,9 @@ void main() async {
   Hive.registerAdapter(SubTaskAdapter()); // TypeId: 6
 
   // Boxes are opened in Repositories on demand/init.
+
+  // ━━━ DI 初期化 ━━━
+  configureDependencies();
 
   // 通知サービスの初期化（エラーが発生してもアプリ起動を妨げない）
   bool notificationInitialized = false;
@@ -93,26 +102,37 @@ class RPGTodoApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
+        // 新VM — get_itシングルトンをProviderでラップ
+        ChangeNotifierProvider<PlayerViewModel>.value(
+            value: getIt<PlayerViewModel>()),
+        ChangeNotifierProvider<TaskViewModel>.value(
+            value: getIt<TaskViewModel>()),
+        ChangeNotifierProvider<ShopViewModel>.value(
+            value: getIt<ShopViewModel>()),
+        ChangeNotifierProvider<SettingsViewModel>.value(
+            value: getIt<SettingsViewModel>()),
+        ChangeNotifierProvider<ThemeViewModel>.value(
+            value: getIt<ThemeViewModel>()),
+        // 旧VM — 後方互換のため当面維持
         ChangeNotifierProvider(create: (_) => GameViewModel()),
         ChangeNotifierProvider(create: (_) => IAPService()..initialize()),
       ],
-      child: Consumer<GameViewModel>(
-        builder: (context, viewModel, child) {
+      child: Consumer2<ThemeViewModel, SettingsViewModel>(
+        builder: (context, themeVM, settingsVM, child) {
           return MaterialApp(
             title: 'RPG Todo',
             debugShowCheckedModeBanner: false,
-            // PCのマウス操作でもスワイプが反応するように設定（開発・Web用）
             scrollBehavior: const MaterialScrollBehavior().copyWith(
               dragDevices: {
                 PointerDeviceKind.mouse,
                 PointerDeviceKind.touch,
                 PointerDeviceKind.stylus,
-                PointerDeviceKind.unknown, // 念のためTrackpadなど含める
+                PointerDeviceKind.unknown,
               },
             ),
-            theme: viewModel.currentTheme.copyWith(
+            theme: themeVM.currentTheme.copyWith(
               textTheme: GoogleFonts.dotGothic16TextTheme(
-                      viewModel.currentTheme.textTheme)
+                      themeVM.currentTheme.textTheme)
                   .apply(
                 bodyColor: Colors.white,
                 displayColor: Colors.white,
@@ -122,7 +142,7 @@ class RPGTodoApp extends StatelessWidget {
             builder: (context, child) {
               return MediaQuery(
                 data: MediaQuery.of(context).copyWith(
-                    textScaler: TextScaler.linear(viewModel.fontSizeScale)),
+                    textScaler: TextScaler.linear(settingsVM.fontSizeScale)),
                 child: child!,
               );
             },

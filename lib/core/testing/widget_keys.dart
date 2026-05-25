@@ -21,6 +21,7 @@ class AppKeys {
   static const Key guildRecurringTasksDialog = Key('dlg_recurring_tasks');
   static const Key guildSettingsMenu = Key('menu_settings');
   static const Key guildKnowledgeQuestToggle = Key('tgl_knowledge_quest');
+  static const Key guildUrgentSection = Key('sec_urgent_quests');
 
   // ━━━ タスクカード ━━━
   static const Key taskCard = Key('card_task');

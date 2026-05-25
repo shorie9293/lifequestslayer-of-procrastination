@@ -5,9 +5,11 @@ import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 
 class TaskRepository implements ITaskRepository {
   static const String boxName = 'tasksBox';
+  static const String _backupBoxName = 'tasksBox_backup';
 
   // v1.5: Box インスタンスをキャッシュして毎回の openBox を回避
   Box<Task>? _box;
+  Box? _backupBox; // v1.3: 保存前のバックアップ用Box
 
   Future<Box<Task>> _getBox() async {
     if (_box != null && _box!.isOpen) return _box!;
@@ -15,13 +17,19 @@ class TaskRepository implements ITaskRepository {
     return _box!;
   }
 
+  Future<Box> _getBackupBox() async {
+    if (_backupBox != null && _backupBox!.isOpen) return _backupBox!;
+    _backupBox = await Hive.openBox(_backupBoxName);
+    return _backupBox!;
+  }
+
   @override
   Future<List<Task>> loadTasks() async {
+    late Box<Task> box;
     try {
-      final box = await _getBox();
+      box = await _getBox();
 
       // Migration: convert legacy integer-keyed entries to ID-keyed entries.
-      // Old code used box.addAll() which assigns auto-increment integer keys.
       final needsMigration = box.keys.any((k) => k is int);
       if (needsMigration) {
         final tasks = box.values.toList();
@@ -29,44 +37,62 @@ class TaskRepository implements ITaskRepository {
         if (tasks.isNotEmpty) {
           await box.putAll({for (final t in tasks) t.id: t});
         }
-        // v1.5: マイグレーション結果を即座にディスクへ反映
         await box.flush();
       }
 
       return box.values.toList();
     } catch (e) {
-      // v1.6: 破損または旧形式の Box を自動修復
+      // v1.3: 破損時にバックアップから復元を試みる
       debugPrint(
-          'TaskRepository: Load failed (corrupted/incompatible data), deleting box: $e');
-      await _closeAndDeleteBox();
-      return [];
+          'TaskRepository: Load failed, attempting backup restore: $e');
+      try {
+        final backup = await _getBackupBox();
+        final keys = backup.get('keys');
+        if (keys is List && keys.isNotEmpty) {
+          debugPrint(
+              'TaskRepository: Restoring ${keys.length} keys from backup');
+          box = await _getBox();
+          await box.clear();
+          for (final key in keys) {
+            try {
+              await box.put(key, Task(id: key.toString(), title: '(復元: $key)'));
+            } catch (_) {}
+          }
+          await box.flush();
+        }
+        await backup.clear();
+        return box.values.toList();
+      } catch (_) {
+        debugPrint('TaskRepository: Backup restore failed, returning empty');
+        return [];
+      }
     }
   }
 
-  /// 破損 Box を削除（次回アクセス時に自動再作成される）
-  Future<void> _closeAndDeleteBox() async {
-    try {
-      if (_box != null && _box!.isOpen) {
-        await _box!.close();
-      }
-      _box = null;
-      await Hive.deleteBoxFromDisk(boxName);
-    } catch (_) {
-      // Best effort
-    }
-  }
+
 
   /// タスクをIDキーで冪等保存する。
   /// putAll() + deleteAll() の2段階方式。
   /// 空リスト時も box.clear() で正しく永続化する（全タスク削除の反映）。
+  /// v1.3: 保存前にバックアップBoxへ退避し、書き込み失敗時の復元を可能にする。
   @override
   Future<void> saveTasks(List<Task> tasks) async {
     final box = await _getBox();
+    final backup = await _getBackupBox();
+
+    // v1.3: 保存前に全タスクのキーセットをバックアップ
+    try {
+      await backup.put('keys', box.keys.toList());
+      await backup.put('count', box.length);
+    } catch (_) {
+      // バックアップ失敗は保存を止めない（復元可能な範囲で進める）
+    }
 
     if (tasks.isEmpty) {
       await box.clear();
-      // v1.5: 即座にディスクへ反映
       await box.flush();
+      // バックアップもクリア
+      try { await backup.clear(); } catch (_) {}
       return;
     }
 
@@ -82,6 +108,9 @@ class TaskRepository implements ITaskRepository {
     }
     // v1.5: 即座にディスクへ反映（OS kill 耐性の向上）
     await box.flush();
+
+    // 保存成功後、バックアップをクリア
+    try { await backup.clear(); } catch (_) {}
   }
 
   @override
@@ -89,6 +118,10 @@ class TaskRepository implements ITaskRepository {
     if (_box != null && _box!.isOpen) {
       await _box!.close();
       _box = null;
+    }
+    if (_backupBox != null && _backupBox!.isOpen) {
+      await _backupBox!.close();
+      _backupBox = null;
     }
   }
 }

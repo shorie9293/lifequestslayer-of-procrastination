@@ -16,7 +16,7 @@ import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
 
 class _MockPlayerRepository implements IPlayerRepository {
   @override
-  Future<Player> loadPlayer() async => Player();
+  Future<Player?> loadPlayer() async => Player();
   @override
   Future<void> savePlayer(Player player) async {}
   @override
@@ -302,6 +302,65 @@ void main() {
       expect(find.byKey(AppKeys.kozuchiSection), findsOneWidget);
       expect(find.text('完了した試練'), findsOneWidget);
       expect(find.text('✅ 達成済み'), findsOneWidget);
+    });
+  });
+
+  group('GuildScreen 緊急依頼セクション', () {
+    testWidgets('緊急タスクがない時は緊急セクションが表示されない',
+        (tester) async {
+      late GameViewModel vm;
+
+      await tester.runAsync(() async {
+        vm = await createLoadedViewModel();
+      });
+
+      await pumpGuildScreen(tester, vm);
+
+      // 緊急タスクがないのでセクションは非表示
+      expect(find.byKey(AppKeys.guildUrgentSection), findsNothing);
+    });
+
+    testWidgets('24時間以内の期限があるタスクで緊急セクションが表示される',
+        (tester) async {
+      late GameViewModel vm;
+
+      await tester.runAsync(() async {
+        vm = await createLoadedViewModel();
+        // 残り12時間の緊急タスクを追加
+        final deadline =
+            DateTime.now().add(const Duration(hours: 12));
+        vm.addTask('緊急討伐クエスト',
+            rank: QuestRank.A, deadline: deadline);
+      });
+
+      await pumpGuildScreen(tester, vm);
+
+      // 緊急セクションが表示されている
+      expect(find.byKey(AppKeys.guildUrgentSection), findsOneWidget);
+      // 緊急タスクのタイトルが表示されている
+      expect(find.textContaining('緊急討伐クエスト'), findsOneWidget);
+      // 残り時間表示がある（時計アイコン付き）
+      expect(find.byIcon(Icons.access_time), findsOneWidget);
+    });
+
+    testWidgets('緊急タスクがなく通常タスクのみの場合でも通常表示は崩れない',
+        (tester) async {
+      late GameViewModel vm;
+
+      await tester.runAsync(() async {
+        vm = await createLoadedViewModel();
+        // 期限が48時間先 = 緊急ではない
+        final deadline =
+            DateTime.now().add(const Duration(hours: 48));
+        vm.addTask('通常依頼', rank: QuestRank.B, deadline: deadline);
+      });
+
+      await pumpGuildScreen(tester, vm);
+
+      // 緊急セクションは表示されない
+      expect(find.byKey(AppKeys.guildUrgentSection), findsNothing);
+      // 通常依頼はギルドリストに表示される
+      expect(find.textContaining('通常依頼'), findsOneWidget);
     });
   });
 }
