@@ -34,6 +34,11 @@ void main() {
       expect(enabled, true);
     });
 
+    test('noonNotificationEnabled defaults to true', () async {
+      final enabled = await repository.getNoonNotificationEnabled();
+      expect(enabled, true);
+    });
+
     test('morningNotificationEnabled can be set to false and re-read', () async {
       await repository.setMorningNotificationEnabled(false);
       final enabled = await repository.getMorningNotificationEnabled();
@@ -43,6 +48,12 @@ void main() {
     test('eveningNotificationEnabled can be set to false and re-read', () async {
       await repository.setEveningNotificationEnabled(false);
       final enabled = await repository.getEveningNotificationEnabled();
+      expect(enabled, false);
+    });
+
+    test('noonNotificationEnabled can be set to false and re-read', () async {
+      await repository.setNoonNotificationEnabled(false);
+      final enabled = await repository.getNoonNotificationEnabled();
       expect(enabled, false);
     });
 

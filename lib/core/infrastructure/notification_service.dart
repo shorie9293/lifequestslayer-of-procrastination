@@ -11,9 +11,12 @@ class NotificationService {
   static const _keyMorningMinute = 'morning_minute';
   static const _keyEveningHour = 'evening_hour';
   static const _keyEveningMinute = 'evening_minute';
+  static const _keyNoonHour = 'noon_hour';
+  static const _keyNoonMinute = 'noon_minute';
 
   static const int _morningId = 1;
   static const int _eveningId = 2;
+  static const int _noonId = 3;
   static const int _testNotificationId = 999;
 
   final FlutterLocalNotificationsPlugin _plugin =
@@ -109,6 +112,17 @@ class NotificationService {
 
     await android.createNotificationChannel(
       const AndroidNotificationChannel(
+        'rpg_noon',
+        '昼の伝令',
+        description: 'ギルドからの昼の通知',
+        importance: Importance.high,
+        playSound: true,
+        enableVibration: true,
+      ),
+    );
+
+    await android.createNotificationChannel(
+      const AndroidNotificationChannel(
         'rpg_test',
         'テスト通知',
         description: '通知機能のテスト用',
@@ -171,10 +185,22 @@ class NotificationService {
     return box.get(_keyEveningMinute, defaultValue: 0) as int;
   }
 
+  Future<int> getNoonHour() async {
+    final box = await _openBox();
+    return box.get(_keyNoonHour, defaultValue: 12) as int;
+  }
+
+  Future<int> getNoonMinute() async {
+    final box = await _openBox();
+    return box.get(_keyNoonMinute, defaultValue: 0) as int;
+  }
+
   Future<void> saveSettings({
     required bool enabled,
     required int morningHour,
     required int morningMinute,
+    required int noonHour,
+    required int noonMinute,
     required int eveningHour,
     required int eveningMinute,
   }) async {
@@ -183,6 +209,8 @@ class NotificationService {
       _keyEnabled: enabled,
       _keyMorningHour: morningHour,
       _keyMorningMinute: morningMinute,
+      _keyNoonHour: noonHour,
+      _keyNoonMinute: noonMinute,
       _keyEveningHour: eveningHour,
       _keyEveningMinute: eveningMinute,
     });
@@ -224,6 +252,7 @@ class NotificationService {
 
   Future<void> scheduleAll({
     bool morningEnabled = true,
+    bool noonEnabled = true,
     bool eveningEnabled = true,
   }) async {
     final enabled = await isEnabled();
@@ -231,7 +260,7 @@ class NotificationService {
       await cancelAll();
       return;
     }
-    // スケジュールモードは1回だけ決定し、朝・夜で使い回す
+    // スケジュールモードは1回だけ決定し、朝・昼・夜で使い回す
     final scheduleMode = await _getScheduleMode();
 
     if (morningEnabled) {
@@ -242,6 +271,16 @@ class NotificationService {
       );
     } else {
       await _plugin.cancel(_morningId);
+    }
+
+    if (noonEnabled) {
+      await _scheduleNoon(
+        hour: await getNoonHour(),
+        minute: await getNoonMinute(),
+        scheduleMode: scheduleMode,
+      );
+    } else {
+      await _plugin.cancel(_noonId);
     }
 
     if (eveningEnabled) {
@@ -255,11 +294,12 @@ class NotificationService {
     }
 
     debugPrint('[NotificationService] 通知をスケジュールしました'
-        '（朝: ${morningEnabled ? "ON" : "OFF"}, 夜: ${eveningEnabled ? "ON" : "OFF"}）');
+        '（朝: ${morningEnabled ? "ON" : "OFF"}, 昼: ${noonEnabled ? "ON" : "OFF"}, 夜: ${eveningEnabled ? "ON" : "OFF"}）');
   }
 
   Future<void> cancelAll() async {
     await _plugin.cancel(_morningId);
+    await _plugin.cancel(_noonId);
     await _plugin.cancel(_eveningId);
     await _plugin.cancel(_testNotificationId);
     debugPrint('[NotificationService] 全ての通知をキャンセルしました');
@@ -317,6 +357,38 @@ class NotificationService {
           'rpg_evening',
           '夜の催促',
           channelDescription: 'ギルドからの夜の通知',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: scheduleMode,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  Future<void> _scheduleNoon({
+    required int hour,
+    required int minute,
+    required AndroidScheduleMode scheduleMode,
+  }) async {
+    await _plugin.cancel(_noonId);
+    final scheduledDate = _nextInstanceOfTime(hour, minute);
+    debugPrint(
+      '[NotificationService] 昼の通知をスケジュール: $hour:$minute → $scheduledDate (mode: $scheduleMode)',
+    );
+    await _plugin.zonedSchedule(
+      _noonId,
+      '☀️ 昼の刻',
+      '昼の刻。戦況を確認し、午後のクエストに備えよ。',
+      scheduledDate,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'rpg_noon',
+          '昼の伝令',
+          channelDescription: 'ギルドからの昼の通知',
           importance: Importance.high,
           priority: Priority.high,
         ),

@@ -21,10 +21,13 @@ class _NotificationSettingsDialogState
   bool _enabled = true;
   bool _morningEnabled = true;
   bool _eveningEnabled = true;
+  bool _noonEnabled = true;
   int _morningHour = 9;
   int _morningMinute = 0;
   int _eveningHour = 21;
   int _eveningMinute = 0;
+  int _noonHour = 12;
+  int _noonMinute = 0;
 
   bool _loading = true;
 
@@ -40,26 +43,41 @@ class _NotificationSettingsDialogState
     final mm = await _service.getMorningMinute();
     final eh = await _service.getEveningHour();
     final em = await _service.getEveningMinute();
+    final nh = await _service.getNoonHour();
+    final nm = await _service.getNoonMinute();
     final morningEnabled =
         await _settingsRepository.getMorningNotificationEnabled();
     final eveningEnabled =
         await _settingsRepository.getEveningNotificationEnabled();
+    final noonEnabled =
+        await _settingsRepository.getNoonNotificationEnabled();
     setState(() {
       _enabled = enabled;
       _morningEnabled = morningEnabled;
       _eveningEnabled = eveningEnabled;
+      _noonEnabled = noonEnabled;
       _morningHour = mh;
       _morningMinute = mm;
       _eveningHour = eh;
       _eveningMinute = em;
+      _noonHour = nh;
+      _noonMinute = nm;
       _loading = false;
     });
   }
 
-  Future<void> _pickTime({required bool isMorning}) async {
+  Future<void> _pickTime({required bool isMorning, bool isNoon = false}) async {
     final initial = TimeOfDay(
-      hour: isMorning ? _morningHour : _eveningHour,
-      minute: isMorning ? _morningMinute : _eveningMinute,
+      hour: isMorning
+          ? _morningHour
+          : isNoon
+              ? _noonHour
+              : _eveningHour,
+      minute: isMorning
+          ? _morningMinute
+          : isNoon
+              ? _noonMinute
+              : _eveningMinute,
     );
     final picked = await showTimePicker(context: context, initialTime: initial);
     if (picked == null) return;
@@ -67,6 +85,9 @@ class _NotificationSettingsDialogState
       if (isMorning) {
         _morningHour = picked.hour;
         _morningMinute = picked.minute;
+      } else if (isNoon) {
+        _noonHour = picked.hour;
+        _noonMinute = picked.minute;
       } else {
         _eveningHour = picked.hour;
         _eveningMinute = picked.minute;
@@ -174,16 +195,21 @@ class _NotificationSettingsDialogState
         _enabled && _morningEnabled);
     await _settingsRepository.setEveningNotificationEnabled(
         _enabled && _eveningEnabled);
+    await _settingsRepository.setNoonNotificationEnabled(
+        _enabled && _noonEnabled);
 
     await _service.saveSettings(
       enabled: _enabled,
       morningHour: _morningHour,
       morningMinute: _morningMinute,
+      noonHour: _noonHour,
+      noonMinute: _noonMinute,
       eveningHour: _eveningHour,
       eveningMinute: _eveningMinute,
     );
     await _service.scheduleAll(
       morningEnabled: _enabled && _morningEnabled,
+      noonEnabled: _enabled && _noonEnabled,
       eveningEnabled: _enabled && _eveningEnabled,
     );
     if (mounted) {
@@ -255,6 +281,38 @@ class _NotificationSettingsDialogState
                     onPressed: () => _pickTime(isMorning: true),
                     child: Text(
                       _fmt(_morningHour, _morningMinute),
+                      style: const TextStyle(
+                          fontSize: 18, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                contentPadding: EdgeInsets.zero,
+              ),
+            SwitchListTile(
+              title: const Text('☀️ 昼の伝令（昼の刻）'),
+              subtitle: Text(
+                _noonEnabled
+                    ? '「昼の刻。戦況を確認せよ。」'
+                    : '昼の通知は無効',
+                style: const TextStyle(fontSize: 12),
+              ),
+              value: _noonEnabled,
+              onChanged: (v) => setState(() => _noonEnabled = v),
+              contentPadding: EdgeInsets.zero,
+            ),
+            if (_noonEnabled)
+              ListTile(
+                leading: const Text('☀️', style: TextStyle(fontSize: 22)),
+                title: const Text('昼の伝令'),
+                subtitle: const Text('「昼の刻。戦況を確認せよ。」'),
+                trailing: SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'pick_noon_time'),
+                  label: '昼の通知時刻を変更',
+                  child: TextButton(
+                    onPressed: () => _pickTime(isMorning: false, isNoon: true),
+                    child: Text(
+                      _fmt(_noonHour, _noonMinute),
                       style: const TextStyle(
                           fontSize: 18, fontWeight: FontWeight.bold),
                     ),

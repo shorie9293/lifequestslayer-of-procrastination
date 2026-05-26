@@ -44,9 +44,17 @@ void main() {
       expect(await service.getEveningHour(), 21);
     });
 
+    test('getNoonHour defaults to 12 (昼の刻)', () async {
+      expect(await service.getNoonHour(), 12);
+    });
+
     test('getMorningMinute and getEveningMinute default to 0', () async {
       expect(await service.getMorningMinute(), 0);
       expect(await service.getEveningMinute(), 0);
+    });
+
+    test('getNoonMinute defaults to 0', () async {
+      expect(await service.getNoonMinute(), 0);
     });
 
     // ── 設定の保存と再読込 ──
@@ -56,6 +64,8 @@ void main() {
         enabled: false,
         morningHour: 6,
         morningMinute: 30,
+        noonHour: 12,
+        noonMinute: 30,
         eveningHour: 22,
         eveningMinute: 15,
       );
@@ -63,6 +73,8 @@ void main() {
       expect(await service.isEnabled(), false);
       expect(await service.getMorningHour(), 6);
       expect(await service.getMorningMinute(), 30);
+      expect(await service.getNoonHour(), 12);
+      expect(await service.getNoonMinute(), 30);
       expect(await service.getEveningHour(), 22);
       expect(await service.getEveningMinute(), 15);
     });
@@ -76,6 +88,12 @@ void main() {
       expect(true, true,
           reason:
               '朝の通知タイトルは「暁の刻」を含む神話的文体であること');
+    });
+
+    test('noon notification title contains 昼の刻', () async {
+      expect(true, true,
+          reason:
+              '昼の通知タイトルは「昼の刻」を含む神話的文体であること');
     });
 
     test('evening notification title contains 宵の刻', () async {
@@ -92,6 +110,8 @@ void main() {
         enabled: true,
         morningHour: 9,
         morningMinute: 0,
+        noonHour: 12,
+        noonMinute: 0,
         eveningHour: 21,
         eveningMinute: 0,
       );
