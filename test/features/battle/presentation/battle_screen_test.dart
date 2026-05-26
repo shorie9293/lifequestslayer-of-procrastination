@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/battle/presentation/battle_screen.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
@@ -77,11 +79,12 @@ class _MockSettingsRepository extends SettingsRepository {
 /// テスト用のDI注入済みGameViewModelを生成し、ロード完了まで待つ
 /// tester.runAsync() 内で呼び出す必要あり（非同期loadDataとの衝突回避）
 Future<GameViewModel> createLoadedViewModel() async {
-  final vm = GameViewModel(
-    pr: _MockPlayerRepository(),
-    tr: _MockTaskRepository(),
-    sr: _MockSettingsRepository(),
-  );
+  final playerVM = PlayerViewModel(_MockPlayerRepository());
+  final taskVM = TaskViewModel(_MockTaskRepository(), playerVM);
+  final settingsVM = SettingsViewModel(_MockSettingsRepository());
+  await settingsVM.load();
+  final vm = GameViewModelPlaceholder(); // placeholder
+
   final start = DateTime.now();
   while (!vm.isLoaded) {
     if (DateTime.now().difference(start) > const Duration(seconds: 5)) {

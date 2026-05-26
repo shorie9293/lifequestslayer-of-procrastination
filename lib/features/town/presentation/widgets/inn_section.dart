@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 宿屋（疲労軽減バフ）セクション
 class InnSection extends StatelessWidget {
   final dynamic player;
-  final dynamic viewModel;
+  final ShopViewModel viewModel;
 
   const InnSection({
     super.key,

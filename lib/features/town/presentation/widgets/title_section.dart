@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:rpg_todo/domain/models/title_definition.dart';
 import 'package:rpg_todo/domain/models/player.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 称号セクション
 class TitleSection extends StatelessWidget {
   final Player player;
-  final GameViewModel viewModel;
+  final PlayerViewModel viewModel;
 
   const TitleSection({
     super.key,
@@ -83,6 +84,7 @@ class TitleSection extends StatelessWidget {
                 isEquipped: player.equippedTitle == entry.def.id,
                 onEquip: () {
                   viewModel.equipTitle(entry.def.id);
+                  context.read<PlayerViewModel>().save();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text("【${entry.def.id}】を装備した！")),
                   );
@@ -230,7 +232,7 @@ class TitleSection extends StatelessWidget {
                       ),
                     ),
                     onTap: () {
-                      viewModel.equipTitle(t);
+                      viewModel.equipTitle(t); context.read<PlayerViewModel>().save();
                       Navigator.pop(ctx);
                     },
                   ),

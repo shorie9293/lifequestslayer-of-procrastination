@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'create_task_dialog.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
@@ -12,8 +12,8 @@ class RecurringTasksDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<GameViewModel>(context);
-    final tasks = viewModel.recurringTasks;
+    final taskVM = context.watch<TaskViewModel>();
+    final tasks = taskVM.recurringTasks;
 
     return AlertDialog(
       key: AppKeys.guildRecurringTasksDialog,
@@ -85,7 +85,7 @@ class RecurringTasksDialog extends StatelessWidget {
                               icon: const Icon(Icons.delete,
                                   color: Colors.redAccent, size: 20),
                               onPressed: () {
-                                viewModel.deleteTask(task.id);
+                                taskVM.deleteTask(task.id); context.read<TaskViewModel>().save();
                               },
                             ),
                           ),

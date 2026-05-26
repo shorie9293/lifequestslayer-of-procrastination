@@ -5,7 +5,11 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
+import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/shared/widgets/debug_panel.dart';
 
 // ━━━ モック（既存 test/game_view_model_test.dart と同じ方式）━━━
@@ -51,20 +55,27 @@ class _MockSettingsRepo extends SettingsRepository {
 
 void main() {
   group('DebugPanel Widget', () {
-    late GameViewModel vm;
+    late SettingsViewModel vm;
 
     setUp(() async {
-      vm = GameViewModel(
-        pr: _MockPlayerRepo(),
-        tr: _MockTaskRepo(),
-        sr: _MockSettingsRepo(),
-      );
+      vm = SettingsViewModel(_MockSettingsRepo());
+      await vm.load();
       vm.tryEnableDebugMode('11111111');
     });
 
-    Widget buildPanel() => MaterialApp(
-      home: Scaffold(body: DebugPanel(vm: vm)),
-    );
+    Widget buildPanel() {
+      final playerVM = PlayerViewModel(_MockPlayerRepo());
+      final taskVM = TaskViewModel(_MockTaskRepo(), playerVM);
+      return MaterialApp(
+        home: MultiProvider(
+          providers: [
+            ChangeNotifierProvider.value(value: playerVM),
+            ChangeNotifierProvider.value(value: taskVM),
+          ],
+          child: Scaffold(body: DebugPanel(settingsVM: vm)),
+        ),
+      );
+    }
 
     testWidgets('デバッグパネルが表示される', (tester) async {
       await tester.pumpWidget(buildPanel());

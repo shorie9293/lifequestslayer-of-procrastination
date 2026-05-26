@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 Future<void> showTutorialChoiceDialog(
     BuildContext context, VoidCallback onDismiss) {
-  final viewModel = Provider.of<GameViewModel>(context, listen: false);
+  final settingsVM = Provider.of<SettingsViewModel>(context, listen: false);
   return showDialog(
     context: context,
     barrierDismissible: false,
@@ -28,7 +28,7 @@ Future<void> showTutorialChoiceDialog(
             key: AppKeys.tutorialSkip,
             onPressed: () async {
               final navigator = Navigator.of(ctx);
-              await viewModel.skipTutorial();
+              await settingsVM.skipTutorial();
               navigator.pop();
               onDismiss();
             },
@@ -44,7 +44,7 @@ Future<void> showTutorialChoiceDialog(
             key: AppKeys.tutorialUnderstood,
             onPressed: () async {
               final navigator = Navigator.of(ctx);
-              await viewModel.markTutorialChoiceMade();
+              await settingsVM.markTutorialChoiceMade();
               navigator.pop();
               onDismiss();
             },

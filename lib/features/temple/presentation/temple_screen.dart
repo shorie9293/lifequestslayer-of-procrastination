@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
@@ -10,8 +10,8 @@ class TempleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<GameViewModel>(context);
-    final player = viewModel.player;
+    final playerVM = context.watch<PlayerViewModel>();
+    final player = playerVM.player;
     final adventurerLv = player.jobLevels[Job.adventurer] ?? 1;
     final currentJobLv = player.level;
     // 浪人Lv10で他職への転職が解禁される
@@ -57,7 +57,7 @@ class TempleScreen extends StatelessWidget {
             const SizedBox(height: 20),
             _buildJobCard(
               context,
-              viewModel,
+              playerVM,
               Job.adventurer,
               "浪人",
               Icons.hiking,
@@ -69,7 +69,7 @@ class TempleScreen extends StatelessWidget {
             ),
             _buildJobCard(
               context,
-              viewModel,
+              playerVM,
               Job.warrior,
               "侍",
               Icons.shield,
@@ -81,7 +81,7 @@ class TempleScreen extends StatelessWidget {
             ),
             _buildJobCard(
               context,
-              viewModel,
+              playerVM,
               Job.cleric,
               "法師",
               Icons.health_and_safety,
@@ -93,7 +93,7 @@ class TempleScreen extends StatelessWidget {
             ),
             _buildJobCard(
               context,
-              viewModel,
+              playerVM,
               Job.wizard,
               "陰陽師",
               Icons.auto_fix_high,
@@ -111,7 +111,7 @@ class TempleScreen extends StatelessWidget {
 
   Widget _buildJobCard(
     BuildContext context,
-    GameViewModel viewModel,
+    PlayerViewModel viewModel,
     Job job,
     String title,
     IconData icon,
@@ -143,6 +143,7 @@ class TempleScreen extends StatelessWidget {
             ? () {
                 if (!isSelected) {
                   viewModel.changeJob(job);
+                  context.read<PlayerViewModel>().save();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text("$title に転職しました！")),
                   );
@@ -242,13 +243,13 @@ class TempleScreen extends StatelessWidget {
                           SemanticTypes.toggle, 'skill_${job.name}'),
                       value: isSkillActive,
                       onChanged: (val) {
-                        viewModel.toggleSkill(job);
+                        viewModel.toggleSkill(job); context.read<PlayerViewModel>().save();
                       },
                       child: Switch(
                       key: AppKeys.templeSkillToggle,
                       value: isSkillActive,
                       onChanged: (val) {
-                        viewModel.toggleSkill(job);
+                        viewModel.toggleSkill(job); context.read<PlayerViewModel>().save();
                       },
                       activeColor: color,
                     ),

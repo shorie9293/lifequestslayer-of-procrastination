@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/features/town/presentation/widgets/shop_item.dart';
 
 /// 拠点拡張（家づくり）ショップセクション
 class HomeShopSection extends StatelessWidget {
   final dynamic player;
-  final dynamic viewModel;
+  final ShopViewModel viewModel;
 
   const HomeShopSection({
     super.key,

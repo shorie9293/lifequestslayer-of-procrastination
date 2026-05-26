@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/domain/services/title_service.dart';
 import 'package:rpg_todo/features/shared/widgets/player_status_header.dart';
 import 'package:rpg_todo/features/guild/presentation/widgets/task_card.dart';
 import 'widgets/battle_report_dialog.dart';
@@ -18,7 +21,9 @@ class BattleScreen extends StatelessWidget {
   Color _getRankColor(QuestRank rank) => RankColors.forRank(rank);
 
   void _completeTask(BuildContext context, String taskId) {
-    final viewModel = Provider.of<GameViewModel>(context, listen: false);
+    final taskVM = context.read<TaskViewModel>();
+    final playerVM = context.read<PlayerViewModel>();
+    final settingsVM = context.read<SettingsViewModel>();
 
     // 重要: この関数は非同期ダイアログ/SnackBar を多数スケジュールする。
     // タスク討伐後に ListView から当該アイテムが dispose されると `context` が unmounted になるため、
@@ -26,18 +31,18 @@ class BattleScreen extends StatelessWidget {
     final navigator = Navigator.of(context, rootNavigator: true);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-    final wasActive = viewModel.activeTasks.any((t) => t.id == taskId);
+    final wasActive = taskVM.activeTasks.any((t) => t.id == taskId);
     if (!wasActive) return;
 
     // レベルアップ前のレベルを記録（completeTask 後に比較するため）
-    final previousLevel = viewModel.player.level;
+    final previousLevel = playerVM.player.level;
 
-    final result = viewModel.completeTask(taskId);
+    final result = taskVM.completeTask(taskId);
 
     if (result == null) {
-      final stillActive = viewModel.activeTasks.any((t) => t.id == taskId);
+      final stillActive = taskVM.activeTasks.any((t) => t.id == taskId);
       if (stillActive) {
-        final task = viewModel.activeTasks.firstWhere((t) => t.id == taskId);
+        final task = taskVM.activeTasks.firstWhere((t) => t.id == taskId);
         if (task.subTasks.any((s) => !s.isCompleted)) {
           scaffoldMessenger.showSnackBar(
             const SnackBar(content: Text("サブ依頼が残っています！")),
@@ -46,6 +51,16 @@ class BattleScreen extends StatelessWidget {
       }
       return;
     }
+
+    // completeTask後のサイドエフェクト（GameViewModelから移行）
+    settingsVM.completeTutorialStep(2);
+    playerVM.checkAndResetMissions(DateTime.now());
+    if (settingsVM.showJobTutorial && !settingsVM.jobTutorialCompleted) {
+      settingsVM.markJobTutorialSeen();
+      playerVM.addExp(50);
+    }
+    playerVM.save();
+    taskVM.save();
 
     final leveledUp = result['leveledUp'] as bool;
     final coinsGained = result['coinsGained'] as int;
@@ -84,10 +99,10 @@ class BattleScreen extends StatelessWidget {
 
     void showBattleReport() {
       if (!dialogContext.mounted) return;
-      final player = viewModel.player;
+      final player = playerVM.player;
       // 疲労警告用の判定
-      final warnThresh = viewModel.fatigueWarnThreshold;
-      final severeThresh = viewModel.fatigueSevereThreshold;
+      final warnThresh = playerVM.fatigueWarnThreshold;
+      final severeThresh = playerVM.fatigueSevereThreshold;
       final dailyDone = player.dailyTasksCompleted;
       String? fatigueWarning;
       if (dailyDone >= severeThresh) {
@@ -108,18 +123,20 @@ class BattleScreen extends StatelessWidget {
         quizQuestion: quizQuestion,
         onQuizCorrect: quizQuestion != null
             ? (q) {
-                viewModel.awardKnowledgeBonus(
-                    q.expBonusPercent, baseExp);
+                taskVM.awardKnowledgeBonus(
+                    q.expBonusPercent, baseExp); taskVM.save();
                 // 刻の番人討伐時は称号チェック
                 if (isOverdueBoss) {
-                  viewModel.defeatTimeWarden();
+                  playerVM.defeatTimeWarden();
+                  playerVM.save();
                 }
               }
             : null,
         onQuizWrong: (isOverdueBoss && wrongAnswerPenaltyExp > 0)
             ? () {
-                viewModel.applyWrongAnswerPenalty(
+                playerVM.applyWrongAnswerPenalty(
                     wrongAnswerPenaltyExp, wrongAnswerPenaltyCoins);
+                playerVM.save();
               }
             : null,
         isOverdueBoss: isOverdueBoss,
@@ -159,8 +176,8 @@ class BattleScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<GameViewModel>(context);
-    final tasks = viewModel.activeTasks;
+    final taskVM = context.watch<TaskViewModel>();
+    final tasks = taskVM.activeTasks;
 
     return Scaffold(
       key: AppKeys.battleScreen,
@@ -195,7 +212,7 @@ class BattleScreen extends StatelessWidget {
                   : Column(
                       children: [
                         // 今日の見積もり時間
-                        if (viewModel.dailyEstimatedMinutes > 0)
+                        if (taskVM.dailyEstimatedMinutes > 0)
                           Container(
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(
@@ -207,7 +224,7 @@ class BattleScreen extends StatelessWidget {
                                     style: TextStyle(fontSize: 16)),
                                 const SizedBox(width: 8),
                                 Text(
-                                  "今日の戦い（見積もり）: ${viewModel.dailyEstimatedMinutes}分",
+                                  "今日の戦い（見積もり）: ${taskVM.dailyEstimatedMinutes}分",
                                   style: const TextStyle(
                                     fontSize: 14,
                                     color: Colors.amberAccent,
@@ -227,8 +244,10 @@ class BattleScreen extends StatelessWidget {
                         return TaskCard(
                           task: task,
                           color: _getRankColor(task.rank),
-                          onSubTaskToggle: (idx, _) =>
-                              viewModel.toggleSubTask(task.id, idx),
+                          onSubTaskToggle: (idx, _) {
+                            taskVM.toggleSubTask(task.id, idx);
+                            taskVM.save();
+                          },
                           actions: [
                             SemanticHelper.interactive(
                               testId: SemanticHelper.createTestId(
@@ -238,7 +257,7 @@ class BattleScreen extends StatelessWidget {
                                 key: AppKeys.battleCancel,
                                 icon: const Icon(Icons.undo, color: Colors.grey),
                                 onPressed: () {
-                                  viewModel.cancelTask(task.id);
+                                  taskVM.cancelTask(task.id); taskVM.save();
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
                                         content: Text("依頼を寄合所に戻しました")),

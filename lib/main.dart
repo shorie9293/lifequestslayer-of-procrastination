@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/theme_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
@@ -34,6 +33,7 @@ void main() async {
 
   // ━━━ DI 初期化 ━━━
   configureDependencies();
+  await initializeViewModels();
 
   // IAPサービスの初期化（DI経由）
   try {
@@ -130,8 +130,6 @@ class RPGTodoApp extends StatelessWidget {
             value: getIt<SettingsViewModel>()),
         ChangeNotifierProvider<ThemeViewModel>.value(
             value: getIt<ThemeViewModel>()),
-        // 旧VM — 後方互換のため当面維持
-        ChangeNotifierProvider(create: (_) => GameViewModel()),
         // IAPサービス — DI管理
         ChangeNotifierProvider<IAPService>.value(
             value: getIt<IAPService>()),

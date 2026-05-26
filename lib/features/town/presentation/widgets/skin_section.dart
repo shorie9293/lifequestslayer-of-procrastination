@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/presentation/widgets/shop_item.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 /// キャラクリエイト（装飾）セクション
 class SkinSection extends StatelessWidget {
   final dynamic player;
-  final dynamic viewModel;
+  final ShopViewModel viewModel;
+  final PlayerViewModel playerVM;
 
   const SkinSection({
     super.key,
     required this.player,
     required this.viewModel,
+    required this.playerVM,
   });
 
   static const List<ShopItem> _items = [
@@ -85,7 +89,7 @@ class SkinSection extends StatelessWidget {
                 child: ElevatedButton(
                   child: const Text("外す"),
                   onPressed: () {
-                    viewModel.equipSkin("");
+                    playerVM.equipSkin(""); playerVM.save();
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text("スキンを外した")),
                     );
@@ -106,7 +110,7 @@ class SkinSection extends StatelessWidget {
       child: ElevatedButton(
         child: const Text("装備する"),
         onPressed: () {
-          viewModel.equipSkin(item.id);
+          playerVM.equipSkin(item.id); playerVM.save();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("${item.name}を装備した！")),
           );

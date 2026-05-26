@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 知識クエスト設定ダイアログ
@@ -15,8 +15,8 @@ class KnowledgeQuestDialog extends StatefulWidget {
 class _KnowledgeQuestDialogState extends State<KnowledgeQuestDialog> {
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<GameViewModel>(context, listen: false);
-    final enabled = viewModel.isKnowledgeQuestEnabled;
+    final settingsVM = Provider.of<SettingsViewModel>(context, listen: false);
+    final enabled = settingsVM.isKnowledgeQuestEnabled;
 
     return AlertDialog(
       title: const Row(
@@ -54,7 +54,7 @@ class _KnowledgeQuestDialogState extends State<KnowledgeQuestDialog> {
               value: enabled,
               activeColor: Colors.amber[700],
               onChanged: (v) {
-                viewModel.setKnowledgeQuestEnabled(v);
+                settingsVM.setKnowledgeQuestEnabled(v);
                 setState(() {});
               },
             ),

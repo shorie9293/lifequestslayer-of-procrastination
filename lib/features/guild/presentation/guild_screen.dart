@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/core/testing/tutorial_keys.dart';
@@ -38,8 +40,13 @@ class GuildScreen extends StatelessWidget {
   }
 
   void _acceptTask(BuildContext context, String taskId) {
-    final viewModel = Provider.of<GameViewModel>(context, listen: false);
-    final error = viewModel.acceptTask(taskId);
+    final taskVM = context.read<TaskViewModel>();
+    final settingsVM = context.read<SettingsViewModel>();
+    final error = taskVM.acceptTask(taskId);
+    if (error == null) {
+      settingsVM.completeTutorialStep(1);
+      taskVM.save();
+    }
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -55,7 +62,7 @@ class GuildScreen extends StatelessWidget {
   }
 
   void _deleteTask(BuildContext context, String taskId) {
-    Provider.of<GameViewModel>(context, listen: false).deleteTask(taskId);
+    context.read<TaskViewModel>().deleteTask(taskId); context.read<TaskViewModel>().save();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text("依頼を破棄しました。")),
     );
@@ -187,8 +194,9 @@ class GuildScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<GameViewModel>(context);
-    final tasks = viewModel.guildTasks;
+    final taskVM = context.watch<TaskViewModel>();
+    final playerVM = context.watch<PlayerViewModel>();
+    final tasks = taskVM.guildTasks;
 
     final now = DateTime.now();
     final urgentTasks = tasks.where((t) =>
@@ -208,7 +216,7 @@ class GuildScreen extends StatelessWidget {
               builder: (context) => const BulkCreateTaskDialog(),
             ),
           ),
-          if (viewModel.player.canUseSkill(Job.cleric))
+          if (playerVM.player.canUseSkill(Job.cleric))
             IconButton(
               icon: const Icon(Icons.loop),
               tooltip: '繰り返し任務一覧',
@@ -300,7 +308,7 @@ class GuildScreen extends StatelessWidget {
           children: [
             const PlayerStatusHeader(),
             // ギルド未着手の見積もり合計
-            if (viewModel.guildEstimatedMinutes > 0)
+            if (taskVM.guildEstimatedMinutes > 0)
               Container(
                 width: double.infinity,
                 padding:
@@ -311,7 +319,7 @@ class GuildScreen extends StatelessWidget {
                     const Text("📋", style: TextStyle(fontSize: 16)),
                     const SizedBox(width: 8),
                     Text(
-                      "未着手の依頼（見積もり）: ${viewModel.guildEstimatedMinutes}分",
+                      "未着手の依頼（見積もり）: ${taskVM.guildEstimatedMinutes}分",
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.amberAccent,
@@ -325,7 +333,7 @@ class GuildScreen extends StatelessWidget {
             Expanded(
               child: Builder(
                 builder: (context) {
-                  final hasKozuchiQuest = viewModel.kozuchiQuest != null;
+                  final hasKozuchiQuest = taskVM.kozuchiQuest != null;
                   final hasUrgent = urgentTasks.isNotEmpty;
                   final remainingTasks = hasUrgent
                       ? tasks.where((t) => !urgentTasks.contains(t)).toList()
@@ -345,7 +353,7 @@ class GuildScreen extends StatelessWidget {
                       if (hasKozuchiQuest && index == 0) {
                         return KozuchiQuestCard(
                           key: AppKeys.kozuchiSection,
-                          quest: viewModel.kozuchiQuest!,
+                          quest: taskVM.kozuchiQuest!,
                         );
                       }
 

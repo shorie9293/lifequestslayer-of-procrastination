@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:rpg_todo/core/infrastructure/iap_service.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -42,7 +43,8 @@ class _GemShopScreenState extends State<GemShopScreen> {
     final iap = context.read<IAPService>();
     final gems = await iap.consumePendingGems();
     if (gems > 0 && mounted) {
-      context.read<GameViewModel>().addGems(gems);
+      context.read<PlayerViewModel>().addGems(gems);
+      context.read<PlayerViewModel>().save();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('💎 $gems 宝石を受け取りました！'),
@@ -64,9 +66,8 @@ class _GemShopScreenState extends State<GemShopScreen> {
   @override
   Widget build(BuildContext context) {
     final iap = context.watch<IAPService>();
-    final viewModel = context.watch<GameViewModel>();
-    final player = viewModel.player;
-
+    final playerVM = context.watch<PlayerViewModel>();
+    final player = playerVM.player;
     return Scaffold(
       key: AppKeys.gemShopScreen,
       appBar: AppBar(
@@ -90,7 +91,7 @@ class _GemShopScreenState extends State<GemShopScreen> {
         children: [
           _buildPurchaseSection(context, iap, player),
           const SizedBox(height: 24),
-          _buildUseSection(context, viewModel, player),
+          _buildUseSection(context, player),
         ],
       ),
     );
@@ -241,7 +242,7 @@ class _GemShopScreenState extends State<GemShopScreen> {
 
   // ── 宝石の使いみち ───────────────────────────────────
   Widget _buildUseSection(
-      BuildContext context, GameViewModel viewModel, player) {
+      BuildContext context, player) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -264,7 +265,9 @@ class _GemShopScreenState extends State<GemShopScreen> {
           cost: 10,
           playerGems: player.gems,
           onConfirm: () {
-            final ok = viewModel.exchangeGemsForCoins(10);
+            final shopVM = context.read<ShopViewModel>();
+            final ok = shopVM.exchangeGemsForCoins(10);
+            if (ok) { context.read<PlayerViewModel>().save(); }
             _showResult(context, ok, '1,000文を受け取った！', '宝石が足りません');
           },
         ),
@@ -279,7 +282,9 @@ class _GemShopScreenState extends State<GemShopScreen> {
           cost: 50,
           playerGems: player.gems,
           onConfirm: () {
-            final ok = viewModel.resetFatigueWithGems();
+            final shopVM = context.read<ShopViewModel>();
+            final ok = shopVM.resetFatigueWithGems();
+            if (ok) { context.read<PlayerViewModel>().save(); }
             _showResult(context, ok, '疲労がリセットされた！', '宝石が足りません');
           },
         ),

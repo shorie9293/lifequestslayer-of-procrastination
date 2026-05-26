@@ -173,6 +173,23 @@ class PlayerViewModel extends ChangeNotifier {
   void clearPendingLoginBonus() { pendingLoginBonusAmount = null; notifyListeners(); }
   void clearPendingStreakReward() { pendingStreakReward = null; notifyListeners(); }
 
+  /// 刻の番人討伐時の称号チェック（GameViewModelから移行）
+  void defeatTimeWarden() {
+    _player.timesWardenDefeated++;
+    TitleService.checkTitles(_player, []);
+    notifyListeners();
+  }
+
+  /// 誤答ペナルティの適用（GameViewModelから移行）
+  void applyWrongAnswerPenalty(int expPenalty, int coinPenalty) {
+    final p = _player;
+    p.jobExps[p.currentJob] = (p.jobExps[p.currentJob] ?? 0) - expPenalty;
+    if (p.jobExps[p.currentJob]! < 0) p.jobExps[p.currentJob] = 0;
+    p.coins -= coinPenalty;
+    if (p.coins < 0) p.coins = 0;
+    notifyListeners();
+  }
+
   // ── データロード/セーブ ──
   Future<void> load() async {
     _loadFailed = false;

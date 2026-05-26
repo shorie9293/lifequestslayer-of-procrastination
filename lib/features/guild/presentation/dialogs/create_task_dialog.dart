@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/domain/difficulty_estimator.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
@@ -52,9 +54,9 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
       setState(() => _estimatedMinutes = null);
       return;
     }
-    final vm = Provider.of<GameViewModel>(context, listen: false);
+    final taskVM = Provider.of<TaskViewModel>(context, listen: false);
     setState(() {
-      _estimatedMinutes = vm.estimateMinutes(title, _selectedRank);
+      _estimatedMinutes = taskVM.estimateMinutes(title, _selectedRank);
     });
   }
 
@@ -129,9 +131,9 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
 
     int? targetTime = int.tryParse(_targetTimeController.text);
 
-    final vm = Provider.of<GameViewModel>(context, listen: false);
+    final taskVM = Provider.of<TaskViewModel>(context, listen: false);
     if (widget.task == null) {
-      vm.addTask(
+      taskVM.addTask(
         _titleController.text,
         rank: _selectedRank,
         repeatInterval: _selectedRepeat,
@@ -141,7 +143,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
         deadline: _deadline,
       );
     } else {
-      vm.editTask(
+      taskVM.editTask(
         widget.task!.id,
         _titleController.text,
         rank: _selectedRank,
@@ -152,13 +154,14 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
         deadline: _deadline,
       );
     }
+    taskVM.save();
     Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<GameViewModel>(context, listen: false);
-    final player = viewModel.player;
+    final playerVM = Provider.of<PlayerViewModel>(context, listen: false);
+    final player = playerVM.player;
 
     return AlertDialog(
       key: AppKeys.formTaskDialog,

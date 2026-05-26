@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/features/town/presentation/gem_shop_screen.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
@@ -24,8 +25,8 @@ class _FatigueGemDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<GameViewModel>();
-    final gems = vm.player.gems;
+    final playerVM = context.watch<PlayerViewModel>();
+    final gems = playerVM.player.gems;
     final canAfford = gems >= 50;
 
     return SemanticHelper.container(
@@ -130,8 +131,9 @@ class _FatigueGemDialog extends StatelessWidget {
               ),
               onPressed: () {
                 if (canAfford) {
-                  final success =
-                      context.read<GameViewModel>().resetFatigueWithGems();
+                  final shopVM = context.read<ShopViewModel>();
+                  final success = shopVM.resetFatigueWithGems();
+                  if (success) { context.read<PlayerViewModel>().save(); }
                   Navigator.of(context).pop();
                   if (success) {
                     ScaffoldMessenger.of(context).showSnackBar(

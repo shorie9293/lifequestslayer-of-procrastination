@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_screen.dart';
@@ -45,24 +47,24 @@ class _MainScreenState extends State<MainScreen> {
 
   void _onPageChanged(int index, {bool animate = false}) {
     setState(() => _currentIndex = index);
-    final vm = Provider.of<GameViewModel>(context, listen: false);
-    if (vm.tutorialStep <= 2) {
+    final settingsVM = context.read<SettingsViewModel>();
+    if (settingsVM.tutorialStep <= 2) {
       _tutorialController.renderedTutorialStep = -1;
       _tutorialController.updateTutorialRect(
-        step: vm.tutorialStep, context: context,
+        step: settingsVM.tutorialStep, context: context,
         pageController: _pageController, setState: () => setState(() {}), mounted: mounted,
       );
     }
     if (animate) _pageController.animateToPage(index, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
   }
 
-  Widget _skipTutorialBtn(GameViewModel vm) => Positioned(
+  Widget _skipTutorialBtn(SettingsViewModel settingsVM) => Positioned(
     top: MediaQuery.of(context).padding.top + 8, right: 16,
     child: SafeArea(child: Material(color: Colors.transparent, child: SemanticHelper.interactive(
       testId: SemanticHelper.createTestId(SemanticTypes.button, 'skip_tutorial'),
       label: '導きの書を略する',
-      child: InkWell(
-        key: AppKeys.tutorialSkip, onTap: vm.skipTutorial, borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+        key: AppKeys.tutorialSkip, onTap: settingsVM.skipTutorial, borderRadius: BorderRadius.circular(20),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white30)),
@@ -77,50 +79,52 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final vm = Provider.of<GameViewModel>(context);
-    if (!vm.isLoaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    final playerVM = context.watch<PlayerViewModel>();
+    final settingsVM = context.watch<SettingsViewModel>();
+    final isLoaded = playerVM.isLoaded && context.read<TaskViewModel>().isLoaded;
+    if (!isLoaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     _tutorialController.currentIndex = _currentIndex;
 
     if (!_didJumpToGuildForTutorial) {
       _didJumpToGuildForTutorial = true;
-      if (vm.tutorialStep <= 1) {
+      if (settingsVM.tutorialStep <= 1) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (mounted) { setState(() => _currentIndex = 1); _pageController.jumpToPage(1); }
         });
       }
     }
 
-    if (!vm.hasSeenConcept && !_isHelpDialogShowing) {
+    if (!settingsVM.hasSeenConcept && !_isHelpDialogShowing) {
       _isHelpDialogShowing = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         showHelpDialog(context).then((_) {
-          vm.markConceptAsSeen();
-          if (mounted && vm.tutorialStep <= 2 && !vm.tutorialChoiceMade) {
+          settingsVM.markConceptAsSeen();
+          if (mounted && settingsVM.tutorialStep <= 2 && !settingsVM.tutorialChoiceMade) {
             setState(() => _isTutorialChoiceShowing = true);
-            _showTutorialChoiceDialog(vm);
+            _showTutorialChoiceDialog(settingsVM);
           }
         });
       });
-    } else if (vm.hasSeenConcept && vm.tutorialStep <= 2 && !vm.tutorialChoiceMade && !_isTutorialChoiceShowing) {
+    } else if (settingsVM.hasSeenConcept && settingsVM.tutorialStep <= 2 && !settingsVM.tutorialChoiceMade && !_isTutorialChoiceShowing) {
       _isTutorialChoiceShowing = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _showTutorialChoiceDialog(vm); });
-    } else if (vm.pendingLoginBonusAmount != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) { vm.clearPendingLoginBonus(); _showLoginBonusDialog(vm.pendingLoginBonusAmount!); });
-    } else if (vm.pendingStreakReward != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) { vm.clearPendingStreakReward(); _showStreakRewardDialog(vm.pendingStreakReward!, vm.streakDays); });
-    } else if (vm.showJobTutorial) {
+      WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _showTutorialChoiceDialog(settingsVM); });
+    } else if (playerVM.pendingLoginBonusAmount != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) { final a = playerVM.pendingLoginBonusAmount!; playerVM.clearPendingLoginBonus(); _showLoginBonusDialog(a); });
+    } else if (playerVM.pendingStreakReward != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) { final r = playerVM.pendingStreakReward!; playerVM.clearPendingStreakReward(); _showStreakRewardDialog(r, playerVM.streakDays); });
+    } else if (settingsVM.showJobTutorial) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           showJobTutorialDialog(
             context,
             onClose: () {
-              vm.markJobTutorialSeen();
+              settingsVM.markJobTutorialSeen();
               setState(() {});
             },
-            jobTutorialCompleted: vm.jobTutorialCompleted,
+            jobTutorialCompleted: settingsVM.jobTutorialCompleted,
             onSkip: () {
-              vm.markJobTutorialSeen();
+              settingsVM.markJobTutorialSeen();
               setState(() {});
             },
           );
@@ -141,21 +145,21 @@ class _MainScreenState extends State<MainScreen> {
           child: Semantics(
             label: 'デバッグモード',
             child: IconButton(
-              icon: Icon(Icons.settings, color: vm.isDebugMode ? Colors.amber : Colors.white24, size: 20),
-              onPressed: vm.isDebugMode ? () => _showDebugPanel(vm) : () => _showDebugPasswordDialog(vm),
-              tooltip: vm.isDebugMode ? 'デバッグパネルを開く' : 'デバッグモード',
+              icon: Icon(Icons.settings, color: settingsVM.isDebugMode ? Colors.amber : Colors.white24, size: 20),
+              onPressed: settingsVM.isDebugMode ? () => _showDebugPanel(settingsVM) : () => _showDebugPasswordDialog(settingsVM),
+              tooltip: settingsVM.isDebugMode ? 'デバッグパネルを開く' : 'デバッグモード',
             ),
           ),
         ),
       ),
-      if (vm.tutorialStep <= 2 && !vm.tutorialSkipped) ...[
-        _tutorialController.buildTutorialOverlay(vm.tutorialStep, _currentIndex),
-        _skipTutorialBtn(vm),
+      if (settingsVM.tutorialStep <= 2 && !settingsVM.tutorialSkipped) ...[
+        _tutorialController.buildTutorialOverlay(settingsVM.tutorialStep, _currentIndex),
+        _skipTutorialBtn(settingsVM),
       ],
     ]);
   }
 
-  void _showTutorialChoiceDialog(GameViewModel vm) {
+  void _showTutorialChoiceDialog(SettingsViewModel settingsVM) {
     showDialog(
       context: context, barrierDismissible: false,
       builder: (ctx) => AlertDialog(
@@ -170,7 +174,7 @@ class _MainScreenState extends State<MainScreen> {
               key: AppKeys.tutorialSkip,
               onPressed: () async {
                 final nav = Navigator.of(ctx);
-                await vm.skipTutorial();
+                await settingsVM.skipTutorial();
                 if (mounted) { nav.pop(); setState(() => _isTutorialChoiceShowing = false); }
               },
               style: TextButton.styleFrom(foregroundColor: Colors.grey),
@@ -185,7 +189,7 @@ class _MainScreenState extends State<MainScreen> {
               key: AppKeys.tutorialUnderstood,
               onPressed: () async {
                 final nav = Navigator.of(ctx);
-                await vm.markTutorialChoiceMade();
+                await settingsVM.markTutorialChoiceMade();
                 if (mounted) { nav.pop(); setState(() => _isTutorialChoiceShowing = false); }
               },
               style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], foregroundColor: Colors.white),
@@ -263,7 +267,7 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  void _showDebugPasswordDialog(GameViewModel vm) {
+  void _showDebugPasswordDialog(SettingsViewModel settingsVM) {
     final controller = TextEditingController();
     showDialog(
       context: context,
@@ -288,7 +292,7 @@ class _MainScreenState extends State<MainScreen> {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('戻る')),
           ElevatedButton(
             onPressed: () {
-              if (vm.tryEnableDebugMode(controller.text)) {
+              if (settingsVM.tryEnableDebugMode(controller.text)) {
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('デバッグモード起動！制限解除されました'), duration: Duration(seconds: 2)),
@@ -306,11 +310,11 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  void _showDebugPanel(GameViewModel vm) {
+  void _showDebugPanel(SettingsViewModel settingsVM) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (_) => DebugPanel(vm: vm),
+      builder: (_) => DebugPanel(settingsVM: settingsVM),
     );
   }
 }

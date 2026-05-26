@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
 import 'package:rpg_todo/features/character_customization/presentation/equipment_tab.dart';
@@ -23,9 +24,10 @@ class TownScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<GameViewModel>(context);
-    final player = viewModel.player;
-    final scale = viewModel.townScale;
+    final playerVM = context.watch<PlayerViewModel>();
+    final shopVM = context.watch<ShopViewModel>();
+    final player = playerVM.player;
+    final scale = playerVM.townScale;
     final hd = homeData(player);
     final next = scale.nextScale;
     final nextLv = scale.nextLevelForUpgrade;
@@ -52,7 +54,8 @@ class TownScreen extends StatelessWidget {
             // ── 町タブ（既存コンテンツ） ──
             _TownTab(
               player: player,
-              viewModel: viewModel,
+              playerVM: playerVM,
+              shopVM: shopVM,
               hd: hd,
               scale: scale,
               nextScale: next,
@@ -66,7 +69,7 @@ class TownScreen extends StatelessWidget {
               totalTasks: player.totalTasksCompleted,
               titles: player.titles,
               onEquip: (slot, skinId) {
-                viewModel.equipCharacterSkin(slot, skinId);
+                playerVM.equipCharacterSkin(slot, skinId); playerVM.save();
               },
             ),
           ],
@@ -79,7 +82,8 @@ class TownScreen extends StatelessWidget {
 /// 町タブ — TownScreen の既存コンテンツを抽出
 class _TownTab extends StatelessWidget {
   final dynamic player;
-  final dynamic viewModel;
+  final PlayerViewModel playerVM;
+  final ShopViewModel shopVM;
   final Map<String, String> hd;
   final TownScale scale;
   final TownScale? nextScale;
@@ -87,7 +91,8 @@ class _TownTab extends StatelessWidget {
 
   const _TownTab({
     required this.player,
-    required this.viewModel,
+    required this.playerVM,
+    required this.shopVM,
     required this.hd,
     required this.scale,
     required this.nextScale,
@@ -113,13 +118,13 @@ class _TownTab extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  HomeShopSection(viewModel: viewModel, player: player),
+                  HomeShopSection(viewModel: shopVM, player: player),
                   const SizedBox(height: 24),
-                  SkinSection(viewModel: viewModel, player: player),
+                  SkinSection(viewModel: shopVM, player: player, playerVM: playerVM),
                   const SizedBox(height: 24),
-                  InnSection(viewModel: viewModel, player: player),
+                  InnSection(viewModel: shopVM, player: player),
                   const SizedBox(height: 24),
-                  TitleSection(viewModel: viewModel, player: player),
+                  TitleSection(viewModel: playerVM, player: player),
                 ],
               ),
             ),

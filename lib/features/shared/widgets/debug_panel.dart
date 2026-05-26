@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../viewmodels/game_view_model.dart';
+import 'package:provider/provider.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 
 /// デバッグパネル — ModalBottomSheetで値を自由操作
 ///
 /// コイン/Gemの直接設定、EXP追加、タスク一括完了、テストタスク追加が可能。
-/// GameViewModel.isDebugMode == true の時のみ表示される。
+/// SettingsViewModel.isDebugMode == true の時のみ表示される。
 class DebugPanel extends StatefulWidget {
-  final GameViewModel vm;
+  final SettingsViewModel settingsVM;
 
-  const DebugPanel({super.key, required this.vm});
+  const DebugPanel({super.key, required this.settingsVM});
 
   @override
   State<DebugPanel> createState() => _DebugPanelState();
@@ -22,8 +25,9 @@ class _DebugPanelState extends State<DebugPanel> {
   @override
   void initState() {
     super.initState();
-    _coinCtrl = TextEditingController(text: widget.vm.player.coins.toString());
-    _gemCtrl = TextEditingController(text: widget.vm.player.gems.toString());
+    final p = context.read<PlayerViewModel>().player;
+    _coinCtrl = TextEditingController(text: p.coins.toString());
+    _gemCtrl = TextEditingController(text: p.gems.toString());
   }
 
   @override
@@ -36,33 +40,33 @@ class _DebugPanelState extends State<DebugPanel> {
   void _setCoins() {
     final v = int.tryParse(_coinCtrl.text);
     if (v != null) {
-      widget.vm.debugSetCoins(v);
-      _coinCtrl.text = widget.vm.player.coins.toString();
+      context.read<PlayerViewModel>().debugSetCoins(v);
+      _coinCtrl.text = context.read<PlayerViewModel>().player.coins.toString();
     }
   }
 
   void _setGems() {
     final v = int.tryParse(_gemCtrl.text);
     if (v != null) {
-      widget.vm.debugSetGems(v);
-      _gemCtrl.text = widget.vm.player.gems.toString();
+      context.read<PlayerViewModel>().debugSetGems(v);
+      _gemCtrl.text = context.read<PlayerViewModel>().player.gems.toString();
     }
   }
 
   void _addExp(int amount) {
-    widget.vm.debugAddExp(amount);
+    context.read<PlayerViewModel>().addExp(amount);
     setState(() {}); // レベル表示更新のため
   }
 
   void _completeAll() {
-    widget.vm.debugCompleteAllActive();
+    context.read<TaskViewModel>().debugCompleteAllActive();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('全アクティブタスクを完了しました'), duration: Duration(seconds: 1)),
     );
   }
 
   void _addTestTasks() {
-    widget.vm.debugAddTestTasks();
+    context.read<TaskViewModel>().debugAddTestTasks();
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('テスト用タスクを3件追加しました'), duration: Duration(seconds: 1)),
     );
@@ -70,7 +74,7 @@ class _DebugPanelState extends State<DebugPanel> {
 
   @override
   Widget build(BuildContext context) {
-    final p = widget.vm.player;
+    final p = context.watch<PlayerViewModel>().player;
     final lvl = p.level;
     final exp = p.currentExp;
     final nextExp = _expForLevel(lvl + 1);

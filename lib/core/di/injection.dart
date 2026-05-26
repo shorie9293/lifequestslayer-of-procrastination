@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
@@ -42,4 +43,59 @@ void configureDependencies() {
   // ── サービス ──
   final iapService = IAPService();
   getIt.registerSingleton<IAPService>(iapService);
+}
+
+/// 全VMのデータロードとアプリライフサイクル監視を統括する。
+/// main()内で configureDependencies() の後に呼ぶこと。
+Future<void> initializeViewModels() async {
+  final playerVM = getIt<PlayerViewModel>();
+  final taskVM = getIt<TaskViewModel>();
+  final settingsVM = getIt<SettingsViewModel>();
+
+  await playerVM.load();
+  await taskVM.load();
+  await settingsVM.load();
+
+  try {
+    playerVM.checkAndResetMissions(DateTime.now(), login: true);
+  } catch (e, s) {
+    debugPrint('[DI] missions error: $e\n$s');
+  }
+
+  try {
+    WidgetsBinding.instance.addObserver(_AppLifecycleObserver(
+      onPause: () async {
+        await _safeSave(playerVM, 'player');
+        await _safeSave(taskVM, 'task');
+      },
+    ));
+  } catch (_) {}
+
+  try {
+    taskVM.autoDeployTodaysTasks();
+  } catch (e, s) {
+    debugPrint('[DI] autoDeploy error: $e\n$s');
+  }
+}
+
+Future<void> _safeSave(ChangeNotifier vm, String label) async {
+  if (vm is PlayerViewModel) {
+    await vm.save().catchError((e) => debugPrint('[DI] $label save failed: $e'));
+  } else if (vm is TaskViewModel) {
+    await vm.save().catchError((e) => debugPrint('[DI] $label save failed: $e'));
+  }
+}
+
+class _AppLifecycleObserver extends WidgetsBindingObserver {
+  final Future<void> Function() _onPause;
+  _AppLifecycleObserver({required Future<void> Function() onPause})
+      : _onPause = onPause;
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _onPause();
+    }
+  }
 }

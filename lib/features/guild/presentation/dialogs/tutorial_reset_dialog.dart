@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// チュートリアルリセット確認ダイアログ
@@ -32,7 +32,7 @@ class TutorialResetDialog extends StatelessWidget {
           label: 'チュートリアルをリセット',
           child: ElevatedButton(
             onPressed: () {
-              Provider.of<GameViewModel>(context, listen: false).resetTutorial();
+              Provider.of<SettingsViewModel>(context, listen: false).resetTutorial();
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('🔄 導きの書をリセットしました')),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// ショップアイテムのデータクラス
@@ -65,7 +66,7 @@ void showBuyConfirmDialog(
 Widget buildBuyButton(
   BuildContext context,
   dynamic player,
-  dynamic viewModel,
+  ShopViewModel viewModel,
   ShopItem item,
 ) {
   return SemanticHelper.interactive(

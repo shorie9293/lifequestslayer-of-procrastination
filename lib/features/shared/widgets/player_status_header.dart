@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/widgets/widgets/player_avatar_section.dart';
 import 'package:rpg_todo/features/shared/widgets/widgets/rank_slot_display.dart';
@@ -14,9 +15,10 @@ class PlayerStatusHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<GameViewModel>(context);
-    final player = viewModel.player;
-    final activeTasks = viewModel.activeTasks;
+    final playerVM = context.watch<PlayerViewModel>();
+    final taskVM = context.watch<TaskViewModel>();
+    final player = playerVM.player;
+    final activeTasks = taskVM.activeTasks;
 
     return SemanticHelper.container(
         testId: '${SemanticTypes.section}_player_status',
@@ -41,23 +43,23 @@ class PlayerStatusHeader extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               FatigueGauge(
-                fatigueStatus: viewModel.fatigueStatus,
-                fatigueProgress: viewModel.fatigueProgress,
-                fatigueLevel: viewModel.fatigueLevel,
+                fatigueStatus: playerVM.fatigueStatus,
+                fatigueProgress: playerVM.fatigueProgress,
+                fatigueLevel: playerVM.fatigueLevel,
                 dailyTasksCompleted: player.dailyTasksCompleted,
-                fatigueSevereThreshold: viewModel.fatigueSevereThreshold,
+                fatigueSevereThreshold: playerVM.fatigueSevereThreshold,
               ),
               const SizedBox(height: 12),
               ExpProgressBar(player: player),
               const SizedBox(height: 10),
               BadgeRow(
-                streakDays: viewModel.streakDays,
-                dailyMissionProgress: viewModel.dailyMissionProgress,
-                isDailyMissionComplete: viewModel.isDailyMissionComplete,
-                weeklyMissionProgress: viewModel.weeklyMissionProgress,
-                isWeeklyMissionComplete: viewModel.isWeeklyMissionComplete,
-                dailyMissionGoal: GameViewModel.dailyMissionGoal,
-                weeklyMissionGoal: GameViewModel.weeklyMissionGoal,
+                streakDays: playerVM.streakDays,
+                dailyMissionProgress: playerVM.dailyMissionProgress,
+                isDailyMissionComplete: playerVM.isDailyMissionComplete,
+                weeklyMissionProgress: playerVM.weeklyMissionProgress,
+                isWeeklyMissionComplete: playerVM.isWeeklyMissionComplete,
+                dailyMissionGoal: PlayerViewModel.dailyMissionGoal,
+                weeklyMissionGoal: PlayerViewModel.weeklyMissionGoal,
               ),
             ],
           ),
