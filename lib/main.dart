@@ -35,6 +35,14 @@ void main() async {
   // ━━━ DI 初期化 ━━━
   configureDependencies();
 
+  // IAPサービスの初期化（DI経由）
+  try {
+    await getIt<IAPService>().initialize();
+    debugPrint('[main] IAPサービスの初期化が完了しました');
+  } catch (e) {
+    debugPrint('[main] IAPサービスの初期化に失敗しました（アプリは継続）: $e');
+  }
+
   // 通知サービスの初期化（エラーが発生してもアプリ起動を妨げない）
   bool notificationInitialized = false;
   try {
@@ -53,6 +61,15 @@ void main() async {
         '[main] クイズデータの読み込みが完了しました（${QuizService.isLoaded ? (QuizService.drawQuizQuestion() != null ? "読み込み済み" : "空") : "未読み込み"}）');
   } catch (e) {
     debugPrint('[main] クイズデータの読み込みに失敗しました（アプリは継続）: $e');
+  }
+
+  // 期限切れ専用クイズデータの読み込み（assets/data/overdue_quests.json）
+  try {
+    await QuizService.loadOverdueQuestions();
+    debugPrint(
+        '[main] 期限切れクイズデータの読み込みが完了しました（${QuizService.isOverdueLoaded ? "読み込み済み" : "未読み込み"}）');
+  } catch (e) {
+    debugPrint('[main] 期限切れクイズデータの読み込みに失敗しました（アプリは継続）: $e');
   }
 
   // ━━━ コード適応神書 適3：エラー境界 ━━━
@@ -115,7 +132,9 @@ class RPGTodoApp extends StatelessWidget {
             value: getIt<ThemeViewModel>()),
         // 旧VM — 後方互換のため当面維持
         ChangeNotifierProvider(create: (_) => GameViewModel()),
-        ChangeNotifierProvider(create: (_) => IAPService()..initialize()),
+        // IAPサービス — DI管理
+        ChangeNotifierProvider<IAPService>.value(
+            value: getIt<IAPService>()),
       ],
       child: Consumer2<ThemeViewModel, SettingsViewModel>(
         builder: (context, themeVM, settingsVM, child) {

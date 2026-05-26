@@ -14,6 +14,8 @@ class BattleReportDialog extends StatefulWidget {
   final int previousLevel, newLevel, currentExp, expToNextLevel;
   final QuizQuestion? quizQuestion;
   final void Function(QuizQuestion)? onQuizCorrect;
+  final VoidCallback? onQuizWrong;
+  final bool isOverdueBoss;
   final String? fatigueWarning;
 
   const BattleReportDialog({
@@ -23,7 +25,10 @@ class BattleReportDialog extends StatefulWidget {
     this.leveledUp = false,
     this.previousLevel = 1, this.newLevel = 1,
     this.currentExp = 0, this.expToNextLevel = 50,
-    this.quizQuestion, this.onQuizCorrect, this.fatigueWarning,
+    this.quizQuestion, this.onQuizCorrect,
+    this.onQuizWrong,
+    this.isOverdueBoss = false,
+    this.fatigueWarning,
   });
 
   static Future<void> show(BuildContext context, {
@@ -31,6 +36,7 @@ class BattleReportDialog extends StatefulWidget {
     bool leveledUp = false, int previousLevel = 1, int newLevel = 1,
     int currentExp = 0, int expToNextLevel = 50,
     QuizQuestion? quizQuestion, void Function(QuizQuestion)? onQuizCorrect,
+    VoidCallback? onQuizWrong, bool isOverdueBoss = false,
     int? baseExp, String? fatigueWarning,
     int? fatigueWarnThreshold, int? dailyTasksCompleted,
   }) => showDialog<void>(
@@ -40,6 +46,7 @@ class BattleReportDialog extends StatefulWidget {
       leveledUp: leveledUp, previousLevel: previousLevel, newLevel: newLevel,
       currentExp: currentExp, expToNextLevel: expToNextLevel,
       quizQuestion: quizQuestion, onQuizCorrect: onQuizCorrect,
+      onQuizWrong: onQuizWrong, isOverdueBoss: isOverdueBoss,
       fatigueWarning: fatigueWarning,
     ),
   );
@@ -83,6 +90,8 @@ class _BattleReportDialogState extends State<BattleReportDialog> {
                   KnowledgeQuestSection(
                     quizQuestion: widget.quizQuestion!,
                     onQuizCorrect: widget.onQuizCorrect,
+                    onQuizWrong: widget.onQuizWrong,
+                    isOverdueBoss: widget.isOverdueBoss,
                   ),
                 if (widget.fatigueWarning != null)
                   FatigueWarningSection(fatigueWarning: widget.fatigueWarning),

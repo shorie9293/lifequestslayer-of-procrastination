@@ -50,6 +50,7 @@ class Player {
   int totalSRankCompleted;
   int totalARankCompleted;
   int totalBRankCompleted;
+  int timesWardenDefeated; // 刻の番人討伐回数
   List<String> titles;
   String? equippedTitle;
   String? equippedSkin; // 追加: 装備中のスキンID（旧ショップスキン）
@@ -79,6 +80,7 @@ class Player {
     this.totalSRankCompleted = 0,
     this.totalARankCompleted = 0,
     this.totalBRankCompleted = 0,
+    this.timesWardenDefeated = 0,
     List<String>? titles,
     this.equippedTitle,
     this.equippedSkin,
@@ -301,6 +303,9 @@ class PlayerAdapter extends TypeAdapter<Player> {
     if (reader.availableBytes > 0) {
       player.lastLoginDate = reader.read();
     }
+    if (reader.availableBytes >= 4) {
+      player.timesWardenDefeated = reader.readInt();
+    }
 
     return player;
   }
@@ -333,5 +338,6 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.writeInt(obj.streakDays);
     writer.writeInt(obj.longestStreak);
     writer.write(obj.lastLoginDate);
+    writer.writeInt(obj.timesWardenDefeated);
   }
 }

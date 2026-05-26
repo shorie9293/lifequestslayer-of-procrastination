@@ -6,11 +6,15 @@ import 'package:takamagahara_ui/takamagahara_ui.dart';
 class KnowledgeQuestSection extends StatefulWidget {
   final QuizQuestion quizQuestion;
   final void Function(QuizQuestion)? onQuizCorrect;
+  final VoidCallback? onQuizWrong;
+  final bool isOverdueBoss;
 
   const KnowledgeQuestSection({
     super.key,
     required this.quizQuestion,
     this.onQuizCorrect,
+    this.onQuizWrong,
+    this.isOverdueBoss = false,
   });
 
   @override
@@ -29,6 +33,9 @@ class _KnowledgeQuestSectionState extends State<KnowledgeQuestSection> {
     });
     if (index == widget.quizQuestion.correctIndex) {
       widget.onQuizCorrect?.call(widget.quizQuestion);
+    } else if (widget.isOverdueBoss) {
+      // 刻の番人クイズ誤答 → 追加ペナルティ
+      widget.onQuizWrong?.call();
     }
   }
 
@@ -45,36 +52,50 @@ class _KnowledgeQuestSectionState extends State<KnowledgeQuestSection> {
   Widget build(BuildContext context) {
     final quest = widget.quizQuestion;
     final isCorrect = _quizAnswered && _selectedIndex == quest.correctIndex;
+    final isBoss = widget.isOverdueBoss;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.purple.withValues(alpha: 0.08),
+        color: isBoss
+            ? Colors.red.withValues(alpha: 0.1)
+            : Colors.purple.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.4)),
+        border: Border.all(
+          color: isBoss
+              ? Colors.redAccent.withValues(alpha: 0.6)
+              : Colors.purpleAccent.withValues(alpha: 0.4),
+          width: isBoss ? 2.0 : 1.0,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Text('📚', style: TextStyle(fontSize: 22)),
+              Text(isBoss ? '⏰' : '📚', style: const TextStyle(fontSize: 22)),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      '知識クエスト！',
+                    Text(
+                      isBoss ? '⚔️ 刻の番人との戦い！' : '知識クエスト！',
                       style: TextStyle(
-                        color: Colors.purpleAccent,
+                        color: isBoss ? Colors.redAccent : Colors.purpleAccent,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
                     ),
-                    Text(
-                      '正解で EXP +${quest.expBonusPercent}% ボーナス！',
-                      style: const TextStyle(color: Colors.amber, fontSize: 10),
-                    ),
+                    if (isBoss)
+                      const Text(
+                        '誤答すると追加ペナルティ！正解で討伐！',
+                        style: TextStyle(color: Colors.orangeAccent, fontSize: 10),
+                      )
+                    else
+                      Text(
+                        '正解で EXP +${quest.expBonusPercent}% ボーナス！',
+                        style: const TextStyle(color: Colors.amber, fontSize: 10),
+                      ),
                   ],
                 ),
               ),
@@ -148,8 +169,12 @@ class _KnowledgeQuestSectionState extends State<KnowledgeQuestSection> {
                 children: [
                   Text(
                     isCorrect
-                        ? '✅ 正解！ +${quest.expBonusPercent}% EXP ボーナス！'
-                        : '❌ 残念… 正解は「${quest.choices[quest.correctIndex]}」',
+                        ? (isBoss
+                            ? '⚔️ 刻の番人を討伐！ +${quest.expBonusPercent}% EXP ボーナス！'
+                            : '✅ 正解！ +${quest.expBonusPercent}% EXP ボーナス！')
+                        : (isBoss
+                            ? '💀 刻の番人の呪い！追加ペナルティ！正解は「${quest.choices[quest.correctIndex]}」'
+                            : '❌ 残念… 正解は「${quest.choices[quest.correctIndex]}」'),
                     style: TextStyle(
                       color: isCorrect ? Colors.greenAccent : Colors.redAccent,
                       fontWeight: FontWeight.bold,

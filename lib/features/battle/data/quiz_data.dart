@@ -42,3 +42,13 @@ Future<List<QuizQuestion>> loadQuizQuestions() async {
       .map((e) => QuizQuestion.fromJson(e as Map<String, dynamic>))
       .toList();
 }
+
+/// assets/data/overdue_quests.json から期限切れ専用クイズ問題を読み込む。
+Future<List<QuizQuestion>> loadOverdueQuizQuestions() async {
+  final jsonString =
+      await rootBundle.loadString('assets/data/overdue_quests.json');
+  final List<dynamic> jsonList = json.decode(jsonString) as List<dynamic>;
+  return jsonList
+      .map((e) => QuizQuestion.fromJson(e as Map<String, dynamic>))
+      .toList();
+}

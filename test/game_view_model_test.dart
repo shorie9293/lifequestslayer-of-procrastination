@@ -1471,7 +1471,7 @@ void main() {
       expect(result!['quizQuestion'], isNotNull,
           reason: '期限切れタスクではクイズが強制発動されるべき');
       expect(result['bonusMessages'],
-          anyElement(contains('期限切れ')),
+          anyElement(contains('刻の番人')),
           reason: '期限切れメッセージがbonusMessagesに含まれるべき');
     });
 

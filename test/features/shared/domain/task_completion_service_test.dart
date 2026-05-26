@@ -74,7 +74,7 @@ void main() {
       expect(result!.quizQuestion, isNotNull,
           reason: '期限切れタスクではクイズが強制発動されるべき');
       expect(result.bonusMessages,
-          anyElement(contains('期限')),
+          anyElement(contains('刻の番人')),
           reason: '期限切れメッセージがbonusMessagesに含まれるべき');
     });
 
@@ -96,7 +96,7 @@ void main() {
       expect(result!.quizQuestion, isNotNull,
           reason: 'knowledgeQuestEnabled=falseでも期限切れなら強制クイズ');
       expect(result.bonusMessages,
-          anyElement(contains('期限')),
+          anyElement(contains('刻の番人')),
           reason: '期限切れメッセージが含まれるべき');
     });
 

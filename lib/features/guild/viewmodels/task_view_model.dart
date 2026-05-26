@@ -209,6 +209,8 @@ class TaskViewModel extends ChangeNotifier {
       'quizQuestion': r.quizQuestion,
       'baseExp': r.expGain,
       'isOverdueBoss': r.isOverdueBoss,
+      'wrongAnswerPenaltyExp': r.wrongAnswerPenaltyExp,
+      'wrongAnswerPenaltyCoins': r.wrongAnswerPenaltyCoins,
     };
   }
 

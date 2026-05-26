@@ -52,6 +52,9 @@ class BattleScreen extends StatelessWidget {
     final bonusMessages = result['bonusMessages'] as List<String>;
     final quizQuestion = result['quizQuestion'] as QuizQuestion?;
     final baseExp = result['baseExp'] as int;
+    final isOverdueBoss = result['isOverdueBoss'] as bool? ?? false;
+    final wrongAnswerPenaltyExp = result['wrongAnswerPenaltyExp'] as int? ?? 0;
+    final wrongAnswerPenaltyCoins = result['wrongAnswerPenaltyCoins'] as int? ?? 0;
 
     // 討伐成功メッセージ (SnackBar)
     if (bonusMessages.isNotEmpty) {
@@ -104,9 +107,22 @@ class BattleScreen extends StatelessWidget {
         expToNextLevel: player.expToNextLevel,
         quizQuestion: quizQuestion,
         onQuizCorrect: quizQuestion != null
-            ? (q) => viewModel.awardKnowledgeBonus(
-                q.expBonusPercent, baseExp)
+            ? (q) {
+                viewModel.awardKnowledgeBonus(
+                    q.expBonusPercent, baseExp);
+                // 刻の番人討伐時は称号チェック
+                if (isOverdueBoss) {
+                  viewModel.defeatTimeWarden();
+                }
+              }
             : null,
+        onQuizWrong: (isOverdueBoss && wrongAnswerPenaltyExp > 0)
+            ? () {
+                viewModel.applyWrongAnswerPenalty(
+                    wrongAnswerPenaltyExp, wrongAnswerPenaltyCoins);
+              }
+            : null,
+        isOverdueBoss: isOverdueBoss,
         baseExp: baseExp,
         fatigueWarning: fatigueWarning,
         fatigueWarnThreshold: warnThresh,

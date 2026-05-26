@@ -47,4 +47,10 @@ final List<TitleDefinition> kAllTitles = [
     requiredCount: 5,
     getProgress: (p) => p.totalSRankCompleted,
   ),
+  TitleDefinition(
+    id: '刻の番人を討ちし者',
+    condition: '刻の番人（期限切れボス）を討伐',
+    requiredCount: 1,
+    getProgress: (p) => p.timesWardenDefeated,
+  ),
 ];

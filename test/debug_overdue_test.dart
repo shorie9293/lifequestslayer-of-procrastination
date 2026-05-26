@@ -67,7 +67,7 @@ void main() {
       print('RESULT bonusMessages: ${result.bonusMessages}');
       print('RESULT expGain: ${result.expGain}');
       expect(result.quizQuestion, isNotNull, reason: '期限切れタスクのクイズはnon-null');
-      expect(result.bonusMessages, anyElement(contains('期限切れ')),
+      expect(result.bonusMessages, anyElement(contains('刻の番人')),
           reason: '期限切れメッセージが含まれるべき');
       expect(result.expGain, lessThan(100), reason: 'EXPが減少しているべき');
     });

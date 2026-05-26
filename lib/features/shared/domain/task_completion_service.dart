@@ -16,6 +16,10 @@ class TaskCompletionResult {
   final bool shouldResetFatiguePopup;
   final QuizQuestion? quizQuestion;
   final bool isOverdueBoss;
+  /// 刻の番人クイズに誤答した場合の追加ペナルティEXP（0ならペナルティなし）
+  final int wrongAnswerPenaltyExp;
+  /// 刻の番人クイズに誤答した場合の追加ペナルティ文（0ならペナルティなし）
+  final int wrongAnswerPenaltyCoins;
 
   const TaskCompletionResult({
     required this.leveledUp,
@@ -26,6 +30,8 @@ class TaskCompletionResult {
     required this.shouldResetFatiguePopup,
     this.quizQuestion,
     this.isOverdueBoss = false,
+    this.wrongAnswerPenaltyExp = 0,
+    this.wrongAnswerPenaltyCoins = 0,
   });
 }
 
@@ -150,16 +156,24 @@ class TaskCompletionService {
     QuizQuestion? quizQuestion;
     final isOverdue = task.deadline != null && task.deadline!.isBefore(DateTime.now());
     bool isOverdueBoss = false;
+    int wrongAnswerPenaltyExp = 0;
+    int wrongAnswerPenaltyCoins = 0;
 
     if (isOverdue) {
-      // 期限切れペナルティ: 強制クイズ + EXP/coins 半減
+      // 刻の番人（TimeWarden）ボス戦: 期限切れ専用クイズを強制出題
       quizQuestion = QuizService.drawHardQuizQuestion();
-      bonusMessages.add("⏰ 期限切れ！時の番人が現れた！クイズに答えて打ち破れ！");
+      bonusMessages.add("⏰ 刻の番人が現れた！「汝、時を無駄にせし者よ…」");
+      bonusMessages.add("💀 知識の刃で刻の番人を打ち破れ！");
       isOverdueBoss = true;
 
       // 倍ペナルティ: 報酬一律半減
       expGain = (expGain * 0.5).round();
       coinsGained = (coinsGained * 0.5).round();
+
+      // 誤答時の追加ペナルティ（半減後報酬のさらに50%を没収）
+      // 正解すればペナルティを回避できる
+      wrongAnswerPenaltyExp = (expGain * 0.5).round();
+      wrongAnswerPenaltyCoins = (coinsGained * 0.5).round();
     } else if (knowledgeQuestEnabled) {
       quizQuestion = QuizService.drawQuizQuestion();
     }
@@ -182,6 +196,8 @@ class TaskCompletionService {
       shouldResetFatiguePopup: shouldResetFatiguePopup,
       quizQuestion: quizQuestion,
       isOverdueBoss: isOverdueBoss,
+      wrongAnswerPenaltyExp: wrongAnswerPenaltyExp,
+      wrongAnswerPenaltyCoins: wrongAnswerPenaltyCoins,
     );
   }
 }

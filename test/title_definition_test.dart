@@ -4,8 +4,8 @@ import 'package:rpg_todo/domain/models/title_definition.dart';
 
 void main() {
   group('kAllTitles', () {
-    test('5つの称号定義が登録されている', () {
-      expect(kAllTitles.length, 5);
+    test('6つの称号定義が登録されている', () {
+      expect(kAllTitles.length, 6);
     });
 
     test('称号一覧が期待通り', () {
@@ -16,6 +16,7 @@ void main() {
         '鬼退治',
         '大物祓い',
         '龍神討ち',
+        '刻の番人を討ちし者',
       ]);
     });
   });
@@ -61,6 +62,13 @@ void main() {
       final def = kAllTitles.firstWhere((d) => d.id == '龍神討ち');
       expect(def.getProgress(player), 5);
       expect(def.requiredCount, 5);
+    });
+
+    test('「刻の番人を討ちし者」は timesWardenDefeated を参照する', () {
+      final player = Player()..timesWardenDefeated = 1;
+      final def = kAllTitles.firstWhere((d) => d.id == '刻の番人を討ちし者');
+      expect(def.getProgress(player), 1);
+      expect(def.requiredCount, 1);
     });
   });
 }

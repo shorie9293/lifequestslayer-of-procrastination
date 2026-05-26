@@ -2,6 +2,7 @@ import 'package:flutter/material.dart' hide DateUtils;
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/title_definition.dart';
+import 'package:rpg_todo/domain/services/title_service.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
 import 'package:rpg_todo/features/shared/data/player_repository.dart';
 import 'package:rpg_todo/features/guild/data/task_repository.dart';
@@ -138,6 +139,29 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void awardKnowledgeBonus(int pct, int base) => _taskVM.awardKnowledgeBonus(pct, base);
+
+  /// 刻の番人（期限切れボス）討伐成功。討伐回数を増やし称号をチェックする。
+  void defeatTimeWarden() {
+    _playerVM.player.timesWardenDefeated++;
+    final messages = <String>[];
+    TitleService.checkTitles(_playerVM.player, messages);
+    _save();
+  }
+
+  /// 刻の番人クイズ誤答時のペナルティ。EXPとコインを減らす。
+  void applyWrongAnswerPenalty(int expPenalty, int coinsPenalty) {
+    if (expPenalty > 0) {
+      // 現在職のEXPからペナルティ分だけ減らす（0未満にはしない）
+      final currentExp = _playerVM.player.currentExp;
+      _playerVM.player.jobExps[_playerVM.player.currentJob] =
+          (currentExp - expPenalty).clamp(0, 99999999);
+    }
+    if (coinsPenalty > 0) {
+      _playerVM.player.coins =
+          (_playerVM.player.coins - coinsPenalty).clamp(0, 99999999);
+    }
+    _save();
+  }
   void addGems(int a) { _playerVM.addGems(a); _save(); }
   bool spendGems(int a) {
     final r = _shopVM.spendGems(a, debugMode: _settingsVM.isDebugMode);
