@@ -2,100 +2,120 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rpg_todo/features/temple/presentation/dialogs/job_tutorial_dialog.dart';
 
-/// テスト用のDI注入済みGameViewModelを生成せずとも、
-/// JobTutorialDialog は自己完結したWidgetのためHive依存不要。
-void main() {
-  Future<void> pumpJobTutorialDialog(WidgetTester tester,
-      {bool jobTutorialCompleted = false}) async {
-    // JobTutorialDialog は showJobTutorialDialog() 関数で表示される
-    await tester.pumpWidget(
-      MaterialApp(
-        home: Builder(
-          builder: (context) => ElevatedButton(
-            onPressed: () {
-              showJobTutorialDialog(
-                context,
-                onClose: () {},
-                jobTutorialCompleted: jobTutorialCompleted,
-              );
-            },
-            child: const Text('Show'),
-          ),
+/// テスト用のヘルパー：JobTutorialDialogを表示する
+Future<void> pumpJobTutorialDialog(WidgetTester tester,
+    {bool jobTutorialCompleted = false}) async {
+  await tester.pumpWidget(
+    MaterialApp(
+      home: Builder(
+        builder: (context) => ElevatedButton(
+          onPressed: () {
+            showJobTutorialDialog(
+              context,
+              onClose: () {},
+              jobTutorialCompleted: jobTutorialCompleted,
+            );
+          },
+          child: const Text('Show'),
         ),
       ),
-    );
-    await tester.tap(find.text('Show'));
+    ),
+  );
+  await tester.tap(find.text('Show'));
+  await tester.pumpAndSettle();
+}
+
+/// 指定ページ数だけ「次へ →」をタップする
+Future<void> tapNext(WidgetTester tester, int count) async {
+  for (int i = 0; i < count; i++) {
+    await tester.tap(find.text('次へ →'));
     await tester.pumpAndSettle();
   }
+}
 
+void main() {
   group('JobTutorialDialog', () {
-    testWidgets('ダイアログが正しく表示され、4ページ構成である',
-        (tester) async {
+    testWidgets('7ページ構成である（ページインジケーター7個）', (tester) async {
       await pumpJobTutorialDialog(tester);
 
-      // 1ページ目：祝福ページ
+      // インジケーターが7つある（7ページ）
+      // 各ページのインジケーターは Container（height: 4）で表現されている
+      // ExpansionTile等との混同を避け、height制約で特定
+      final indicators = find.byWidgetPredicate(
+        (w) => w is Container && w.constraints?.maxHeight == 4,
+      );
+      expect(indicators, findsNWidgets(7));
+    });
+
+    testWidgets('1ページ目：祝福ページ', (tester) async {
+      await pumpJobTutorialDialog(tester);
+
       expect(find.text('🌸 祝福'), findsOneWidget);
       expect(
         find.text('修行、お疲れ様でありんす！\n浪人Lv.10到達、誠におめでとうございます。'),
         findsOneWidget,
       );
+      // 全16スキルの告知
+      expect(find.textContaining('4つの職業'), findsOneWidget);
       expect(find.text('次へ →'), findsOneWidget);
+    });
 
-      // 「次へ」を押して2ページ目へ
-      await tester.tap(find.text('次へ →'));
-      await tester.pumpAndSettle();
+    testWidgets('2ページ目：浪人スキルページ', (tester) async {
+      await pumpJobTutorialDialog(tester);
+      await tapNext(tester, 1);
 
-      // 2ページ目：職業説明ページ
-      expect(find.text('🏯 職業解説'), findsOneWidget);
-      expect(find.text('浪人'), findsOneWidget);
-      expect(find.text('侍'), findsOneWidget);
-      expect(find.text('法師'), findsOneWidget);
-      expect(find.text('陰陽師'), findsOneWidget);
+      expect(find.text('🗡️ 浪人のスキル'), findsOneWidget);
+      expect(find.text('冒険者の勘'), findsOneWidget);
+      expect(find.text('果てなき挑戦'), findsOneWidget);
+      expect(find.text('← 戻る'), findsOneWidget);
+    });
+
+    testWidgets('3ページ目：侍スキルページ', (tester) async {
+      await pumpJobTutorialDialog(tester);
+      await tapNext(tester, 2);
+
+      expect(find.text('⚔️ 侍のスキル'), findsOneWidget);
+      expect(find.text('連撃の構え'), findsOneWidget);
+      expect(find.text('逆転の気魄'), findsOneWidget);
+      expect(find.text('集中の型'), findsOneWidget);
+      expect(find.text('武士道の極意'), findsOneWidget);
+      expect(find.text('← 戻る'), findsOneWidget);
+    });
+
+    testWidgets('4ページ目：法師スキルページ', (tester) async {
+      await pumpJobTutorialDialog(tester);
+      await tapNext(tester, 3);
+
+      expect(find.text('🛡️ 法師のスキル'), findsOneWidget);
+      expect(find.text('後追いの祈り'), findsOneWidget);
+      expect(find.text('微睡みの加護'), findsOneWidget);
+      expect(find.text('連続の誓い'), findsOneWidget);
+      expect(find.text('悟りの境地'), findsOneWidget);
+    });
+
+    testWidgets('5ページ目：陰陽師スキルページ', (tester) async {
+      await pumpJobTutorialDialog(tester);
+      await tapNext(tester, 4);
+
+      expect(find.text('🔮 陰陽師のスキル'), findsOneWidget);
+      expect(find.text('分割の理'), findsOneWidget);
+      expect(find.text('札の掌握'), findsOneWidget);
+      expect(find.text('計画の陣'), findsOneWidget);
+      expect(find.text('俯瞰の魔眼'), findsOneWidget);
+    });
+
+    testWidgets('6ページ目：スキルスロット説明ページ', (tester) async {
+      await pumpJobTutorialDialog(tester);
+      await tapNext(tester, 5);
+
+      expect(find.text('🔧 スキルスロットシステム'), findsOneWidget);
+      expect(find.textContaining('基本1枠'), findsOneWidget);
+      expect(find.textContaining('MASTERスキル'), findsOneWidget);
       expect(find.text('← 戻る'), findsOneWidget);
       expect(find.text('次へ →'), findsOneWidget);
     });
 
-    testWidgets('職業説明ページで各職業の説明文が表示される', (tester) async {
-      await pumpJobTutorialDialog(tester);
-
-      // 1ページ目→2ページ目
-      await tester.tap(find.text('次へ →'));
-      await tester.pumpAndSettle();
-
-      // 浪人の説明
-      expect(find.textContaining('基本の職業'), findsOneWidget);
-      expect(find.textContaining('ランク'), findsWidgets);
-
-      // 侍の説明
-      expect(find.textContaining('攻撃特化'), findsOneWidget);
-      expect(find.textContaining('コンボ'), findsWidgets);
-
-      // 法師の説明
-      expect(find.textContaining('回復・支援'), findsOneWidget);
-      expect(find.textContaining('繰り返し'), findsWidgets);
-
-      // 陰陽師の説明
-      expect(find.textContaining('知識・管理'), findsOneWidget);
-      expect(find.textContaining('サブタスク'), findsWidgets);
-    });
-
-    testWidgets('マスタリー説明ページが表示される', (tester) async {
-      await pumpJobTutorialDialog(tester);
-
-      // 1ページ目→2ページ目
-      await tester.tap(find.text('次へ →'));
-      await tester.pumpAndSettle();
-      // 2ページ目→3ページ目
-      await tester.tap(find.text('次へ →'));
-      await tester.pumpAndSettle();
-
-      // 3ページ目：マスタリー説明
-      expect(find.text('⭐ マスタリー'), findsOneWidget);
-      expect(find.textContaining('Lv.14'), findsWidgets);
-      expect(find.textContaining('スキル継承'), findsWidgets);
-    });
-
-    testWidgets('寺院への導線ページが表示され、閉じられる', (tester) async {
+    testWidgets('7ページ目：寺院への導線ページ', (tester) async {
       bool closed = false;
 
       await tester.pumpWidget(
@@ -117,24 +137,29 @@ void main() {
       await tester.tap(find.text('Show'));
       await tester.pumpAndSettle();
 
-      // 1→2→3→4ページ目
-      await tester.tap(find.text('次へ →'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('次へ →'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('次へ →'));
-      await tester.pumpAndSettle();
+      // 6回「次へ」で最終ページ
+      await tapNext(tester, 6);
 
-      // 4ページ目：寺院への導線
       expect(find.text('🏛️ 寺院へ'), findsOneWidget);
-      expect(find.textContaining('「社」タブ'), findsWidgets);
+      expect(find.textContaining('「社」タブ'), findsOneWidget);
       expect(find.text('閉じる'), findsOneWidget);
 
-      // 閉じるを押す
       await tester.tap(find.text('閉じる'));
       await tester.pumpAndSettle();
-
       expect(closed, true);
+    });
+
+    testWidgets('戻るボタンで前のページに戻れる', (tester) async {
+      await pumpJobTutorialDialog(tester);
+
+      // 2ページ目へ
+      await tapNext(tester, 1);
+      expect(find.text('🗡️ 浪人のスキル'), findsOneWidget);
+
+      // 戻る
+      await tester.tap(find.text('← 戻る'));
+      await tester.pumpAndSettle();
+      expect(find.text('🌸 祝福'), findsOneWidget);
     });
 
     testWidgets('スキップ可能である', (tester) async {
@@ -160,13 +185,19 @@ void main() {
       await tester.tap(find.text('Show'));
       await tester.pumpAndSettle();
 
-      // スキップボタンが存在する
       expect(find.text('スキップ'), findsOneWidget);
 
       await tester.tap(find.text('スキップ'));
       await tester.pumpAndSettle();
-
       expect(skipped, true);
+    });
+
+    testWidgets('jobTutorialCompleted=trueでダイアログが表示されない',
+        (tester) async {
+      await pumpJobTutorialDialog(tester, jobTutorialCompleted: true);
+
+      // ダイアログが表示されていない
+      expect(find.text('🌸 祝福'), findsNothing);
     });
   });
 }
