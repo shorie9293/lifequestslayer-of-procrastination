@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/domain/models/skill_slot.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -14,11 +15,14 @@ class TempleScreen extends StatelessWidget {
     final player = playerVM.player;
     final adventurerLv = player.jobLevels[Job.adventurer] ?? 1;
     final currentJobLv = player.level;
-    // 浪人Lv10で他職への転職が解禁される
     final canUnlockOtherJobs = adventurerLv >= 10;
-    // 他職にいる場合、その職業でLv10にならないと他に転職できない
-    final canLeaveCurrentJob = player.currentJob == Job.adventurer || currentJobLv >= 10;
+    final canLeaveCurrentJob =
+        player.currentJob == Job.adventurer || currentJobLv >= 10;
     final canChangeJob = canUnlockOtherJobs && canLeaveCurrentJob;
+    final maxSlots = JobSkill.maxSkillSlots(player.jobLevels);
+
+    // Get current job's skills (unlocked/locked)
+    final currentJobSkills = JobSkill.values.where((s) => s.job == player.currentJob).toList();
 
     return Scaffold(
       key: AppKeys.templeScreen,
@@ -64,7 +68,7 @@ class TempleScreen extends StatelessWidget {
               "基本の職業。まずはここから。",
               Colors.brown,
               player.currentJob == Job.adventurer,
-              true, // Always allowed
+              true,
               AppKeys.templeJobCardAdventurer,
             ),
             _buildJobCard(
@@ -103,12 +107,272 @@ class TempleScreen extends StatelessWidget {
               canChangeJob,
               AppKeys.templeJobCardWizard,
             ),
+
+            // ━━━ スキルスロットセクション ━━━
+            const SizedBox(height: 16),
+            _buildSkillSlotSection(context, playerVM, player, maxSlots),
+
+            // ━━━ 現在の職業スキル一覧 ━━━
+            const SizedBox(height: 16),
+            _buildCurrentJobSkillsSection(playerVM, player, currentJobSkills),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildSkillSlotSection(
+    BuildContext context,
+    PlayerViewModel viewModel,
+    Player player,
+    int maxSlots,
+  ) {
+    final equipped = player.equippedSkills;
+    return Container(
+      key: AppKeys.templeSkillSlotSection,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blueGrey.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.extension, color: Colors.cyanAccent, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                "スキルスロット (${equipped.length}/$maxSlots)",
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.cyanAccent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (maxSlots == 0)
+            const Padding(
+              padding: EdgeInsets.all(8),
+              child: Text(
+                "浪人Lv.8以上でスキルスロットが解放されます",
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+            ),
+          ...List.generate(maxSlots, (index) {
+            final isSlotFilled = index < equipped.length;
+            final eqSkill = isSlotFilled ? equipped[index] : null;
+            return _buildSlotRow(
+              context, viewModel, player, index, eqSkill, isSlotFilled);
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSlotRow(
+    BuildContext context,
+    PlayerViewModel viewModel,
+    Player player,
+    int slotIndex,
+    EquippedSkill? eqSkill,
+    bool isFilled,
+  ) {
+    // Collect all unlockable skills from OTHER jobs (not current job)
+    final allSkills = JobSkill.values.where((s) {
+      if (s.job == player.currentJob) return false; // Current job skills are always active
+      if (s.job == Job.adventurer) return false; // Ronin skills always active
+      return (player.jobLevels[s.job] ?? 0) >= 1; // At least Lv1 to consider
+    }).toList();
+
+    // Filter to only skills that can actually be learned (level requirement met)
+    final learnableSkills = allSkills.where((s) {
+      final jobLevel = player.jobLevels[s.job] ?? 1;
+      return jobLevel >= s.requiredLevel;
+    }).toList();
+
+    return Container(
+      key: Key('slot_$slotIndex'),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isFilled
+            ? Colors.blueGrey.withValues(alpha: 0.2)
+            : Colors.grey.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          Text("枠${slotIndex + 1}: ",
+              style: const TextStyle(color: Colors.white70, fontSize: 12)),
+          const SizedBox(width: 4),
+          Expanded(
+            child: isFilled
+                ? Row(
+                    children: [
+                      Icon(Icons.check_circle,
+                          size: 14, color: Colors.greenAccent),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          "${_jobDisplayName(eqSkill!.skill.job)}・${eqSkill.skill.displayName}",
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  )
+                : const Text("空きスロット",
+                    style: TextStyle(color: Colors.grey, fontSize: 12)),
+          ),
+          if (eqSkill != null && eqSkill.skill.isMasterSkill)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+              decoration: BoxDecoration(
+                color: Colors.amber.withValues(alpha: 0.3),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text("常時発動",
+                  style: TextStyle(
+                      color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold)),
+            ),
+          if (isFilled)
+            IconButton(
+              icon: const Icon(Icons.remove_circle_outline,
+                  size: 18, color: Colors.redAccent),
+              onPressed: () {
+                viewModel.unequipSkill(slotIndex);
+                viewModel.save();
+              },
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          if (!isFilled && learnableSkills.isNotEmpty)
+            PopupMenuButton<JobSkill>(
+              key: AppKeys.templeSkillSlotDropdown,
+              icon: const Icon(Icons.add_circle_outline,
+                  size: 18, color: Colors.cyanAccent),
+              onSelected: (skill) {
+                viewModel.equipSkill(skill);
+                viewModel.save();
+              },
+              itemBuilder: (context) =>
+                  learnableSkills.map((skill) {
+                return PopupMenuItem<JobSkill>(
+                  value: skill,
+                  child: Text(
+                    "${_jobDisplayName(skill.job)}・${skill.displayName}",
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                );
+              }).toList(),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCurrentJobSkillsSection(
+    PlayerViewModel viewModel,
+    Player player,
+    List<JobSkill> skills,
+  ) {
+    final currentJobLevel = player.level;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.teal.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.auto_awesome, color: Colors.tealAccent, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                "${_jobDisplayName(player.currentJob)}のスキル (Lv.$currentJobLevel)",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.tealAccent,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          ...skills.map((skill) {
+            final isUnlocked = currentJobLevel >= skill.requiredLevel;
+            final isMastered = skill.isMasterSkill && skill.isMastered(currentJobLevel);
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Icon(
+                    isUnlocked ? Icons.check_circle : Icons.lock,
+                    size: 16,
+                    color: isUnlocked ? Colors.greenAccent : Colors.grey,
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      skill.displayName,
+                      style: TextStyle(
+                        color: isUnlocked ? Colors.white : Colors.grey,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    "Lv.${skill.requiredLevel}",
+                    style: TextStyle(
+                      color: isUnlocked ? Colors.white60 : Colors.redAccent,
+                      fontSize: 11,
+                    ),
+                  ),
+                  if (isMastered) ...[
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.withValues(alpha: 0.3),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text("MASTER",
+                          style: TextStyle(
+                              color: Colors.amber,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold)),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
+  String _jobDisplayName(Job job) {
+    switch (job) {
+      case Job.adventurer:
+        return '浪人';
+      case Job.warrior:
+        return '侍';
+      case Job.cleric:
+        return '法師';
+      case Job.wizard:
+        return '陰陽師';
+    }
+  }
   Widget _buildJobCard(
     BuildContext context,
     PlayerViewModel viewModel,

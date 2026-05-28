@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/domain/models/skill_slot.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/title_definition.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
@@ -127,6 +128,24 @@ class PlayerViewModel extends ChangeNotifier {
     } else {
       _player.activeSkills.add(j);
     }
+    notifyListeners();
+  }
+
+  /// v4: スキルを装備スロットに追加する。スロット上限・重複チェックあり。
+  void equipSkill(JobSkill skill, {bool debugMode = false}) {
+    if (!debugMode) {
+      final maxSlots = JobSkill.maxSkillSlots(_player.jobLevels);
+      if (_player.equippedSkills.length >= maxSlots) return;
+      if (_player.equippedSkills.any((es) => es.skill == skill)) return;
+    }
+    _player.equippedSkills.add(EquippedSkill(skill: skill));
+    notifyListeners();
+  }
+
+  /// v4: 指定スロットの装備スキルを解除する。
+  void unequipSkill(int slotIndex) {
+    if (slotIndex < 0 || slotIndex >= _player.equippedSkills.length) return;
+    _player.equippedSkills.removeAt(slotIndex);
     notifyListeners();
   }
 

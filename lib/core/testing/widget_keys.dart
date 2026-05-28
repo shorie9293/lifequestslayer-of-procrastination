@@ -71,6 +71,8 @@ class AppKeys {
   static const Key templeJobCardCleric = Key('card_job_cleric');
   static const Key templeJobCardWizard = Key('card_job_wizard');
   static const Key templeSkillToggle = Key('tgl_skill_inherit');
+  static const Key templeSkillSlotSection = Key('sec_skill_slots');
+  static const Key templeSkillSlotDropdown = Key('dd_skill_slot');
 
   // ━━━ 街 ━━━
   static const Key townScreen = Key('screen_town');
