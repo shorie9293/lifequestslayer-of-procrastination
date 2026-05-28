@@ -43,27 +43,38 @@ class TaskCompletionService {
 
   /// タスクを完了し、結果を返す。PlayerとTaskは呼び出し元で更新する。
   /// 戻り値がnullの場合は完了不可（サブタスク未完了など）。
+  /// [allTasks] は wizardProject ボーナス判定用の全タスクリスト（任意）。
   TaskCompletionResult? complete({
     required Task task,
     required Player player,
     required bool hasShownFatiguePopupToday,
     required bool knowledgeQuestEnabled,
+    List<Task>? allTasks,
   }) {
-    // Wizard: サブタスク完了チェック
-    if (player.canUseSkill(Job.wizard) && task.subTasks.isNotEmpty) {
+    // Wizard Lv1: 分割の理 — サブタスク完了チェック
+    if (player.isSkillEquipped(JobSkill.wizardSubtask) && task.subTasks.isNotEmpty) {
       if (task.subTasks.any((s) => !s.isCompleted)) {
         return null;
       }
     }
 
-    // Cleric: 繰り返しタスクは isCompleted にしない
-    if (player.canUseSkill(Job.cleric) &&
-        task.repeatInterval != RepeatInterval.none) {
+    // Cleric: repeatAfterDays の処理
+    if (player.canUseSkill(Job.cleric) && task.repeatAfterDays != null) {
+      task.lastCompletedAt = DateTime.now();
+    } else if (
+        // Ronin (冒険者): 繰り返しタスクは isCompleted にせず lastCompletedAt を更新
+        // 後方互換: Cleric mastery でも動作
+        task.repeatInterval != RepeatInterval.none &&
+        (player.hasSkill(JobSkill.roninRepeatTask) ||
+         player.canUseSkill(Job.cleric))) {
       task.lastCompletedAt = DateTime.now();
     } else {
       task.isCompleted = true;
       task.status = TaskStatus.inGuild;
     }
+
+    // Cleric Lv10: 連続の誓い — タスク完了をstreakに記録
+    player.recordTaskCompletion(task.id, DateTime.now());
 
     final bonusMessages = <String>[];
     final fatigueMultiplier = FatigueService.fatigueMultiplier(player);
@@ -99,6 +110,12 @@ class TaskCompletionService {
     // 称号ボーナス
     if (player.equippedTitle != null) {
       expGain = (expGain * 1.05).round();
+    }
+
+    // Cleric Lv10: 連続の誓い — 7日間streakで+20% EXP
+    if (player.getTaskStreakBonus(task.id) > 1.0) {
+      expGain = (expGain * player.getTaskStreakBonus(task.id)).round();
+      bonusMessages.add("📿 連続の誓いボーナス！ +20% EXP");
     }
 
     // コイン計算
@@ -184,6 +201,33 @@ class TaskCompletionService {
       if (remaining.inMinutes <= 60 && remaining.inMinutes > 0) {
         expGain = (expGain * 1.5).round();
         bonusMessages.add("🔥 ギリギリ討伐ボーナス！報酬1.5倍！");
+      }
+    }
+
+    // Wizard Lv10: 計画の陣 — プロジェクト全完了ボーナス
+    int projectBonusExp = 0;
+    if (player.isSkillEquipped(JobSkill.wizardProject) &&
+        allTasks != null &&
+        allTasks.isNotEmpty) {
+      final projectName = player.taskProjects[task.id];
+      if (projectName != null) {
+        final project = player.projects
+            .where((p) => p.name == projectName)
+            .firstOrNull;
+        if (project != null && project.bonusExp > 0) {
+          // プロジェクトに属する全タスクが完了しているか
+          final allProjectTaskIds = project.taskIds.toSet();
+          // 現在完了したタスク + 他の全タスクの完了状態を確認
+          final allProjectTasks = allTasks
+              .where((t) => allProjectTaskIds.contains(t.id));
+          final allDone = allProjectTasks.every((t) =>
+              t.isCompleted || t.id == task.id);
+          if (allDone) {
+            projectBonusExp = project.bonusExp;
+            expGain += projectBonusExp;
+            bonusMessages.add("🗺️ 計画の陣：${projectName} 全踏破！ +$projectBonusExp EXP");
+          }
+        }
       }
     }
 

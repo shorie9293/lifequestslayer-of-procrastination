@@ -134,4 +134,83 @@ void main() {
       expect(player.activeSkills, contains(Job.warrior));
     });
   });
+
+  group('hasSkill(JobSkill)', () {
+    test('default player (Lv1 adventurer) has roninSlots', () {
+      final player = Player(); // Lv1 adventurer, default
+      expect(player.hasSkill(JobSkill.roninSlots), true);
+    });
+
+    test('default player (Lv1 adventurer) does NOT have roninRepeatTask', () {
+      final player = Player(); // Lv1 adventurer, default
+      expect(player.hasSkill(JobSkill.roninRepeatTask), false);
+    });
+
+    test('Lv10 adventurer (mastered) has roninRepeatTask', () {
+      final player = Player(
+        jobLevels: {Job.adventurer: 10},
+      );
+      expect(player.hasSkill(JobSkill.roninRepeatTask), true);
+    });
+
+    test('Lv9 adventurer does NOT have roninRepeatTask', () {
+      final player = Player(
+        jobLevels: {Job.adventurer: 9},
+        currentJob: Job.adventurer,
+      );
+      expect(player.hasSkill(JobSkill.roninRepeatTask), false);
+    });
+
+    test('Lv10 adventurer has roninRepeatTask even when currentJob is warrior', () {
+      final player = Player(
+        jobLevels: {Job.adventurer: 10, Job.warrior: 1},
+        currentJob: Job.warrior,
+      );
+      // Ronin skills are always on when adventurer is mastered
+      expect(player.hasSkill(JobSkill.roninRepeatTask), true);
+      expect(player.hasSkill(JobSkill.roninSlots), true);
+    });
+
+    test('Lv1 warrior does NOT have warriorBushido (requires Lv15)', () {
+      final player = Player(
+        jobLevels: {Job.adventurer: 1, Job.warrior: 1},
+        currentJob: Job.warrior,
+      );
+      expect(player.hasSkill(JobSkill.warriorBushido), false);
+    });
+
+    test('equippedSkills grants specific skill when level requirement is met', () {
+      final player = Player(
+        jobLevels: {Job.adventurer: 1, Job.warrior: 10},
+        currentJob: Job.adventurer,
+        equippedSkills: [
+          EquippedSkill(skill: JobSkill.warriorPomodoro), // requires Lv10
+        ],
+      );
+      expect(player.hasSkill(JobSkill.warriorPomodoro), true);
+    });
+
+    test('equippedSkills does NOT grant skill if level is insufficient', () {
+      final player = Player(
+        jobLevels: {Job.warrior: 5},
+        currentJob: Job.adventurer,
+        equippedSkills: [
+          EquippedSkill(skill: JobSkill.warriorBushido), // requires Lv15
+        ],
+      );
+      expect(player.hasSkill(JobSkill.warriorBushido), false);
+    });
+
+    test('v3 compat: isMastered + activeSkills grants all job skills', () {
+      final player = Player(
+        jobLevels: {Job.cleric: 15},
+        currentJob: Job.adventurer,
+      );
+      // ignore: deprecated_member_use
+      player.activeSkills.add(Job.cleric);
+      // Cleric Lv15 mastered → all Cleric skills available via v3 compat
+      expect(player.hasSkill(JobSkill.clericRepeatAfter), true);
+      expect(player.hasSkill(JobSkill.clericEnlightenment), true);
+    });
+  });
 }

@@ -32,11 +32,13 @@ class ProjectGroup {
   String name;
   List<String> taskIds;
   List<String> tags;
+  int bonusExp; // wizardProject: 全タスク完了時のボーナスEXP
 
   ProjectGroup({
     required this.name,
     List<String>? taskIds,
     List<String>? tags,
+    this.bonusExp = 0,
   })  : taskIds = taskIds ?? [],
         tags = tags ?? [];
 
@@ -54,6 +56,7 @@ class ProjectGroup {
         'name': name,
         'taskIds': taskIds,
         'tags': tags,
+        'bonusExp': bonusExp,
       };
 
   factory ProjectGroup.fromJson(Map<String, dynamic> json) {
@@ -61,6 +64,7 @@ class ProjectGroup {
       name: json['name'] as String,
       taskIds: (json['taskIds'] as List?)?.cast<String>(),
       tags: (json['tags'] as List?)?.cast<String>(),
+      bonusExp: (json['bonusExp'] as int?) ?? 0,
     );
   }
 
@@ -70,11 +74,12 @@ class ProjectGroup {
       other is ProjectGroup &&
           runtimeType == other.runtimeType &&
           name == other.name &&
+          bonusExp == other.bonusExp &&
           _listEquals(taskIds, other.taskIds) &&
           _listEquals(tags, other.tags);
 
   @override
-  int get hashCode => Object.hash(name, Object.hashAll(taskIds), Object.hashAll(tags));
+  int get hashCode => Object.hash(name, bonusExp, Object.hashAll(taskIds), Object.hashAll(tags));
 }
 
 bool _listEquals<T>(List<T>? a, List<T>? b) {

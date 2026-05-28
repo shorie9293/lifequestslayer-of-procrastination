@@ -338,4 +338,115 @@ void main() {
       expect(question, isNull);
     });
   });
+
+  group('TaskCompletionService - 繰り返しタスク (RoninRepeatTask)', () {
+    late TaskCompletionService service;
+
+    setUp(() {
+      service = TaskCompletionService();
+      QuizService.setQuestions([]);
+      QuizService.probability = 0.0;
+    });
+
+    tearDown(() {
+      QuizService.probability = 0.30;
+    });
+
+    Task makeRepeatTask() {
+      return Task(
+        id: 'repeat-1',
+        title: '毎日の修行',
+        status: TaskStatus.active,
+        rank: QuestRank.B,
+        repeatInterval: RepeatInterval.daily,
+      );
+    }
+
+    test('RoninRepeatTask有効時はisCompletedにならずlastCompletedAt設定', () {
+      final task = makeRepeatTask();
+      final player = Player(
+        jobLevels: {Job.adventurer: 10},
+        currentJob: Job.adventurer,
+      );
+      final coinsBefore = player.coins;
+
+      final result = service.complete(
+        task: task,
+        player: player,
+        hasShownFatiguePopupToday: false,
+        knowledgeQuestEnabled: false,
+      );
+
+      expect(result, isNotNull);
+      expect(task.isCompleted, false,
+          reason: 'RoninRepeatTask有効時はisCompleted=false');
+      expect(task.lastCompletedAt, isNotNull);
+      expect(task.status, isNot(TaskStatus.inGuild));
+      expect(result!.expGain, greaterThan(0));
+      expect(player.coins, greaterThan(coinsBefore));
+    });
+
+    test('RoninRepeatTask未開放時はrepeatInterval≠noneでもisCompleted=true', () {
+      final task = makeRepeatTask();
+      final player = Player(
+        jobLevels: {Job.adventurer: 1},
+        currentJob: Job.adventurer,
+      );
+
+      final result = service.complete(
+        task: task,
+        player: player,
+        hasShownFatiguePopupToday: false,
+        knowledgeQuestEnabled: false,
+      );
+
+      expect(result, isNotNull);
+      expect(task.isCompleted, true);
+      expect(task.status, TaskStatus.inGuild);
+    });
+
+    test('後方互換:Cleric mastered+activeSkillsで繰り返しタスクが機能', () {
+      final task = makeRepeatTask();
+      final player = Player(
+        jobLevels: {Job.adventurer: 1, Job.cleric: 15},
+        currentJob: Job.adventurer,
+      );
+      // ignore: deprecated_member_use
+      player.activeSkills.add(Job.cleric);
+
+      final result = service.complete(
+        task: task,
+        player: player,
+        hasShownFatiguePopupToday: false,
+        knowledgeQuestEnabled: false,
+      );
+
+      expect(result, isNotNull);
+      expect(task.isCompleted, false);
+      expect(task.lastCompletedAt, isNotNull);
+    });
+
+    test('repeatInterval=noneのタスクはRoninRepeatTask有無に関わらずisCompleted=true', () {
+      final task = Task(
+        id: 'normal-1',
+        title: '通常タスク',
+        status: TaskStatus.active,
+        rank: QuestRank.B,
+        repeatInterval: RepeatInterval.none,
+      );
+      final player = Player(
+        jobLevels: {Job.adventurer: 10},
+      );
+
+      service.complete(
+        task: task,
+        player: player,
+        hasShownFatiguePopupToday: false,
+        knowledgeQuestEnabled: false,
+      );
+
+      expect(task.isCompleted, true);
+      expect(task.status, TaskStatus.inGuild);
+    });
+  });
 }

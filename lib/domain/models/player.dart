@@ -140,6 +140,29 @@ extension JobSkillMeta on JobSkill {
   }
 }
 
+/// Cleric Lv10: タスクごとの連続完了記録
+class TaskStreak {
+  int currentStreak;
+  DateTime lastCompletedDate;
+
+  TaskStreak({
+    this.currentStreak = 1,
+    required this.lastCompletedDate,
+  });
+
+  Map<String, dynamic> toJson() => {
+        'currentStreak': currentStreak,
+        'lastCompletedDate': lastCompletedDate.toIso8601String(),
+      };
+
+  factory TaskStreak.fromJson(Map<String, dynamic> json) {
+    return TaskStreak(
+      currentStreak: json['currentStreak'] as int,
+      lastCompletedDate: DateTime.parse(json['lastCompletedDate'] as String),
+    );
+  }
+}
+
 class JobSkillAdapter extends TypeAdapter<JobSkill> {
   @override
   final int typeId = 10;
@@ -219,6 +242,17 @@ class Player {
   List<String> tags;
   List<ProjectGroup> projects;
 
+  // --- v4: wizardTags — タグ→タスクIDの逆引きマップ ---
+  Map<String, List<String>> taskTags;
+  // --- v4: wizardProject — タスクID→プロジェクト名の逆引きマップ ---
+  Map<String, String> taskProjects;
+
+  // --- v4: Cleric スキル用 ---
+  /// Lv5: 微睡みの加護 — snooze済みタスクID → snooze実行日
+  Map<String, DateTime> snoozedTasks = {};
+  /// Lv10: 連続の誓い — タスクごとの連続完了記録
+  Map<String, TaskStreak> taskStreaks = {};
+
   Player({
     Map<Job, int>? jobLevels,
     Map<Job, int>? jobExps,
@@ -253,6 +287,10 @@ class Player {
     List<String>? tags,
     List<ProjectGroup>? projects,
     List<EquippedSkill>? equippedSkills,
+    Map<String, List<String>>? taskTags,
+    Map<String, String>? taskProjects,
+    Map<String, DateTime>? snoozedTasks,
+    Map<String, TaskStreak>? taskStreaks,
   })  : characterSkin = characterSkin ?? const CharacterSkin(), jobLevels = jobLevels ?? {Job.adventurer: 1},
         jobExps = jobExps ?? {Job.adventurer: 0},
         activeSkills = activeSkills ?? {},
@@ -260,7 +298,11 @@ class Player {
         titles = titles ?? [],
         tags = tags ?? [],
         projects = projects ?? [],
-        equippedSkills = equippedSkills ?? [];
+        equippedSkills = equippedSkills ?? [],
+        taskTags = taskTags ?? {},
+        taskProjects = taskProjects ?? {},
+        snoozedTasks = snoozedTasks ?? {},
+        taskStreaks = taskStreaks ?? {};
 
   // Getters for current job (Compatibility)
   int get level => jobLevels[currentJob] ?? 1;
@@ -321,8 +363,124 @@ class Player {
     return false;
   }
 
+  /// v4: JobSkill 単位のスキル使用可否判定。
+  /// - Ronin スキル: Adventurer mastered (Lv10+) で常時オン
+  /// - v4 equippedSkills: 明示装備 + 必要レベル達成
+  /// - v3 互換: isMastered + activeSkills
+  /// - 現在の職業: 現在レベル以下の全スキル有効
+  bool hasSkill(JobSkill skill) {
+    final job = skill.job;
+    final jobLevel = jobLevels[job] ?? 1;
+
+    // Ronin: adventurer mastered (Lv10+) → 全Roninスキル常時オン
+    if (job == Job.adventurer && isMastered(Job.adventurer)) return true;
+
+    // v4: equippedSkills に明示装備 + 必要レベル達成
+    if (equippedSkills.any((es) => es.skill == skill) &&
+        jobLevel >= skill.requiredLevel) {
+      return true;
+    }
+
+    // v3互換: isMastered + activeSkills → その職の全スキル有効
+    if (isMastered(job) && activeSkills.contains(job)) return true;
+
+    // 現在の職業: 現在レベル以下なら全スキル有効
+    if (currentJob == job && jobLevel >= skill.requiredLevel) return true;
+
+    return false;
+  }
+
+  /// wizardSubtask etc: equippedSkills への明示装備チェック
+  /// hasSkill と異なり、マスター特権や現職全開放を適用せず、
+  /// スキル個別の装備のみを判定する。
+  bool isSkillEquipped(JobSkill skill) {
+    return equippedSkills.any((es) => es.skill == skill) &&
+        canUseSkill(skill.job);
+  }
+
+  // --- wizardTags ---
+
+  /// タスクに札（タグ）を付ける
+  void tagTask(String taskId, String tag) {
+    taskTags.putIfAbsent(tag, () => []);
+    if (!taskTags[tag]!.contains(taskId)) {
+      taskTags[tag]!.add(taskId);
+    }
+  }
+
+  /// タスクから札を外す
+  void untagTask(String taskId, String tag) {
+    taskTags[tag]?.remove(taskId);
+    if (taskTags[tag]?.isEmpty ?? false) {
+      taskTags.remove(tag);
+    }
+  }
+
+  /// 指定された札に紐づくタスクID一覧を返す
+  List<String> getTaskIdsByTag(String tag) {
+    return List.unmodifiable(taskTags[tag] ?? []);
+  }
+
+  // --- wizardProject ---
+
+  /// タスクをプロジェクトに所属させる
+  void addToProject(String taskId, String projectName) {
+    taskProjects[taskId] = projectName;
+  }
+
+  /// タスクをプロジェクトから外す
+  void removeFromProject(String taskId) {
+    taskProjects.remove(taskId);
+  }
+
   // v1.3: レベル上限（powオーバーフロー防止）
   static const int maxLevel = 99;
+
+  /// Cleric Lv5: 微睡みの加護 — タスクのdeadlineを翌日に延期
+  void snoozeTask(String taskId, Task task, DateTime now) {
+    if (task.deadline == null) return;
+    final currentDeadline = task.deadline!;
+    // 現在のdeadlineから1日追加
+    task.deadline = currentDeadline.add(const Duration(days: 1));
+    snoozedTasks[taskId] = now;
+  }
+
+  /// Cleric Lv10: 連続の誓い — タスク完了を記録しstreakを更新
+  void recordTaskCompletion(String taskId, DateTime completedDate) {
+    final today = DateTime(completedDate.year, completedDate.month, completedDate.day);
+    final existing = taskStreaks[taskId];
+
+    if (existing == null) {
+      taskStreaks[taskId] = TaskStreak(
+        currentStreak: 1,
+        lastCompletedDate: today,
+      );
+      return;
+    }
+
+    final lastDate = existing.lastCompletedDate;
+    final diffDays = today.difference(lastDate).inDays;
+
+    if (diffDays == 0) {
+      // 同日の複数完了は無視
+      return;
+    } else if (diffDays == 1) {
+      // 連続日 → streak増加
+      existing.currentStreak++;
+      existing.lastCompletedDate = today;
+    } else {
+      // 1日以上空いた → streakリセット
+      existing.currentStreak = 1;
+      existing.lastCompletedDate = today;
+    }
+  }
+
+  /// Cleric Lv10: 7日以上のstreakで +20% EXPボーナス
+  double getTaskStreakBonus(String taskId) {
+    final streak = taskStreaks[taskId];
+    if (streak == null) return 1.0;
+    return streak.currentStreak >= 7 ? 1.2 : 1.0;
+  }
 
   bool addExp(int amount) {
     // レベル上限到達時はEXPを加算しない
@@ -511,6 +669,40 @@ class PlayerAdapter extends TypeAdapter<Player> {
               .toList() ??
           [];
     }
+    // v4: Cleric snoozedTasks
+    if (reader.availableBytes > 0) {
+      final snoozeRaw = reader.readMap();
+      player.snoozedTasks = (snoozeRaw as Map?)?.map(
+            (k, v) => MapEntry(k as String, v as DateTime),
+          ) ??
+          {};
+    }
+    // v4: Cleric taskStreaks
+    if (reader.availableBytes > 0) {
+      final streakRawList = reader.readList();
+      player.taskStreaks = (streakRawList as List?)
+              ?.map((e) => MapEntry(
+                    (e as Map)['taskId'] as String,
+                    TaskStreak.fromJson(
+                        (e['streak'] as Map).cast<String, dynamic>()),
+                  ))
+              .fold<Map<String, TaskStreak>>(
+                  {}, (map, entry) => map..[entry.key] = entry.value) ??
+          {};
+    }
+    // v4: wizardTags — taskTags map
+    if (reader.availableBytes > 0) {
+      final raw = reader.readMap();
+      player.taskTags = (raw as Map?)?.map(
+            (k, v) => MapEntry(k as String, (v as List).cast<String>()),
+          ) ??
+          {};
+    }
+    // v4: wizardProject — taskProjects map
+    if (reader.availableBytes > 0) {
+      final raw = reader.readMap();
+      player.taskProjects = (raw as Map?)?.cast<String, String>() ?? {};
+    }
 
     return player;
   }
@@ -650,5 +842,18 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.writeList(obj.tags);
     // v4: プロジェクト
     writer.writeList(obj.projects.map((p) => p.toJson()).toList());
+    // v4: Cleric snoozedTasks
+    writer.writeMap(obj.snoozedTasks);
+    // v4: Cleric taskStreaks
+    writer.writeList(obj.taskStreaks.entries
+        .map((e) => {
+              'taskId': e.key,
+              'streak': e.value.toJson(),
+            })
+        .toList());
+    // v4: wizardTags — taskTags map
+    writer.writeMap(obj.taskTags);
+    // v4: wizardProject — taskProjects map
+    writer.writeMap(obj.taskProjects);
   }
 }

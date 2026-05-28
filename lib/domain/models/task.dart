@@ -102,6 +102,8 @@ class Task {
   int? targetTimeMinutes; // 見積もり時間（分）
   DateTime? activeAt; // タスク開始日時（アクティブ化した日時）
   DateTime? deadline; // 完成期限
+  int? repeatAfterDays; // Cleric Lv1 後追いの祈り: N日後に再活性化
+  List<String> tags; // wizardTags: 札（タグ）
 
   Task({
     required this.id,
@@ -116,8 +118,36 @@ class Task {
     this.targetTimeMinutes,
     this.activeAt,
     this.deadline,
+    this.repeatAfterDays,
+    List<String>? tags,
   })  : subTasks = subTasks ?? [],
-        repeatWeekdays = repeatWeekdays ?? [];
+        repeatWeekdays = repeatWeekdays ?? [],
+        tags = tags ?? [];
+
+  /// 札を追加（wizardTags: 重複防止）
+  void addTag(String tag) {
+    if (!tags.contains(tag)) {
+      tags.add(tag);
+    }
+  }
+
+  /// 札を削除
+  void removeTag(String tag) {
+    tags.remove(tag);
+  }
+
+  /// 札を持っているか
+  bool hasTag(String tag) => tags.contains(tag);
+
+  /// repeatAfterDays が設定され、lastCompletedAt から repeatAfterDays 日経過したか判定。
+  bool shouldReactivate() {
+    if (repeatAfterDays == null || lastCompletedAt == null) return false;
+    final reactivateDate = lastCompletedAt!.add(Duration(days: repeatAfterDays!));
+    return DateTime.now().isAfter(reactivateDate) ||
+        DateTime.now().day == reactivateDate.day &&
+            DateTime.now().month == reactivateDate.month &&
+            DateTime.now().year == reactivateDate.year;
+  }
 }
 
 class TaskAdapter extends TypeAdapter<Task> {
@@ -142,6 +172,8 @@ class TaskAdapter extends TypeAdapter<Task> {
       task.targetTimeMinutes = reader.read();
       task.activeAt = reader.read();
       task.deadline = reader.read();
+      task.repeatAfterDays = reader.read();
+      task.tags = (reader.read() as List?)?.cast<String>() ?? [];
     } catch (e) {
       // 過去のデータを読み込んだ場合のフォールバック
     }
@@ -162,5 +194,7 @@ class TaskAdapter extends TypeAdapter<Task> {
     writer.write(obj.targetTimeMinutes);
     writer.write(obj.activeAt);
     writer.write(obj.deadline);
+    writer.write(obj.repeatAfterDays);
+    writer.write(obj.tags);
   }
 }
