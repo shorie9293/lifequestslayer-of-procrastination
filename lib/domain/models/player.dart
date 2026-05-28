@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:hive/hive.dart';
 import 'task.dart';
+import 'skill_slot.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
 
 enum Job {
@@ -8,6 +9,150 @@ enum Job {
   cleric,
   wizard,
   adventurer,
+}
+
+/// 職業スキル — 14スキル (Ronin 2, Warrior 4, Cleric 4, Wizard 4)
+enum JobSkill {
+  // Ronin (冒険者) — 基本スキル
+  roninSlots,
+  roninRepeatTask,
+
+  // Warrior (戦士) — 討伐特化
+  warriorCombo,
+  warriorFatigueReverse,
+  warriorPomodoro,
+  warriorBushido,
+
+  // Cleric (僧侶) — 継続支援
+  clericRepeatAfter,
+  clericSnooze,
+  clericStreak,
+  clericEnlightenment,
+
+  // Wizard (魔法使い) — 管理強化
+  wizardSubtask,
+  wizardTags,
+  wizardProject,
+  wizardOverview,
+  ;
+
+  /// 装備可能な最大スキルスロット数。
+  /// 基本1枠 + Roninマスター(+1) + 各職マスター(+1)。
+  static int maxSkillSlots(Map<Job, int> jobLevels) {
+    int slots = 1;
+    if ((jobLevels[Job.adventurer] ?? 1) >= 10) slots++;
+    if ((jobLevels[Job.warrior] ?? 1) >= 15) slots++;
+    if ((jobLevels[Job.cleric] ?? 1) >= 15) slots++;
+    if ((jobLevels[Job.wizard] ?? 1) >= 15) slots++;
+    return slots;
+  }
+}
+
+extension JobSkillMeta on JobSkill {
+  Job get job {
+    switch (this) {
+      case JobSkill.roninSlots:
+      case JobSkill.roninRepeatTask:
+        return Job.adventurer;
+      case JobSkill.warriorCombo:
+      case JobSkill.warriorFatigueReverse:
+      case JobSkill.warriorPomodoro:
+      case JobSkill.warriorBushido:
+        return Job.warrior;
+      case JobSkill.clericRepeatAfter:
+      case JobSkill.clericSnooze:
+      case JobSkill.clericStreak:
+      case JobSkill.clericEnlightenment:
+        return Job.cleric;
+      case JobSkill.wizardSubtask:
+      case JobSkill.wizardTags:
+      case JobSkill.wizardProject:
+      case JobSkill.wizardOverview:
+        return Job.wizard;
+    }
+  }
+
+  int get requiredLevel {
+    switch (this) {
+      // Ronin
+      case JobSkill.roninSlots:
+        return 1;
+      case JobSkill.roninRepeatTask:
+        return 10;
+      // Warrior
+      case JobSkill.warriorCombo:
+        return 1;
+      case JobSkill.warriorFatigueReverse:
+        return 5;
+      case JobSkill.warriorPomodoro:
+        return 10;
+      case JobSkill.warriorBushido:
+        return 15;
+      // Cleric
+      case JobSkill.clericRepeatAfter:
+        return 1;
+      case JobSkill.clericSnooze:
+        return 5;
+      case JobSkill.clericStreak:
+        return 10;
+      case JobSkill.clericEnlightenment:
+        return 15;
+      // Wizard
+      case JobSkill.wizardSubtask:
+        return 1;
+      case JobSkill.wizardTags:
+        return 5;
+      case JobSkill.wizardProject:
+        return 10;
+      case JobSkill.wizardOverview:
+        return 15;
+    }
+  }
+
+  bool get isMasterSkill {
+    if (this == JobSkill.roninRepeatTask) return true;
+    return requiredLevel == 15;
+  }
+
+  static const _displayNames = {
+    JobSkill.roninSlots: '冒険者の勘',
+    JobSkill.roninRepeatTask: '果てなき挑戦',
+    JobSkill.warriorCombo: '連撃の構え',
+    JobSkill.warriorFatigueReverse: '逆転の気魄',
+    JobSkill.warriorPomodoro: '集中の型',
+    JobSkill.warriorBushido: '武士道の極意',
+    JobSkill.clericRepeatAfter: '後追いの祈り',
+    JobSkill.clericSnooze: '微睡みの加護',
+    JobSkill.clericStreak: '連続の誓い',
+    JobSkill.clericEnlightenment: '悟りの境地',
+    JobSkill.wizardSubtask: '分割の理',
+    JobSkill.wizardTags: '札の掌握',
+    JobSkill.wizardProject: '計画の陣',
+    JobSkill.wizardOverview: '俯瞰の魔眼',
+  };
+
+  String get displayName => _displayNames[this] ?? name;
+
+  /// RoninスキルはJobLv>=10、他職業スキルはJobLv>=15 で mastered。
+  bool isMastered(int jobLevel) {
+    if (job == Job.adventurer) return jobLevel >= 10;
+    return jobLevel >= 15;
+  }
+}
+
+class JobSkillAdapter extends TypeAdapter<JobSkill> {
+  @override
+  final int typeId = 10;
+
+  @override
+  JobSkill read(BinaryReader reader) {
+    return JobSkill.values[reader.readByte()];
+  }
+
+  @override
+  void write(BinaryWriter writer, JobSkill obj) {
+    writer.writeByte(obj.index);
+  }
 }
 
 class JobAdapter extends TypeAdapter<Job> {
@@ -31,7 +176,9 @@ class Player {
   // Let's store the Maps.
   Map<Job, int> jobLevels;
   Map<Job, int> jobExps;
-  Set<Job> activeSkills; // Mastery skills equipped
+  @Deprecated('v4: equippedSkills に移行。互換性のため維持')
+  Set<Job> activeSkills; // Mastery skills equipped (v3互換、削除予定)
+  List<EquippedSkill> equippedSkills; // v4: 装備スキル
   Job currentJob;
   int comboCount;
   int coins;
@@ -62,6 +209,16 @@ class Player {
   int longestStreak;
   DateTime? lastLoginDate;
 
+  // --- v4: ポモドーロ設定 ---
+  int pomodoroMinutes;
+  int pomodoroShortBreakMinutes;
+  int pomodoroLongBreakMinutes;
+  int pomodorosBeforeLongBreak;
+
+  // --- v4: タグ・プロジェクト ---
+  List<String> tags;
+  List<ProjectGroup> projects;
+
   Player({
     Map<Job, int>? jobLevels,
     Map<Job, int>? jobExps,
@@ -89,11 +246,21 @@ class Player {
     this.streakDays = 0,
     this.longestStreak = 0,
     this.lastLoginDate,
+    this.pomodoroMinutes = 25,
+    this.pomodoroShortBreakMinutes = 5,
+    this.pomodoroLongBreakMinutes = 15,
+    this.pomodorosBeforeLongBreak = 4,
+    List<String>? tags,
+    List<ProjectGroup>? projects,
+    List<EquippedSkill>? equippedSkills,
   })  : characterSkin = characterSkin ?? const CharacterSkin(), jobLevels = jobLevels ?? {Job.adventurer: 1},
         jobExps = jobExps ?? {Job.adventurer: 0},
         activeSkills = activeSkills ?? {},
         homeItems = homeItems ?? [],
-        titles = titles ?? [];
+        titles = titles ?? [],
+        tags = tags ?? [],
+        projects = projects ?? [],
+        equippedSkills = equippedSkills ?? [];
 
   // Getters for current job (Compatibility)
   int get level => jobLevels[currentJob] ?? 1;
@@ -197,26 +364,158 @@ class PlayerAdapter extends TypeAdapter<Player> {
   @override
   final int typeId = 3;
 
-  static const int _formatVersion = 3;
+  static const int _formatVersion = 4;
 
   @override
   Player read(BinaryReader reader) {
     final version = reader.readByte();
+    if (version == 4) {
+      return _readV4(reader);
+    }
+    if (version == 3) {
+      return _readV3(reader);
+    }
     if (version < 1 || version > _formatVersion) {
-      // v1.3-fix: 未知のバージョンは例外を投げず、デフォルト値で安全に読み取る。
-      // データ破損時にも全データを削除せず、次回起動時の修復を期待する。
       try {
-        return _readV2(reader); // best-effort: 読み取れるだけ読み取る
+        return _readV3(reader);
       } catch (_) {
-        return Player(); // 復元不能ならデフォルトプレイヤー
+        return Player();
       }
     }
-    return _readV2(reader);
+    return _readV3(reader);
   }
 
-  Player _readV2(BinaryReader reader) {
-    // デフォルト値で初期化。古いフォーマット(v1,v2)のデータでも
-    // 各フィールドを availableBytes でガードしながら安全に読み取る。
+  Player _readV4(BinaryReader reader) {
+    final player = Player();
+
+    if (reader.availableBytes > 0) {
+      player.jobLevels =
+          (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 1};
+    }
+    if (reader.availableBytes > 0) {
+      player.jobExps =
+          (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 0};
+    }
+    // v4: equippedSkills (List<EquippedSkill>) を読み取る
+    if (reader.availableBytes > 0) {
+      final skillRawList = reader.readList();
+      player.equippedSkills = (skillRawList as List?)
+              ?.map((e) => EquippedSkill.fromJson(
+                  (e as Map).cast<String, dynamic>()))
+              .toList() ??
+          [];
+    }
+    // v3互換: activeSkills も読み取る（後方互換）
+    if (reader.availableBytes > 0) {
+      player.activeSkills =
+          (reader.readList() as List?)?.cast<Job>().toSet() ?? {};
+    }
+    if (reader.availableBytes > 0) {
+      player.currentJob = (reader.read() as Job?) ?? Job.adventurer;
+    }
+    if (reader.availableBytes >= 4) {
+      player.comboCount = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.coins = reader.readInt();
+    }
+    if (reader.availableBytes > 0) {
+      player.homeItems =
+          (reader.readList() as List?)?.cast<String>() ?? [];
+    }
+    if (reader.availableBytes >= 4) {
+      player.dailyTasksCompleted = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.weeklySRankCompleted = reader.readInt();
+    }
+    if (reader.availableBytes > 0) {
+      player.lastMissionResetDate = reader.read();
+    }
+    if (reader.availableBytes >= 4) {
+      player.nextDayTaskLimitOffset = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.todayTaskLimitOffset = reader.readInt();
+    }
+    if (reader.availableBytes > 0) {
+      player.lastRestDate = reader.read();
+    }
+    if (reader.availableBytes >= 4) {
+      player.totalTasksCompleted = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.totalSRankCompleted = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.totalARankCompleted = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.totalBRankCompleted = reader.readInt();
+    }
+    if (reader.availableBytes > 0) {
+      player.titles =
+          (reader.readList() as List?)?.cast<String>() ?? [];
+    }
+    if (reader.availableBytes > 0) {
+      player.equippedTitle = reader.read();
+    }
+    // v3 fields
+    if (reader.availableBytes > 0) {
+      player.equippedSkin = reader.read();
+    }
+    if (reader.availableBytes >= 4) {
+      player.characterSkin = CharacterSkin.fromMap(
+        (reader.readMap() as Map?)?.cast<String, dynamic>() ?? {},
+      );
+    }
+    if (reader.availableBytes >= 4) {
+      player.gems = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.streakDays = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.longestStreak = reader.readInt();
+    }
+    if (reader.availableBytes > 0) {
+      player.lastLoginDate = reader.read();
+    }
+    if (reader.availableBytes >= 4) {
+      player.timesWardenDefeated = reader.readInt();
+    }
+    // v4: ポモドーロ設定
+    if (reader.availableBytes >= 4) {
+      player.pomodoroMinutes = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.pomodoroShortBreakMinutes = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.pomodoroLongBreakMinutes = reader.readInt();
+    }
+    if (reader.availableBytes >= 4) {
+      player.pomodorosBeforeLongBreak = reader.readInt();
+    }
+    // v4: タグ
+    if (reader.availableBytes > 0) {
+      player.tags =
+          (reader.readList() as List?)?.cast<String>() ?? [];
+    }
+    // v4: プロジェクト
+    if (reader.availableBytes > 0) {
+      final projRawList = reader.readList();
+      player.projects = (projRawList as List?)
+              ?.map((e) => ProjectGroup.fromJson(
+                  (e as Map).cast<String, dynamic>()))
+              .toList() ??
+          [];
+    }
+
+    return player;
+  }
+
+  Player _readV3(BinaryReader reader) {
     final player = Player();
 
     if (reader.availableBytes > 0) {
@@ -315,6 +614,9 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.writeByte(_formatVersion);
     writer.writeMap(obj.jobLevels);
     writer.writeMap(obj.jobExps);
+    // v4: equippedSkills as JSON list
+    writer.writeList(obj.equippedSkills.map((e) => e.toJson()).toList());
+    // v3互換: activeSkills
     writer.writeList(obj.activeSkills.toList());
     writer.write(obj.currentJob);
     writer.writeInt(obj.comboCount);
@@ -339,5 +641,14 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.writeInt(obj.longestStreak);
     writer.write(obj.lastLoginDate);
     writer.writeInt(obj.timesWardenDefeated);
+    // v4: ポモドーロ設定
+    writer.writeInt(obj.pomodoroMinutes);
+    writer.writeInt(obj.pomodoroShortBreakMinutes);
+    writer.writeInt(obj.pomodoroLongBreakMinutes);
+    writer.writeInt(obj.pomodorosBeforeLongBreak);
+    // v4: タグ
+    writer.writeList(obj.tags);
+    // v4: プロジェクト
+    writer.writeList(obj.projects.map((p) => p.toJson()).toList());
   }
 }

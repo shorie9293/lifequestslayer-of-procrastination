@@ -28,6 +28,7 @@ void main() async {
   Hive.registerAdapter(JobAdapter()); // TypeId: 4
   Hive.registerAdapter(RepeatIntervalAdapter()); // TypeId: 5
   Hive.registerAdapter(SubTaskAdapter()); // TypeId: 6
+  Hive.registerAdapter(JobSkillAdapter()); // TypeId: 10
 
   // Boxes are opened in Repositories on demand/init.
 
