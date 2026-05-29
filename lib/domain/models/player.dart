@@ -240,6 +240,16 @@ class Player {
   /// T9: Warrior Lv10 集中の型 — ポモドーロアクティブセッションの開始時刻
   DateTime? pomodoroStartTime;
 
+  /// T10: Warrior Lv15 武士道の極意 — 最終完了日
+  DateTime? lastDailyComplete;
+  /// T10: 武士道の極意 — 蓄積バフ（0.1%単位、例: 10 = 1.0%）
+  int warriorDailyBuff = 0;
+
+  /// T10: Cleric Lv15 悟りの境地 — 猶予回数（週1回リセット、最大1）
+  int streakGraceRemaining = 1;
+  /// T10: 悟りの境地 — 最終猶予リセット日
+  DateTime? lastStreakGraceReset;
+
   /// T9: 集中の型 — ポモドーロセッションがアクティブか
   bool get isPomodoroActive {
     if (pomodoroStartTime == null) return false;
@@ -254,6 +264,41 @@ class Player {
   /// T9: 集中の型 — ポモドーロセッションを終了
   void endPomodoro() {
     pomodoroStartTime = null;
+  }
+
+  /// T10: 武士道の極意 — 本日の初回完了かを判定し、buffを蓄積
+  void recordDailyCompletion() {
+    final now = DateTime.now();
+    final last = lastDailyComplete;
+    if (last == null ||
+        last.year != now.year ||
+        last.month != now.month ||
+        last.day != now.day) {
+      lastDailyComplete = DateTime(now.year, now.month, now.day);
+      warriorDailyBuff++;
+    }
+  }
+
+  /// T10: 悟りの境地 — 猶予を消費
+  void consumeStreakGrace() {
+    if (streakGraceRemaining > 0) {
+      streakGraceRemaining--;
+    }
+  }
+
+  /// T10: 悟りの境地 — 週次リセット判定
+  void resetStreakGraceIfNeeded() {
+    final now = DateTime.now();
+    if (lastStreakGraceReset == null) {
+      lastStreakGraceReset = DateTime(now.year, now.month, now.day);
+      streakGraceRemaining = 1;
+      return;
+    }
+    final diff = now.difference(lastStreakGraceReset!).inDays;
+    if (diff >= 7) {
+      lastStreakGraceReset = DateTime(now.year, now.month, now.day);
+      streakGraceRemaining = 1;
+    }
   }
 
   // --- v4: タグ・プロジェクト ---
@@ -677,6 +722,18 @@ class PlayerAdapter extends TypeAdapter<Player> {
     if (reader.availableBytes > 0) {
       player.pomodoroStartTime = reader.read();
     }
+    // v4+: warriorDailyBuff (T10: 武士道の極意)
+    if (reader.availableBytes >= 4) {
+      player.warriorDailyBuff = reader.readInt();
+    }
+    // v4+: streakGraceRemaining (T10: 悟りの境地)
+    if (reader.availableBytes >= 4) {
+      player.streakGraceRemaining = reader.readInt();
+    }
+    // v4+: lastStreakGraceReset (T10: 悟りの境地)
+    if (reader.availableBytes > 0) {
+      player.lastStreakGraceReset = reader.read();
+    }
     // v4: タグ
     if (reader.availableBytes > 0) {
       player.tags =
@@ -862,6 +919,11 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.writeInt(obj.pomodorosBeforeLongBreak);
     // v4+: pomodoroStartTime (T9: 集中の型)
     writer.write(obj.pomodoroStartTime);
+    // v4+: warriorDailyBuff (T10: 武士道の極意)
+    writer.writeInt(obj.warriorDailyBuff);
+    // v4+: streakGraceRemaining + lastStreakGraceReset (T10: 悟りの境地)
+    writer.writeInt(obj.streakGraceRemaining);
+    writer.write(obj.lastStreakGraceReset);
     // v4: タグ
     writer.writeList(obj.tags);
     // v4: プロジェクト

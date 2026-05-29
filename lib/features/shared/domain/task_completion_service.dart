@@ -118,6 +118,17 @@ class TaskCompletionService {
       bonusMessages.add("🧘 集中の型ボーナス！ +50% EXP");
     }
 
+    // Warrior Lv15: 武士道の極意 — 蓄積バフ
+    if (player.hasSkill(JobSkill.warriorBushido) && player.warriorDailyBuff > 0) {
+      final buffMultiplier = 1.0 + (player.warriorDailyBuff / 1000.0);
+      final prevExp = expGain;
+      expGain = (expGain * buffMultiplier).round();
+      final increase = expGain - prevExp;
+      if (increase > 0) {
+        bonusMessages.add("⚜️ 武士道の極意ボーナス！ +$increase EXP");
+      }
+    }
+
     // Cleric Lv10: 連続の誓い — 7日間streakで+20% EXP
     if (player.getTaskStreakBonus(task.id) > 1.0) {
       expGain = (expGain * player.getTaskStreakBonus(task.id)).round();
@@ -149,6 +160,11 @@ class TaskCompletionService {
     if (task.rank == QuestRank.S) player.totalSRankCompleted++;
     if (task.rank == QuestRank.A) player.totalARankCompleted++;
     if (task.rank == QuestRank.B) player.totalBRankCompleted++;
+
+    // T10: Warrior Lv15 武士道の極意 — 本日の完了を記録
+    if (player.hasSkill(JobSkill.warriorBushido)) {
+      player.recordDailyCompletion();
+    }
 
     TitleService.checkTitles(player, bonusMessages);
 
