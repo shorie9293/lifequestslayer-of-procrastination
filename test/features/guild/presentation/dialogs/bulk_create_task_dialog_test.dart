@@ -8,6 +8,9 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
+import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 
 /// Hive非依存のインメモリ PlayerRepository モック
@@ -77,6 +80,29 @@ class _MockSettingsRepo extends SettingsRepository {
   Future<void> setDebugModeEnabled(bool v) async {}
 }
 
+/// テスト用 TaskViewModel モック — GameViewModel に委譲する
+class _MockTaskViewModel extends TaskViewModel {
+  final GameViewModel _gameVM;
+
+  _MockTaskViewModel(this._gameVM, super.taskRepository, super.playerVM);
+
+  @override
+  void addTasks(List<String> titles, QuestRank rank) {
+    _gameVM.addTasks(titles, rank);
+  }
+
+  @override
+  Future<void> save() async {}
+}
+
+/// テスト用 SettingsViewModel モック
+class _MockSettingsViewModel extends SettingsViewModel {
+  _MockSettingsViewModel(super.settingsRepository);
+
+  @override
+  Future<void> completeTutorialStep(int step) async {}
+}
+
 class _DialogLauncher extends StatelessWidget {
   const _DialogLauncher();
   @override
@@ -98,6 +124,8 @@ class _DialogLauncher extends StatelessWidget {
 void main() {
   group('BulkCreateTaskDialog', () {
     late GameViewModel vm;
+    late _MockTaskViewModel taskVM;
+    late _MockSettingsViewModel settingsVM;
 
     setUp(() async {
       vm = GameViewModel(
@@ -105,6 +133,8 @@ void main() {
         tr: _MockTaskRepo(),
         sr: _MockSettingsRepo(),
       );
+      taskVM = _MockTaskViewModel(vm, _MockTaskRepo(), PlayerViewModel(_MockPlayerRepo()));
+      settingsVM = _MockSettingsViewModel(_MockSettingsRepo());
       final start = DateTime.now();
       while (!vm.isLoaded) {
         if (DateTime.now().difference(start) > const Duration(seconds: 5)) {
@@ -117,8 +147,12 @@ void main() {
 
     testWidgets('ダイアログが正しい要素で表示される', (tester) async {
       await tester.pumpWidget(
-        ChangeNotifierProvider<GameViewModel>.value(
-          value: vm,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GameViewModel>.value(value: vm),
+            ChangeNotifierProvider<TaskViewModel>.value(value: taskVM),
+            ChangeNotifierProvider<SettingsViewModel>.value(value: settingsVM),
+          ],
           child: MaterialApp(
             home: Builder(
               builder: (context) => ElevatedButton(
@@ -147,8 +181,12 @@ void main() {
 
     testWidgets('空テキストで一括登録ボタンを押すとエラー', (tester) async {
       await tester.pumpWidget(
-        ChangeNotifierProvider<GameViewModel>.value(
-          value: vm,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GameViewModel>.value(value: vm),
+            ChangeNotifierProvider<TaskViewModel>.value(value: taskVM),
+            ChangeNotifierProvider<SettingsViewModel>.value(value: settingsVM),
+          ],
           child: const MaterialApp(home: _DialogLauncher()),
         ),
       );
@@ -166,8 +204,12 @@ void main() {
 
     testWidgets('複数行の入力を一括登録できる', (tester) async {
       await tester.pumpWidget(
-        ChangeNotifierProvider<GameViewModel>.value(
-          value: vm,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GameViewModel>.value(value: vm),
+            ChangeNotifierProvider<TaskViewModel>.value(value: taskVM),
+            ChangeNotifierProvider<SettingsViewModel>.value(value: settingsVM),
+          ],
           child: const MaterialApp(home: _DialogLauncher()),
         ),
       );
@@ -195,8 +237,12 @@ void main() {
 
     testWidgets('空行は無視されて有効な行のみ登録される', (tester) async {
       await tester.pumpWidget(
-        ChangeNotifierProvider<GameViewModel>.value(
-          value: vm,
+        MultiProvider(
+          providers: [
+            ChangeNotifierProvider<GameViewModel>.value(value: vm),
+            ChangeNotifierProvider<TaskViewModel>.value(value: taskVM),
+            ChangeNotifierProvider<SettingsViewModel>.value(value: settingsVM),
+          ],
           child: const MaterialApp(home: _DialogLauncher()),
         ),
       );
