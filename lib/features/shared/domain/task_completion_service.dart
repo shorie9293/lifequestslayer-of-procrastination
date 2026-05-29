@@ -112,6 +112,12 @@ class TaskCompletionService {
       expGain = (expGain * 1.05).round();
     }
 
+    // Warrior Lv10: 集中の型 — ポモドーロアクティブ中は+50% EXP
+    if (player.hasSkill(JobSkill.warriorPomodoro) && player.isPomodoroActive) {
+      expGain = (expGain * 1.5).round();
+      bonusMessages.add("🧘 集中の型ボーナス！ +50% EXP");
+    }
+
     // Cleric Lv10: 連続の誓い — 7日間streakで+20% EXP
     if (player.getTaskStreakBonus(task.id) > 1.0) {
       expGain = (expGain * player.getTaskStreakBonus(task.id)).round();

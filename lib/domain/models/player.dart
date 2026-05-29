@@ -237,6 +237,24 @@ class Player {
   int pomodoroShortBreakMinutes;
   int pomodoroLongBreakMinutes;
   int pomodorosBeforeLongBreak;
+  /// T9: Warrior Lv10 集中の型 — ポモドーロアクティブセッションの開始時刻
+  DateTime? pomodoroStartTime;
+
+  /// T9: 集中の型 — ポモドーロセッションがアクティブか
+  bool get isPomodoroActive {
+    if (pomodoroStartTime == null) return false;
+    return DateTime.now().difference(pomodoroStartTime!).inMinutes < pomodoroMinutes;
+  }
+
+  /// T9: 集中の型 — ポモドーロセッションを開始
+  void startPomodoro() {
+    pomodoroStartTime = DateTime.now();
+  }
+
+  /// T9: 集中の型 — ポモドーロセッションを終了
+  void endPomodoro() {
+    pomodoroStartTime = null;
+  }
 
   // --- v4: タグ・プロジェクト ---
   List<String> tags;
@@ -655,6 +673,10 @@ class PlayerAdapter extends TypeAdapter<Player> {
     if (reader.availableBytes >= 4) {
       player.pomodorosBeforeLongBreak = reader.readInt();
     }
+    // v4+: pomodoroStartTime (T9: 集中の型)
+    if (reader.availableBytes > 0) {
+      player.pomodoroStartTime = reader.read();
+    }
     // v4: タグ
     if (reader.availableBytes > 0) {
       player.tags =
@@ -838,6 +860,8 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.writeInt(obj.pomodoroShortBreakMinutes);
     writer.writeInt(obj.pomodoroLongBreakMinutes);
     writer.writeInt(obj.pomodorosBeforeLongBreak);
+    // v4+: pomodoroStartTime (T9: 集中の型)
+    writer.write(obj.pomodoroStartTime);
     // v4: タグ
     writer.writeList(obj.tags);
     // v4: プロジェクト
