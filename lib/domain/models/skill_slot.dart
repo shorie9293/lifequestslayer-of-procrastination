@@ -3,16 +3,19 @@ import 'player.dart';
 /// 装備中のスキルを表す値オブジェクト。
 class EquippedSkill {
   final JobSkill skill;
+  bool isActive;
 
-  const EquippedSkill({required this.skill});
+  EquippedSkill({required this.skill, this.isActive = true});
 
   Map<String, dynamic> toJson() => {
         'skill': skill.index,
+        'isActive': isActive,
       };
 
   factory EquippedSkill.fromJson(Map<String, dynamic> json) {
     return EquippedSkill(
       skill: JobSkill.values[json['skill'] as int],
+      isActive: (json['isActive'] as bool?) ?? true,
     );
   }
 

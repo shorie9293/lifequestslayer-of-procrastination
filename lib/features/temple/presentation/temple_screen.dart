@@ -213,7 +213,7 @@ class TempleScreen extends StatelessWidget {
             child: isFilled
                 ? Row(
                     children: [
-                      Icon(Icons.check_circle,
+                      const Icon(Icons.check_circle,
                           size: 14, color: Colors.greenAccent),
                       const SizedBox(width: 4),
                       Expanded(
@@ -229,6 +229,21 @@ class TempleScreen extends StatelessWidget {
                 : const Text("空きスロット",
                     style: TextStyle(color: Colors.grey, fontSize: 12)),
           ),
+          if (isFilled && eqSkill != null) ...[
+            // ON/OFF toggle
+            SizedBox(
+              height: 24,
+              child: Switch(
+                value: eqSkill.isActive,
+                onChanged: (val) {
+                  viewModel.toggleEquippedSkill(slotIndex);
+                  viewModel.save();
+                },
+                activeColor: Colors.cyanAccent,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+          ],
           if (eqSkill != null && eqSkill.skill.isMasterSkill)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),

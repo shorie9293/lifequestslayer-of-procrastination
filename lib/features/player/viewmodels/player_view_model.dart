@@ -149,6 +149,14 @@ class PlayerViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// v4: 指定スロットの装備スキルのON/OFFをトグルする。
+  void toggleEquippedSkill(int slotIndex) {
+    if (slotIndex < 0 || slotIndex >= _player.equippedSkills.length) return;
+    _player.equippedSkills[slotIndex].isActive =
+        !_player.equippedSkills[slotIndex].isActive;
+    notifyListeners();
+  }
+
   void equipTitle(String t) {
     if (_player.titles.contains(t) || t.isEmpty) {
       _player.equippedTitle = t.isEmpty ? null : t;

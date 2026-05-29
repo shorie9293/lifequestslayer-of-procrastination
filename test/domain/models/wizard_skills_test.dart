@@ -13,7 +13,7 @@ void main() {
       final player = Player(
         currentJob: Job.wizard,
         jobLevels: {Job.wizard: 1},
-        equippedSkills: [const EquippedSkill(skill: JobSkill.wizardSubtask)],
+        equippedSkills: [EquippedSkill(skill: JobSkill.wizardSubtask)],
       );
       expect(player.isSkillEquipped(JobSkill.wizardSubtask), isTrue);
     });
@@ -22,7 +22,7 @@ void main() {
       final player = Player(
         currentJob: Job.wizard,
         jobLevels: {Job.wizard: 1},
-        equippedSkills: [const EquippedSkill(skill: JobSkill.wizardTags)],
+        equippedSkills: [EquippedSkill(skill: JobSkill.wizardTags)],
       );
       expect(player.isSkillEquipped(JobSkill.wizardSubtask), isFalse);
     });
@@ -31,7 +31,7 @@ void main() {
       final player = Player(
         currentJob: Job.adventurer,
         jobLevels: {Job.adventurer: 1, Job.wizard: 14},
-        equippedSkills: [const EquippedSkill(skill: JobSkill.wizardSubtask)],
+        equippedSkills: [EquippedSkill(skill: JobSkill.wizardSubtask)],
       );
       // ignore: deprecated_member_use
       player.activeSkills.add(Job.wizard);
@@ -42,7 +42,7 @@ void main() {
       final player = Player(
         currentJob: Job.adventurer,
         jobLevels: {Job.adventurer: 1, Job.wizard: 1},
-        equippedSkills: [const EquippedSkill(skill: JobSkill.wizardSubtask)],
+        equippedSkills: [EquippedSkill(skill: JobSkill.wizardSubtask)],
       );
       expect(player.isSkillEquipped(JobSkill.wizardSubtask), isFalse);
     });
@@ -68,7 +68,7 @@ void main() {
       final player = Player(
         currentJob: Job.wizard,
         jobLevels: {Job.wizard: 1},
-        equippedSkills: [const EquippedSkill(skill: JobSkill.wizardSubtask)],
+        equippedSkills: [EquippedSkill(skill: JobSkill.wizardSubtask)],
       );
 
       final result = service.complete(
@@ -95,7 +95,7 @@ void main() {
       final player = Player(
         currentJob: Job.wizard,
         jobLevels: {Job.wizard: 1},
-        equippedSkills: [const EquippedSkill(skill: JobSkill.wizardSubtask)],
+        equippedSkills: [EquippedSkill(skill: JobSkill.wizardSubtask)],
       );
 
       final result = service.complete(
@@ -144,7 +144,7 @@ void main() {
       final player = Player(
         currentJob: Job.wizard,
         jobLevels: {Job.wizard: 1},
-        equippedSkills: [const EquippedSkill(skill: JobSkill.wizardSubtask)],
+        equippedSkills: [EquippedSkill(skill: JobSkill.wizardSubtask)],
       );
 
       final result = service.complete(
@@ -308,7 +308,7 @@ void main() {
       final player = Player(
         currentJob: Job.wizard,
         jobLevels: {Job.wizard: 10},
-        equippedSkills: [const EquippedSkill(skill: JobSkill.wizardProject)],
+        equippedSkills: [EquippedSkill(skill: JobSkill.wizardProject)],
         projects: [project],
       );
       player.taskProjects['t1'] = '試練の陣';
@@ -364,7 +364,7 @@ void main() {
       final player = Player(
         currentJob: Job.wizard,
         jobLevels: {Job.wizard: 10},
-        equippedSkills: [const EquippedSkill(skill: JobSkill.wizardProject)],
+        equippedSkills: [EquippedSkill(skill: JobSkill.wizardProject)],
         projects: [project],
       );
       player.taskProjects['t1'] = '未完の陣';
