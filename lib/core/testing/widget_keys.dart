@@ -121,6 +121,12 @@ class AppKeys {
   static const Key kozuchiOffering = Key('txt_kozuchi_offering');
   static const Key kozuchiStatus = Key('txt_kozuchi_status');
 
+  // ━━━ ランダム町イベント ━━━
+  static const Key townEventOverlay = Key('overlay_town_event');
+  static const Key townEventClose = Key('btn_event_close');
+  static const Key townEventTitle = Key('txt_event_title');
+  static const Key townEventDescription = Key('txt_event_description');
+
   // ━━━ 汎用 ━━━
   static const Key backButton = Key('btn_back');
   static const Key closeButton = Key('btn_close');
