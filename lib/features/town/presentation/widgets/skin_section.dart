@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/features/character_customization/presentation/widgets/avatar_preview_widget.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/presentation/widgets/shop_item.dart';
@@ -16,6 +17,22 @@ class SkinSection extends StatelessWidget {
     required this.viewModel,
     required this.playerVM,
   });
+
+  /// 旧スキンID → スキン名のマッピング
+  static String _skinName(String? id) {
+    switch (id) {
+      case 'skin_1':
+        return '旅衣';
+      case 'skin_2':
+        return '武功の感状';
+      case 'skin_3':
+        return '高僧の錫杖';
+      case 'skin_4':
+        return '天の冠';
+      default:
+        return 'なし';
+    }
+  }
 
   static const List<ShopItem> _items = [
     ShopItem(
@@ -57,6 +74,31 @@ class SkinSection extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 12),
+        // アバタープレビュー
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: Column(
+              children: [
+                AvatarPreviewWidget(
+                  characterSkin: player.characterSkin,
+                  legacySkinId: player.equippedSkin,
+                  size: 100,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  player.equippedSkin != null
+                      ? '装備中: ${_skinName(player.equippedSkin)}'
+                      : '装備なし',
+                  style: const TextStyle(
+                    color: Color(0xFFFFD700),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
         ..._items.map((item) {
           final isOwned = player.homeItems.contains(item.id);
           final isEquipped = player.equippedSkin == item.id;

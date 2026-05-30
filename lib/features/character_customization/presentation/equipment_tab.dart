@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
+import 'package:rpg_todo/features/character_customization/presentation/widgets/avatar_preview_widget.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 /// キャラクター装備タブ — 5部位のスキン選択UI。
@@ -30,15 +31,16 @@ class EquipmentTab extends StatefulWidget {
 
 class _EquipmentTabState extends State<EquipmentTab> {
   SkinSlot? _selectedSlot;
+  String? _previewSkinId;
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.all(16),
-          child: Row(
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: const Row(
             children: [
               Icon(Icons.face, color: Colors.white),
               SizedBox(width: 8),
@@ -51,6 +53,31 @@ class _EquipmentTabState extends State<EquipmentTab> {
                 ),
               ),
             ],
+          ),
+        ),
+        // アバタープレビューエリア
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Column(
+              children: [
+                AvatarPreviewWidget(
+                  characterSkin: widget.currentSkin,
+                  previewSlot: _selectedSlot,
+                  previewSkinId: _previewSkinId,
+                  size: 140,
+                ),
+                const SizedBox(height: 8),
+                if (_selectedSlot != null && _previewSkinId != null)
+                  Text(
+                    '「${SkinCatalog.findById(_previewSkinId!)?.name ?? ''}」をプレビュー中',
+                    style: const TextStyle(
+                      color: Color(0xFFFFD700),
+                      fontSize: 13,
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
         // スロット選択チップ
@@ -81,6 +108,7 @@ class _EquipmentTabState extends State<EquipmentTab> {
                     onSelected: (_) {
                       setState(() {
                         _selectedSlot = isSelected ? null : slot;
+                        _previewSkinId = null;
                       });
                     },
                     selectedColor: Colors.amber.shade700,
@@ -170,10 +198,22 @@ class _EquipmentTabState extends State<EquipmentTab> {
     required bool isEquipped,
     required bool locked,
   }) {
+    final isPreviewing = _previewSkinId == skin.id;
     return Card(
-      color: Colors.black54,
+      color: isPreviewing
+          ? Colors.amber.shade900.withValues(alpha: 0.4)
+          : Colors.black54,
       margin: const EdgeInsets.only(bottom: 8),
-      child: ListTile(
+      child: InkWell(
+        onTap: locked
+            ? null
+            : () {
+                setState(() {
+                  _previewSkinId = skin.id;
+                });
+              },
+        borderRadius: BorderRadius.circular(12),
+        child: ListTile(
         leading: Text(skin.icon, style: const TextStyle(fontSize: 28)),
         title: Text(
           skin.name,
@@ -223,10 +263,13 @@ class _EquipmentTabState extends State<EquipmentTab> {
                       child: const Text('装備'),
                       onPressed: () {
                         widget.onEquip(skin.slot, skin.id);
-                        setState(() {});
+                        setState(() {
+                          _previewSkinId = skin.id;
+                        });
                       },
                     ),
                   ),
+      ),
       ),
     );
   }
