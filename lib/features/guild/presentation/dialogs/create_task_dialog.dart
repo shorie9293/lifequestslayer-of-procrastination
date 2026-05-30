@@ -278,12 +278,13 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                     ),
                   ],
                 ),
-                if (player.canUseSkill(Job.cleric)) ...[
+                if (player.hasSkill(JobSkill.roninRepeatTask) ||
+                    player.canUseSkill(Job.cleric)) ...[
                   const SizedBox(height: 16),
                   DropdownButtonFormField<RepeatInterval>(
                     value: _selectedRepeat,
                     decoration: const InputDecoration(
-                        labelText: "繰り返し (Cleric Ability)"),
+                        labelText: "繰り返し (果てなき挑戦 / Cleric)"),
                     items: RepeatInterval.values.map((r) {
                       return DropdownMenuItem(
                         value: r,
