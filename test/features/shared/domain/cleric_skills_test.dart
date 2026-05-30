@@ -367,8 +367,8 @@ void main() {
         rank: QuestRank.B,
       );
 
-      // 7日連続完了をシミュレート
-      final baseDate = DateTime(2026, 5, 22);
+      // 7日連続完了をシミュレート（DateTime.now()基準で過去7日間）
+      final baseDate = DateTime.now().subtract(const Duration(days: 7));
       for (int i = 0; i < 7; i++) {
         player.recordTaskCompletion(
           'st7',
