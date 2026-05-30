@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/town/presentation/town_screen.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
@@ -96,10 +98,14 @@ Future<GameViewModel> _createViewModelWithLevel(int level) async {
   return vm;
 }
 
-Future<void> pumpTownScreen(WidgetTester tester, GameViewModel vm) async {
+Future<void> pumpTownScreen(WidgetTester tester, GameViewModel vm, PlayerViewModel playerVM) async {
   await tester.pumpWidget(
-    ChangeNotifierProvider<GameViewModel>.value(
-      value: vm,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<GameViewModel>.value(value: vm),
+        ChangeNotifierProvider<PlayerViewModel>.value(value: playerVM),
+        ChangeNotifierProvider<ShopViewModel>(create: (_) => ShopViewModel(playerVM)),
+      ],
       child: const MaterialApp(
         home: TownScreen(),
       ),
@@ -111,62 +117,80 @@ Future<void> pumpTownScreen(WidgetTester tester, GameViewModel vm) async {
 
 void main() {
   group('TownScreen 町発展表示', () {
+    Future<PlayerViewModel> _createPlayerViewModel(int level) async {
+      final playerVM = PlayerViewModel(_MockPlayerRepository(Player(jobLevels: {Job.adventurer: level})));
+      await playerVM.load();
+      return playerVM;
+    }
+
     testWidgets('Lv.5 の冒険者は「荒野のキャンプ」と表示される', (tester) async {
       late GameViewModel vm;
+      late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(5);
+        playerVM = await _createPlayerViewModel(5);
       });
-      await pumpTownScreen(tester, vm);
+      await pumpTownScreen(tester, vm, playerVM);
 
       expect(find.textContaining('荒野のキャンプ'), findsWidgets);
     });
 
     testWidgets('Lv.15 の冒険者は「小さな集落」と表示される', (tester) async {
       late GameViewModel vm;
+      late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(15);
+        playerVM = await _createPlayerViewModel(15);
       });
-      await pumpTownScreen(tester, vm);
+      await pumpTownScreen(tester, vm, playerVM);
 
       expect(find.textContaining('小さな集落'), findsWidgets);
     });
 
     testWidgets('Lv.30 の冒険者は「活気ある町」と表示される', (tester) async {
       late GameViewModel vm;
+      late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(30);
+        playerVM = await _createPlayerViewModel(30);
       });
-      await pumpTownScreen(tester, vm);
+      await pumpTownScreen(tester, vm, playerVM);
 
       expect(find.textContaining('活気ある町'), findsWidgets);
     });
 
     testWidgets('Lv.75 の冒険者は「王都」と表示される', (tester) async {
       late GameViewModel vm;
+      late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(75);
+        playerVM = await _createPlayerViewModel(75);
       });
-      await pumpTownScreen(tester, vm);
+      await pumpTownScreen(tester, vm, playerVM);
 
       expect(find.textContaining('王都'), findsWidgets);
     });
 
     testWidgets('Lv.120 の冒険者は「天空の都」と表示される', (tester) async {
       late GameViewModel vm;
+      late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(120);
+        playerVM = await _createPlayerViewModel(120);
       });
-      await pumpTownScreen(tester, vm);
+      await pumpTownScreen(tester, vm, playerVM);
 
       expect(find.textContaining('天空の都'), findsWidgets);
     });
 
     testWidgets('次の段階への必要レベルが表示される（最大段階以外）', (tester) async {
       late GameViewModel vm;
+      late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(5);
+        playerVM = await _createPlayerViewModel(5);
       });
-      await pumpTownScreen(tester, vm);
+      await pumpTownScreen(tester, vm, playerVM);
 
       // 「次の発展まで Lv.11」のような表示がある
       expect(find.textContaining('Lv.11'), findsOneWidget);
@@ -174,10 +198,12 @@ void main() {
 
     testWidgets('天空の都では次の段階表示がない', (tester) async {
       late GameViewModel vm;
+      late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(150);
+        playerVM = await _createPlayerViewModel(150);
       });
-      await pumpTownScreen(tester, vm);
+      await pumpTownScreen(tester, vm, playerVM);
 
       // 次の段階表示がないことを確認（「次の発展」のテキストがない）
       expect(find.textContaining('次の発展'), findsNothing);

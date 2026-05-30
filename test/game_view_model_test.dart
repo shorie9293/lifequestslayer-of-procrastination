@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/domain/models/skill_slot.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
@@ -758,6 +759,7 @@ void main() {
 
       vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
       vm.changeJob(Job.wizard);
+      vm.player.equippedSkills.add(EquippedSkill(skill: JobSkill.wizardSubtask));
 
       vm.addTask('サブタスク付き', rank: QuestRank.B, subTasks: [
         SubTask(title: 'ステップ1'),

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_screen.dart';
-import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
@@ -76,24 +78,12 @@ class _MockSettingsRepository extends SettingsRepository {
   Future<void> setDebugModeEnabled(bool v) async {}
 }
 
-/// テスト用のDI注入済みGameViewModelを生成し、ロード完了まで待つ
-/// tester.runAsync() 内で呼び出す必要あり（非同期loadDataとの衝突回避）
-Future<GameViewModel> createLoadedViewModel() async {
-  final vm = GameViewModel(
-    pr: _MockPlayerRepository(),
-    tr: _MockTaskRepository(),
-    sr: _MockSettingsRepository(),
-  );
-  final start = DateTime.now();
-  while (!vm.isLoaded) {
-    if (DateTime.now().difference(start) > const Duration(seconds: 5)) {
-      throw Exception('GameViewModel のロードがタイムアウトしました');
-    }
-    await Future.delayed(const Duration(milliseconds: 10));
-  }
-  // loadData() 内の後続処理（autoDeploy等）の完了を待つ
-  await Future.delayed(const Duration(milliseconds: 50));
-  return vm;
+/// テスト用のDI注入済みViewModel群を生成
+({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) createViewModels() {
+  final playerVM = PlayerViewModel(_MockPlayerRepository());
+  final taskVM = TaskViewModel(_MockTaskRepository(), playerVM);
+  final settingsVM = SettingsViewModel(_MockSettingsRepository());
+  return (task: taskVM, player: playerVM, settings: settingsVM);
 }
 
 /// KozuchiQuestService のモック
@@ -107,10 +97,19 @@ class MockKozuchiQuestService implements IKozuchiQuestService {
 }
 
 /// GuildScreen をポンプするヘルパー
-Future<void> pumpGuildScreen(WidgetTester tester, GameViewModel vm) async {
+Future<void> pumpGuildScreen(
+  WidgetTester tester, {
+  required TaskViewModel taskVM,
+  required PlayerViewModel playerVM,
+  required SettingsViewModel settingsVM,
+}) async {
   await tester.pumpWidget(
-    ChangeNotifierProvider<GameViewModel>.value(
-      value: vm,
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<TaskViewModel>.value(value: taskVM),
+        ChangeNotifierProvider<PlayerViewModel>.value(value: playerVM),
+        ChangeNotifierProvider<SettingsViewModel>.value(value: settingsVM),
+      ],
       child: const MaterialApp(
         home: GuildScreen(),
       ),
@@ -128,33 +127,33 @@ void main() {
     testWidgets(
         'ギルドタスクに targetTimeMinutes がある場合、'
         '「未着手の依頼（見積もり）: XX分」が表示される', (tester) async {
-      late GameViewModel vm;
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
-        vm = await createLoadedViewModel();
+        vms = createViewModels();
 
         // 見積もり時間付きのタスクを追加（受注しない → guildTasks に留まる）
-        vm.addTask('討伐クエスト', rank: QuestRank.B, targetTimeMinutes: 45);
+        vms.task.addTask('討伐クエスト', rank: QuestRank.B, targetTimeMinutes: 45);
       });
 
-      await pumpGuildScreen(tester, vm);
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 見積もり時間のテキストが表示されていることを確認（完全一致）
       expect(find.text('未着手の依頼（見積もり）: 45分'), findsOneWidget);
     });
 
     testWidgets('複数ギルドタスクの見積もりが合計表示される', (tester) async {
-      late GameViewModel vm;
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
-        vm = await createLoadedViewModel();
+        vms = createViewModels();
 
-        vm.addTask('クエストA', rank: QuestRank.B, targetTimeMinutes: 20);
-        vm.addTask('クエストB', rank: QuestRank.A, targetTimeMinutes: 35);
-        vm.addTask('クエストC', rank: QuestRank.S, targetTimeMinutes: 60);
+        vms.task.addTask('クエストA', rank: QuestRank.B, targetTimeMinutes: 20);
+        vms.task.addTask('クエストB', rank: QuestRank.A, targetTimeMinutes: 35);
+        vms.task.addTask('クエストC', rank: QuestRank.S, targetTimeMinutes: 60);
       });
 
-      await pumpGuildScreen(tester, vm);
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 合計115分が表示されていることを確認
       expect(find.text('未着手の依頼（見積もり）: 115分'), findsOneWidget);
@@ -163,17 +162,17 @@ void main() {
     testWidgets(
         'ギルドタスクの一部だけ targetTimeMinutes がある場合、'
         'あるものだけ合計される', (tester) async {
-      late GameViewModel vm;
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
-        vm = await createLoadedViewModel();
+        vms = createViewModels();
 
         // 見積もりありのタスクと、なしのタスクを混在させる
-        vm.addTask('見積もりあり', rank: QuestRank.B, targetTimeMinutes: 30);
-        vm.addTask('見積もりなし', rank: QuestRank.B);
+        vms.task.addTask('見積もりあり', rank: QuestRank.B, targetTimeMinutes: 30);
+        vms.task.addTask('見積もりなし', rank: QuestRank.B);
       });
 
-      await pumpGuildScreen(tester, vm);
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 30分のみの合計が表示される
       expect(find.text('未着手の依頼（見積もり）: 30分'), findsOneWidget);
@@ -184,16 +183,16 @@ void main() {
     testWidgets(
         'ギルドタスクの targetTimeMinutes が null の場合、見積もり表示は出ない',
         (tester) async {
-      late GameViewModel vm;
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
-        vm = await createLoadedViewModel();
+        vms = createViewModels();
 
         // targetTimeMinutes なしのタスクを追加
-        vm.addTask('テストクエスト', rank: QuestRank.B);
+        vms.task.addTask('テストクエスト', rank: QuestRank.B);
       });
 
-      await pumpGuildScreen(tester, vm);
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 見積もり時間のテキストが表示されていないことを確認
       expect(
@@ -208,14 +207,14 @@ void main() {
     });
 
     testWidgets('タスクがない場合は見積もり表示が出ない', (tester) async {
-      late GameViewModel vm;
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
-        vm = await createLoadedViewModel();
+        vms = createViewModels();
         // タスクを追加しない
       });
 
-      await pumpGuildScreen(tester, vm);
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 見積もり表示は存在しない
       expect(
@@ -237,15 +236,15 @@ void main() {
     testWidgets(
         'KozuchiQuest が null の時は Kozuchi セクションが表示されない',
         (tester) async {
-      late GameViewModel vm;
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
-        vm = await createLoadedViewModel();
-        vm.refreshKozuchiQuest();
+        vms = createViewModels();
+        vms.task.refreshKozuchiQuest();
         // KozuchiQuestService は null なのでセクションは表示されない
       });
 
-      await pumpGuildScreen(tester, vm);
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       expect(find.byKey(AppKeys.kozuchiSection), findsNothing);
     });
@@ -253,12 +252,12 @@ void main() {
     testWidgets(
         'KozuchiQuest がある時は KozuchiQuestCard が表示される',
         (tester) async {
-      late GameViewModel vm;
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
-        vm = await createLoadedViewModel();
+        vms = createViewModels();
         // KozuchiQuestService をモックで注入
-        vm.kozuchiQuestService = MockKozuchiQuestService(
+        vms.task.kozuchiQuestService = MockKozuchiQuestService(
           quest: const KozuchiQuest(
             title: '朝の祈り',
             description: '新しい一日への感謝と祈りを捧げよ',
@@ -267,10 +266,10 @@ void main() {
             guardianDeityLabel: '稲荷神',
           ),
         );
-        await vm.refreshKozuchiQuest();
+        await vms.task.refreshKozuchiQuest();
       });
 
-      await pumpGuildScreen(tester, vm);
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // Kozuchiセクションが表示されている
       expect(find.byKey(AppKeys.kozuchiSection), findsOneWidget);
@@ -280,11 +279,11 @@ void main() {
     testWidgets(
         'KozuchiQuest が完了状態の時も表示される',
         (tester) async {
-      late GameViewModel vm;
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
-        vm = await createLoadedViewModel();
-        vm.kozuchiQuestService = MockKozuchiQuestService(
+        vms = createViewModels();
+        vms.task.kozuchiQuestService = MockKozuchiQuestService(
           quest: const KozuchiQuest(
             title: '完了した試練',
             description: '完了テスト',
@@ -294,10 +293,10 @@ void main() {
             isCompleted: true,
           ),
         );
-        await vm.refreshKozuchiQuest();
+        await vms.task.refreshKozuchiQuest();
       });
 
-      await pumpGuildScreen(tester, vm);
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       expect(find.byKey(AppKeys.kozuchiSection), findsOneWidget);
       expect(find.text('完了した試練'), findsOneWidget);
@@ -308,13 +307,13 @@ void main() {
   group('GuildScreen 緊急依頼セクション', () {
     testWidgets('緊急タスクがない時は緊急セクションが表示されない',
         (tester) async {
-      late GameViewModel vm;
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
-        vm = await createLoadedViewModel();
+        vms = createViewModels();
       });
 
-      await pumpGuildScreen(tester, vm);
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 緊急タスクがないのでセクションは非表示
       expect(find.byKey(AppKeys.guildUrgentSection), findsNothing);
@@ -322,18 +321,18 @@ void main() {
 
     testWidgets('24時間以内の期限があるタスクで緊急セクションが表示される',
         (tester) async {
-      late GameViewModel vm;
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
-        vm = await createLoadedViewModel();
+        vms = createViewModels();
         // 残り12時間の緊急タスクを追加
         final deadline =
             DateTime.now().add(const Duration(hours: 12));
-        vm.addTask('緊急討伐クエスト',
+        vms.task.addTask('緊急討伐クエスト',
             rank: QuestRank.A, deadline: deadline);
       });
 
-      await pumpGuildScreen(tester, vm);
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 緊急セクションが表示されている
       expect(find.byKey(AppKeys.guildUrgentSection), findsOneWidget);
@@ -345,17 +344,17 @@ void main() {
 
     testWidgets('緊急タスクがなく通常タスクのみの場合でも通常表示は崩れない',
         (tester) async {
-      late GameViewModel vm;
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
-        vm = await createLoadedViewModel();
+        vms = createViewModels();
         // 期限が48時間先 = 緊急ではない
         final deadline =
             DateTime.now().add(const Duration(hours: 48));
-        vm.addTask('通常依頼', rank: QuestRank.B, deadline: deadline);
+        vms.task.addTask('通常依頼', rank: QuestRank.B, deadline: deadline);
       });
 
-      await pumpGuildScreen(tester, vm);
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 緊急セクションは表示されない
       expect(find.byKey(AppKeys.guildUrgentSection), findsNothing);
