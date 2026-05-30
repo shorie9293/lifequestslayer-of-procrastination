@@ -5,7 +5,6 @@ import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/overview/domain/overview_service.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
-import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 /// T11: Wizard Lv15 俯瞰の魔眼 — Overview screen with calendar and kanban views.
 class OverviewScreen extends StatelessWidget {

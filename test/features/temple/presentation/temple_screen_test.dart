@@ -4,17 +4,14 @@ import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/temple/presentation/temple_screen.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/domain/models/player.dart';
-import 'package:rpg_todo/domain/models/skill_slot.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 
 class _MockPlayerRepo implements IPlayerRepository {
-  final Player _initialPlayer;
   Player _player;
 
   _MockPlayerRepo([Player? player])
-      : _initialPlayer = player ?? Player(),
-        _player = player ?? Player();
+      : _player = player ?? Player();
 
   @override
   Future<Player> loadPlayer() async => _player;

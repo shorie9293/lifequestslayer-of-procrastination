@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 /// 職業説明チュートリアルダイアログ。
 /// 冒険者Lv10到達時に表示され、全16スキル（4職業×4）の解説と
