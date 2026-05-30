@@ -168,6 +168,31 @@ class TempleScreen extends StatelessWidget {
             return _buildSlotRow(
               context, viewModel, player, index, eqSkill, isSlotFilled);
           }),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.05),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline,
+                    size: 14, color: Colors.white38),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    '他の職業を育てると、そのスキルをスロットに装備できます。'
+                    'Lv到達で解放されたスキルが候補に表示されます。',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.4),
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -279,9 +304,22 @@ class TempleScreen extends StatelessWidget {
                   learnableSkills.map((skill) {
                 return PopupMenuItem<JobSkill>(
                   value: skill,
-                  child: Text(
-                    "${_jobDisplayName(skill.job)}・${skill.displayName}",
-                    style: const TextStyle(fontSize: 13),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        "${_jobDisplayName(skill.job)}・${skill.displayName}",
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      Text(
+                        skill.description,
+                        style: const TextStyle(
+                            fontSize: 10, color: Colors.grey),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
                   ),
                 );
               }).toList(),
@@ -336,12 +374,27 @@ class TempleScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(
-                      skill.displayName,
-                      style: TextStyle(
-                        color: isUnlocked ? Colors.white : Colors.grey,
-                        fontSize: 14,
-                      ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          skill.displayName,
+                          style: TextStyle(
+                            color: isUnlocked ? Colors.white : Colors.grey,
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          skill.description,
+                          style: TextStyle(
+                            color: isUnlocked
+                                ? Colors.white54
+                                : Colors.grey.withValues(alpha: 0.5),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   Text(

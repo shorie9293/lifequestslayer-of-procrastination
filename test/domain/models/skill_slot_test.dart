@@ -83,4 +83,26 @@ void main() {
       expect(pg.taskIds, ['a', 'c']);
     });
   });
+
+  group('JobSkill.description', () {
+    test('returns non-empty string for all 14 skills', () {
+      for (final skill in JobSkill.values) {
+        expect(skill.description, isNotEmpty,
+            reason: '${skill.name} should have a description');
+        expect(skill.description.length, greaterThan(5),
+            reason: '${skill.name} description too short');
+      }
+    });
+
+    test('description differs from displayName for all skills', () {
+      for (final skill in JobSkill.values) {
+        expect(skill.description, isNot(equals(skill.displayName)),
+            reason: '${skill.name} description should differ from displayName');
+      }
+    });
+
+    test('all skills have exactly 14 entries in description map', () {
+      expect(JobSkill.values.length, 14);
+    });
+  });
 }

@@ -133,6 +133,25 @@ extension JobSkillMeta on JobSkill {
 
   String get displayName => _displayNames[this] ?? name;
 
+  static const _descriptions = {
+    JobSkill.roninSlots: 'クエストランクと枠数が拡大。S/A/Bランクの上限が増える',
+    JobSkill.roninRepeatTask: '完了済みクエストを「繰り返し」として再発行可能に',
+    JobSkill.warriorCombo: '連続達成でEXPボーナス。コンボ数が多いほど報酬が増える',
+    JobSkill.warriorFatigueReverse: '疲労度が高いほどEXP倍率が上昇。逆境が強さに変わる',
+    JobSkill.warriorPomodoro: 'ポモドーロタイマー連動。集中時間に応じてEXPボーナス',
+    JobSkill.warriorBushido: '毎日1つクエストを完了するだけでバフが蓄積。継続が力に',
+    JobSkill.clericRepeatAfter: '完了後、指定日数で自動的にクエストを再発行',
+    JobSkill.clericSnooze: 'クエストをスヌーズ（後回し）可能。猶予を与えられる',
+    JobSkill.clericStreak: 'タスクごとの連続完了を記録。ストリークで報酬UP',
+    JobSkill.clericEnlightenment: '週1回、ストリークを守る猶予。中断しても連続記録が消えない',
+    JobSkill.wizardSubtask: 'クエストをサブクエスト（小タスク）に分割可能に',
+    JobSkill.wizardTags: 'クエストに札（タグ）を付けて整理・検索',
+    JobSkill.wizardProject: '複数クエストをプロジェクトとしてまとめ、全達成でボーナス',
+    JobSkill.wizardOverview: 'プロジェクト全体を俯瞰し、進捗を一覧表示',
+  };
+
+  String get description => _descriptions[this] ?? '';
+
   /// RoninスキルはJobLv>=10、他職業スキルはJobLv>=15 で mastered。
   bool isMastered(int jobLevel) {
     if (job == Job.adventurer) return jobLevel >= 10;
