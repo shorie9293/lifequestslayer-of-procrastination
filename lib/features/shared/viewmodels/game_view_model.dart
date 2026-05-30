@@ -20,7 +20,6 @@ import 'package:rpg_todo/features/town/domain/town_scale.dart';
 
 /// 後方互換用のファサードViewModel。
 /// 新VM（PlayerVM/TaskVM/ShopVM/SettingsVM/ThemeVM）に委譲する。
-@Deprecated('Use PlayerVM, TaskVM, ShopVM, SettingsVM, ThemeVM directly')
 class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   late final PlayerViewModel _playerVM;
   late final TaskViewModel _taskVM;
