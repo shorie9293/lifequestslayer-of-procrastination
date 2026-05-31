@@ -23,18 +23,21 @@ class GemShopScreen extends StatefulWidget {
 }
 
 class _GemShopScreenState extends State<GemShopScreen> {
+  late final IAPService _iap;
+
   @override
   void initState() {
     super.initState();
+    _iap = context.read<IAPService>();
     // IAPServiceが通知したら宝石をGameViewModelに付与する
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<IAPService>().addListener(_onIAPUpdate);
+      _iap.addListener(_onIAPUpdate);
     });
   }
 
   @override
   void dispose() {
-    context.read<IAPService>().removeListener(_onIAPUpdate);
+    _iap.removeListener(_onIAPUpdate);
     super.dispose();
   }
 

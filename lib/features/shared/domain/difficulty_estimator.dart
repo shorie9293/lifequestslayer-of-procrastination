@@ -45,23 +45,25 @@ class DifficultyEstimator {
     '検証',
     '最適化',
     'リファクタ',
-    '勉強',
-    '学習',
     '研修',
     '発表',
     'プレゼン',
-    '修正',
-    '更新',
-    '予約',
-    '支払い',
-    '片付け',
-    '整理',
+    'API',
+    'Flutter',
+    'データベース',
+    'サーバー',
+    'UI',
+    'UX',
+    'アーキテクチャ',
   ];
 
   /// タイトル文字列から難易度ランクを推定する。
   ///
   /// 1. Sランクキーワードを含む → [QuestRank.S]
-  /// 2. Aランクキーワードを含む、または15文字超 → [QuestRank.A]
+  /// 2. スコアリング方式でA/Bを判定:
+  ///    - Aキーワードが2つ以上 → [QuestRank.A]
+  ///    - Aキーワード1つ + タイトル20文字超 → [QuestRank.A]
+  ///    - Aキーワード0 + 30文字超 + 複雑パターン(＋, から, Step, Phase, 連携) → [QuestRank.A]
   /// 3. それ以外 → [QuestRank.B]
   static QuestRank estimateRank(String title) {
     // Sキーワードチェック（最優先）
@@ -71,13 +73,29 @@ class DifficultyEstimator {
       }
     }
 
-    // Aキーワードチェック（Sキーワードがなければ）または15文字超
-    if (title.length > 15) {
-      return QuestRank.A;
-    }
+    // Aキーワードをカウント
+    int aKeywordCount = 0;
     for (final keyword in _aRankKeywords) {
       if (title.contains(keyword)) {
-        return QuestRank.A;
+        aKeywordCount++;
+      }
+    }
+
+    // 複合キーワードによるスコアリング
+    if (aKeywordCount >= 2) {
+      return QuestRank.A;
+    }
+    if (aKeywordCount == 1 && title.length > 20) {
+      return QuestRank.A;
+    }
+
+    // Aキーワードなしでも複雑なパターンがあればA
+    if (aKeywordCount == 0 && title.length > 30) {
+      const complexPatterns = ['＋', 'から', 'Step', 'Phase', '連携'];
+      for (final pattern in complexPatterns) {
+        if (title.contains(pattern)) {
+          return QuestRank.A;
+        }
       }
     }
 

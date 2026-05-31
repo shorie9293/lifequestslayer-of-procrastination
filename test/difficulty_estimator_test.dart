@@ -38,44 +38,38 @@ void main() {
     });
 
     group('Aランク判定', () {
-      test('「新機能の実装」でA', () {
-        expect(DifficultyEstimator.estimateRank('新機能の実装'), QuestRank.A);
-      });
-
-      test('「設計ドキュメントの作成」でA', () {
-        expect(DifficultyEstimator.estimateRank('設計ドキュメントの作成'),
-            QuestRank.A);
-      });
-
-      test('「コードレビュー」でA', () {
-        expect(DifficultyEstimator.estimateRank('コードレビュー'), QuestRank.A);
-      });
-
-      test('「分析レポートの作成」でA', () {
-        expect(DifficultyEstimator.estimateRank('分析レポートの作成'),
-            QuestRank.A);
-      });
-
-      test('「データ移行計画」でA', () {
+      test('「データ移行計画」でA（複合キーワード: 移行+計画）', () {
         expect(DifficultyEstimator.estimateRank('データ移行計画'), QuestRank.A);
       });
 
-      test('「システムの最適化」でA', () {
-        expect(DifficultyEstimator.estimateRank('システムの最適化'), QuestRank.A);
+      test('「新機能の実装＋API連携」でA（複合キーワード）', () {
+        expect(
+          DifficultyEstimator.estimateRank('新機能の実装＋API連携'),
+          QuestRank.A,
+        );
       });
 
-      test('「リファクタリング」でA', () {
-        expect(DifficultyEstimator.estimateRank('リファクタリング'), QuestRank.A);
+      test('「FlutterでのUI実装」でA（複合キーワード）', () {
+        expect(
+          DifficultyEstimator.estimateRank('FlutterでのUI実装'),
+          QuestRank.A,
+        );
       });
 
-      test('16文字の長いタイトルは自動的にAランク', () {
-        expect(DifficultyEstimator.estimateRank('あいうえおかきくけこさしすせそた'),
-            QuestRank.A);
+      test('長文＋StepパターンでA（キーワードなし複雑パターン）', () {
+        expect(
+          DifficultyEstimator.estimateRank(
+              '買い物リストの作成からStep2買うものの整理までを実施するの'),
+          QuestRank.A,
+        );
       });
 
-      test('「テストケースの作成」でA', () {
-        expect(DifficultyEstimator.estimateRank('テストケースの作成'),
-            QuestRank.A);
+      test('長文＋連携パターンでA（キーワードなし複雑パターン）', () {
+        expect(
+          DifficultyEstimator.estimateRank(
+              '来週のタスクを洗い出しからスケジュール調整までの準備作業を進める'),
+          QuestRank.A,
+        );
       });
     });
 
@@ -99,23 +93,84 @@ void main() {
       test('「読書」でB', () {
         expect(DifficultyEstimator.estimateRank('読書'), QuestRank.B);
       });
+
+      test('「新機能の実装」でB（Aキーワード1つだけ＋短文）', () {
+        expect(DifficultyEstimator.estimateRank('新機能の実装'), QuestRank.B);
+      });
+
+      test('「設計ドキュメントの作成」でB（Aキーワード1つだけ＋短文）', () {
+        expect(DifficultyEstimator.estimateRank('設計ドキュメントの作成'),
+            QuestRank.B);
+      });
+
+      test('「コードレビュー」でB（Aキーワード1つだけ＋短文）', () {
+        expect(DifficultyEstimator.estimateRank('コードレビュー'), QuestRank.B);
+      });
+
+      test('「分析レポートの作成」でB（Aキーワード1つだけ＋短文）', () {
+        expect(DifficultyEstimator.estimateRank('分析レポートの作成'),
+            QuestRank.B);
+      });
+
+      test('「システムの最適化」でB（Aキーワード1つだけ＋短文）', () {
+        expect(DifficultyEstimator.estimateRank('システムの最適化'), QuestRank.B);
+      });
+
+      test('「リファクタリング」でB（Aキーワード1つだけ＋短文）', () {
+        expect(DifficultyEstimator.estimateRank('リファクタリング'), QuestRank.B);
+      });
+
+      test('「テストケースの作成」でB（Aキーワード1つだけ＋短文）', () {
+        expect(DifficultyEstimator.estimateRank('テストケースの作成'),
+            QuestRank.B);
+      });
+
+      test('「簡単な修正」でB（修正はAキーワードから除外された）', () {
+        expect(DifficultyEstimator.estimateRank('簡単な修正'), QuestRank.B);
+      });
+
+      test('「勉強する」でB（除外されたキーワード）', () {
+        expect(DifficultyEstimator.estimateRank('勉強する'), QuestRank.B);
+      });
+
+      test('「買い物と掃除と洗濯」でB（日常タスクの列挙）', () {
+        expect(DifficultyEstimator.estimateRank('買い物と掃除と洗濯'),
+            QuestRank.B);
+      });
+
+      test('Aキーワードなしのランダム文字列はB（16文字超でもB）', () {
+        expect(DifficultyEstimator.estimateRank('あいうえおかきくけこさしすせそた'),
+            QuestRank.B);
+      });
+
+      test('S/Aキーワードを含まない20文字の繰り返しはB', () {
+        final longTitle = List.filled(20, 'あ').join();
+        expect(DifficultyEstimator.estimateRank(longTitle), QuestRank.B);
+      });
+
+      test('英語タイトルで24文字でもキーワードなしならB', () {
+        expect(
+          DifficultyEstimator.estimateRank('This is a long task title'),
+          QuestRank.B,
+        );
+      });
     });
 
     group('優先順位', () {
       test('Sキーワードがあれば文字数に関係なくS', () {
-        // 「緊急」が含まれているため、15文字以下でもS
+        // 「緊急」が含まれているため、短くてもS
         expect(DifficultyEstimator.estimateRank('緊急'), QuestRank.S);
       });
 
-      test('Aキーワードがなくても16文字以上ならA', () {
+      test('Aキーワードがなくて長くてもB', () {
         expect(
           DifficultyEstimator.estimateRank('あいうえおかきくけこさしすせそた'),
-          QuestRank.A,
+          QuestRank.B,
         );
       });
 
-      test('Aキーワードあり+短文でもA', () {
-        expect(DifficultyEstimator.estimateRank('実装'), QuestRank.A);
+      test('Aキーワード1つだけの短文はB', () {
+        expect(DifficultyEstimator.estimateRank('実装'), QuestRank.B);
       });
     });
 
@@ -132,15 +187,9 @@ void main() {
         expect(DifficultyEstimator.estimateRank('　'), QuestRank.B);
       });
 
-      test('S/Aキーワードを含まない長い文字列はA', () {
-        final longTitle = List.filled(20, 'あ').join();
-        expect(DifficultyEstimator.estimateRank(longTitle), QuestRank.A);
-      });
-
-      test('英語タイトルで16文字超ならA', () {
+      test('Aキーワードを1つ含む長文（21文字超）はA', () {
         expect(
-          DifficultyEstimator.estimateRank(
-              'This is a long task title'),
+          DifficultyEstimator.estimateRank('先月のプロジェクト進捗報告について話し合う'),
           QuestRank.A,
         );
       });

@@ -149,7 +149,7 @@ void main() {
 
         final result = await estimator.estimate('設計書作成', []);
 
-        expect(result.rank, QuestRank.A);
+        expect(result.rank, QuestRank.B);
         expect(result.source, EstimationSource.keyword);
       });
     });

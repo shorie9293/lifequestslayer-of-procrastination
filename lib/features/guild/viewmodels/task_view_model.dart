@@ -283,6 +283,13 @@ class TaskViewModel extends ChangeNotifier {
     addTask('デバッグ：古代遺跡の調査', rank: QuestRank.A, targetTimeMinutes: 60);
   }
 
+  /// バックアップ復元時にタスクリストを差し替える。
+  void setTasks(List<Task> tasks) {
+    _tasks = tasks;
+    notifyListeners();
+    save();
+  }
+
   // ── データロード/セーブ ──
   Future<void> load() async {
     try {

@@ -49,75 +49,75 @@ void main() {
     });
 
     group('Aランク判定（重要・中規模）', () {
-      test('「実装」を含むタイトルはAランク', () {
+      test('「実装」を含むタイトルはBランク（Aキーワード1つだけ＋短文）', () {
         expect(
           DifficultyEstimator.estimateRank('ログイン機能の実装'),
-          QuestRank.A,
+          QuestRank.B,
         );
       });
 
-      test('「開発」を含むタイトルはAランク', () {
+      test('「開発」を含むタイトルはBランク（Aキーワード1つだけ＋短文）', () {
         expect(
           DifficultyEstimator.estimateRank('新機能の開発'),
-          QuestRank.A,
+          QuestRank.B,
         );
       });
 
-      test('「会議」を含むタイトルはAランク', () {
+      test('「会議」を含むタイトルはBランク（Aキーワード1つだけ＋短文）', () {
         expect(
           DifficultyEstimator.estimateRank('週次進捗会議の準備'),
-          QuestRank.A,
+          QuestRank.B,
         );
       });
 
-      test('「資料」を含むタイトルはAランク', () {
+      test('「資料」を含むタイトルはAランク（複合キーワード: 提案+資料）', () {
         expect(
           DifficultyEstimator.estimateRank('提案資料の作成'),
           QuestRank.A,
         );
       });
 
-      test('「設計」を含むタイトルはAランク', () {
+      test('「設計」を含むタイトルはAランク（複合キーワード: データベース+設計）', () {
         expect(
           DifficultyEstimator.estimateRank('データベース設計'),
           QuestRank.A,
         );
       });
 
-      test('「テスト」を含むタイトルはAランク', () {
+      test('「テスト」を含むタイトルはBランク（Aキーワード1つだけ＋短文）', () {
         expect(
           DifficultyEstimator.estimateRank('単体テストの作成'),
-          QuestRank.A,
+          QuestRank.B,
         );
       });
 
-      test('「レビュー」を含むタイトルはAランク', () {
+      test('「レビュー」を含むタイトルはBランク（Aキーワード1つだけ＋短文）', () {
         expect(
           DifficultyEstimator.estimateRank('コードレビュー対応'),
-          QuestRank.A,
+          QuestRank.B,
         );
       });
 
-      test('「調査」を含むタイトルはAランク', () {
+      test('「調査」を含むタイトルはBランク（Aキーワード1つだけ＋短文）', () {
         expect(
           DifficultyEstimator.estimateRank('パフォーマンス問題の調査'),
-          QuestRank.A,
+          QuestRank.B,
         );
       });
 
-      test('「分析」を含むタイトルはAランク', () {
+      test('「分析」を含むタイトルはBランク（Aキーワード1つだけ＋短文）', () {
         expect(
           DifficultyEstimator.estimateRank('ユーザー行動の分析'),
-          QuestRank.A,
+          QuestRank.B,
         );
       });
 
-      test('30文字超のタイトルはAランク（S/Aキーワードなしの場合）', () {
+      test('キーワードなし短いタイトルはB（30文字未満＋複雑パターンなし）', () {
         expect(
           DifficultyEstimator.estimateRank(
             '明日までに提出が必要な週次レポートのまとめとグラフ作成',
           ),
-          QuestRank.A,
+          QuestRank.B,
         );
       });
     });
@@ -204,10 +204,10 @@ void main() {
         );
       });
 
-      test('AキーワードがBより優先される', () {
+      test('Aキーワード1つ+短文はB（複合キーワードが必要）', () {
         expect(
           DifficultyEstimator.estimateRank('設計書の作成'),
-          QuestRank.A,
+          QuestRank.B,
         );
       });
 

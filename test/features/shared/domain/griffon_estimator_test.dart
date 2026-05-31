@@ -163,9 +163,9 @@ void main() {
     });
 
     test('キーワードのみ使用時、estimatedMinutes は null', () {
-      // 「設計ドキュメントの作成」はAランクキーワード「設計」を含む
+      // 「データ移行計画」はAランクキーワード「移行」「計画」を含むのでA
       final result =
-          DifficultyEstimator.estimateRankWithSource('設計ドキュメントの作成');
+          DifficultyEstimator.estimateRankWithSource('データ移行計画');
       expect(result.rank, QuestRank.A);
       expect(result.estimatedMinutes, isNull);
       expect(result.source, EstimationSource.keyword);

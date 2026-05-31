@@ -200,6 +200,13 @@ class PlayerViewModel extends ChangeNotifier {
   void clearPendingLoginBonus() { pendingLoginBonusAmount = null; notifyListeners(); }
   void clearPendingStreakReward() { pendingStreakReward = null; notifyListeners(); }
 
+  /// バックアップ復元時に Player を差し替える。
+  void restorePlayer(Player p) {
+    _player = p;
+    notifyListeners();
+    save();
+  }
+
   /// 刻の番人討伐時の称号チェック（GameViewModelから移行）
   void defeatTimeWarden() {
     _player.timesWardenDefeated++;

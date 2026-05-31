@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
@@ -179,6 +180,111 @@ void main() {
       expect(restored.equippedSkin, original.equippedSkin);
       expect(restored.nextDayTaskLimitOffset, original.nextDayTaskLimitOffset);
       expect(restored.todayTaskLimitOffset, original.todayTaskLimitOffset);
+    });
+  });
+
+  // ━━━ toJson / fromJson round-trip ━━━
+  group('Player.toJson / fromJson', () {
+    test('toJson produces all expected fields', () {
+      final player = Player();
+      final json = player.toJson();
+      expect(json, contains('jobLevels'));
+      expect(json, contains('jobExps'));
+      expect(json, contains('activeSkills'));
+      expect(json, contains('equippedSkills'));
+      expect(json, contains('currentJob'));
+      expect(json, contains('coins'));
+      expect(json, contains('gems'));
+      expect(json, contains('streakDays'));
+      expect(json, contains('longestStreak'));
+      expect(json, contains('titles'));
+      expect(json, contains('characterSkin'));
+    });
+
+    test('round-trip: default Player matches original', () {
+      final original = Player();
+      final jsonStr = jsonEncode(original.toJson());
+      final restored = Player.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
+      expect(restored.level, original.level);
+      expect(restored.coins, original.coins);
+      expect(restored.gems, original.gems);
+      expect(restored.currentJob, original.currentJob);
+      expect(restored.streakDays, original.streakDays);
+      expect(restored.longestStreak, original.longestStreak);
+      expect(restored.jobLevels, original.jobLevels);
+      expect(restored.jobExps, original.jobExps);
+      expect(restored.activeSkills, original.activeSkills);
+      expect(restored.titles, original.titles);
+      expect(restored.homeItems, original.homeItems);
+    });
+
+    test('round-trip: custom Player with all fields populated matches original', () {
+      final original = Player(
+        jobLevels: {Job.adventurer: 10, Job.warrior: 5, Job.cleric: 3, Job.wizard: 1},
+        jobExps: {Job.adventurer: 500, Job.warrior: 200, Job.cleric: 100, Job.wizard: 50},
+        activeSkills: {Job.warrior, Job.cleric},
+        currentJob: Job.warrior,
+        comboCount: 3,
+        coins: 9999,
+        gems: 100,
+        homeItems: ['sword', 'shield'],
+        dailyTasksCompleted: 3,
+        weeklySRankCompleted: 1,
+        totalTasksCompleted: 50,
+        totalSRankCompleted: 5,
+        totalARankCompleted: 15,
+        totalBRankCompleted: 30,
+        timesWardenDefeated: 2,
+        titles: ['勇者', '英雄'],
+        equippedTitle: '英雄',
+        equippedSkin: 'skin_warrior_01',
+        streakDays: 7,
+        longestStreak: 21,
+        pomodoroMinutes: 30,
+      );
+      original.nextDayTaskLimitOffset = 2;
+      original.todayTaskLimitOffset = 1;
+      original.lastMissionResetDate = DateTime(2026, 5, 30);
+      original.lastRestDate = DateTime(2026, 5, 29);
+      original.lastLoginDate = DateTime(2026, 5, 30, 10, 30, 0);
+      original.pomodoroStartTime = DateTime(2026, 5, 30, 9, 0);
+      original.lastDailyComplete = DateTime(2026, 5, 30);
+      original.lastStreakGraceReset = DateTime(2026, 5, 23);
+      original.warriorDailyBuff = 10;
+
+      final jsonStr = jsonEncode(original.toJson());
+      final restored = Player.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
+
+      expect(restored.jobLevels, original.jobLevels);
+      expect(restored.jobExps, original.jobExps);
+      expect(restored.activeSkills, original.activeSkills);
+      expect(restored.currentJob, original.currentJob);
+      expect(restored.comboCount, original.comboCount);
+      expect(restored.coins, original.coins);
+      expect(restored.gems, original.gems);
+      expect(restored.homeItems, original.homeItems);
+      expect(restored.dailyTasksCompleted, original.dailyTasksCompleted);
+      expect(restored.weeklySRankCompleted, original.weeklySRankCompleted);
+      expect(restored.totalTasksCompleted, original.totalTasksCompleted);
+      expect(restored.totalSRankCompleted, original.totalSRankCompleted);
+      expect(restored.totalARankCompleted, original.totalARankCompleted);
+      expect(restored.totalBRankCompleted, original.totalBRankCompleted);
+      expect(restored.timesWardenDefeated, original.timesWardenDefeated);
+      expect(restored.titles, original.titles);
+      expect(restored.equippedTitle, original.equippedTitle);
+      expect(restored.equippedSkin, original.equippedSkin);
+      expect(restored.streakDays, original.streakDays);
+      expect(restored.longestStreak, original.longestStreak);
+      expect(restored.lastLoginDate, original.lastLoginDate);
+      expect(restored.lastMissionResetDate, original.lastMissionResetDate);
+      expect(restored.lastRestDate, original.lastRestDate);
+      expect(restored.nextDayTaskLimitOffset, original.nextDayTaskLimitOffset);
+      expect(restored.todayTaskLimitOffset, original.todayTaskLimitOffset);
+      expect(restored.pomodoroMinutes, original.pomodoroMinutes);
+      expect(restored.pomodoroStartTime, original.pomodoroStartTime);
+      expect(restored.lastDailyComplete, original.lastDailyComplete);
+      expect(restored.lastStreakGraceReset, original.lastStreakGraceReset);
+      expect(restored.warriorDailyBuff, original.warriorDailyBuff);
     });
   });
 }
