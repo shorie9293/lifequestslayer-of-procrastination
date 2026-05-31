@@ -232,16 +232,19 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     super.dispose();
   }
 
-  bool _saving = false, _pending = false;
+  bool _isSaving = false;
 
-  void _save() {
+  Future<void> _save() async {
     notifyListeners();
-    if (_saving) { _pending = true; return; }
-    _saving = true; _pending = false;
-    Future.wait([_playerVM.save(), _taskVM.save()]).then((_) {
-      _saving = false;
-      if (_pending) { _pending = false; _saving = true; Future.wait([_playerVM.save(), _taskVM.save()]).then((_) { _saving = false; }).catchError((e) { _saving = false; }); }
-    }).catchError((e) { _saving = false; _pending = false; });
+    if (_isSaving) return;
+    _isSaving = true;
+    try {
+      await Future.wait([_playerVM.save(), _taskVM.save()]);
+    } catch (e) {
+      debugPrint('GameViewModel: save failed: $e');
+    } finally {
+      _isSaving = false;
+    }
   }
 
   Future<void> loadData() async {

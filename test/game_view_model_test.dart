@@ -34,6 +34,59 @@ class _MockTaskRepo implements ITaskRepository {
   Future<void> close() async {}
 }
 
+/// セーブに遅延を入れる PlayerRepository モック（並行セーブ検出用）
+class _SlowMockPlayerRepo implements IPlayerRepository {
+  Player _player = Player();
+  @override
+  Future<Player?> loadPlayer() async => _player;
+  @override
+  Future<void> savePlayer(Player player) async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    _player = player;
+  }
+  @override
+  Future<void> close() async {}
+}
+
+/// セーブに遅延を入れる TaskRepository モック（並行セーブ検出用）
+class _SlowMockTaskRepo implements ITaskRepository {
+  final List<Task> _tasks = [];
+  @override
+  Future<List<Task>> loadTasks() async => List.from(_tasks);
+  @override
+  Future<void> saveTasks(List<Task> tasks) async {
+    await Future.delayed(const Duration(milliseconds: 100));
+    _tasks.clear();
+    _tasks.addAll(tasks);
+  }
+  @override
+  Future<void> close() async {}
+}
+
+/// セーブの並行実行をカウントする PlayerRepository モック
+class _ConcurrentTrackPlayerRepo implements IPlayerRepository {
+  Player _player = Player();
+  int concurrentSaves = 0;
+  int maxConcurrentSaves = 0;
+
+  @override
+  Future<Player?> loadPlayer() async => _player;
+
+  @override
+  Future<void> savePlayer(Player player) async {
+    concurrentSaves++;
+    if (concurrentSaves > maxConcurrentSaves) {
+      maxConcurrentSaves = concurrentSaves;
+    }
+    await Future.delayed(const Duration(milliseconds: 50));
+    _player = player;
+    concurrentSaves--;
+  }
+
+  @override
+  Future<void> close() async {}
+}
+
 /// Hive非依存の SettingsRepository モック
 class _MockSettingsRepo extends SettingsRepository {
   @override
@@ -1708,7 +1761,76 @@ void main() {
       expect(urgent[2].title, '5時間後');
     });
   });
+
+  group('GameViewModel 永続化ガードテスト (_isSaving)', () {
+    test('連続操作で saveData() が並行実行されず、最終データが正しく永続化される', () async {
+      final pr = _SlowMockPlayerRepo();
+      final tr = _SlowMockTaskRepo();
+      final sr = _MockSettingsRepo();
+
+      final vm1 = GameViewModel(pr: pr, tr: tr, sr: sr);
+      await _waitForLoad(vm1);
+
+      // 連続ミューテーション → _save() が複数回呼ばれる
+      vm1.addGems(100);
+      vm1.addGems(50);
+      vm1.addTask('タスクA', rank: QuestRank.B);
+      vm1.addTask('タスクB', rank: QuestRank.B);
+
+      // すべての保存が完了するのを待つ
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // 新しいVMでデータを再読み込み → 永続化を確認
+      final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
+      await _waitForLoad(vm2);
+
+      expect(vm2.player.gems, 150, reason: '連続 addGems の累積値が維持されている');
+      expect(vm2.tasks.length, 2, reason: '連続 addTask の全タスクが維持されている');
+    });
+
+    test('セーブ中に別のミューテーションが発生してもデータ不整合が起きない', () async {
+      final pr = _SlowMockPlayerRepo();
+      final tr = _SlowMockTaskRepo();
+      final sr = _MockSettingsRepo();
+
+      final vm = GameViewModel(pr: pr, tr: tr, sr: sr);
+      await _waitForLoad(vm);
+
+      // タスクを追加して完了 → save が走っている間に別の操作
+      vm.addTask('メインクエスト', rank: QuestRank.B);
+      vm.acceptTask(vm.tasks[0].id);
+
+      // save が進行中に別の操作（save中フラグを貫通）
+      vm.addGems(200);
+
+      await Future.delayed(const Duration(milliseconds: 500));
+      expect(vm.player.gems, 200);
+      expect(vm.tasks.length, 1);
+    });
+
+    test('_isSaving ガードにより saveData が決して並行実行されない', () async {
+      final pr = _ConcurrentTrackPlayerRepo();
+      final tr = _SlowMockTaskRepo();
+      final sr = _MockSettingsRepo();
+
+      final vm = GameViewModel(pr: pr, tr: tr, sr: sr);
+      await _waitForLoad(vm);
+
+      // 大量の連続操作で _save() をトリガー
+      for (int i = 0; i < 10; i++) {
+        vm.addGems(10);
+      }
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // 並行セーブが一度も発生していないこと
+      expect(pr.maxConcurrentSaves, lessThanOrEqualTo(1),
+          reason: 'savePlayer が並行実行されてはいけない');
+      expect(vm.player.gems, 100, reason: '全操作の累積値が正しい');
+    });
+  });
 }
+
 Future<void> _waitForLoad(GameViewModel vm,
     {Duration timeout = const Duration(seconds: 5)}) async {
   final start = DateTime.now();
