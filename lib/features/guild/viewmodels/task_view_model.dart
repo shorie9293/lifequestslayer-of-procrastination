@@ -24,6 +24,29 @@ class TaskViewModel extends ChangeNotifier {
 
   TaskViewModel(this._taskRepository, this._playerVM);
 
+  // ── 保存ガード（同時保存防止） ──
+  bool _isSaving = false;
+  bool _savePending = false;
+
+  void _autoSave() {
+    if (_isSaving) {
+      _savePending = true;
+      return;
+    }
+    _isSaving = true;
+    _savePending = false;
+    _taskRepository.saveTasks(_tasks).then((_) {
+      _isSaving = false;
+      if (_savePending) {
+        _savePending = false;
+        _autoSave();
+      }
+    }).catchError((e) {
+      debugPrint('[TaskVM] autoSave failed: $e');
+      _isSaving = false;
+    });
+  }
+
   List<Task> get tasks => _tasks;
   bool get isLoaded => _isLoaded;
   IKozuchiQuestService? get kozuchiQuestService => _kozuchiQuestService;
@@ -114,6 +137,7 @@ class TaskViewModel extends ChangeNotifier {
         targetTimeMinutes: targetTimeMinutes,
         deadline: deadline));
     notifyListeners();
+    _autoSave();
   }
 
   void addTasks(List<String> titles, QuestRank rank) {
@@ -121,6 +145,7 @@ class TaskViewModel extends ChangeNotifier {
       _tasks.add(Task(id: const Uuid().v4(), title: title, rank: rank));
     }
     notifyListeners();
+    _autoSave();
   }
 
   void editTask(String id, String title,
@@ -141,6 +166,7 @@ class TaskViewModel extends ChangeNotifier {
       ..targetTimeMinutes = targetTimeMinutes
       ..deadline = deadline;
     notifyListeners();
+    _autoSave();
   }
 
   String? acceptTask(String id, {bool debugMode = false}) {
@@ -155,12 +181,14 @@ class TaskViewModel extends ChangeNotifier {
     _tasks[i].status = TaskStatus.active;
     _tasks[i].activeAt = DateTime.now();
     notifyListeners();
+    _autoSave();
     return null;
   }
 
   void deleteTask(String id) {
     _tasks.removeWhere((t) => t.id == id);
     notifyListeners();
+    _autoSave();
   }
 
   void cancelTask(String id) {
@@ -168,6 +196,7 @@ class TaskViewModel extends ChangeNotifier {
     if (i != -1) {
       _tasks[i].status = TaskStatus.inGuild;
       notifyListeners();
+      _autoSave();
     }
   }
 
@@ -177,6 +206,7 @@ class TaskViewModel extends ChangeNotifier {
       _tasks[i].subTasks[idx].isCompleted =
           !_tasks[i].subTasks[idx].isCompleted;
       notifyListeners();
+      _autoSave();
     }
   }
 
@@ -201,6 +231,8 @@ class TaskViewModel extends ChangeNotifier {
     }
     _playerVM.notifyListeners(); // player state changed
     notifyListeners();
+    _playerVM.save(); // player の変更も永続化
+    _autoSave();
     _completing.remove(id);
     return {
       'leveledUp': r.leveledUp,
@@ -219,6 +251,7 @@ class TaskViewModel extends ChangeNotifier {
     final b = QuizService.calcBonusExp(pct, base);
     if (b > 0) {
       _playerVM.addExp(b);
+      _playerVM.save();
     }
   }
 

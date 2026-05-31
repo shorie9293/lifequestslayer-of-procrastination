@@ -58,6 +58,7 @@ Future<void> initializeViewModels() async {
 
   try {
     playerVM.checkAndResetMissions(DateTime.now(), login: true);
+    await playerVM.save();
   } catch (e, s) {
     debugPrint('[DI] missions error: $e\n$s');
   }

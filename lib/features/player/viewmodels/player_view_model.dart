@@ -23,6 +23,10 @@ class PlayerViewModel extends ChangeNotifier {
 
   PlayerViewModel(this._playerRepository);
 
+  // ── 保存ガード（同時保存防止） ──
+  bool _isSaving = false;
+  bool _savePending = false;
+
   Player get player => _player;
   bool get isLoaded => _isLoaded;
   bool get loadFailed => _loadFailed;
@@ -83,31 +87,53 @@ class PlayerViewModel extends ChangeNotifier {
   }
 
   // ── 操作 ──
-  void addExp(int amount) { _player.addExp(amount); notifyListeners(); }
-  void addGems(int amount) { _player.gems += amount; notifyListeners(); }
+  void _autoSave() {
+    if (_isSaving) {
+      _savePending = true;
+      return;
+    }
+    _isSaving = true;
+    _savePending = false;
+    _playerRepository.savePlayer(_player).then((_) {
+      _isSaving = false;
+      if (_savePending) {
+        _savePending = false;
+        _autoSave();
+      }
+    }).catchError((e) {
+      debugPrint('[PlayerVM] autoSave failed: $e');
+      _isSaving = false;
+    });
+  }
+
+  void addExp(int amount) { _player.addExp(amount); notifyListeners(); _autoSave(); }
+  void addGems(int amount) { _player.gems += amount; notifyListeners(); _autoSave(); }
   bool spendGems(int amount, {bool debugMode = false}) {
     if (debugMode) return true;
     if (_player.gems < amount) return false;
     _player.gems -= amount;
     notifyListeners();
+    _autoSave();
     return true;
   }
-  void addCoins(int amount) { _player.coins += amount; notifyListeners(); }
-  void spendCoins(int amount) { _player.coins -= amount; notifyListeners(); }
-  void setDailyTasksCompleted(int v) { _player.dailyTasksCompleted = v; notifyListeners(); }
-  void incrementDailyTasksCompleted() { _player.dailyTasksCompleted++; notifyListeners(); }
-  void incrementWeeklySRank() { _player.weeklySRankCompleted++; notifyListeners(); }
-  void setNextDayTaskLimitOffset(int v) { _player.nextDayTaskLimitOffset = v; notifyListeners(); }
+  void addCoins(int amount) { _player.coins += amount; notifyListeners(); _autoSave(); }
+  void spendCoins(int amount) { _player.coins -= amount; notifyListeners(); _autoSave(); }
+  void setDailyTasksCompleted(int v) { _player.dailyTasksCompleted = v; notifyListeners(); _autoSave(); }
+  void incrementDailyTasksCompleted() { _player.dailyTasksCompleted++; notifyListeners(); _autoSave(); }
+  void incrementWeeklySRank() { _player.weeklySRankCompleted++; notifyListeners(); _autoSave(); }
+  void setNextDayTaskLimitOffset(int v) { _player.nextDayTaskLimitOffset = v; notifyListeners(); _autoSave(); }
 
   void changeJob(Job j, {bool debugMode = false}) {
     if (debugMode) {
       _player.currentJob = j;
       notifyListeners();
+      _autoSave();
       return;
     }
     if (j == Job.adventurer) {
       _player.currentJob = j;
       notifyListeners();
+      _autoSave();
       return;
     }
     if (_player.currentJob == Job.adventurer) {
@@ -119,6 +145,7 @@ class PlayerViewModel extends ChangeNotifier {
     }
     _player.currentJob = j;
     notifyListeners();
+    _autoSave();
   }
 
   void toggleSkill(Job j, {bool debugMode = false}) {
@@ -129,6 +156,7 @@ class PlayerViewModel extends ChangeNotifier {
       _player.activeSkills.add(j);
     }
     notifyListeners();
+    _autoSave();
   }
 
   /// v4: スキルを装備スロットに追加する。スロット上限・重複チェックあり。
@@ -140,6 +168,7 @@ class PlayerViewModel extends ChangeNotifier {
     }
     _player.equippedSkills.add(EquippedSkill(skill: skill));
     notifyListeners();
+    _autoSave();
   }
 
   /// v4: 指定スロットの装備スキルを解除する。
@@ -147,6 +176,7 @@ class PlayerViewModel extends ChangeNotifier {
     if (slotIndex < 0 || slotIndex >= _player.equippedSkills.length) return;
     _player.equippedSkills.removeAt(slotIndex);
     notifyListeners();
+    _autoSave();
   }
 
   /// v4: 指定スロットの装備スキルのON/OFFをトグルする。
@@ -155,12 +185,14 @@ class PlayerViewModel extends ChangeNotifier {
     _player.equippedSkills[slotIndex].isActive =
         !_player.equippedSkills[slotIndex].isActive;
     notifyListeners();
+    _autoSave();
   }
 
   void equipTitle(String t) {
     if (_player.titles.contains(t) || t.isEmpty) {
       _player.equippedTitle = t.isEmpty ? null : t;
       notifyListeners();
+      _autoSave();
     }
   }
 
@@ -168,12 +200,14 @@ class PlayerViewModel extends ChangeNotifier {
     if (_player.homeItems.contains(s) || s.isEmpty) {
       _player.equippedSkin = s.isEmpty ? null : s;
       notifyListeners();
+      _autoSave();
     }
   }
 
   void equipCharacterSkin(SkinSlot slot, String skinId) {
     _player.characterSkin = _player.characterSkin.withSlot(slot, skinId);
     notifyListeners();
+    _autoSave();
   }
 
   bool buyHomeItem(String id, int price, {bool debugMode = false}) {
@@ -181,6 +215,7 @@ class PlayerViewModel extends ChangeNotifier {
       if (!debugMode) _player.coins -= price;
       _player.homeItems.add(id);
       notifyListeners();
+      _autoSave();
       return true;
     }
     return false;
@@ -190,11 +225,13 @@ class PlayerViewModel extends ChangeNotifier {
   void debugSetCoins(int amount) {
     _player.coins = amount.clamp(0, 99999999);
     notifyListeners();
+    _autoSave();
   }
 
   void debugSetGems(int amount) {
     _player.gems = amount.clamp(0, 99999);
     notifyListeners();
+    _autoSave();
   }
 
   void clearPendingLoginBonus() { pendingLoginBonusAmount = null; notifyListeners(); }
@@ -222,6 +259,7 @@ class PlayerViewModel extends ChangeNotifier {
     p.coins -= coinPenalty;
     if (p.coins < 0) p.coins = 0;
     notifyListeners();
+    _autoSave();
   }
 
   // ── データロード/セーブ ──
