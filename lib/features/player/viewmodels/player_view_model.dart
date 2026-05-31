@@ -269,8 +269,12 @@ class PlayerViewModel extends ChangeNotifier {
       final loaded = await _playerRepository.loadPlayer();
       if (loaded != null) {
         _player = loaded;
+        // ignore: avoid_print
+        print('[PlayerVM] load OK: Lv.${_player.level}, coins=${_player.coins}, jobLevels=${_player.jobLevels}');
       } else {
-        _loadFailed = true; // データ破損時はデフォルトプレイヤーのままエラーフラグ
+        _loadFailed = true;
+        // ignore: avoid_print
+        print('[PlayerVM] load returned null — using default Player');
       }
     } catch (e, s) {
       debugPrint('[PlayerVM] load error: $e\n$s');

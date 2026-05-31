@@ -3,6 +3,12 @@ import 'package:hive/hive.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 
+/// Release でも logcat に出力する簡易ロガー
+void _log(String msg) {
+  // ignore: avoid_print
+  print('[PlayerRepo] $msg');
+}
+
 class PlayerRepository implements IPlayerRepository {
   static const String boxName = 'playerBox';
 
@@ -17,24 +23,25 @@ class PlayerRepository implements IPlayerRepository {
 
   @override
   Future<Player?> loadPlayer() async {
-    debugPrint('PlayerRepository: Loading player...');
+    _log('Loading player...');
     try {
       final box = await _getBox();
+      _log('box.length=${box.length}, box.keys=${box.keys.toList()}');
       if (box.isNotEmpty) {
         final player = box.getAt(0);
         if (player != null) {
-          debugPrint('PlayerRepository: Player found (Lv.${player.level})');
+          _log('Player found (Lv.${player.level}, coins=${player.coins}, job=${player.currentJob}, jobLevels=${player.jobLevels})');
           return player;
+        } else {
+          _log('box.getAt(0) returned null!');
         }
       }
-    } catch (e) {
-      // v1.3-fix: 読み込み失敗時はBoxを削除せずnullを返す。
-      // データ破損でも保存データは保持し、次回起動時の修復を期待する。
-      debugPrint(
-          'PlayerRepository: Load failed (player data may be corrupted): $e');
+    } catch (e, s) {
+      _log('Load failed: $e');
+      _log('Stack: $s');
       return null;
     }
-    debugPrint('PlayerRepository: No player found, returning null.');
+    _log('No player found, returning null.');
     return null;
   }
 
@@ -42,12 +49,13 @@ class PlayerRepository implements IPlayerRepository {
 
   @override
   Future<void> savePlayer(Player player) async {
-    debugPrint('PlayerRepository: Saving player (Lv.${player.level})...');
+    _log('Saving player (Lv.${player.level}, coins=${player.coins}, job=${player.currentJob})');
     final box = await _getBox();
     await box.put(0, player);
-    // v1.5: 即座にディスクへ反映（OS kill 耐性の向上）
     await box.flush();
-    debugPrint('PlayerRepository: Player saved and flushed.');
+    // 読み戻して確認
+    final verify = box.getAt(0);
+    _log('Saved & flushed. Verify: Lv.${verify?.level}, coins=${verify?.coins}');
   }
 
   @override

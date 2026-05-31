@@ -57,8 +57,14 @@ Future<void> initializeViewModels() async {
   await settingsVM.load();
 
   try {
+    // ignore: avoid_print
+    print('[DI] Before missions: Lv.${playerVM.player.level}, coins=${playerVM.player.coins}');
     playerVM.checkAndResetMissions(DateTime.now(), login: true);
+    // ignore: avoid_print
+    print('[DI] After missions: Lv.${playerVM.player.level}, coins=${playerVM.player.coins}');
     await playerVM.save();
+    // ignore: avoid_print
+    print('[DI] Player saved after missions');
   } catch (e, s) {
     debugPrint('[DI] missions error: $e\n$s');
   }
