@@ -366,6 +366,11 @@ class Player {
     this.pomodoroShortBreakMinutes = 5,
     this.pomodoroLongBreakMinutes = 15,
     this.pomodorosBeforeLongBreak = 4,
+    this.pomodoroStartTime,
+    this.lastDailyComplete,
+    this.warriorDailyBuff = 0,
+    this.streakGraceRemaining = 1,
+    this.lastStreakGraceReset,
     List<String>? tags,
     List<ProjectGroup>? projects,
     List<EquippedSkill>? equippedSkills,
@@ -597,6 +602,137 @@ class Player {
 
     jobExps[currentJob] = cExp;
     return leveledUp;
+  }
+
+  Map<String, dynamic> toJson() => {
+        'jobLevels': jobLevels.map((k, v) => MapEntry(k.name, v)),
+        'jobExps': jobExps.map((k, v) => MapEntry(k.name, v)),
+        'activeSkills': activeSkills.map((j) => j.name).toList(),
+        'equippedSkills': equippedSkills.map((e) => e.toJson()).toList(),
+        'currentJob': currentJob.name,
+        'comboCount': comboCount,
+        'coins': coins,
+        'homeItems': homeItems,
+        'dailyTasksCompleted': dailyTasksCompleted,
+        'weeklySRankCompleted': weeklySRankCompleted,
+        'lastMissionResetDate': lastMissionResetDate?.toIso8601String(),
+        'nextDayTaskLimitOffset': nextDayTaskLimitOffset,
+        'todayTaskLimitOffset': todayTaskLimitOffset,
+        'lastRestDate': lastRestDate?.toIso8601String(),
+        'totalTasksCompleted': totalTasksCompleted,
+        'totalSRankCompleted': totalSRankCompleted,
+        'totalARankCompleted': totalARankCompleted,
+        'totalBRankCompleted': totalBRankCompleted,
+        'timesWardenDefeated': timesWardenDefeated,
+        'titles': titles,
+        'equippedTitle': equippedTitle,
+        'equippedSkin': equippedSkin,
+        'characterSkin': characterSkin.toMap(),
+        'gems': gems,
+        'streakDays': streakDays,
+        'longestStreak': longestStreak,
+        'lastLoginDate': lastLoginDate?.toIso8601String(),
+        'pomodoroMinutes': pomodoroMinutes,
+        'pomodoroShortBreakMinutes': pomodoroShortBreakMinutes,
+        'pomodoroLongBreakMinutes': pomodoroLongBreakMinutes,
+        'pomodorosBeforeLongBreak': pomodorosBeforeLongBreak,
+        'pomodoroStartTime': pomodoroStartTime?.toIso8601String(),
+        'lastDailyComplete': lastDailyComplete?.toIso8601String(),
+        'warriorDailyBuff': warriorDailyBuff,
+        'streakGraceRemaining': streakGraceRemaining,
+        'lastStreakGraceReset': lastStreakGraceReset?.toIso8601String(),
+        'tags': tags,
+        'projects': projects.map((p) => p.toJson()).toList(),
+        'taskTags': taskTags,
+        'taskProjects': taskProjects,
+        'snoozedTasks':
+            snoozedTasks.map((k, v) => MapEntry(k, v.toIso8601String())),
+        'taskStreaks': taskStreaks.entries
+            .map((e) => {
+                  'taskId': e.key,
+                  'streak': e.value.toJson(),
+                })
+            .toList(),
+      };
+
+  factory Player.fromJson(Map<String, dynamic> json) {
+    return Player(
+      jobLevels: (json['jobLevels'] as Map<String, dynamic>)
+          .map((k, v) => MapEntry(Job.values.byName(k), v as int)),
+      jobExps: (json['jobExps'] as Map<String, dynamic>)
+          .map((k, v) => MapEntry(Job.values.byName(k), v as int)),
+      activeSkills: (json['activeSkills'] as List<dynamic>)
+          .map((e) => Job.values.byName(e as String))
+          .toSet(),
+      equippedSkills: (json['equippedSkills'] as List<dynamic>)
+          .map((e) => EquippedSkill.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      currentJob: Job.values.byName(json['currentJob'] as String),
+      comboCount: json['comboCount'] as int,
+      coins: json['coins'] as int,
+      homeItems: (json['homeItems'] as List<dynamic>).cast<String>(),
+      dailyTasksCompleted: json['dailyTasksCompleted'] as int,
+      weeklySRankCompleted: json['weeklySRankCompleted'] as int,
+      lastMissionResetDate: json['lastMissionResetDate'] != null
+          ? DateTime.parse(json['lastMissionResetDate'] as String)
+          : null,
+      nextDayTaskLimitOffset: json['nextDayTaskLimitOffset'] as int,
+      todayTaskLimitOffset: json['todayTaskLimitOffset'] as int,
+      lastRestDate: json['lastRestDate'] != null
+          ? DateTime.parse(json['lastRestDate'] as String)
+          : null,
+      totalTasksCompleted: json['totalTasksCompleted'] as int,
+      totalSRankCompleted: json['totalSRankCompleted'] as int,
+      totalARankCompleted: json['totalARankCompleted'] as int,
+      totalBRankCompleted: json['totalBRankCompleted'] as int,
+      timesWardenDefeated: json['timesWardenDefeated'] as int,
+      titles: (json['titles'] as List<dynamic>).cast<String>(),
+      equippedTitle: json['equippedTitle'] as String?,
+      equippedSkin: json['equippedSkin'] as String?,
+      characterSkin: CharacterSkin.fromMap(
+          json['characterSkin'] as Map<String, dynamic>),
+      gems: json['gems'] as int,
+      streakDays: json['streakDays'] as int,
+      longestStreak: json['longestStreak'] as int,
+      lastLoginDate: json['lastLoginDate'] != null
+          ? DateTime.parse(json['lastLoginDate'] as String)
+          : null,
+      pomodoroMinutes: json['pomodoroMinutes'] as int,
+      pomodoroShortBreakMinutes: json['pomodoroShortBreakMinutes'] as int,
+      pomodoroLongBreakMinutes: json['pomodoroLongBreakMinutes'] as int,
+      pomodorosBeforeLongBreak: json['pomodorosBeforeLongBreak'] as int,
+      pomodoroStartTime: json['pomodoroStartTime'] != null
+          ? DateTime.parse(json['pomodoroStartTime'] as String)
+          : null,
+      lastDailyComplete: json['lastDailyComplete'] != null
+          ? DateTime.parse(json['lastDailyComplete'] as String)
+          : null,
+      warriorDailyBuff: json['warriorDailyBuff'] as int? ?? 0,
+      streakGraceRemaining: json['streakGraceRemaining'] as int? ?? 1,
+      lastStreakGraceReset: json['lastStreakGraceReset'] != null
+          ? DateTime.parse(json['lastStreakGraceReset'] as String)
+          : null,
+      tags: (json['tags'] as List<dynamic>).cast<String>(),
+      projects: (json['projects'] as List<dynamic>)
+          .map((e) => ProjectGroup.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      taskTags: (json['taskTags'] as Map<String, dynamic>?)?.map(
+        (k, v) => MapEntry(k, (v as List<dynamic>).cast<String>()),
+      ),
+      taskProjects: (json['taskProjects'] as Map<String, dynamic>?)
+          ?.cast<String, String>(),
+      snoozedTasks: (json['snoozedTasks'] as Map<String, dynamic>?)?.map(
+        (k, v) => MapEntry(k, DateTime.parse(v as String)),
+      ),
+      taskStreaks: (json['taskStreaks'] as List<dynamic>?)
+          ?.map((e) => MapEntry(
+                (e as Map)['taskId'] as String,
+                TaskStreak.fromJson(
+                    (e['streak'] as Map).cast<String, dynamic>()),
+              ))
+          .fold<Map<String, TaskStreak>>(
+              {}, (map, entry) => map..[entry.key] = entry.value),
+    );
   }
 }
 

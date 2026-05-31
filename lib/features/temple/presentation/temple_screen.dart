@@ -4,6 +4,8 @@ import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/skill_slot.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/domain/services/data_export_service.dart';
+import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class TempleScreen extends StatelessWidget {
@@ -115,6 +117,10 @@ class TempleScreen extends StatelessWidget {
             // ━━━ 現在の職業スキル一覧 ━━━
             const SizedBox(height: 16),
             _buildCurrentJobSkillsSection(playerVM, player, currentJobSkills),
+
+            // ━━━ バックアップ/復元 ━━━
+            const SizedBox(height: 16),
+            _buildBackupSection(context, playerVM),
           ],
         ),
       ),
@@ -424,6 +430,77 @@ class TempleScreen extends StatelessWidget {
               ),
             );
           }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBackupSection(BuildContext context, PlayerViewModel playerVM) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.blueGrey.withValues(alpha: 0.5)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: ElevatedButton.icon(
+              key: AppKeys.templeBackupButton,
+              icon: const Icon(Icons.backup, size: 20),
+              label: const Text('データバックアップ'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueGrey.withValues(alpha: 0.4),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              onPressed: () async {
+                final taskVM = context.read<TaskViewModel>();
+                final tasks = taskVM.tasks;
+                final service = DataExportService();
+                await service.exportToFile(playerVM.player, tasks);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('バックアップを共有しました')),
+                  );
+                }
+              },
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ElevatedButton.icon(
+              key: AppKeys.templeRestoreButton,
+              icon: const Icon(Icons.restore, size: 20),
+              label: const Text('データ復元'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal.withValues(alpha: 0.4),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              onPressed: () async {
+                final result = await DataExportService().importFromFile();
+                if (result == null) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('復元に失敗しました')),
+                    );
+                  }
+                  return;
+                }
+                final playerVM = context.read<PlayerViewModel>();
+                final taskVM = context.read<TaskViewModel>();
+                playerVM.restorePlayer(result.player);
+                taskVM.setTasks(result.tasks);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('データを復元しました')),
+                  );
+                }
+              },
+            ),
+          ),
         ],
       ),
     );

@@ -73,6 +73,8 @@ class AppKeys {
   static const Key templeSkillToggle = Key('tgl_skill_inherit');
   static const Key templeSkillSlotSection = Key('sec_skill_slots');
   static const Key templeSkillSlotDropdown = Key('dd_skill_slot');
+  static const Key templeBackupButton = Key('btn_temple_backup');
+  static const Key templeRestoreButton = Key('btn_temple_restore');
 
   // ━━━ 街 ━━━
   static const Key townScreen = Key('screen_town');

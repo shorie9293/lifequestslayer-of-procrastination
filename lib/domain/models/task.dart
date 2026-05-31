@@ -68,6 +68,18 @@ class SubTask {
     required this.title,
     this.isCompleted = false,
   });
+
+  Map<String, dynamic> toJson() => {
+        'title': title,
+        'isCompleted': isCompleted,
+      };
+
+  factory SubTask.fromJson(Map<String, dynamic> json) {
+    return SubTask(
+      title: json['title'] as String,
+      isCompleted: json['isCompleted'] as bool? ?? false,
+    );
+  }
 }
 
 class SubTaskAdapter extends TypeAdapter<SubTask> {
@@ -147,6 +159,52 @@ class Task {
         DateTime.now().day == reactivateDate.day &&
             DateTime.now().month == reactivateDate.month &&
             DateTime.now().year == reactivateDate.year;
+  }
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'title': title,
+        'status': status.name,
+        'isCompleted': isCompleted,
+        'rank': rank.name,
+        'repeatInterval': repeatInterval.name,
+        'repeatWeekdays': repeatWeekdays,
+        'lastCompletedAt': lastCompletedAt?.toIso8601String(),
+        'subTasks': subTasks.map((st) => st.toJson()).toList(),
+        'targetTimeMinutes': targetTimeMinutes,
+        'activeAt': activeAt?.toIso8601String(),
+        'deadline': deadline?.toIso8601String(),
+        'repeatAfterDays': repeatAfterDays,
+        'tags': tags,
+      };
+
+  factory Task.fromJson(Map<String, dynamic> json) {
+    return Task(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      status: TaskStatus.values.byName(json['status'] as String),
+      isCompleted: json['isCompleted'] as bool,
+      rank: QuestRank.values.byName(json['rank'] as String),
+      repeatInterval:
+          RepeatInterval.values.byName(json['repeatInterval'] as String),
+      repeatWeekdays:
+          (json['repeatWeekdays'] as List<dynamic>?)?.cast<int>(),
+      lastCompletedAt: json['lastCompletedAt'] != null
+          ? DateTime.parse(json['lastCompletedAt'] as String)
+          : null,
+      subTasks: (json['subTasks'] as List<dynamic>?)
+          ?.map((st) => SubTask.fromJson(st as Map<String, dynamic>))
+          .toList(),
+      targetTimeMinutes: json['targetTimeMinutes'] as int?,
+      activeAt: json['activeAt'] != null
+          ? DateTime.parse(json['activeAt'] as String)
+          : null,
+      deadline: json['deadline'] != null
+          ? DateTime.parse(json['deadline'] as String)
+          : null,
+      repeatAfterDays: json['repeatAfterDays'] as int?,
+      tags: (json['tags'] as List<dynamic>?)?.cast<String>(),
+    );
   }
 }
 
