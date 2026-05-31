@@ -14,12 +14,19 @@ import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
+/// M4禍津対策: 連打ガード用セット
+final Set<String> _completingTaskIds = {};
+
 class BattleScreen extends StatelessWidget {
   const BattleScreen({super.key});
 
   Color _getRankColor(QuestRank rank) => RankColors.forRank(rank);
 
   void _completeTask(BuildContext context, String taskId) {
+    // M4禍津対策: 連打ガード。同一タスクの二重実行を防止する。
+    if (_completingTaskIds.contains(taskId)) return;
+    _completingTaskIds.add(taskId);
+
     final taskVM = context.read<TaskViewModel>();
     final playerVM = context.read<PlayerViewModel>();
     final settingsVM = context.read<SettingsViewModel>();
@@ -31,7 +38,10 @@ class BattleScreen extends StatelessWidget {
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
     final wasActive = taskVM.activeTasks.any((t) => t.id == taskId);
-    if (!wasActive) return;
+    if (!wasActive) {
+      _completingTaskIds.remove(taskId);
+      return;
+    }
 
     // レベルアップ前のレベルを記録（completeTask 後に比較するため）
     final previousLevel = playerVM.player.level;
@@ -48,6 +58,7 @@ class BattleScreen extends StatelessWidget {
           );
         }
       }
+      _completingTaskIds.remove(taskId);
       return;
     }
 
@@ -155,7 +166,10 @@ class BattleScreen extends StatelessWidget {
         return Center(
           child: ParticleBurst(
             onComplete: () {
-              navigator.maybePop();
+              // M5禍津対策: maybePop() は最上面のルートを閉じてしまう。
+              // 無関係なダイアログ（知識クエスト等）を閉じないよう、
+              // ParticleBurst のコンテキストで明示的に pop する。
+              Navigator.of(ctx).pop();
             },
           ),
         );
@@ -170,6 +184,8 @@ class BattleScreen extends StatelessWidget {
       Future.delayed(const Duration(milliseconds: 400), () {
         showBattleReport();
       });
+      // ガード解除: ダイアログ連鎖完了後に解放
+      _completingTaskIds.remove(taskId);
     });
   }
 

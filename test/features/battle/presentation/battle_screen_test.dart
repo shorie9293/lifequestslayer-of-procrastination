@@ -77,7 +77,8 @@ class _MockSettingsRepository extends SettingsRepository {
 }
 
 /// テスト用のDI注入済みViewModel群を生成
-({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) createViewModels() {
+({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings})
+    createViewModels() {
   final playerVM = PlayerViewModel(_MockPlayerRepository());
   final taskVM = TaskViewModel(_MockTaskRepository(), playerVM);
   final settingsVM = SettingsViewModel(_MockSettingsRepository());
@@ -127,7 +128,8 @@ void main() {
         vms.task.acceptTask(taskId);
       });
 
-      await pumpBattleScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+      await pumpBattleScreen(
+          tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 見積もり時間のテキストが表示されていることを確認（完全一致）
       expect(find.text('今日の戦い（見積もり）: 30分'), findsOneWidget);
@@ -149,7 +151,8 @@ void main() {
         }
       });
 
-      await pumpBattleScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+      await pumpBattleScreen(
+          tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 合計75分が表示されていることを確認
       expect(find.text('今日の戦い（見積もり）: 75分'), findsOneWidget);
@@ -171,7 +174,8 @@ void main() {
         vms.task.acceptTask(taskId);
       });
 
-      await pumpBattleScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+      await pumpBattleScreen(
+          tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 見積もり時間のテキストが表示されていないことを確認
       expect(
@@ -193,7 +197,8 @@ void main() {
         // タスクを追加しない → dailyEstimatedMinutes = 0
       });
 
-      await pumpBattleScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+      await pumpBattleScreen(
+          tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 見積もり表示は存在しない
       expect(
@@ -208,6 +213,96 @@ void main() {
 
       // 空状態が表示されている（AppKeyで検証）
       expect(find.byKey(AppKeys.battleEmptyState), findsOneWidget);
+    });
+  });
+
+  // ━━━ M4禍津: タスク連打でダイアログ多重表示 ━━━
+
+  group('M4 タスク連打ガードテスト', () {
+    testWidgets('タスク完了ボタンを連打してもダイアログは1つだけ表示される',
+        (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+      late String taskId;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+        // Lv2に上げてBランク受注可能にする
+        vms.player.player.jobLevels[vms.player.player.currentJob] = 2;
+        vms.task.addTask('連打テスト', rank: QuestRank.B);
+        taskId = vms.task.tasks.first.id;
+        vms.task.acceptTask(taskId);
+      });
+
+      await pumpBattleScreen(
+          tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // ExpansionTile を展開して完了ボタンを表示させる
+      final taskTitle = find.text('[B] 連打テスト');
+      expect(taskTitle, findsOneWidget);
+      await tester.tap(taskTitle);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 完了ボタン（⚔️）を探す
+      final completeButton = find.byTooltip('討つ！');
+      expect(completeButton, findsOneWidget);
+
+      // 連打: 2回連続でタップ（同一フレーム内で2度実行されるように）
+      await tester.tap(completeButton);
+      await tester.tap(completeButton);
+      await tester.pump();
+
+      // パーティクルエフェクトが1つだけ存在することを確認
+      // 連打ガードにより2つ目がブロックされ、1つの ParticleBurst のみ表示
+      await tester.pump(const Duration(milliseconds: 100));
+      final particleTexts = find.text('討伐完了\n💥');
+      expect(particleTexts, findsOneWidget);
+    });
+  });
+
+  // ━━━ M5禍津: maybePop() が無関係ダイアログを閉じる ━━━
+
+  group('M5 maybePop 無関係ダイアログテスト', () {
+    testWidgets('タスク完了後、先に開いていたダイアログが閉じられない',
+        (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+      late String taskId;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+        vms.player.player.jobLevels[vms.player.player.currentJob] = 2;
+        vms.task.addTask('M5テスト', rank: QuestRank.B);
+        taskId = vms.task.tasks.first.id;
+        vms.task.acceptTask(taskId);
+      });
+
+      await pumpBattleScreen(
+          tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // ExpansionTile を展開して完了ボタンを表示させる
+      final taskTitle = find.text('[B] M5テスト');
+      expect(taskTitle, findsOneWidget);
+      await tester.tap(taskTitle);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 完了ボタン（⚔️）をタップしてタスク完了
+      // ParticleBurst 完了後に Navigator.pop(ctx) が呼ばれることを検証
+      final completeButton = find.byTooltip('討つ！');
+      expect(completeButton, findsOneWidget);
+      await tester.tap(completeButton);
+      await tester.pump();
+
+      // ParticleBurst が表示されるのを待つ
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('討伐完了\n💥'), findsOneWidget);
+
+      // ParticleBurst のアニメーション完了を待つ（pumpAndSettle で確実に）
+      // Navigator.of(ctx).pop() が呼ばれ ParticleBurst ダイアログが閉じられる
+      await tester.pumpAndSettle(const Duration(milliseconds: 2000));
+
+      // ParticleBurst ダイアログが閉じられたことを確認
+      expect(find.text('討伐完了\n💥'), findsNothing);
     });
   });
 }

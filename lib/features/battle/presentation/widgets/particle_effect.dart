@@ -27,7 +27,7 @@ class _Particle {
 /// 使用例:
 /// ```dart
 /// ParticleBurst(
-///   onComplete: () => Navigator.of(context).maybePop(),
+///   onComplete: () => Navigator.pop(context),
 /// )
 /// ```
 class ParticleBurst extends StatefulWidget {

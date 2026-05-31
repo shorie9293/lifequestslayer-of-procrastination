@@ -233,17 +233,31 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   bool _isSaving = false;
+  bool _pending = false;
 
   Future<void> _save() async {
     notifyListeners();
-    if (_isSaving) return;
+    if (_isSaving) {
+      _pending = true;
+      return;
+    }
     _isSaving = true;
+    _pending = false;
     try {
       await Future.wait([_playerVM.save(), _taskVM.save()]);
     } catch (e) {
       debugPrint('GameViewModel: save failed: $e');
     } finally {
       _isSaving = false;
+      if (_pending) {
+        _pending = false;
+        // 保留中のデータ（後続のaddTask等による変更）を保存
+        try {
+          await Future.wait([_playerVM.save(), _taskVM.save()]);
+        } catch (e) {
+          debugPrint('GameViewModel: retry save failed: $e');
+        }
+      }
     }
   }
 
