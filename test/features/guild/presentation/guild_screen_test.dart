@@ -18,6 +18,8 @@ import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
 
 class _MockPlayerRepository implements IPlayerRepository {
   @override
+  bool get loadFailedDueToCorruption => false;
+  @override
   Future<Player?> loadPlayer() async => Player();
   @override
   Future<void> savePlayer(Player player) async {}

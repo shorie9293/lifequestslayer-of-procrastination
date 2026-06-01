@@ -194,6 +194,25 @@ class BattleScreen extends StatelessWidget {
     final taskVM = context.watch<TaskViewModel>();
     final tasks = taskVM.activeTasks;
 
+    // UX-9: save()失敗時のSnackBar表示コールバック
+    if (taskVM.onSaveError == null) {
+      final messenger = ScaffoldMessenger.of(context);
+      taskVM.onSaveError = () {
+        messenger.showSnackBar(
+          const SnackBar(content: Text("タスクデータの保存に失敗しました")),
+        );
+      };
+    }
+    final playerVM = context.read<PlayerViewModel>();
+    if (playerVM.onSaveError == null) {
+      final messenger = ScaffoldMessenger.of(context);
+      playerVM.onSaveError = () {
+        messenger.showSnackBar(
+          const SnackBar(content: Text("プレイヤーデータの保存に失敗しました")),
+        );
+      };
+    }
+
     return Scaffold(
       key: AppKeys.battleScreen,
       appBar: AppBar(
@@ -272,10 +291,30 @@ class BattleScreen extends StatelessWidget {
                                 key: AppKeys.battleCancel,
                                 icon: const Icon(Icons.undo, color: Colors.grey),
                                 onPressed: () {
-                                  taskVM.cancelTask(task.id); taskVM.save();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content: Text("依頼を寄合所に戻しました")),
+                                  showDialog(
+                                    context: context,
+                                    builder: (ctx) => AlertDialog(
+                                      key: AppKeys.confirmDialog,
+                                      title: const Text("依頼を戻す"),
+                                      content: const Text("この依頼を寄合所に戻しますか？"),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(ctx),
+                                          child: const Text("キャンセル"),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.pop(ctx);
+                                            taskVM.cancelTask(task.id); taskVM.save();
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                  content: Text("依頼を寄合所に戻しました")),
+                                            );
+                                          },
+                                          child: const Text("戻す"),
+                                        ),
+                                      ],
+                                    ),
                                   );
                                 },
                                 tooltip: "寄合所に戻す",

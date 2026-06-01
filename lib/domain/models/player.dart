@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'task.dart';
 import 'skill_slot.dart';
@@ -742,301 +743,373 @@ class PlayerAdapter extends TypeAdapter<Player> {
 
   static const int _formatVersion = 4;
 
+  /// Release でも logcat に出力する簡易ロガー
+  void _log(String msg, [Object? error]) {
+    // ignore: avoid_print
+    print('[PlayerAdapter] $msg${error != null ? ': $error' : ''}');
+  }
+
   @override
   Player read(BinaryReader reader) {
     final version = reader.readByte();
-    if (version == 4) {
-      return _readV4(reader);
-    }
-    if (version == 3) {
-      return _readV3(reader);
-    }
-    if (version < 1 || version > _formatVersion) {
-      try {
-        return _readV3(reader);
-      } catch (_) {
-        return Player();
+    _log('Reading Player data (formatVersion=$version, currentVersion=$_formatVersion)');
+
+    try {
+      if (version == 4) {
+        return _readV4(reader);
       }
+      if (version == 3) {
+        _log('Migrating v3→v4 format');
+        return _readV3(reader);
+      }
+      if (version < 1 || version > _formatVersion) {
+        _log('Unknown format version $version, attempting v3 fallback');
+        try {
+          return _readV3(reader);
+        } catch (e) {
+          _log('v3 fallback also failed, returning default Player', e);
+          return Player();
+        }
+      }
+      _log('Version $version handler not found, using v3');
+      return _readV3(reader);
+    } catch (e, s) {
+      _log('Fatal error reading Player data, returning default Player', e);
+      debugPrint('[PlayerAdapter] Stack: $s');
+      return Player();
     }
-    return _readV3(reader);
   }
 
   Player _readV4(BinaryReader reader) {
     final player = Player();
 
-    if (reader.availableBytes > 0) {
-      player.jobLevels =
-          (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 1};
-    }
-    if (reader.availableBytes > 0) {
-      player.jobExps =
-          (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 0};
-    }
-    // v4: equippedSkills (List<EquippedSkill>) を読み取る
-    if (reader.availableBytes > 0) {
-      final skillRawList = reader.readList();
-      player.equippedSkills = (skillRawList as List?)
-              ?.map((e) => EquippedSkill.fromJson(
-                  (e as Map).cast<String, dynamic>()))
-              .toList() ??
-          [];
-    }
-    // v3互換: activeSkills も読み取る（後方互換）
-    if (reader.availableBytes > 0) {
-      player.activeSkills =
-          (reader.readList() as List?)?.cast<Job>().toSet() ?? {};
-    }
-    if (reader.availableBytes > 0) {
-      player.currentJob = (reader.read() as Job?) ?? Job.adventurer;
-    }
-    if (reader.availableBytes >= 4) {
-      player.comboCount = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.coins = reader.readInt();
-    }
-    if (reader.availableBytes > 0) {
-      player.homeItems =
-          (reader.readList() as List?)?.cast<String>() ?? [];
-    }
-    if (reader.availableBytes >= 4) {
-      player.dailyTasksCompleted = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.weeklySRankCompleted = reader.readInt();
-    }
-    if (reader.availableBytes > 0) {
-      player.lastMissionResetDate = reader.read();
-    }
-    if (reader.availableBytes >= 4) {
-      player.nextDayTaskLimitOffset = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.todayTaskLimitOffset = reader.readInt();
-    }
-    if (reader.availableBytes > 0) {
-      player.lastRestDate = reader.read();
-    }
-    if (reader.availableBytes >= 4) {
-      player.totalTasksCompleted = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.totalSRankCompleted = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.totalARankCompleted = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.totalBRankCompleted = reader.readInt();
-    }
-    if (reader.availableBytes > 0) {
-      player.titles =
-          (reader.readList() as List?)?.cast<String>() ?? [];
-    }
-    if (reader.availableBytes > 0) {
-      player.equippedTitle = reader.read();
-    }
-    // v3 fields
-    if (reader.availableBytes > 0) {
-      player.equippedSkin = reader.read();
-    }
-    if (reader.availableBytes >= 4) {
-      player.characterSkin = CharacterSkin.fromMap(
-        (reader.readMap() as Map?)?.cast<String, dynamic>() ?? {},
-      );
-    }
-    if (reader.availableBytes >= 4) {
-      player.gems = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.streakDays = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.longestStreak = reader.readInt();
-    }
-    if (reader.availableBytes > 0) {
-      player.lastLoginDate = reader.read();
-    }
-    if (reader.availableBytes >= 4) {
-      player.timesWardenDefeated = reader.readInt();
-    }
+    try {
+      if (reader.availableBytes > 0) {
+        player.jobLevels =
+            (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 1};
+      }
+    } catch (e) { _log('jobLevels read failed', e); }
+    try {
+      if (reader.availableBytes > 0) {
+        player.jobExps =
+            (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 0};
+      }
+    } catch (e) { _log('jobExps read failed', e); }
+    // v4: equippedSkills (List<EquippedSkill>)
+    try {
+      if (reader.availableBytes > 0) {
+        final skillRawList = reader.readList();
+        player.equippedSkills = (skillRawList as List?)
+                ?.map((e) {
+                  try {
+                    return EquippedSkill.fromJson(
+                        (e as Map).cast<String, dynamic>());
+                  } catch (_) {
+                    return null;
+                  }
+                })
+                .whereType<EquippedSkill>()
+                .toList() ??
+            [];
+      }
+    } catch (e) { _log('equippedSkills read failed', e); }
+    // v3互換: activeSkills
+    try {
+      if (reader.availableBytes > 0) {
+        player.activeSkills =
+            (reader.readList() as List?)?.cast<Job>().toSet() ?? {};
+      }
+    } catch (e) { _log('activeSkills read failed', e); }
+    try {
+      if (reader.availableBytes > 0) {
+        player.currentJob = (reader.read() as Job?) ?? Job.adventurer;
+      }
+    } catch (e) { _log('currentJob read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.comboCount = reader.readInt(); }
+    } catch (e) { _log('comboCount read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.coins = reader.readInt(); }
+    } catch (e) { _log('coins read failed', e); }
+    try {
+      if (reader.availableBytes > 0) {
+        player.homeItems =
+            (reader.readList() as List?)?.cast<String>() ?? [];
+      }
+    } catch (e) { _log('homeItems read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.dailyTasksCompleted = reader.readInt(); }
+    } catch (e) { _log('dailyTasksCompleted read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.weeklySRankCompleted = reader.readInt(); }
+    } catch (e) { _log('weeklySRankCompleted read failed', e); }
+    try {
+      if (reader.availableBytes > 0) { player.lastMissionResetDate = reader.read(); }
+    } catch (e) { _log('lastMissionResetDate read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.nextDayTaskLimitOffset = reader.readInt(); }
+    } catch (e) { _log('nextDayTaskLimitOffset read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.todayTaskLimitOffset = reader.readInt(); }
+    } catch (e) { _log('todayTaskLimitOffset read failed', e); }
+    try {
+      if (reader.availableBytes > 0) { player.lastRestDate = reader.read(); }
+    } catch (e) { _log('lastRestDate read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.totalTasksCompleted = reader.readInt(); }
+    } catch (e) { _log('totalTasksCompleted read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.totalSRankCompleted = reader.readInt(); }
+    } catch (e) { _log('totalSRankCompleted read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.totalARankCompleted = reader.readInt(); }
+    } catch (e) { _log('totalARankCompleted read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.totalBRankCompleted = reader.readInt(); }
+    } catch (e) { _log('totalBRankCompleted read failed', e); }
+    try {
+      if (reader.availableBytes > 0) {
+        player.titles =
+            (reader.readList() as List?)?.cast<String>() ?? [];
+      }
+    } catch (e) { _log('titles read failed', e); }
+    try {
+      if (reader.availableBytes > 0) { player.equippedTitle = reader.read(); }
+    } catch (e) { _log('equippedTitle read failed', e); }
+    try {
+      if (reader.availableBytes > 0) { player.equippedSkin = reader.read(); }
+    } catch (e) { _log('equippedSkin read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) {
+        player.characterSkin = CharacterSkin.fromMap(
+          (reader.readMap() as Map?)?.cast<String, dynamic>() ?? {},
+        );
+      }
+    } catch (e) { _log('characterSkin read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.gems = reader.readInt(); }
+    } catch (e) { _log('gems read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.streakDays = reader.readInt(); }
+    } catch (e) { _log('streakDays read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.longestStreak = reader.readInt(); }
+    } catch (e) { _log('longestStreak read failed', e); }
+    try {
+      if (reader.availableBytes > 0) { player.lastLoginDate = reader.read(); }
+    } catch (e) { _log('lastLoginDate read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.timesWardenDefeated = reader.readInt(); }
+    } catch (e) { _log('timesWardenDefeated read failed', e); }
     // v4: ポモドーロ設定
-    if (reader.availableBytes >= 4) {
-      player.pomodoroMinutes = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.pomodoroShortBreakMinutes = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.pomodoroLongBreakMinutes = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.pomodorosBeforeLongBreak = reader.readInt();
-    }
-    // v4+: pomodoroStartTime (T9: 集中の型)
-    if (reader.availableBytes > 0) {
-      player.pomodoroStartTime = reader.read();
-    }
-    // v4+: warriorDailyBuff (T10: 武士道の極意)
-    if (reader.availableBytes >= 4) {
-      player.warriorDailyBuff = reader.readInt();
-    }
-    // v4+: streakGraceRemaining (T10: 悟りの境地)
-    if (reader.availableBytes >= 4) {
-      player.streakGraceRemaining = reader.readInt();
-    }
-    // v4+: lastStreakGraceReset (T10: 悟りの境地)
-    if (reader.availableBytes > 0) {
-      player.lastStreakGraceReset = reader.read();
-    }
+    try {
+      if (reader.availableBytes >= 4) { player.pomodoroMinutes = reader.readInt(); }
+    } catch (e) { _log('pomodoroMinutes read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.pomodoroShortBreakMinutes = reader.readInt(); }
+    } catch (e) { _log('pomodoroShortBreakMinutes read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.pomodoroLongBreakMinutes = reader.readInt(); }
+    } catch (e) { _log('pomodoroLongBreakMinutes read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.pomodorosBeforeLongBreak = reader.readInt(); }
+    } catch (e) { _log('pomodorosBeforeLongBreak read failed', e); }
+    try {
+      if (reader.availableBytes > 0) { player.pomodoroStartTime = reader.read(); }
+    } catch (e) { _log('pomodoroStartTime read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.warriorDailyBuff = reader.readInt(); }
+    } catch (e) { _log('warriorDailyBuff read failed', e); }
+    try {
+      if (reader.availableBytes >= 4) { player.streakGraceRemaining = reader.readInt(); }
+    } catch (e) { _log('streakGraceRemaining read failed', e); }
+    try {
+      if (reader.availableBytes > 0) { player.lastStreakGraceReset = reader.read(); }
+    } catch (e) { _log('lastStreakGraceReset read failed', e); }
     // v4: タグ
-    if (reader.availableBytes > 0) {
-      player.tags =
-          (reader.readList() as List?)?.cast<String>() ?? [];
-    }
+    try {
+      if (reader.availableBytes > 0) {
+        player.tags =
+            (reader.readList() as List?)?.cast<String>() ?? [];
+      }
+    } catch (e) { _log('tags read failed', e); }
     // v4: プロジェクト
-    if (reader.availableBytes > 0) {
-      final projRawList = reader.readList();
-      player.projects = (projRawList as List?)
-              ?.map((e) => ProjectGroup.fromJson(
-                  (e as Map).cast<String, dynamic>()))
-              .toList() ??
-          [];
-    }
+    try {
+      if (reader.availableBytes > 0) {
+        final projRawList = reader.readList();
+        player.projects = (projRawList as List?)
+                ?.map((e) {
+                  try {
+                    return ProjectGroup.fromJson(
+                        (e as Map).cast<String, dynamic>());
+                  } catch (_) {
+                    return null;
+                  }
+                })
+                .whereType<ProjectGroup>()
+                .toList() ??
+            [];
+      }
+    } catch (e) { _log('projects read failed', e); }
     // v4: Cleric snoozedTasks
-    if (reader.availableBytes > 0) {
-      final snoozeRaw = reader.readMap();
-      player.snoozedTasks = (snoozeRaw as Map?)?.map(
-            (k, v) => MapEntry(k as String, v as DateTime),
-          ) ??
-          {};
-    }
+    try {
+      if (reader.availableBytes > 0) {
+        final snoozeRaw = reader.readMap();
+        player.snoozedTasks = (snoozeRaw as Map?)?.map(
+              (k, v) => MapEntry(k as String, v as DateTime),
+            ) ??
+            {};
+      }
+    } catch (e) { _log('snoozedTasks read failed', e); }
     // v4: Cleric taskStreaks
-    if (reader.availableBytes > 0) {
-      final streakRawList = reader.readList();
-      player.taskStreaks = (streakRawList as List?)
-              ?.map((e) => MapEntry(
-                    (e as Map)['taskId'] as String,
-                    TaskStreak.fromJson(
-                        (e['streak'] as Map).cast<String, dynamic>()),
-                  ))
-              .fold<Map<String, TaskStreak>>(
-                  {}, (map, entry) => map..[entry.key] = entry.value) ??
-          {};
-    }
+    try {
+      if (reader.availableBytes > 0) {
+        final streakRawList = reader.readList();
+        player.taskStreaks = (streakRawList as List?)
+                ?.map((e) {
+                  try {
+                    return MapEntry(
+                          (e as Map)['taskId'] as String,
+                          TaskStreak.fromJson(
+                              (e['streak'] as Map).cast<String, dynamic>()),
+                        );
+                  } catch (_) {
+                    return null;
+                  }
+                })
+                .whereType<MapEntry<String, TaskStreak>>()
+                .fold<Map<String, TaskStreak>>(
+                    {}, (map, entry) => map..[entry.key] = entry.value) ??
+            {};
+      }
+    } catch (e) { _log('taskStreaks read failed', e); }
     // v4: wizardTags — taskTags map
-    if (reader.availableBytes > 0) {
-      final raw = reader.readMap();
-      player.taskTags = (raw as Map?)?.map(
-            (k, v) => MapEntry(k as String, (v as List).cast<String>()),
-          ) ??
-          {};
-    }
+    try {
+      if (reader.availableBytes > 0) {
+        final raw = reader.readMap();
+        player.taskTags = (raw as Map?)?.map(
+              (k, v) => MapEntry(k as String, (v as List).cast<String>()),
+            ) ??
+            {};
+      }
+    } catch (e) { _log('taskTags read failed', e); }
     // v4: wizardProject — taskProjects map
-    if (reader.availableBytes > 0) {
-      final raw = reader.readMap();
-      player.taskProjects = (raw as Map?)?.cast<String, String>() ?? {};
-    }
+    try {
+      if (reader.availableBytes > 0) {
+        final raw = reader.readMap();
+        player.taskProjects = (raw as Map?)?.cast<String, String>() ?? {};
+      }
+    } catch (e) { _log('taskProjects read failed', e); }
 
+    _log('Player read complete (Lv.${player.level}, coins=${player.coins})');
     return player;
   }
 
   Player _readV3(BinaryReader reader) {
     final player = Player();
 
-    if (reader.availableBytes > 0) {
-      player.jobLevels =
-          (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 1};
-    }
-    if (reader.availableBytes > 0) {
-      player.jobExps =
-          (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 0};
-    }
-    if (reader.availableBytes > 0) {
-      player.activeSkills =
-          (reader.readList() as List?)?.cast<Job>().toSet() ?? {};
-    }
-    if (reader.availableBytes > 0) {
-      player.currentJob = (reader.read() as Job?) ?? Job.adventurer;
-    }
-    if (reader.availableBytes >= 4) {
-      player.comboCount = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.coins = reader.readInt();
-    }
-    if (reader.availableBytes > 0) {
-      player.homeItems =
-          (reader.readList() as List?)?.cast<String>() ?? [];
-    }
-    if (reader.availableBytes >= 4) {
-      player.dailyTasksCompleted = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.weeklySRankCompleted = reader.readInt();
-    }
-    if (reader.availableBytes > 0) {
-      player.lastMissionResetDate = reader.read();
-    }
-    if (reader.availableBytes >= 4) {
-      player.nextDayTaskLimitOffset = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.todayTaskLimitOffset = reader.readInt();
-    }
-    if (reader.availableBytes > 0) {
-      player.lastRestDate = reader.read();
-    }
-    if (reader.availableBytes >= 4) {
-      player.totalTasksCompleted = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.totalSRankCompleted = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.totalARankCompleted = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.totalBRankCompleted = reader.readInt();
-    }
-    if (reader.availableBytes > 0) {
-      player.titles =
-          (reader.readList() as List?)?.cast<String>() ?? [];
-    }
-    if (reader.availableBytes > 0) {
-      player.equippedTitle = reader.read();
+    void _safeRead(String field, void Function() readFn) {
+      try {
+        if (reader.availableBytes > 0) {
+          readFn();
+        }
+      } catch (e) {
+        _log('Field "$field" read failed (v3), using default', e);
+      }
     }
 
-    // 以下、v3以降で追加されたフィールド（元からavailableBytesチェックあり）
-    if (reader.availableBytes > 0) {
+    _safeRead('jobLevels', () {
+      player.jobLevels =
+          (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 1};
+    });
+    _safeRead('jobExps', () {
+      player.jobExps =
+          (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 0};
+    });
+    _safeRead('activeSkills', () {
+      player.activeSkills =
+          (reader.readList() as List?)?.cast<Job>().toSet() ?? {};
+    });
+    _safeRead('currentJob', () {
+      player.currentJob = (reader.read() as Job?) ?? Job.adventurer;
+    });
+    _safeRead('comboCount', () {
+      if (reader.availableBytes >= 4) player.comboCount = reader.readInt();
+    });
+    _safeRead('coins', () {
+      if (reader.availableBytes >= 4) player.coins = reader.readInt();
+    });
+    _safeRead('homeItems', () {
+      player.homeItems =
+          (reader.readList() as List?)?.cast<String>() ?? [];
+    });
+    _safeRead('dailyTasksCompleted', () {
+      if (reader.availableBytes >= 4) player.dailyTasksCompleted = reader.readInt();
+    });
+    _safeRead('weeklySRankCompleted', () {
+      if (reader.availableBytes >= 4) player.weeklySRankCompleted = reader.readInt();
+    });
+    _safeRead('lastMissionResetDate', () {
+      player.lastMissionResetDate = reader.read();
+    });
+    _safeRead('nextDayTaskLimitOffset', () {
+      if (reader.availableBytes >= 4) player.nextDayTaskLimitOffset = reader.readInt();
+    });
+    _safeRead('todayTaskLimitOffset', () {
+      if (reader.availableBytes >= 4) player.todayTaskLimitOffset = reader.readInt();
+    });
+    _safeRead('lastRestDate', () {
+      player.lastRestDate = reader.read();
+    });
+    _safeRead('totalTasksCompleted', () {
+      if (reader.availableBytes >= 4) player.totalTasksCompleted = reader.readInt();
+    });
+    _safeRead('totalSRankCompleted', () {
+      if (reader.availableBytes >= 4) player.totalSRankCompleted = reader.readInt();
+    });
+    _safeRead('totalARankCompleted', () {
+      if (reader.availableBytes >= 4) player.totalARankCompleted = reader.readInt();
+    });
+    _safeRead('totalBRankCompleted', () {
+      if (reader.availableBytes >= 4) player.totalBRankCompleted = reader.readInt();
+    });
+    _safeRead('titles', () {
+      player.titles =
+          (reader.readList() as List?)?.cast<String>() ?? [];
+    });
+    _safeRead('equippedTitle', () {
+      player.equippedTitle = reader.read();
+    });
+    _safeRead('equippedSkin', () {
       player.equippedSkin = reader.read();
-    }
-    if (reader.availableBytes >= 4) {
+    });
+    _safeRead('characterSkin', () {
       player.characterSkin = CharacterSkin.fromMap(
         (reader.readMap() as Map?)?.cast<String, dynamic>() ?? {},
       );
-    }
-    if (reader.availableBytes >= 4) {
-      player.gems = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.streakDays = reader.readInt();
-    }
-    if (reader.availableBytes >= 4) {
-      player.longestStreak = reader.readInt();
-    }
-    if (reader.availableBytes > 0) {
+    });
+    _safeRead('gems', () {
+      if (reader.availableBytes >= 4) player.gems = reader.readInt();
+    });
+    _safeRead('streakDays', () {
+      if (reader.availableBytes >= 4) player.streakDays = reader.readInt();
+    });
+    _safeRead('longestStreak', () {
+      if (reader.availableBytes >= 4) player.longestStreak = reader.readInt();
+    });
+    _safeRead('lastLoginDate', () {
       player.lastLoginDate = reader.read();
-    }
-    if (reader.availableBytes >= 4) {
-      player.timesWardenDefeated = reader.readInt();
-    }
+    });
+    _safeRead('timesWardenDefeated', () {
+      if (reader.availableBytes >= 4) player.timesWardenDefeated = reader.readInt();
+    });
 
     return player;
   }
 
   @override
   void write(BinaryWriter writer, Player obj) {
+    _log('Writing Player (Lv.${obj.level}, coins=${obj.coins}, gems=${obj.gems})');
     writer.writeByte(_formatVersion);
     writer.writeMap(obj.jobLevels);
     writer.writeMap(obj.jobExps);

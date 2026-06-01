@@ -323,6 +323,9 @@ class TaskViewModel extends ChangeNotifier {
     save();
   }
 
+  /// save()失敗時のコールバック
+  VoidCallback? onSaveError;
+
   // ── データロード/セーブ ──
   Future<void> load() async {
     try {
@@ -336,7 +339,12 @@ class TaskViewModel extends ChangeNotifier {
   }
 
   Future<void> save() async {
-    await _taskRepository.saveTasks(_tasks);
+    try {
+      await _taskRepository.saveTasks(_tasks);
+    } catch (e) {
+      debugPrint('[TaskVM] save failed: $e');
+      onSaveError?.call();
+    }
   }
 
   void closeRepository() => _taskRepository.close();

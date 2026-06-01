@@ -8,6 +8,8 @@ import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 
 class _MockPlayerRepo implements IPlayerRepository {
+  @override
+  bool get loadFailedDueToCorruption => false;
   Player _player;
 
   _MockPlayerRepo([Player? player])

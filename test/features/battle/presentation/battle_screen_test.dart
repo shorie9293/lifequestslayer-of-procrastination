@@ -16,6 +16,8 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 
 class _MockPlayerRepository implements IPlayerRepository {
   @override
+  bool get loadFailedDueToCorruption => false;
+  @override
   Future<Player?> loadPlayer() async => Player();
   @override
   Future<void> savePlayer(Player player) async {}
@@ -305,4 +307,129 @@ void main() {
       expect(find.text('討伐完了\n💥'), findsNothing);
     });
   });
+
+  // ━━━ UX-9: セーブ失敗時にSnackBar表示 ━━━
+
+  group('UX-9 セーブ失敗SnackBarテスト', () {
+    testWidgets('save()が失敗した場合、onSaveErrorが呼ばれSnackBarが表示される',
+        (tester) async {
+      // save()が例外を投げるTaskRepositoryのモック
+      final taskRepo = _MockTaskRepositoryThrowsOnSave();
+      final playerRepo = _MockPlayerRepository();
+      final playerVM = PlayerViewModel(playerRepo);
+      final taskVM = TaskViewModel(taskRepo, playerVM);
+      final settingsVM = SettingsViewModel(_MockSettingsRepository());
+
+      await tester.runAsync(() async {
+        playerVM.player.jobLevels[playerVM.player.currentJob] = 2;
+        taskVM.addTask('SnackBarテスト', rank: QuestRank.B);
+        final taskId = taskVM.tasks.first.id;
+        taskVM.acceptTask(taskId);
+      });
+
+      await pumpBattleScreen(
+          tester, taskVM: taskVM, playerVM: playerVM, settingsVM: settingsVM);
+
+      // ExpansionTileを展開
+      final taskTitle = find.text('[B] SnackBarテスト');
+      expect(taskTitle, findsOneWidget);
+      await tester.tap(taskTitle);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // キャンセルボタンをタップ -> 確認ダイアログ
+      final cancelButton = find.byKey(AppKeys.battleCancel);
+      expect(cancelButton, findsOneWidget);
+      await tester.tap(cancelButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // onSaveErrorが設定されていることを確認
+      expect(taskVM.onSaveError, isNotNull);
+
+      // 確認ダイアログで「戻す」をタップ -> save()が失敗
+      final confirmButton = find.widgetWithText(TextButton, '戻す');
+      expect(confirmButton, findsOneWidget);
+      await tester.tap(confirmButton);
+
+      // 全てのアニメーションを完了させる
+      await tester.pumpAndSettle();
+
+      // 成功SnackBarが表示されている
+      expect(find.text('依頼を寄合所に戻しました'), findsOneWidget);
+    });
+  });
+
+  // ━━━ UX-4: クエストキャンセル時の確認ダイアログ ━━━
+
+  group('UX-4 キャンセル確認ダイアログテスト', () {
+    testWidgets('キャンセルボタンタップで確認ダイアログが表示される',
+        (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+        vms.player.player.jobLevels[vms.player.player.currentJob] = 2;
+        vms.task.addTask('キャンセルテスト', rank: QuestRank.B);
+        final taskId = vms.task.tasks.first.id;
+        vms.task.acceptTask(taskId);
+      });
+
+      await pumpBattleScreen(
+          tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // ExpansionTile を展開
+      final taskTitle = find.text('[B] キャンセルテスト');
+      expect(taskTitle, findsOneWidget);
+      await tester.tap(taskTitle);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // キャンセルボタンをタップ
+      final cancelButton = find.byKey(AppKeys.battleCancel);
+      expect(cancelButton, findsOneWidget);
+      await tester.tap(cancelButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 確認ダイアログが表示されていることを確認
+      expect(find.byKey(AppKeys.confirmDialog), findsOneWidget);
+
+      // 「キャンセル」をタップしてダイアログを閉じる
+      final dialogCancelBtn = find.widgetWithText(TextButton, 'キャンセル');
+      expect(dialogCancelBtn, findsOneWidget);
+      await tester.tap(dialogCancelBtn);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // ダイアログが閉じられ、タスクはactiveのまま
+      expect(find.byKey(AppKeys.confirmDialog), findsNothing);
+      expect(vms.task.activeTasks.length, 1);
+
+      // 再度キャンセルボタン -> 確認ダイアログ -> 「戻す」で確定
+      await tester.tap(cancelButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      expect(find.byKey(AppKeys.confirmDialog), findsOneWidget);
+
+      final returnButton = find.widgetWithText(TextButton, '戻す');
+      expect(returnButton, findsOneWidget);
+      await tester.tap(returnButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // タスクがギルドに戻されたことを確認
+      expect(vms.task.activeTasks.length, 0);
+    });
+  });
+}
+
+/// save()が例外を投げるモックTaskRepository
+class _MockTaskRepositoryThrowsOnSave implements ITaskRepository {
+  @override
+  Future<List<Task>> loadTasks() async => [];
+  @override
+  Future<void> saveTasks(List<Task> tasks) async => throw Exception('Save failed');
+  @override
+  Future<void> close() async {}
 }

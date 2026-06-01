@@ -14,6 +14,8 @@ import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 // ━━━ DI Mock リポジトリ ━━━
 
 class _MockPlayerRepository implements IPlayerRepository {
+  @override
+  bool get loadFailedDueToCorruption => false;
   final Player _player;
   _MockPlayerRepository(this._player);
 

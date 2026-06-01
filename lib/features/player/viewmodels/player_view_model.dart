@@ -30,6 +30,8 @@ class PlayerViewModel extends ChangeNotifier {
   Player get player => _player;
   bool get isLoaded => _isLoaded;
   bool get loadFailed => _loadFailed;
+  /// v1.6: データは存在するが読めない（バージョンアップ等による破損）
+  bool get dataCorrupted => _loadFailed && _playerRepository.loadFailedDueToCorruption;
 
   // ── 便利なゲッター ──
   int get level => _player.level;
@@ -262,6 +264,9 @@ class PlayerViewModel extends ChangeNotifier {
     _autoSave();
   }
 
+  /// save()失敗時のコールバック
+  VoidCallback? onSaveError;
+
   // ── データロード/セーブ ──
   Future<void> load() async {
     _loadFailed = false;
@@ -285,7 +290,17 @@ class PlayerViewModel extends ChangeNotifier {
   }
 
   Future<void> save() async {
-    await _playerRepository.savePlayer(_player);
+    // ★ v1.6: corruption時は旧データを上書きしない
+    if (_playerRepository.loadFailedDueToCorruption) {
+      debugPrint('[PlayerVM] Skipping save — data corruption detected');
+      return;
+    }
+    try {
+      await _playerRepository.savePlayer(_player);
+    } catch (e) {
+      debugPrint('[PlayerVM] save failed: $e');
+      onSaveError?.call();
+    }
   }
 
   void closeRepository() => _playerRepository.close();

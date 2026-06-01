@@ -15,6 +15,8 @@ import 'package:rpg_todo/features/shared/widgets/debug_panel.dart';
 // ━━━ モック（既存 test/game_view_model_test.dart と同じ方式）━━━
 
 class _MockPlayerRepo implements IPlayerRepository {
+  @override
+  bool get loadFailedDueToCorruption => false;
   Player _player = Player();
   @override Future<Player?> loadPlayer() async => _player;
   @override Future<void> savePlayer(Player player) async => _player = player;

@@ -56,15 +56,28 @@ Future<void> initializeViewModels() async {
   await taskVM.load();
   await settingsVM.load();
 
+  // ★ v1.6: PlayerRepositoryへのアクセス
+  final playerRepo = getIt<IPlayerRepository>();
+
   try {
     // ignore: avoid_print
     print('[DI] Before missions: Lv.${playerVM.player.level}, coins=${playerVM.player.coins}');
-    playerVM.checkAndResetMissions(DateTime.now(), login: true);
-    // ignore: avoid_print
-    print('[DI] After missions: Lv.${playerVM.player.level}, coins=${playerVM.player.coins}');
-    await playerVM.save();
-    // ignore: avoid_print
-    print('[DI] Player saved after missions');
+
+    // ★ v1.6: デシリアライズ失敗時は旧データを上書きしない
+    if (playerRepo.loadFailedDueToCorruption) {
+      // ignore: avoid_print
+      print('[DI] ⚠️ Player data corruption detected — SKIPPING save to preserve backup data');
+      // ミッション処理もスキップ（デフォルトPlayerに対して実行する意味がない）
+      // ignore: avoid_print
+      print('[DI] User should see "data recovery needed" message on next UI');
+    } else {
+      playerVM.checkAndResetMissions(DateTime.now(), login: true);
+      // ignore: avoid_print
+      print('[DI] After missions: Lv.${playerVM.player.level}, coins=${playerVM.player.coins}');
+      await playerVM.save();
+      // ignore: avoid_print
+      print('[DI] Player saved after missions');
+    }
   } catch (e, s) {
     debugPrint('[DI] missions error: $e\n$s');
   }
@@ -87,6 +100,12 @@ Future<void> initializeViewModels() async {
 
 Future<void> _safeSave(ChangeNotifier vm, String label) async {
   if (vm is PlayerViewModel) {
+    // ★ v1.6: corruption時は旧データを上書きしない
+    final repo = getIt<IPlayerRepository>();
+    if (repo.loadFailedDueToCorruption) {
+      debugPrint('[DI] Skipping $label save (corruption detected)');
+      return;
+    }
     await vm.save().catchError((e) => debugPrint('[DI] $label save failed: $e'));
   } else if (vm is TaskViewModel) {
     await vm.save().catchError((e) => debugPrint('[DI] $label save failed: $e'));

@@ -7,6 +7,8 @@ import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 
 class _MockPlayerRepo implements IPlayerRepository {
+  @override
+  bool get loadFailedDueToCorruption => false;
   Player _player = Player();
   @override
   Future<Player> loadPlayer() async => _player;

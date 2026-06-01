@@ -6,6 +6,8 @@ import 'package:rpg_todo/features/shared/viewmodels/theme_view_model.dart';
 import 'package:rpg_todo/features/shared/domain/game_themes.dart';
 
 class _MockPlayerRepo implements IPlayerRepository {
+  @override
+  bool get loadFailedDueToCorruption => false;
   Player _player = Player();
   @override
   Future<Player> loadPlayer() async => _player;

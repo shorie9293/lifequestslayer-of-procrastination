@@ -11,6 +11,8 @@ import 'package:rpg_todo/features/battle/data/quiz_data.dart';
 
 /// Hive非依存のインメモリ PlayerRepository モック
 class _MockPlayerRepo implements IPlayerRepository {
+  @override
+  bool get loadFailedDueToCorruption => false;
   Player _player = Player();
   @override
   Future<Player?> loadPlayer() async => _player;
@@ -36,6 +38,8 @@ class _MockTaskRepo implements ITaskRepository {
 
 /// セーブに遅延を入れる PlayerRepository モック（並行セーブ検出用）
 class _SlowMockPlayerRepo implements IPlayerRepository {
+  @override
+  bool get loadFailedDueToCorruption => false;
   Player _player = Player();
   @override
   Future<Player?> loadPlayer() async => _player;
@@ -65,6 +69,8 @@ class _SlowMockTaskRepo implements ITaskRepository {
 
 /// セーブの並行実行をカウントする PlayerRepository モック
 class _ConcurrentTrackPlayerRepo implements IPlayerRepository {
+  @override
+  bool get loadFailedDueToCorruption => false;
   Player _player = Player();
   int concurrentSaves = 0;
   int maxConcurrentSaves = 0;
@@ -133,6 +139,8 @@ class _MockSettingsRepo extends SettingsRepository {
 
 /// テスト時にエラーをthrowする PlayerRepository モック
 class _FailingPlayerRepo implements IPlayerRepository {
+  @override
+  bool get loadFailedDueToCorruption => false;
   final Object error;
   _FailingPlayerRepo(this.error);
 
