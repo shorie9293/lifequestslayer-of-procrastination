@@ -101,7 +101,7 @@ class GuildScreen extends StatelessWidget {
   }
 
   /// 緊急セクションウィジェット（24時間以内の期限タスク）
-  Widget _buildUrgentSection(List<Task> urgentTasks) {
+  Widget _buildUrgentSection(BuildContext context, List<Task> urgentTasks) {
     return Container(
       key: AppKeys.guildUrgentSection,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -180,6 +180,34 @@ class GuildScreen extends StatelessWidget {
                         color: isExpired ? Colors.redAccent : Colors.amber,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  // 🔥 緊急出撃ボタン — 戦場へ即投入
+                  GestureDetector(
+                    onTap: () => _acceptTask(context, task.id),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade800,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('⚔️', style: TextStyle(fontSize: 13)),
+                          SizedBox(width: 3),
+                          Text(
+                            '出発',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -361,7 +389,7 @@ class GuildScreen extends StatelessWidget {
 
                       // Urgent section (after Kozuchi, before regular tasks)
                       if (hasUrgent && index == kozuchiOffset) {
-                        return _buildUrgentSection(urgentTasks);
+                        return _buildUrgentSection(context, urgentTasks);
                       }
 
                       final urgentOffset = hasUrgent ? 1 : 0;
