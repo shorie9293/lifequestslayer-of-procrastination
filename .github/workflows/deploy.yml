@@ -65,6 +65,11 @@ jobs:
       - name: 🔨 Build App Bundle
         run: flutter build appbundle --release
 
+      - name: 🔍 Verify AAB exists
+        run: |
+          ls -la build/app/outputs/bundle/release/app-release.aab
+          echo "AAB size: $(stat -c%s build/app/outputs/bundle/release/app-release.aab) bytes"
+
       - name: 💎 Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -78,7 +83,8 @@ jobs:
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
           TRACK="${{ github.event.inputs.track || 'alpha' }}"
-          bundle exec fastlane deploy track:${TRACK}
+          set -x
+          bundle exec fastlane deploy track:${TRACK} --verbose
 
       - name: 📤 Upload AAB artifact
         uses: actions/upload-artifact@v4
