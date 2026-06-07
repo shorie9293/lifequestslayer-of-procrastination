@@ -4,13 +4,8 @@ import 'package:hive/hive.dart';
 import 'task.dart';
 import 'skill_slot.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
-
-enum Job {
-  warrior,
-  cleric,
-  wizard,
-  adventurer,
-}
+import 'skill_tree.dart';
+import 'job.dart';
 
 /// 職業スキル — 14スキル (Ronin 2, Warrior 4, Cleric 4, Wizard 4)
 enum JobSkill {
@@ -265,10 +260,16 @@ class Player {
   /// T10: 武士道の極意 — 蓄積バフ（0.1%単位、例: 10 = 1.0%）
   int warriorDailyBuff = 0;
 
-  /// T10: Cleric Lv15 悟りの境地 — 猶予回数（週1回リセット、最大1）
+  /// T10: 悟りの境地 — 猶予回数（週1回リセット、最大1）
   int streakGraceRemaining = 1;
   /// T10: 悟りの境地 — 最終猶予リセット日
   DateTime? lastStreakGraceReset;
+
+  // --- v5: スキルツリー ---
+  /// 未使用のスキルポイント。冒険者Lv上昇時に獲得。
+  int skillPoints = 0;
+  /// 解放済みのスキルノードID一覧。
+  List<String> unlockedSkillIds = [];
 
   /// T9: 集中の型 — ポモドーロセッションがアクティブか
   bool get isPomodoroActive {
@@ -379,6 +380,8 @@ class Player {
     Map<String, String>? taskProjects,
     Map<String, DateTime>? snoozedTasks,
     Map<String, TaskStreak>? taskStreaks,
+    this.skillPoints = 0,
+    List<String>? unlockedSkillIds,
   })  : characterSkin = characterSkin ?? const CharacterSkin(), jobLevels = jobLevels ?? {Job.adventurer: 1},
         jobExps = jobExps ?? {Job.adventurer: 0},
         activeSkills = activeSkills ?? {},
@@ -390,7 +393,8 @@ class Player {
         taskTags = taskTags ?? {},
         taskProjects = taskProjects ?? {},
         snoozedTasks = snoozedTasks ?? {},
-        taskStreaks = taskStreaks ?? {};
+        taskStreaks = taskStreaks ?? {},
+        unlockedSkillIds = unlockedSkillIds ?? [];
 
   // Getters for current job (Compatibility)
   int get level => jobLevels[currentJob] ?? 1;
@@ -570,6 +574,50 @@ class Player {
     return streak.currentStreak >= 7 ? 1.2 : 1.0;
   }
 
+  // --- v5: スキルツリー ---
+
+  /// 冒険者Lv上昇時に呼び、獲得したスキルポイントを加算する。
+  ///
+  /// [oldAdventurerLevel] はレベルアップ前の冒険者Lv。
+  /// 計算式: max(0, (newLv - 2) ~/ 3) - max(0, (oldLv - 2) ~/ 3)
+  void awardSkillPointsOnLevelUp(int oldAdventurerLevel) {
+    final newLevel = jobLevels[Job.adventurer] ?? 1;
+    final oldEarned = totalEarnedSkillPoints(oldAdventurerLevel);
+    final newEarned = totalEarnedSkillPoints(newLevel);
+    final delta = newEarned - oldEarned;
+    if (delta > 0) {
+      skillPoints += delta;
+    }
+  }
+
+  /// スキルノードを解放する。
+  ///
+  /// 戻り値: 解放に成功した場合は `true`。
+  /// ポイント不足、前提条件未達成、または既解放の場合は `false`。
+  bool unlockSkillNode(String nodeId) {
+    final node = skillTreeDefinition[nodeId];
+    if (node == null) return false;
+    if (unlockedSkillIds.contains(nodeId)) return false;
+    if (skillPoints < node.pointCost) return false;
+    for (final prereq in node.prerequisites) {
+      if (!unlockedSkillIds.contains(prereq)) return false;
+    }
+    skillPoints -= node.pointCost;
+    unlockedSkillIds.add(nodeId);
+    return true;
+  }
+
+  /// スキルポイントを冒険者Lvに基づいて再計算する。
+  ///
+  /// Hive v4→v5 移行時やデバッグ用途に使用。
+  void recalculateSkillPoints() {
+    final advLevel = jobLevels[Job.adventurer] ?? 1;
+    skillPoints = availableSkillPoints(advLevel, unlockedSkillIds);
+  }
+
+  /// このノードが解放済みか。
+  bool isSkillUnlocked(String nodeId) => unlockedSkillIds.contains(nodeId);
+
   bool addExp(int amount) {
     // レベル上限到達時はEXPを加算しない
     int lvl = jobLevels[currentJob] ?? 1;
@@ -577,6 +625,10 @@ class Player {
 
     int cExp = jobExps[currentJob] ?? 0;
     cExp += amount;
+
+    // v5: 冒険者の場合、レベルアップ前のLvを記録（スキルポイント用）
+    final isAdventurer = currentJob == Job.adventurer;
+    final int oldAdvLevel = isAdventurer ? lvl : 0;
 
     int expNext = (50 * pow(1.4, lvl - 1)).round();
     // v1.3: pow が double.maxFinite を超えた場合のガード
@@ -602,6 +654,12 @@ class Player {
     }
 
     jobExps[currentJob] = cExp;
+
+    // v5: 冒険者のレベルアップ時にスキルポイントを付与
+    if (isAdventurer && leveledUp) {
+      awardSkillPointsOnLevelUp(oldAdvLevel);
+    }
+
     return leveledUp;
   }
 
@@ -654,6 +712,9 @@ class Player {
                   'streak': e.value.toJson(),
                 })
             .toList(),
+        // v5: スキルツリー
+        'skillPoints': skillPoints,
+        'unlockedSkillIds': unlockedSkillIds,
       };
 
   factory Player.fromJson(Map<String, dynamic> json) {
@@ -733,6 +794,11 @@ class Player {
               ))
           .fold<Map<String, TaskStreak>>(
               {}, (map, entry) => map..[entry.key] = entry.value),
+      // v5: スキルツリー
+      skillPoints: (json['skillPoints'] as int?) ?? 0,
+      unlockedSkillIds: (json['unlockedSkillIds'] as List<dynamic>?)
+              ?.cast<String>() ??
+          [],
     );
   }
 }
@@ -741,7 +807,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
   @override
   final int typeId = 3;
 
-  static const int _formatVersion = 4;
+  static const int _formatVersion = 5;
 
   /// Release でも logcat に出力する簡易ロガー
   void _log(String msg, [Object? error]) {
@@ -755,8 +821,14 @@ class PlayerAdapter extends TypeAdapter<Player> {
     _log('Reading Player data (formatVersion=$version, currentVersion=$_formatVersion)');
 
     try {
+      if (version == 5) {
+        return _readV5(reader);
+      }
       if (version == 4) {
-        return _readV4(reader);
+        _log('Migrating v4→v5 format');
+        final player = _readV4(reader);
+        player.recalculateSkillPoints();
+        return player;
       }
       if (version == 3) {
         _log('Migrating v3→v4 format');
@@ -778,6 +850,26 @@ class PlayerAdapter extends TypeAdapter<Player> {
       debugPrint('[PlayerAdapter] Stack: $s');
       return Player();
     }
+  }
+
+  Player _readV5(BinaryReader reader) {
+    final player = _readV4(reader);
+
+    try {
+      if (reader.availableBytes >= 4) {
+        player.skillPoints = reader.readInt();
+      }
+    } catch (e) { _log('skillPoints read failed', e); }
+    try {
+      if (reader.availableBytes > 0) {
+        final raw = reader.readList();
+        player.unlockedSkillIds =
+            (raw as List?)?.cast<String>() ?? [];
+      }
+    } catch (e) { _log('unlockedSkillIds read failed', e); }
+
+    _log('Player v5 read complete (skillPoints=${player.skillPoints}, unlocked=${player.unlockedSkillIds.length})');
+    return player;
   }
 
   Player _readV4(BinaryReader reader) {
@@ -1169,5 +1261,8 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.writeMap(obj.taskTags);
     // v4: wizardProject — taskProjects map
     writer.writeMap(obj.taskProjects);
+    // v5: スキルツリー
+    writer.writeInt(obj.skillPoints);
+    writer.writeList(obj.unlockedSkillIds);
   }
 }
