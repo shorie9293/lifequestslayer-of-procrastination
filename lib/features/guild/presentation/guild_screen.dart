@@ -20,23 +20,34 @@ import 'dialogs/notification_settings_dialog.dart';
 import 'package:rpg_todo/features/battle/presentation/widgets/knowledge_quest_dialog.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
-class GuildScreen extends StatelessWidget {
+class GuildScreen extends StatefulWidget {
   const GuildScreen({super.key});
+
+  @override
+  State<GuildScreen> createState() => _GuildScreenState();
+}
+
+class _GuildScreenState extends State<GuildScreen> {
+  bool _isDialogOpen = false;
 
   Color _getRankColor(QuestRank rank) => RankColors.forRank(rank);
 
   void _showCreateTaskDialog(BuildContext context) {
+    if (_isDialogOpen) return;
+    _isDialogOpen = true;
     showDialog(
       context: context,
       builder: (context) => const CreateTaskDialog(),
-    );
+    ).then((_) => _isDialogOpen = false);
   }
 
   void _showEditTaskDialog(BuildContext context, Task task) {
+    if (_isDialogOpen) return;
+    _isDialogOpen = true;
     showDialog(
       context: context,
       builder: (context) => CreateTaskDialog(task: task),
-    );
+    ).then((_) => _isDialogOpen = false);
   }
 
   void _acceptTask(BuildContext context, String taskId) {
@@ -63,6 +74,8 @@ class GuildScreen extends StatelessWidget {
 
   void _deleteTask(BuildContext context, String taskId) {
     // UX-4: クエスト取消に確認ダイアログを追加
+    if (_isDialogOpen) return;
+    _isDialogOpen = true;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -86,7 +99,7 @@ class GuildScreen extends StatelessWidget {
           ),
         ],
       ),
-    );
+    ).then((_) => _isDialogOpen = false);
   }
 
   String _getTaskDetails(Task task) {
@@ -267,10 +280,14 @@ class GuildScreen extends StatelessWidget {
             child: IconButton(
               icon: const Icon(Icons.post_add),
               tooltip: '一括依頼作成',
-              onPressed: () => showDialog(
-                context: context,
-                builder: (context) => const BulkCreateTaskDialog(),
-              ),
+              onPressed: () {
+                if (_isDialogOpen) return;
+                _isDialogOpen = true;
+                showDialog(
+                  context: context,
+                  builder: (context) => const BulkCreateTaskDialog(),
+                ).then((_) => _isDialogOpen = false);
+              },
             ),
           ),
           if (playerVM.player.canUseSkill(Job.cleric))
@@ -280,10 +297,14 @@ class GuildScreen extends StatelessWidget {
               child: IconButton(
                 icon: const Icon(Icons.loop),
                 tooltip: '繰り返し任務一覧',
-                onPressed: () => showDialog(
-                  context: context,
-                  builder: (context) => const RecurringTasksDialog(),
-                ),
+                onPressed: () {
+                  if (_isDialogOpen) return;
+                  _isDialogOpen = true;
+                  showDialog(
+                    context: context,
+                    builder: (context) => const RecurringTasksDialog(),
+                  ).then((_) => _isDialogOpen = false);
+                },
               ),
             ),
           PopupMenuButton<String>(
@@ -293,22 +314,30 @@ class GuildScreen extends StatelessWidget {
             onSelected: (value) {
               switch (value) {
                 case 'help':
-                  showHelpDialog(context);
+                  if (_isDialogOpen) return;
+                  _isDialogOpen = true;
+                  showHelpDialog(context).then((_) => _isDialogOpen = false);
                 case 'notification':
+                  if (_isDialogOpen) return;
+                  _isDialogOpen = true;
                   showDialog(
                     context: context,
                     builder: (context) => const NotificationSettingsDialog(),
-                  );
+                  ).then((_) => _isDialogOpen = false);
                 case 'knowledge_quest':
+                  if (_isDialogOpen) return;
+                  _isDialogOpen = true;
                   showDialog(
                     context: context,
                     builder: (context) => const KnowledgeQuestDialog(),
-                  );
+                  ).then((_) => _isDialogOpen = false);
                 case 'tutorial_reset':
+                  if (_isDialogOpen) return;
+                  _isDialogOpen = true;
                   showDialog(
                     context: context,
                     builder: (context) => const TutorialResetDialog(),
-                  );
+                  ).then((_) => _isDialogOpen = false);
               }
             },
             itemBuilder: (context) => [

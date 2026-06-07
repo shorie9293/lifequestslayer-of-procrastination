@@ -6,6 +6,7 @@ import 'skill_slot.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
 import 'skill_tree.dart';
 import 'job.dart';
+export 'job.dart';
 
 /// 職業スキル — 14スキル (Ronin 2, Warrior 4, Cleric 4, Wizard 4)
 enum JobSkill {
