@@ -7,6 +7,7 @@ import 'package:rpg_todo/features/shared/widgets/player_status_header.dart';
 import 'package:rpg_todo/features/guild/presentation/widgets/task_card.dart';
 import 'widgets/battle_report_dialog.dart';
 import 'widgets/particle_effect.dart';
+import 'widgets/fatigue_gem_popup.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/battle/data/quiz_data.dart';
 import 'package:rpg_todo/core/testing/tutorial_keys.dart';
@@ -53,8 +54,16 @@ class BattleScreen extends StatelessWidget {
       if (stillActive) {
         final task = taskVM.activeTasks.firstWhere((t) => t.id == taskId);
         if (task.subTasks.any((s) => !s.isCompleted)) {
+          // UX-3: 討伐失敗時、未完了サブタスクの名前を表示
+          final remaining = task.subTasks
+              .where((s) => !s.isCompleted)
+              .map((s) => '・${s.title}')
+              .join('\n');
           scaffoldMessenger.showSnackBar(
-            const SnackBar(content: Text("サブ依頼が残っています！")),
+            SnackBar(
+              content: Text("サブ依頼が残っています:\n$remaining"),
+              duration: const Duration(seconds: 4),
+            ),
           );
         }
       }
@@ -80,34 +89,16 @@ class BattleScreen extends StatelessWidget {
     final isOverdueBoss = result['isOverdueBoss'] as bool? ?? false;
     final wrongAnswerPenaltyExp = result['wrongAnswerPenaltyExp'] as int? ?? 0;
     final wrongAnswerPenaltyCoins = result['wrongAnswerPenaltyCoins'] as int? ?? 0;
+    final showFatiguePopup = result['showFatiguePopup'] as bool? ?? false;
 
-    // 討伐成功メッセージ (SnackBar)
-    if (bonusMessages.isNotEmpty) {
-          scaffoldMessenger.showSnackBar(SnackBar(
-            content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-              Text("見事仕留めた！ $coinsGained 文を獲得しました！"),
-              const SizedBox(height: 4),
-              ...bonusMessages.map((msg) => Text(msg,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.amberAccent))),
-            ]),
-            duration: const Duration(seconds: 4),
-          ));
-    } else {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(content: Text("見事仕留めた！ $coinsGained 文を獲得しました！")),
-      );
-    }
+    // UX-6: 戦果報告書の統合 — SnackBarを廃止し、全てのフィードバックを戦果報告書ダイアログに集約
 
     // 討伐完了パーティクルエフェクト → 戦果報告書（統合ダイアログ）
     // navigator を事前捕捉してあるので、リスト項目が dispose されても確実に pop できる。
     final dialogContext = navigator.context;
     bool effectClosed = false;
 
-    void showBattleReport() {
+    Future<void> showBattleReport() async {
       if (!dialogContext.mounted) return;
       final player = playerVM.player;
       // 疲労警告用の判定
@@ -121,7 +112,7 @@ class BattleScreen extends StatelessWidget {
         fatigueWarning = '疲れが溜まってきました。宿屋で一息つきませんか？';
       }
 
-      BattleReportDialog.show(
+      await BattleReportDialog.show(
         dialogContext,
         coinsGained: coinsGained,
         bonusMessages: bonusMessages,
@@ -155,6 +146,12 @@ class BattleScreen extends StatelessWidget {
         fatigueWarnThreshold: warnThresh,
         dailyTasksCompleted: dailyDone,
       );
+
+      // UX-12: 疲労ポップアップを戦果報告書の後に表示
+      // rootNavigator経由で二重遷移を防止する
+      if (showFatiguePopup && dialogContext.mounted) {
+        await FatigueGemPopup.show(dialogContext);
+      }
     }
 
     showGeneralDialog(

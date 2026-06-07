@@ -85,7 +85,29 @@ class RecurringTasksDialog extends StatelessWidget {
                               icon: const Icon(Icons.delete,
                                   color: Colors.redAccent, size: 20),
                               onPressed: () {
-                                taskVM.deleteTask(task.id); context.read<TaskViewModel>().save();
+                                // UX-4: クエスト取消に確認ダイアログを追加
+                                showDialog(
+                                  context: context,
+                                  builder: (ctx) => AlertDialog(
+                                    title: const Text("定期任務を削除"),
+                                    content: const Text("この定期任務を削除しますか？\n繰り返し設定も失われます。"),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.pop(ctx),
+                                        child: const Text("キャンセル"),
+                                      ),
+                                      TextButton(
+                                        onPressed: () {
+                                          Navigator.pop(ctx);
+                                          taskVM.deleteTask(task.id);
+                                          context.read<TaskViewModel>().save();
+                                        },
+                                        child: const Text("削除する",
+                                            style: TextStyle(color: Colors.red)),
+                                      ),
+                                    ],
+                                  ),
+                                );
                               },
                             ),
                           ),

@@ -62,9 +62,30 @@ class GuildScreen extends StatelessWidget {
   }
 
   void _deleteTask(BuildContext context, String taskId) {
-    context.read<TaskViewModel>().deleteTask(taskId); context.read<TaskViewModel>().save();
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("依頼を破棄しました。")),
+    // UX-4: クエスト取消に確認ダイアログを追加
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("依頼を破棄"),
+        content: const Text("この依頼を完全に破棄しますか？\nこの操作は取り消せません。"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("キャンセル"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<TaskViewModel>().deleteTask(taskId);
+              context.read<TaskViewModel>().save();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("依頼を破棄しました。")),
+              );
+            },
+            child: const Text("破棄する", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -185,29 +206,33 @@ class GuildScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   // 🔥 緊急出撃ボタン — 戦場へ即投入
-                  GestureDetector(
-                    onTap: () => _acceptTask(context, task.id),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.shade800,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text('⚔️', style: TextStyle(fontSize: 13)),
-                          SizedBox(width: 3),
-                          Text(
-                            '出発',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                  SemanticHelper.interactive(
+                    testId: SemanticHelper.createTestId(SemanticTypes.button, 'urgent_deploy'),
+                    label: '緊急出撃：戦場へ即投入',
+                    child: GestureDetector(
+                      onTap: () => _acceptTask(context, task.id),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.shade800,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('⚔️', style: TextStyle(fontSize: 13)),
+                            SizedBox(width: 3),
+                            Text(
+                              '出発',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),
@@ -236,21 +261,29 @@ class GuildScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text("寄合所"),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.post_add),
-            tooltip: '一括依頼作成',
-            onPressed: () => showDialog(
-              context: context,
-              builder: (context) => const BulkCreateTaskDialog(),
+          SemanticHelper.interactive(
+            testId: SemanticHelper.createTestId(SemanticTypes.button, 'bulk_create'),
+            label: '一括依頼作成',
+            child: IconButton(
+              icon: const Icon(Icons.post_add),
+              tooltip: '一括依頼作成',
+              onPressed: () => showDialog(
+                context: context,
+                builder: (context) => const BulkCreateTaskDialog(),
+              ),
             ),
           ),
           if (playerVM.player.canUseSkill(Job.cleric))
-            IconButton(
-              icon: const Icon(Icons.loop),
-              tooltip: '繰り返し任務一覧',
-              onPressed: () => showDialog(
-                context: context,
-                builder: (context) => const RecurringTasksDialog(),
+            SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(SemanticTypes.button, 'recurring_tasks'),
+              label: '繰り返し任務一覧',
+              child: IconButton(
+                icon: const Icon(Icons.loop),
+                tooltip: '繰り返し任務一覧',
+                onPressed: () => showDialog(
+                  context: context,
+                  builder: (context) => const RecurringTasksDialog(),
+                ),
               ),
             ),
           PopupMenuButton<String>(
@@ -436,32 +469,44 @@ class GuildScreen extends StatelessWidget {
                           color: _getRankColor(task.rank),
                           subtitle: _getTaskDetails(task),
                           actions: [
-                            TextButton(
-                              onPressed: () =>
-                                  _showEditTaskDialog(context, task),
-                              child: const Text("編集",
-                                  style: TextStyle(color: Colors.grey)),
+                            SemanticHelper.interactive(
+                              testId: SemanticHelper.createTestId(SemanticTypes.button, 'edit_task'),
+                              label: '依頼を編集',
+                              child: TextButton(
+                                onPressed: () =>
+                                    _showEditTaskDialog(context, task),
+                                child: const Text("編集",
+                                    style: TextStyle(color: Colors.grey)),
+                              ),
                             ),
-                            TextButton(
-                              key: AppKeys.taskCardDelete,
-                              onPressed: () => _deleteTask(context, task.id),
-                              child: const Text("破棄",
-                                  style: TextStyle(color: Colors.grey)),
+                            SemanticHelper.interactive(
+                              testId: SemanticHelper.createTestId(SemanticTypes.button, 'delete_task'),
+                              label: '依頼を破棄',
+                              child: TextButton(
+                                key: AppKeys.taskCardDelete,
+                                onPressed: () => _deleteTask(context, task.id),
+                                child: const Text("破棄",
+                                    style: TextStyle(color: Colors.grey)),
+                              ),
                             ),
                             const SizedBox(width: 8),
-                            ElevatedButton(
-                              key: adjustedIndex == 0
-                                  ? TutorialKeys.acceptTaskKey
-                                  : null,
-                              onPressed: () =>
-                                  _acceptTask(context, task.id),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.amber[700],
-                                foregroundColor: Colors.white,
-                                textStyle: const TextStyle(
-                                    fontWeight: FontWeight.bold),
+                            SemanticHelper.interactive(
+                              testId: SemanticHelper.createTestId(SemanticTypes.button, 'accept_task'),
+                              label: '依頼を受注して出発',
+                              child: ElevatedButton(
+                                key: adjustedIndex == 0
+                                    ? TutorialKeys.acceptTaskKey
+                                    : null,
+                                onPressed: () =>
+                                    _acceptTask(context, task.id),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.amber[700],
+                                  foregroundColor: Colors.white,
+                                  textStyle: const TextStyle(
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                child: const Text("出発する"),
                               ),
-                              child: const Text("出発する"),
                             ),
                           ],
                         ),
