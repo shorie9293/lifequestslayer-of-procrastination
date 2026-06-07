@@ -401,10 +401,11 @@ class Player {
   int get currentExp => jobExps[currentJob] ?? 0;
 
   // Calculate expToNextLevel dynamically based on level
-  int get expToNextLevel {
-    // Formula: 50 * 1.4^(lvl-1)  Lv1→50, Lv10→~1034, Lv20→~29914
-    return (50 * pow(1.4, level - 1)).round();
-  }
+  int get expToNextLevel => expForLevel(level);
+
+  /// 指定レベルに必要な経験値を計算（Lv1→50, Lv10→~1034, Lv20→~29914）
+  static int expForLevel(int lvl) =>
+      (50 * pow(1.4, lvl - 1)).round();
 
   Map<QuestRank, int> get questSlots {
     // Mastery: Adventurer Lv10 unlocks max slots permanently?
@@ -630,7 +631,7 @@ class Player {
     final isAdventurer = currentJob == Job.adventurer;
     final int oldAdvLevel = isAdventurer ? lvl : 0;
 
-    int expNext = (50 * pow(1.4, lvl - 1)).round();
+    int expNext = expForLevel(lvl);
     // v1.3: pow が double.maxFinite を超えた場合のガード
     if (expNext >= double.maxFinite.toInt() || expNext <= 0) {
       expNext = double.maxFinite.toInt() ~/ 2;
@@ -641,7 +642,7 @@ class Player {
       cExp -= expNext;
       lvl++;
       jobLevels[currentJob] = lvl;
-      expNext = (50 * pow(1.4, lvl - 1)).round();
+      expNext = expForLevel(lvl);
       if (expNext >= double.maxFinite.toInt() || expNext <= 0) {
         expNext = double.maxFinite.toInt() ~/ 2;
       }

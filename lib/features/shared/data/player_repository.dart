@@ -1,11 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 
 /// Release でも logcat に出力する簡易ロガー
 void _log(String msg) {
-  // ignore: avoid_print
-  print('[PlayerRepo] $msg');
+  debugPrint('[PlayerRepo] $msg');
 }
 
 class PlayerRepository implements IPlayerRepository {

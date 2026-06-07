@@ -30,7 +30,9 @@ class TaskRepository implements ITaskRepository {
       box = await _getBox();
 
       // Migration: convert legacy integer-keyed entries to ID-keyed entries.
-      final needsMigration = box.keys.any((k) => k is int);
+      // O(1) check: if first key is not int, migration already done
+      final needsMigration =
+          box.keys.isNotEmpty && box.keys.first is int;
       if (needsMigration) {
         final tasks = box.values.toList();
         await box.clear();
