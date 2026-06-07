@@ -36,63 +36,6 @@ class _MockTaskRepo implements ITaskRepository {
   Future<void> close() async {}
 }
 
-/// セーブに遅延を入れる PlayerRepository モック（並行セーブ検出用）
-class _SlowMockPlayerRepo implements IPlayerRepository {
-  @override
-  bool get loadFailedDueToCorruption => false;
-  Player _player = Player();
-  @override
-  Future<Player?> loadPlayer() async => _player;
-  @override
-  Future<void> savePlayer(Player player) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    _player = player;
-  }
-  @override
-  Future<void> close() async {}
-}
-
-/// セーブに遅延を入れる TaskRepository モック（並行セーブ検出用）
-class _SlowMockTaskRepo implements ITaskRepository {
-  final List<Task> _tasks = [];
-  @override
-  Future<List<Task>> loadTasks() async => List.from(_tasks);
-  @override
-  Future<void> saveTasks(List<Task> tasks) async {
-    await Future.delayed(const Duration(milliseconds: 100));
-    _tasks.clear();
-    _tasks.addAll(tasks);
-  }
-  @override
-  Future<void> close() async {}
-}
-
-/// セーブの並行実行をカウントする PlayerRepository モック
-class _ConcurrentTrackPlayerRepo implements IPlayerRepository {
-  @override
-  bool get loadFailedDueToCorruption => false;
-  Player _player = Player();
-  int concurrentSaves = 0;
-  int maxConcurrentSaves = 0;
-
-  @override
-  Future<Player?> loadPlayer() async => _player;
-
-  @override
-  Future<void> savePlayer(Player player) async {
-    concurrentSaves++;
-    if (concurrentSaves > maxConcurrentSaves) {
-      maxConcurrentSaves = concurrentSaves;
-    }
-    await Future.delayed(const Duration(milliseconds: 50));
-    _player = player;
-    concurrentSaves--;
-  }
-
-  @override
-  Future<void> close() async {}
-}
-
 /// Hive非依存の SettingsRepository モック
 class _MockSettingsRepo extends SettingsRepository {
   @override
