@@ -64,6 +64,12 @@ class AppKeys {
   static const Key battleReportDialog = Key('dlg_battle_report');
   static const Key battleReportClose = Key('btn_battle_report_close');
 
+  // ━━━ 戦術選択バー ━━━
+  static const Key combatSelectionBar = Key('bar_combat_selection');
+  static const Key combatAttackButton = Key('btn_combat_attack');
+  static const Key combatDefendButton = Key('btn_combat_defend');
+  static const Key combatSkillButton = Key('btn_combat_skill');
+
   // ━━━ 神殿（転職） ━━━
   static const Key templeScreen = Key('screen_temple');
   static const Key templeJobCardAdventurer = Key('card_job_adventurer');

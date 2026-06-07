@@ -7,7 +7,10 @@ import 'package:rpg_todo/features/shared/widgets/player_status_header.dart';
 import 'package:rpg_todo/features/guild/presentation/widgets/task_card.dart';
 import 'widgets/battle_report_dialog.dart';
 import 'widgets/particle_effect.dart';
+import 'widgets/combat_selection_bar.dart';
 import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/features/battle/domain/battle_action.dart';
 import 'package:rpg_todo/features/battle/data/quiz_data.dart';
 import 'package:rpg_todo/core/testing/tutorial_keys.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
@@ -17,10 +20,44 @@ import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 /// M4禍津対策: 連打ガード用セット
 final Set<String> _completingTaskIds = {};
 
-class BattleScreen extends StatelessWidget {
+class BattleScreen extends StatefulWidget {
   const BattleScreen({super.key});
 
+  @override
+  State<BattleScreen> createState() => _BattleScreenState();
+}
+
+class _BattleScreenState extends State<BattleScreen> {
+  /// 現在戦術選択フェイズにあるタスクのID。
+  /// null の場合は通常のタスク一覧表示。
+  String? _taskInCombat;
+
   Color _getRankColor(QuestRank rank) => RankColors.forRank(rank);
+
+  /// 戦術選択バーを表示して討伐フェイズに移行する。
+  void _enterCombatPhase(String taskId) {
+    setState(() {
+      _taskInCombat = taskId;
+    });
+  }
+
+  /// 戦術が選択された時の処理。
+  /// [action] に応じた補正を行った後、既存の討伐フローを実行する。
+  void _onActionSelected(BattleAction action) {
+    final taskId = _taskInCombat;
+    if (taskId == null) return;
+
+    // 戦術選択UIを閉じる
+    setState(() {
+      _taskInCombat = null;
+    });
+
+    // TODO(v2.1): actionに応じたEXP/成功率補正をTaskViewModelに反映する。
+    // 現時点ではアクション選択UIのみ実装。討伐フローは既存のまま。
+    // 例: attack → 標準, defend → EXP * 0.7 + 成功率UP, skill → 装備スキル効果発動
+
+    _completeTask(context, taskId);
+  }
 
   void _completeTask(BuildContext context, String taskId) {
     // M4禍津対策: 連打ガード。同一タスクの二重実行を防止する。
@@ -213,10 +250,12 @@ class BattleScreen extends StatelessWidget {
       };
     }
 
+    // 戦術選択フェイズのときは選択中のタスクをハイライト
+    
     return Scaffold(
       key: AppKeys.battleScreen,
       appBar: AppBar(
-        title: const Text("修練場"),
+        title: Text(_taskInCombat != null ? "⚔️ 戦術選択" : "修練場"),
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -330,7 +369,7 @@ class BattleScreen extends StatelessWidget {
                                     : null,
                                 icon: const Text('⚔️',
                                     style: TextStyle(fontSize: 24)),
-                                onPressed: () => _completeTask(context, task.id),
+                                onPressed: () => _enterCombatPhase(task.id),
                                 tooltip: "討つ！",
                               ),
                             ),
@@ -345,6 +384,28 @@ class BattleScreen extends StatelessWidget {
           ],
         ),
       ),
+      // ── 戦術選択バー（下部オーバーレイ） ──
+      bottomNavigationBar: _taskInCombat != null
+          ? CombatSelectionBar(
+              onActionSelected: _onActionSelected,
+              skillAvailable: _isSkillAvailable(playerVM.player),
+              skillUnavailableReason: _skillUnavailableReason(playerVM.player),
+            )
+          : null,
     );
+  }
+
+  /// スキルアクションが使用可能かを判定する。
+  /// 装備スキルが1つ以上ある場合にtrue。
+  bool _isSkillAvailable(Player player) {
+    return player.equippedSkills.isNotEmpty;
+  }
+
+  /// スキル未使用時の理由テキスト。
+  String? _skillUnavailableReason(Player player) {
+    if (player.equippedSkills.isEmpty) {
+      return '装備スキルがありません。寺院でスキルを装備してください。';
+    }
+    return null;
   }
 }
