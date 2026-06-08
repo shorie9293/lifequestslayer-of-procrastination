@@ -181,6 +181,32 @@ class _DebugPanelState extends State<DebugPanel> {
                 ),
               ],
             ),
+            const SizedBox(height: 16),
+            // フォントサイズ調整
+            _sectionLabel('🔤 フォントサイズ'),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Text('小', style: TextStyle(fontSize: 12)),
+                Expanded(
+                  child: Slider(
+                    value: widget.settingsVM.fontSizeScale,
+                    min: 0.6,
+                    max: 1.4,
+                    divisions: 16,
+                    label: '${(widget.settingsVM.fontSizeScale * 100).round()}%',
+                    onChanged: (v) => widget.settingsVM.setFontSizeScale(v),
+                  ),
+                ),
+                const Text('大', style: TextStyle(fontSize: 18)),
+              ],
+            ),
+            Center(
+              child: Text(
+                '現在: ${(widget.settingsVM.fontSizeScale * 100).round()}%',
+                style: const TextStyle(color: Colors.white54, fontSize: 12),
+              ),
+            ),
           ],
         ),
       ),
