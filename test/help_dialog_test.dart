@@ -19,8 +19,8 @@ void main() {
 
     testWidgets('3つのセクションが表示される', (tester) async {
       await tester.pumpWidget(buildTestApp());
-      expect(find.text('RPG風依頼管理'), findsOneWidget);
-      expect(find.text('レベルアップと依頼枠'), findsOneWidget);
+      expect(find.text('RPG風クエスト管理'), findsOneWidget);
+      expect(find.text('レベルアップとクエスト枠'), findsOneWidget);
       expect(find.text('転職と新機能の解放'), findsOneWidget);
     });
 

@@ -28,8 +28,8 @@ void main() {
       expect(totalEarnedSkillPoints(11), 3);
     });
 
-    test('Lv 99 で 最大 32 ポイント', () {
-      expect(totalEarnedSkillPoints(99), 32);
+    test('Lv 99 で 最大 33 ポイント', () {
+      expect(totalEarnedSkillPoints(99), 33);
     });
 
     test('Lv 0 以下でも 0 を返す', () {
@@ -231,13 +231,14 @@ void main() {
           {'war_flash', 'cle_prayer', 'wiz_foresight'});
     });
 
-    test('war_flash 解放済み・8ポイント → war_combo + war_critical 可', () {
+    test('war_flash 解放済み・8ポイント → war_combo 可（war_critical は前提不足で不可）', () {
       final nodes = unlockableNodes(
               unlockedIds: ['war_flash'], skillPoints: 8)
           .toList();
       final ids = nodes.map((n) => n.id).toSet();
       expect(ids.contains('war_combo'), true);
-      expect(ids.contains('war_critical'), true);
+      // war_critical requires war_combo as prerequisite — not yet unlocked
+      expect(ids.contains('war_critical'), false);
     });
   });
 }

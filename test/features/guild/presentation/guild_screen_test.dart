@@ -141,7 +141,7 @@ void main() {
       await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 見積もり時間のテキストが表示されていることを確認（完全一致）
-      expect(find.text('未着手の依頼（見積もり）: 45分'), findsOneWidget);
+      expect(find.text('未着手のクエスト（見積もり）: 45分'), findsOneWidget);
     });
 
     testWidgets('複数ギルドタスクの見積もりが合計表示される', (tester) async {
@@ -158,7 +158,7 @@ void main() {
       await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 合計115分が表示されていることを確認
-      expect(find.text('未着手の依頼（見積もり）: 115分'), findsOneWidget);
+      expect(find.text('未着手のクエスト（見積もり）: 115分'), findsOneWidget);
     });
 
     testWidgets(
@@ -177,7 +177,7 @@ void main() {
       await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 30分のみの合計が表示される
-      expect(find.text('未着手の依頼（見積もり）: 30分'), findsOneWidget);
+      expect(find.text('未着手のクエスト（見積もり）: 30分'), findsOneWidget);
     });
 
     // ━━━ 見積もり表示なし ━━━
@@ -202,7 +202,7 @@ void main() {
           (widget) =>
               widget is Text &&
               widget.data != null &&
-              widget.data!.contains('未着手の依頼（見積もり）'),
+              widget.data!.contains('未着手のクエスト（見積もり）'),
         ),
         findsNothing,
       );
@@ -224,7 +224,7 @@ void main() {
           (widget) =>
               widget is Text &&
               widget.data != null &&
-              widget.data!.contains('未着手の依頼（見積もり）'),
+              widget.data!.contains('未着手のクエスト（見積もり）'),
         ),
         findsNothing,
       );

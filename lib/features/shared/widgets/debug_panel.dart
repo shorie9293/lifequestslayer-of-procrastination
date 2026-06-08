@@ -61,14 +61,14 @@ class _DebugPanelState extends State<DebugPanel> {
   void _completeAll() {
     context.read<TaskViewModel>().debugCompleteAllActive();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('全アクティブタスクを完了しました'), duration: Duration(seconds: 1)),
+      const SnackBar(content: Text('全アクティブクエストを完了しました'), duration: Duration(seconds: 1)),
     );
   }
 
   void _addTestTasks() {
     context.read<TaskViewModel>().debugAddTestTasks();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('テスト用タスクを3件追加しました'), duration: Duration(seconds: 1)),
+      const SnackBar(content: Text('テスト用クエストを3件追加しました'), duration: Duration(seconds: 1)),
     );
   }
 
@@ -159,8 +159,8 @@ class _DebugPanelState extends State<DebugPanel> {
             ),
             const SizedBox(height: 16),
 
-            // タスク操作
-            _sectionLabel('📋 タスク操作'),
+            // クエスト操作
+            _sectionLabel('📋 クエスト操作'),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -168,7 +168,7 @@ class _DebugPanelState extends State<DebugPanel> {
                   child: OutlinedButton.icon(
                     onPressed: _completeAll,
                     icon: const Icon(Icons.done_all, size: 18),
-                    label: const Text('全タスク完了'),
+                    label: const Text('全クエスト完了'),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -176,7 +176,7 @@ class _DebugPanelState extends State<DebugPanel> {
                   child: OutlinedButton.icon(
                     onPressed: _addTestTasks,
                     icon: const Icon(Icons.add, size: 18),
-                    label: const Text('テストタスク追加'),
+                    label: const Text('テストクエスト追加'),
                   ),
                 ),
               ],

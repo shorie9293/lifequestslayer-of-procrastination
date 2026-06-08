@@ -73,14 +73,14 @@ class _GuildScreenState extends State<GuildScreen> {
   }
 
   void _deleteTask(BuildContext context, String taskId) {
-    // UX-4: クエスト取消に確認ダイアログを追加
+    // UX-4: クエスト契約解除に確認ダイアログを追加
     if (_isDialogOpen) return;
     _isDialogOpen = true;
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text("依頼を破棄"),
-        content: const Text("この依頼を完全に破棄しますか？\nこの操作は取り消せません。"),
+        title: const Text("クエストを破棄"),
+        content: const Text("このクエストを完全に破棄しますか？\nこの操作は取り消せません。"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -92,7 +92,7 @@ class _GuildScreenState extends State<GuildScreen> {
               context.read<TaskViewModel>().deleteTask(taskId);
               context.read<TaskViewModel>().save();
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("依頼を破棄しました。")),
+                const SnackBar(content: Text("クエストを破棄しました。")),
               );
             },
             child: const Text("破棄する", style: TextStyle(color: Colors.red)),
@@ -108,7 +108,7 @@ class _GuildScreenState extends State<GuildScreen> {
       details += " | 繰り返し: ${task.repeatInterval.name}";
     }
     if (task.subTasks.isNotEmpty) {
-      details += " | サブ依頼: ${task.subTasks.length}個";
+      details += " | サブクエスト: ${task.subTasks.length}個";
     }
     if (task.deadline != null) {
       final d = task.deadline!;
@@ -158,7 +158,7 @@ class _GuildScreenState extends State<GuildScreen> {
               Text('🔥', style: TextStyle(fontSize: 20)),
               SizedBox(width: 8),
               Text(
-                '緊急依頼',
+                '緊急クエスト',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -276,10 +276,10 @@ class _GuildScreenState extends State<GuildScreen> {
         actions: [
           SemanticHelper.interactive(
             testId: SemanticHelper.createTestId(SemanticTypes.button, 'bulk_create'),
-            label: '一括依頼作成',
+            label: '一括クエスト登録',
             child: IconButton(
               icon: const Icon(Icons.post_add),
-              tooltip: '一括依頼作成',
+              tooltip: '一括クエスト登録',
               onPressed: () {
                 if (_isDialogOpen) return;
                 _isDialogOpen = true;
@@ -409,7 +409,7 @@ class _GuildScreenState extends State<GuildScreen> {
                     const Text("📋", style: TextStyle(fontSize: 16)),
                     const SizedBox(width: 8),
                     Text(
-                      "未着手の依頼（見積もり）: ${taskVM.guildEstimatedMinutes}分",
+                      "未着手のクエスト（見積もり）: ${taskVM.guildEstimatedMinutes}分",
                       style: const TextStyle(
                         fontSize: 14,
                         color: Colors.amberAccent,
@@ -463,7 +463,7 @@ class _GuildScreenState extends State<GuildScreen> {
                         return SemanticHelper.container(
                           testId: SemanticHelper.createTestId(
                               SemanticTypes.section, 'empty_no_quests'),
-                          label: '依頼なし',
+                          label: 'クエストなし',
                           child: const Center(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
@@ -471,13 +471,13 @@ class _GuildScreenState extends State<GuildScreen> {
                                 Text("🏯", style: TextStyle(fontSize: 48)),
                                 SizedBox(height: 12),
                                 Text(
-                                  "まだ依頼が届いていない。",
+                                  "まだクエストが届いていない。",
                                   style: TextStyle(
                                       fontSize: 18, color: Colors.grey),
                                 ),
                                 SizedBox(height: 8),
                                 Text(
-                                  "右下の ＋ から最初の依頼を登録しよう！",
+                                  "右下の ＋ から最初のクエストを登録しよう！",
                                   style: TextStyle(
                                       fontSize: 14, color: Colors.grey),
                                 ),
@@ -500,7 +500,7 @@ class _GuildScreenState extends State<GuildScreen> {
                           actions: [
                             SemanticHelper.interactive(
                               testId: SemanticHelper.createTestId(SemanticTypes.button, 'edit_task'),
-                              label: '依頼を編集',
+                              label: 'クエストを編集',
                               child: TextButton(
                                 onPressed: () =>
                                     _showEditTaskDialog(context, task),
@@ -510,7 +510,7 @@ class _GuildScreenState extends State<GuildScreen> {
                             ),
                             SemanticHelper.interactive(
                               testId: SemanticHelper.createTestId(SemanticTypes.button, 'delete_task'),
-                              label: '依頼を破棄',
+                              label: 'クエストを破棄',
                               child: TextButton(
                                 key: AppKeys.taskCardDelete,
                                 onPressed: () => _deleteTask(context, task.id),
@@ -521,7 +521,7 @@ class _GuildScreenState extends State<GuildScreen> {
                             const SizedBox(width: 8),
                             SemanticHelper.interactive(
                               testId: SemanticHelper.createTestId(SemanticTypes.button, 'accept_task'),
-                              label: '依頼を受注して出発',
+                              label: 'クエストを受注して出発',
                               child: ElevatedButton(
                                 key: adjustedIndex == 0
                                     ? TutorialKeys.acceptTaskKey
@@ -550,7 +550,7 @@ class _GuildScreenState extends State<GuildScreen> {
       ),
       floatingActionButton: SemanticHelper.interactive(
         testId: SemanticHelper.createTestId(SemanticTypes.button, 'add_task'),
-        hint: '新規依頼を作成',
+        hint: '新規クエストを登録',
         child: FloatingActionButton(
           key: TutorialKeys.fabKey,
           onPressed: () => _showCreateTaskDialog(context),

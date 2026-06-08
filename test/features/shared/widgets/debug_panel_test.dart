@@ -103,12 +103,12 @@ void main() {
 
     testWidgets('全タスク完了ボタンがある', (tester) async {
       await tester.pumpWidget(buildPanel());
-      expect(find.text('全タスク完了'), findsOneWidget);
+      expect(find.text('全クエスト完了'), findsOneWidget);
     });
 
     testWidgets('テストタスク追加ボタンがある', (tester) async {
       await tester.pumpWidget(buildPanel());
-      expect(find.text('テストタスク追加'), findsOneWidget);
+      expect(find.text('テストクエスト追加'), findsOneWidget);
     });
   });
 

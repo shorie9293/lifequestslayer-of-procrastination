@@ -90,7 +90,7 @@ const Map<String, SkillNode> skillTreeDefinition = {
     id: 'cle_prayer',
     tree: Job.cleric,
     name: '祈り',
-    description: 'タスク期限の延長が可能に。祈りを捧げて猶予を1日追加する',
+    description: 'クエスト期限の延長が可能に。祈りを捧げて猶予を1日追加する',
     pointCost: 2,
     row: 0,
   ),
@@ -98,7 +98,7 @@ const Map<String, SkillNode> skillTreeDefinition = {
     id: 'cle_heal',
     tree: Job.cleric,
     name: '治癒',
-    description: 'タスク未完了によるペナルティを軽減。連続ログインの保護効果が上昇',
+    description: 'クエスト未完了によるペナルティを軽減。連続ログインの保護効果が上昇',
     pointCost: 3,
     prerequisites: ['cle_prayer'],
     row: 1,
@@ -118,7 +118,7 @@ const Map<String, SkillNode> skillTreeDefinition = {
     id: 'wiz_foresight',
     tree: Job.wizard,
     name: '先見',
-    description: '未着手タスクの可視化。期限が近いタスクを優先表示する',
+    description: '未着手クエストの可視化。期限が近いクエストを優先表示する',
     pointCost: 2,
     row: 0,
   ),
@@ -126,7 +126,7 @@ const Map<String, SkillNode> skillTreeDefinition = {
     id: 'wiz_split',
     tree: Job.wizard,
     name: '分割',
-    description: '大タスクをサブタスクに分割可能に。分割数に応じて達成ボーナスが上昇',
+    description: '大クエストをサブクエストに分割可能に。分割数に応じて達成ボーナスが上昇',
     pointCost: 3,
     prerequisites: ['wiz_foresight'],
     row: 1,
@@ -135,7 +135,7 @@ const Map<String, SkillNode> skillTreeDefinition = {
     id: 'wiz_transfer',
     tree: Job.wizard,
     name: '転移',
-    description: '未完了タスクの期限を別の日に転移。計画の立て直しが容易になる',
+    description: '未完了クエストの期限を別の日に転移。計画の立て直しが容易になる',
     pointCost: 4,
     prerequisites: ['wiz_split'],
     row: 2,
@@ -153,10 +153,9 @@ const Map<String, SkillNode> skillTreeDefinition = {
 ///
 /// | Adventurer Lv | 1-2 | 3-5 | 6-8 | 9-11 | … | 96-98 | 99 |
 /// |---------------|-----|-----|-----|------|---|-------|----|
-/// | Points earned | 0   | 1   | 2   | 3    | … | 32    | 32 |
+/// | Points earned | 0   | 1   | 2   | 3    | … | 32    | 33 |
 int totalEarnedSkillPoints(int adventurerLevel) {
-  if (adventurerLevel < 3) return 0;
-  return (adventurerLevel - 2) ~/ 3;
+  return adventurerLevel ~/ 3;
 }
 
 /// Sum of [SkillNode.pointCost] for every node whose ID appears in

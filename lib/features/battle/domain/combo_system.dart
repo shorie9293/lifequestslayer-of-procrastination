@@ -39,10 +39,16 @@ class ComboSystem {
   }) : _clock = clock ?? (() => DateTime.now());
 
   /// 現在のコンボ数。
-  int get comboCount => _comboCount;
+  int get comboCount {
+    _checkTimeout();
+    return _comboCount;
+  }
 
   /// 前回討伐時刻。
-  DateTime? get lastCombatTime => _lastCombatTime;
+  DateTime? get lastCombatTime {
+    _checkTimeout();
+    return _lastCombatTime;
+  }
 
   /// 現在のコンボ倍率。
   ///
@@ -63,7 +69,7 @@ class ComboSystem {
   /// コンボの残り時間。
   /// コンボが無効またはタイムアウト済みの場合は Duration.zero。
   Duration get remainingComboTime {
-    if (_comboCount == 0 || _lastCombatTime == null) return Duration.zero;
+    if (!isComboActive || _lastCombatTime == null) return Duration.zero;
     final elapsed = _clock().difference(_lastCombatTime!);
     final remaining = comboTimeout - elapsed;
     return remaining > Duration.zero ? remaining : Duration.zero;
@@ -84,6 +90,11 @@ class ComboSystem {
   /// [now] に討伐時刻を渡す（テスト用。省略時は DateTime.now()）。
   void onVictory({DateTime? now}) {
     final time = now ?? _clock();
+    // タイムアウトしていれば先にリセット
+    if (_lastCombatTime != null &&
+        time.difference(_lastCombatTime!) >= comboTimeout) {
+      reset();
+    }
     _lastCombatTime = time;
     _comboCount++;
   }

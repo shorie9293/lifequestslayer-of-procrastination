@@ -16,22 +16,22 @@ class HelpDialog extends StatelessWidget {
           children: [
             _buildSection(
               icon: Icons.lightbulb,
-              title: 'RPG風依頼管理',
-              content: 'いきなり全てを管理するのではなく、RPGのように少ない依頼から徐々に慣れていくコンセプトです。',
+              title: 'RPG風クエスト管理',
+              content: 'いきなり全てを管理するのではなく、RPGのように少ないクエストから徐々に慣れていくコンセプトです。',
             ),
             const SizedBox(height: 16),
             _buildSection(
               icon: Icons.trending_up,
-              title: 'レベルアップと依頼枠',
+              title: 'レベルアップとクエスト枠',
               content:
-                  'まずは少しの依頼から！依頼を仕留めてレベルが上がると、同時に受注できる依頼の数が増えていきます。',
+                  'まずは少しのクエストから！クエストを仕留めてレベルが上がると、同時に受注できるクエストの数が増えていきます。',
             ),
             const SizedBox(height: 16),
             _buildSection(
               icon: Icons.switch_account,
               title: '転職と新機能の解放',
               content:
-                  '最初は「修行者」ですが、レベルが上がると「転職の神殿」で他の職業に転職できます。侍、法師、陰陽師など、職業を変えることで新しい機能（繰り返し依頼やサブ依頼など）が解放されます。',
+                  '最初は「修行者」ですが、レベルが上がると「転職の神殿」で他の職業に転職できます。侍、法師、陰陽師など、職業を変えることで新しい機能（繰り返しクエストやサブクエストなど）が解放されます。',
             ),
           ],
         ),

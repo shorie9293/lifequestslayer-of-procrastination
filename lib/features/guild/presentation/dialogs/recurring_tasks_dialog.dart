@@ -29,7 +29,7 @@ class RecurringTasksDialog extends StatelessWidget {
         height: 400,
         child: tasks.isEmpty
             ? const Center(
-                child: Text('繰り返し設定された依頼はありません',
+                child: Text('繰り返し設定されたクエストはありません',
                     style: TextStyle(color: Colors.grey)),
               )
             : ListView.builder(
@@ -85,7 +85,7 @@ class RecurringTasksDialog extends StatelessWidget {
                               icon: const Icon(Icons.delete,
                                   color: Colors.redAccent, size: 20),
                               onPressed: () {
-                                // UX-4: クエスト取消に確認ダイアログを追加
+                                // UX-4: クエスト契約解除に確認ダイアログを追加
                                 showDialog(
                                   context: context,
                                   builder: (ctx) => AlertDialog(

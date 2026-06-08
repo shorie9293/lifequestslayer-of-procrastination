@@ -257,7 +257,7 @@ void main() {
       // パーティクルエフェクトが1つだけ存在することを確認
       // 連打ガードにより2つ目がブロックされ、1つの ParticleBurst のみ表示
       await tester.pump(const Duration(milliseconds: 100));
-      final particleTexts = find.text('討伐完了\n💥');
+      final particleTexts = find.text('クエスト完了\n💥');
       expect(particleTexts, findsOneWidget);
     });
   });
@@ -297,14 +297,14 @@ void main() {
 
       // ParticleBurst が表示されるのを待つ
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.text('討伐完了\n💥'), findsOneWidget);
+      expect(find.text('クエスト完了\n💥'), findsOneWidget);
 
       // ParticleBurst のアニメーション完了を待つ（pumpAndSettle で確実に）
       // Navigator.of(ctx).pop() が呼ばれ ParticleBurst ダイアログが閉じられる
       await tester.pumpAndSettle(const Duration(milliseconds: 2000));
 
       // ParticleBurst ダイアログが閉じられたことを確認
-      expect(find.text('討伐完了\n💥'), findsNothing);
+      expect(find.text('クエスト完了\n💥'), findsNothing);
     });
   });
 
@@ -356,7 +356,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // 成功SnackBarが表示されている
-      expect(find.text('依頼を寄合所に戻しました'), findsOneWidget);
+      expect(find.text('クエストを寄合所に戻しました'), findsOneWidget);
     });
   });
 

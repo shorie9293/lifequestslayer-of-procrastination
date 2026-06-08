@@ -34,7 +34,7 @@ class _BulkCreateTaskDialogState extends State<BulkCreateTaskDialog> {
     final text = _controller.text.trim();
     if (text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("依頼内容を入力してください")),
+        const SnackBar(content: Text("クエスト内容を入力してください")),
       );
       return;
     }
@@ -48,7 +48,7 @@ class _BulkCreateTaskDialogState extends State<BulkCreateTaskDialog> {
 
     if (titles.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("依頼内容を入力してください")),
+        const SnackBar(content: Text("クエスト内容を入力してください")),
       );
       return;
     }
@@ -63,7 +63,7 @@ class _BulkCreateTaskDialogState extends State<BulkCreateTaskDialog> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text("${titles.length}件の依頼を登録しました（${_selectedRank.name}ランク）"),
+        content: Text("${titles.length}件のクエストを登録しました（${_selectedRank.name}ランク）"),
       ),
     );
   }
@@ -72,7 +72,7 @@ class _BulkCreateTaskDialogState extends State<BulkCreateTaskDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       key: AppKeys.bulkCreateTaskDialog,
-      title: const Text("一括依頼作成"),
+      title: const Text("一括クエスト登録"),
       content: SizedBox(
         width: double.maxFinite,
         child: Column(
@@ -82,7 +82,7 @@ class _BulkCreateTaskDialogState extends State<BulkCreateTaskDialog> {
               key: AppKeys.bulkCreateTaskInput,
               controller: _controller,
               decoration: const InputDecoration(
-                labelText: "依頼内容（1行に1つ）",
+                labelText: "クエスト内容（1行に1つ）",
                 hintText: "書類作成\n買い物\n報告書提出",
                 border: OutlineInputBorder(),
               ),
@@ -95,7 +95,7 @@ class _BulkCreateTaskDialogState extends State<BulkCreateTaskDialog> {
               key: AppKeys.bulkCreateTaskRank,
               value: _selectedRank,
               decoration: const InputDecoration(
-                labelText: "ランク（全タスク共通）",
+                labelText: "ランク（全クエスト共通）",
                 border: OutlineInputBorder(),
               ),
               items: QuestRank.values.map((rank) {

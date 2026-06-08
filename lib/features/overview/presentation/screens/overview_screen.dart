@@ -91,7 +91,7 @@ class _CalendarView extends StatelessWidget {
   Widget build(BuildContext context) {
     final grouped = service.groupTasksByDeadline(tasks);
     if (grouped.isEmpty) {
-      return const Center(child: Text('タスクがありません'));
+      return const Center(child: Text('クエストがありません'));
     }
 
     return ListView(
@@ -154,7 +154,7 @@ class _KanbanView extends StatelessWidget {
   Widget build(BuildContext context) {
     final grouped = service.groupTasksByStatus(tasks);
     if (grouped.isEmpty) {
-      return const Center(child: Text('タスクがありません'));
+      return const Center(child: Text('クエストがありません'));
     }
 
     return SingleChildScrollView(

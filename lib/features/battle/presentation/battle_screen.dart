@@ -61,7 +61,7 @@ class BattleScreen extends StatelessWidget {
               .join('\n');
           scaffoldMessenger.showSnackBar(
             SnackBar(
-              content: Text("サブ依頼が残っています:\n$remaining"),
+              content: Text("サブクエストが残っています:\n$remaining"),
               duration: const Duration(seconds: 4),
             ),
           );
@@ -235,7 +235,7 @@ class BattleScreen extends StatelessWidget {
                   ? const Center(
                       key: AppKeys.battleEmptyState,
                       child: Text(
-                        "依頼がありません。\n寄合所で受注してください！",
+                        "クエストがありません。\n寄合所で受注してください！",
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 20, color: Colors.grey),
                       ),
@@ -283,7 +283,7 @@ class BattleScreen extends StatelessWidget {
                             SemanticHelper.interactive(
                               testId: SemanticHelper.createTestId(
                                   SemanticTypes.button, 'cancel_task'),
-                              label: '依頼を寄合所に戻す',
+                              label: 'クエストを寄合所に戻す',
                               child: IconButton(
                                 key: AppKeys.battleCancel,
                                 icon: const Icon(Icons.undo, color: Colors.grey),
@@ -292,8 +292,8 @@ class BattleScreen extends StatelessWidget {
                                     context: context,
                                     builder: (ctx) => AlertDialog(
                                       key: AppKeys.confirmDialog,
-                                      title: const Text("依頼を戻す"),
-                                      content: const Text("この依頼を寄合所に戻しますか？"),
+                                      title: const Text("クエストを戻す"),
+                                      content: const Text("このクエストを寄合所に戻しますか？"),
                                       actions: [
                                         TextButton(
                                           onPressed: () => Navigator.pop(ctx),
@@ -305,7 +305,7 @@ class BattleScreen extends StatelessWidget {
                                             taskVM.cancelTask(task.id); taskVM.save();
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               const SnackBar(
-                                                  content: Text("依頼を寄合所に戻しました")),
+                                                  content: Text("クエストを寄合所に戻しました")),
                                             );
                                           },
                                           child: const Text("戻す"),

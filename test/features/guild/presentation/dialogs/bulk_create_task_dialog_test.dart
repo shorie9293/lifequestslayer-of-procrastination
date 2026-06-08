@@ -174,7 +174,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
 
       expect(find.byKey(AppKeys.bulkCreateTaskDialog), findsOneWidget);
-      expect(find.text('一括依頼作成'), findsOneWidget);
+      expect(find.text('一括クエスト登録'), findsOneWidget);
       expect(find.byKey(AppKeys.bulkCreateTaskInput), findsOneWidget);
       expect(find.byKey(AppKeys.bulkCreateTaskRank), findsOneWidget);
       expect(find.byKey(AppKeys.bulkCreateTaskSubmit), findsOneWidget);
@@ -200,7 +200,7 @@ void main() {
       await tester.tap(find.byKey(AppKeys.bulkCreateTaskSubmit));
       await tester.pump();
 
-      expect(find.text('依頼内容を入力してください'), findsOneWidget);
+      expect(find.text('クエスト内容を入力してください'), findsOneWidget);
       expect(vm.tasks, isEmpty);
     });
 

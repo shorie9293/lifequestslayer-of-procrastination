@@ -324,7 +324,7 @@ class _VictoryCelebration extends StatelessWidget {
     return const Positioned.fill(
       child: Center(
         child: ParticleBurst(
-          text: '討伐完了\n💥',
+          text: 'クエスト完了\n💥',
           duration: Duration(milliseconds: 1200),
         ),
       ),

@@ -45,7 +45,7 @@ class ParticleBurst extends StatefulWidget {
 
   const ParticleBurst({
     super.key,
-    this.text = '討伐完了\n💥',
+    this.text = 'クエスト完了\n💥',
     this.duration = const Duration(milliseconds: 800),
     this.onComplete,
     this.textStyle,

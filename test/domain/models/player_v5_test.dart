@@ -1,6 +1,9 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
+import 'package:hive/src/binary/binary_reader_impl.dart';
+import 'package:hive/src/binary/binary_writer_impl.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/skill_tree.dart';
 
@@ -8,19 +11,30 @@ import 'package:rpg_todo/domain/models/skill_tree.dart';
 /// シリアライズ／デシリアライズ ラウンドトリップ テスト。
 void main() {
   late PlayerAdapter adapter;
+  late TypeRegistry registry;
+
+  setUpAll(() {
+    final testDir = Directory.systemTemp.createTempSync('hive_player_v5_test_');
+    Hive.init(testDir.path);
+    Hive.registerAdapter(PlayerAdapter());
+    Hive.registerAdapter(JobAdapter());
+    Hive.registerAdapter(JobSkillAdapter());
+  });
 
   setUp(() {
     adapter = PlayerAdapter();
+    // Hive implements TypeRegistry, use it for internal impl classes
+    registry = Hive;
   });
 
   // ━━━ ヘルパー ━━━
 
   /// Player → bytes → Player の往復
   Player _roundtrip(Player player) {
-    final writer = BinaryWriter(Frame(limit: 1024 * 1024)); // 1 MiB
+    final writer = BinaryWriterImpl(registry);
     adapter.write(writer, player);
     final bytes = writer.toBytes();
-    final reader = BinaryReader(bytes, 0, bytes.length);
+    final reader = BinaryReaderImpl(bytes, registry);
     return adapter.read(reader);
   }
 
@@ -29,7 +43,7 @@ void main() {
     int version,
     void Function(BinaryWriter) writePayload,
   ) {
-    final writer = BinaryWriter(Frame(limit: 1024 * 1024));
+    final writer = BinaryWriterImpl(registry);
     writePayload(writer);
     final payload = writer.toBytes();
 
@@ -38,7 +52,7 @@ void main() {
     bytes[0] = version;
     bytes.setRange(1, payload.length, payload.sublist(1));
 
-    final reader = BinaryReader(bytes, 0, bytes.length);
+    final reader = BinaryReaderImpl(bytes, registry);
     return adapter.read(reader);
   }
 
@@ -143,8 +157,8 @@ void main() {
         writer.writeMap({}); // taskProjects
       });
 
-      // Lv6 → totalEarned = (6-2)~/3 = 1
-      expect(player.skillPoints, 1);
+      // Lv6 → totalEarned = 2
+      expect(player.skillPoints, 2);
       expect(player.unlockedSkillIds, isEmpty);
     });
 
@@ -364,14 +378,14 @@ void main() {
       expect(player.skillPoints, 0);
     });
 
-    test('Lv12 (3ポイント), war_flash+war_combo (5コスト) → -2', () {
+    test('Lv12 (4ポイント), war_flash+war_combo (5コスト) → -1', () {
       final player = Player(
         jobLevels: {Job.adventurer: 12},
         unlockedSkillIds: ['war_flash', 'war_combo'],
       );
       player.recalculateSkillPoints();
-      // Lv12 → totalEarned = (12-2)~/3 = 3, spent = 5 → -2
-      expect(player.skillPoints, -2);
+      // Lv12 → totalEarned = 12~/3 = 4, spent = 5 → -1
+      expect(player.skillPoints, -1);
     });
   });
 

@@ -162,8 +162,8 @@ class BattleViewModel extends ChangeNotifier {
     List<String> bonusMessages = const [],
   }) {
     _phase.declareVictory();
-    final comboBonus = _combo.calcComboBonusExp(expGained);
     _combo.onVictory();
+    final comboBonus = _combo.calcComboBonusExp(expGained);
 
     final result = BattleResult(
       isVictory: true,
