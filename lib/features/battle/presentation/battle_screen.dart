@@ -13,6 +13,7 @@ import 'package:rpg_todo/features/battle/data/quiz_data.dart';
 import 'package:rpg_todo/core/testing/tutorial_keys.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// M4禍津対策: 連打ガード用セット
@@ -214,6 +215,14 @@ class BattleScreen extends StatelessWidget {
       key: AppKeys.battleScreen,
       appBar: AppBar(
         title: const Text("修練場"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: '神託補佐（ヘルプ）',
+            onPressed: () =>
+                showHelpDialog(context, screen: HelpScreen.battle),
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(

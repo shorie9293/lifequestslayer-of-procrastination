@@ -6,6 +6,7 @@ import 'package:rpg_todo/domain/models/skill_slot.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/domain/services/data_export_service.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class TempleScreen extends StatelessWidget {
@@ -30,6 +31,14 @@ class TempleScreen extends StatelessWidget {
       key: AppKeys.templeScreen,
       appBar: AppBar(
         title: const Text('社'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: '神託補佐（ヘルプ）',
+            onPressed: () =>
+                showHelpDialog(context, screen: HelpScreen.temple),
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(

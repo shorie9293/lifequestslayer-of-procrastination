@@ -5,6 +5,7 @@ import 'package:rpg_todo/core/infrastructure/iap_service.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 宝石パックの表示名・ボーナス表記
@@ -77,6 +78,12 @@ class _GemShopScreenState extends State<GemShopScreen> {
         leading: const BackButton(),
         title: const Text('💎 宝石ショップ'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: '神託補佐（ヘルプ）',
+            onPressed: () =>
+                showHelpDialog(context, screen: HelpScreen.gemShop),
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Chip(

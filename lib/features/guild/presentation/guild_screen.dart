@@ -316,7 +316,7 @@ class _GuildScreenState extends State<GuildScreen> {
                 case 'help':
                   if (_isDialogOpen) return;
                   _isDialogOpen = true;
-                  showHelpDialog(context).then((_) => _isDialogOpen = false);
+                  showHelpDialog(context, screen: HelpScreen.guild).then((_) => _isDialogOpen = false);
                 case 'notification':
                   if (_isDialogOpen) return;
                   _isDialogOpen = true;
