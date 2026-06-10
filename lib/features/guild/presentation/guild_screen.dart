@@ -118,6 +118,23 @@ class _GuildScreenState extends State<GuildScreen> {
     return details;
   }
 
+  /// コンパクト表示用: 見積もり時間 + 期限 のみ
+  String _getCompactTaskDetails(Task task) {
+    final parts = <String>[];
+    if (task.targetTimeMinutes != null) {
+      parts.add('⏱ 見積もり: ${task.targetTimeMinutes}分');
+    }
+    if (task.deadline != null) {
+      final d = task.deadline!;
+      parts.add(
+          '📅 期限: ${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}');
+    }
+    if (parts.isEmpty) {
+      parts.add('⚔️ タップで詳細を表示');
+    }
+    return parts.join('  |  ');
+  }
+
   /// 残り時間表示の文字列（日本語）を生成
   String _formatTimeRemaining(Duration diff) {
     if (diff.isNegative) {
@@ -487,7 +504,7 @@ class _GuildScreenState extends State<GuildScreen> {
                         );
                       }
 
-                      // Task card
+                      // Task card (非緊急: コンパクト表示)
                       final task = remainingTasks[adjustedIndex];
                       return SemanticHelper.listItem(
                         testId: SemanticHelper.createTestId(
@@ -496,7 +513,15 @@ class _GuildScreenState extends State<GuildScreen> {
                         child: TaskCard(
                           task: task,
                           color: _getRankColor(task.rank),
-                          subtitle: _getTaskDetails(task),
+                          subtitle: _getCompactTaskDetails(task),
+                          hideCountdown: true,
+                          expandedDetails: Text(
+                            _getTaskDetails(task),
+                            style: const TextStyle(
+                              color: Colors.white70,
+                              fontSize: 13,
+                            ),
+                          ),
                           actions: [
                             SemanticHelper.interactive(
                               testId: SemanticHelper.createTestId(SemanticTypes.button, 'edit_task'),

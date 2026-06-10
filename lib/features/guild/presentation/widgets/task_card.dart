@@ -22,6 +22,8 @@ class TaskCard extends StatefulWidget {
   final String? subtitle;
 
   final bool isUrgent;
+  final bool hideCountdown;
+  final Widget? expandedDetails;
 
   TaskCard({
     super.key,
@@ -32,6 +34,8 @@ class TaskCard extends StatefulWidget {
     this.initiallyExpanded = false,
     this.onSubTaskToggle,
     this.subtitle,
+    this.hideCountdown = false,
+    this.expandedDetails,
   }) : isUrgent = task.deadline != null &&
            task.deadline!.isBefore(DateTime.now().add(const Duration(days: 1)));
 
@@ -285,8 +289,8 @@ class _TaskCardState extends State<TaskCard> {
                           ),
                       ],
                     ),
-                    // カウントダウン表示
-                    if (_countdownText.isNotEmpty)
+                    // カウントダウン表示（hideCountdown=true の場合は抑制）
+                    if (_countdownText.isNotEmpty && !widget.hideCountdown)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
@@ -310,6 +314,15 @@ class _TaskCardState extends State<TaskCard> {
                       )
                     : null,
                 children: [
+                  if (widget.expandedDetails != null)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.1),
+                      ),
+                      child: widget.expandedDetails!,
+                    ),
                   if (_task.subTasks.isNotEmpty)
                     Container(
                       color: Colors.black.withValues(alpha: 0.1),

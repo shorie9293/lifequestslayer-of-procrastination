@@ -117,7 +117,9 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
       confirmText: "決定",
     );
     if (picked != null) {
-      setState(() => _deadline = picked);
+      // 期限は選択日の23:59:59に設定（UX改善: 0:00→23:59）
+      setState(() => _deadline = DateTime(
+          picked.year, picked.month, picked.day, 23, 59, 59));
     }
   }
 
