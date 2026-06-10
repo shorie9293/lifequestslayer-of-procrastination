@@ -118,21 +118,19 @@ class _GuildScreenState extends State<GuildScreen> {
     return details;
   }
 
-  /// コンパクト表示用: 見積もり時間 + 期限 のみ
-  String _getCompactTaskDetails(Task task) {
-    final parts = <String>[];
-    if (task.targetTimeMinutes != null) {
-      parts.add('⏱ 見積もり: ${task.targetTimeMinutes}分');
-    }
+  /// コンパクト表示用: 難易度 + 期限 のみ（タイトルは展開時表示）
+  String _getCompactTitle(Task task) {
+    final rankEmoji = switch (task.rank) {
+      QuestRank.S => '🐉',
+      QuestRank.A => '👹',
+      QuestRank.B => '👺',
+    };
+    final rankStr = '${rankEmoji} [${task.rank.name}]';
     if (task.deadline != null) {
       final d = task.deadline!;
-      parts.add(
-          '📅 期限: ${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}');
+      return '$rankStr  📅 ${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
     }
-    if (parts.isEmpty) {
-      parts.add('⚔️ タップで詳細を表示');
-    }
-    return parts.join('  |  ');
+    return '$rankStr  📅 期限なし';
   }
 
   /// 残り時間表示の文字列（日本語）を生成
@@ -513,14 +511,37 @@ class _GuildScreenState extends State<GuildScreen> {
                         child: TaskCard(
                           task: task,
                           color: _getRankColor(task.rank),
-                          subtitle: _getCompactTaskDetails(task),
+                          titleOverride: _getCompactTitle(task),
                           hideCountdown: true,
-                          expandedDetails: Text(
-                            _getTaskDetails(task),
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 13,
-                            ),
+                          expandedDetails: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                '[${task.rank.name}] ${task.title}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 6),
+                              if (task.targetTimeMinutes != null)
+                                Text(
+                                  '⏱ 見積もり: ${task.targetTimeMinutes}分',
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                              Text(
+                                _getTaskDetails(task),
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
                           ),
                           actions: [
                             SemanticHelper.interactive(

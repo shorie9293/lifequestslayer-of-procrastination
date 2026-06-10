@@ -347,12 +347,15 @@ void main() {
     testWidgets('緊急タスクがなく通常タスクのみの場合でも通常表示は崩れない',
         (tester) async {
       late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+      late String deadlineStr;
 
       await tester.runAsync(() async {
         vms = createViewModels();
         // 期限が48時間先 = 緊急ではない
         final deadline =
             DateTime.now().add(const Duration(hours: 48));
+        deadlineStr =
+            '${deadline.year}/${deadline.month.toString().padLeft(2, '0')}/${deadline.day.toString().padLeft(2, '0')}';
         vms.task.addTask('通常依頼', rank: QuestRank.B, deadline: deadline);
       });
 
@@ -360,7 +363,12 @@ void main() {
 
       // 緊急セクションは表示されない
       expect(find.byKey(AppKeys.guildUrgentSection), findsNothing);
-      // 通常依頼はギルドリストに表示される
+      // 通常依頼はコンパクト表示（難易度+期限のみ）で存在確認 → 展開するとタイトル表示
+      // コンパクト状態では期日が表示されている
+      expect(find.textContaining(deadlineStr), findsOneWidget);
+      // 展開するとタイトルが表示される
+      await tester.tap(find.textContaining(deadlineStr));
+      await tester.pumpAndSettle();
       expect(find.textContaining('通常依頼'), findsOneWidget);
     });
   });

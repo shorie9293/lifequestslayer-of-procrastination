@@ -347,8 +347,8 @@ void main() {
       // onSaveErrorが設定されていることを確認
       expect(taskVM.onSaveError, isNotNull);
 
-      // 確認ダイアログで「戻す」をタップ -> save()が失敗
-      final confirmButton = find.widgetWithText(TextButton, '戻す');
+      // 確認ダイアログで「戻す（体力消費）」をタップ -> save()が失敗
+      final confirmButton = find.widgetWithText(TextButton, '戻す（体力消費）');
       expect(confirmButton, findsOneWidget);
       await tester.tap(confirmButton);
 
@@ -356,7 +356,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // 成功SnackBarが表示されている
-      expect(find.text('クエストを寄合所に戻しました'), findsOneWidget);
+      expect(find.textContaining('クエストを寄合所に戻しました'), findsOneWidget);
     });
   });
 
@@ -412,7 +412,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 300));
       expect(find.byKey(AppKeys.confirmDialog), findsOneWidget);
 
-      final returnButton = find.widgetWithText(TextButton, '戻す');
+      final returnButton = find.widgetWithText(TextButton, '戻す（体力消費）');
       expect(returnButton, findsOneWidget);
       await tester.tap(returnButton);
       await tester.pump();

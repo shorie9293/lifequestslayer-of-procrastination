@@ -24,6 +24,7 @@ class TaskCard extends StatefulWidget {
   final bool isUrgent;
   final bool hideCountdown;
   final Widget? expandedDetails;
+  final String? titleOverride;
 
   TaskCard({
     super.key,
@@ -36,6 +37,7 @@ class TaskCard extends StatefulWidget {
     this.subtitle,
     this.hideCountdown = false,
     this.expandedDetails,
+    this.titleOverride,
   }) : isUrgent = task.deadline != null &&
            task.deadline!.isBefore(DateTime.now().add(const Duration(days: 1)));
 
@@ -266,7 +268,8 @@ class _TaskCardState extends State<TaskCard> {
                           child: Semantics(
                             identifier: 'txt_task_title_${_task.id}',
                             child: Text(
-                              "[${_task.rank.name}] ${_task.title}",
+                              widget.titleOverride ??
+                                  "[${_task.rank.name}] ${_task.title}",
                               style: GoogleFonts.vt323(
                                   fontSize: 26,
                                   color: textColor,

@@ -302,7 +302,8 @@ class BattleScreen extends StatelessWidget {
                                     builder: (ctx) => AlertDialog(
                                       key: AppKeys.confirmDialog,
                                       title: const Text("クエストを戻す"),
-                                      content: const Text("このクエストを寄合所に戻しますか？"),
+                                      content: const Text(
+                                          "このクエストを寄合所に戻しますか？\n\n⚠ 撤退には体力を消耗します（討伐1回分と同量）"),
                                       actions: [
                                         TextButton(
                                           onPressed: () => Navigator.pop(ctx),
@@ -311,13 +312,18 @@ class BattleScreen extends StatelessWidget {
                                         TextButton(
                                           onPressed: () {
                                             Navigator.pop(ctx);
-                                            taskVM.cancelTask(task.id); taskVM.save();
+                                            // 体力消費：1タスク完了分
+                                            playerVM.player.dailyTasksCompleted++;
+                                            playerVM.save();
+                                            taskVM.cancelTask(task.id);
+                                            taskVM.save();
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               const SnackBar(
-                                                  content: Text("クエストを寄合所に戻しました")),
+                                                  content: Text("クエストを寄合所に戻しました（体力を消耗した…）")),
                                             );
                                           },
-                                          child: const Text("戻す"),
+                                          child: const Text("戻す（体力消費）",
+                                              style: TextStyle(color: Colors.orange)),
                                         ),
                                       ],
                                     ),
