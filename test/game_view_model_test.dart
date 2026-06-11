@@ -117,6 +117,7 @@ class _FailingTaskRepo implements ITaskRepository {
 }
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
   group('GameViewModel 永続化テスト（Mock）', () {
     test('タスク完了（Bランク）が永続化され、再読み込みでレベル・タスク状態が維持される', () async {
       final pr = _MockPlayerRepo();
