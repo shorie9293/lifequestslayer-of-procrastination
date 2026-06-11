@@ -2,12 +2,14 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
+import 'package:injectable/injectable.dart';
 
 /// Release でも logcat に出力する簡易ロガー
 void _log(String msg) {
   debugPrint('[PlayerRepo] $msg');
 }
 
+@LazySingleton(as: IPlayerRepository)
 class PlayerRepository implements IPlayerRepository {
   static const String boxName = 'playerBox';
   static const String _backupBoxName = 'playerBox_backup';

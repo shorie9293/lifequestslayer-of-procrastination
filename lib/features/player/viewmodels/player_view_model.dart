@@ -13,8 +13,10 @@ import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
 import 'package:rpg_todo/core/utils/date_utils.dart';
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
+import 'package:injectable/injectable.dart';
 
 /// プレイヤーの状態と操作を管理するViewModel
+@lazySingleton
 class PlayerViewModel extends ChangeNotifier {
   final IPlayerRepository _playerRepository;
 

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:injectable/injectable.dart';
 
 /// Play Console に登録する商品ID（消耗型）
 const kGemProducts = <String, int>{
@@ -14,6 +15,7 @@ const kGemProducts = <String, int>{
 const _kPendingBoxName = 'iapPendingBox';
 const _kPendingKey = 'pendingGems';
 
+@lazySingleton
 class IAPService extends ChangeNotifier {
   late final InAppPurchase _iap;
   StreamSubscription<List<PurchaseDetails>>? _subscription;

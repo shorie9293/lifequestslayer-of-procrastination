@@ -1,9 +1,11 @@
 import 'package:hive/hive.dart';
+import 'package:injectable/injectable.dart';
 
 /// Hiveの settingsBox / tutorialBox へのアクセスを集約するリポジトリ。
 ///
 /// GameViewModel から直接 Hive.box() を呼んでいた箇所をここに移すことで、
 /// 永続化の詳細を隠蔽し、テスト容易性を向上させる。
+@lazySingleton
 class SettingsRepository {
   static const String _settingsBoxName = 'settingsBox';
   static const String _tutorialBoxName = 'tutorialBox';

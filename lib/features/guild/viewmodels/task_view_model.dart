@@ -9,8 +9,10 @@ import 'package:rpg_todo/core/utils/date_utils.dart';
 import 'package:rpg_todo/features/kozuchi/domain/kozuchi_quest_model.dart';
 import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:injectable/injectable.dart';
 
 /// タスクのCRUDと操作を管理するViewModel
+@lazySingleton
 class TaskViewModel extends ChangeNotifier {
   final ITaskRepository _taskRepository;
   final PlayerViewModel _playerVM;

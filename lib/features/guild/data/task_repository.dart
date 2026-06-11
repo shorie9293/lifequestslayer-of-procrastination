@@ -2,7 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
+import 'package:injectable/injectable.dart';
 
+@LazySingleton(as: ITaskRepository)
 class TaskRepository implements ITaskRepository {
   static const String boxName = 'tasksBox';
   static const String _backupBoxName = 'tasksBox_backup';

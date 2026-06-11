@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 import 'package:rpg_todo/features/shared/domain/tutorial_service.dart';
+import 'package:injectable/injectable.dart';
 
 /// 設定関連の状態を管理するViewModel
+@lazySingleton
 class SettingsViewModel extends ChangeNotifier {
   final SettingsRepository _settingsRepository;
   final TutorialService _tutorial;

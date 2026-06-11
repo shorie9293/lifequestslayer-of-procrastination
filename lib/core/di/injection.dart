@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:injectable/injectable.dart';
+
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/features/shared/data/player_repository.dart';
@@ -12,38 +14,16 @@ import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/theme_view_model.dart';
 import 'package:rpg_todo/core/infrastructure/iap_service.dart';
 
+import 'injection.config.dart';
+
 final getIt = GetIt.instance;
 
-void configureDependencies() {
-  // ── リポジトリ ──
-  final playerRepo = PlayerRepository();
-  final taskRepo = TaskRepository();
-  final settingsRepo = SettingsRepository();
-
-  getIt.registerSingleton<IPlayerRepository>(playerRepo);
-  getIt.registerSingleton<ITaskRepository>(taskRepo);
-  getIt.registerSingleton<SettingsRepository>(settingsRepo);
-
-  // ── ViewModels（依存順に登録） ──
-  final playerVM = PlayerViewModel(playerRepo);
-  getIt.registerSingleton<PlayerViewModel>(playerVM);
-
-  final taskVM = TaskViewModel(taskRepo, playerVM);
-  getIt.registerSingleton<TaskViewModel>(taskVM);
-
-  final shopVM = ShopViewModel(playerVM);
-  getIt.registerSingleton<ShopViewModel>(shopVM);
-
-  final settingsVM = SettingsViewModel(settingsRepo);
-  getIt.registerSingleton<SettingsViewModel>(settingsVM);
-
-  final themeVM = ThemeViewModel(playerVM);
-  getIt.registerSingleton<ThemeViewModel>(themeVM);
-
-  // ── サービス ──
-  final iapService = IAPService();
-  getIt.registerSingleton<IAPService>(iapService);
-}
+@InjectableInit(
+  initializerName: 'initGetIt',
+  preferRelativeImports: true,
+  asExtension: false,
+)
+void configureDependencies() => initGetIt(getIt);
 
 /// 全VMのデータロードとアプリライフサイクル監視を統括する。
 /// main()内で configureDependencies() の後に呼ぶこと。
