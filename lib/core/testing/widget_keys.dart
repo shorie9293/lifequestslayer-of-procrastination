@@ -12,7 +12,7 @@ import 'package:flutter/material.dart';
 class AppKeys {
   AppKeys._();
 
-  // ━━━ ギルド（冒険者依頼所） ━━━
+  // ━━━ ギルド（冒険者クエスト所） ━━━
   static const Key guildScreen = Key('screen_guild');
   static const Key guildFab = Key('fab_add_task');
   static const Key guildQuestList = Key('list_quests');

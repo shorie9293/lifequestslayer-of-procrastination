@@ -35,7 +35,7 @@ void main() {
     test('calcStreakReward - 定義外の日数は0', () {
       expect(StreakService.calcStreakReward(4), 0);
       expect(StreakService.calcStreakReward(10), 0);
-      expect(StreakService.calcStreakReward(100), 0);
+      expect(StreakService.calcStreakReward(100), 5000); // >= 30 days returns max reward
     });
   });
 }

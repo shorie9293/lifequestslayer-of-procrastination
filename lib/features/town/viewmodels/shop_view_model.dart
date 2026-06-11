@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/domain/services/fatigue_service.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:injectable/injectable.dart';
 
 /// ショップ・宿屋・宝石関連の操作を管理するViewModel
+@lazySingleton
 class ShopViewModel extends ChangeNotifier {
   final PlayerViewModel _playerVM;
 

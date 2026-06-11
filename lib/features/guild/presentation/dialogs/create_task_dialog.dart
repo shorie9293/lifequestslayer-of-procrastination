@@ -117,7 +117,9 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
       confirmText: "決定",
     );
     if (picked != null) {
-      setState(() => _deadline = picked);
+      // 期限は選択日の23:59:59に設定（UX改善: 0:00→23:59）
+      setState(() => _deadline = DateTime(
+          picked.year, picked.month, picked.day, 23, 59, 59));
     }
   }
 
@@ -164,7 +166,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
 
     return AlertDialog(
       key: AppKeys.formTaskDialog,
-      title: Text(widget.task == null ? "新規依頼作成" : "依頼編集"),
+      title: Text(widget.task == null ? "新規クエスト登録" : "クエスト編集"),
       content: ConstrainedBox(
         constraints: BoxConstraints(
           maxHeight: MediaQuery.of(context).size.height * 0.55,
@@ -318,7 +320,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                         child: TextField(
                           controller: _subTaskController,
                           decoration: const InputDecoration(
-                              labelText: "サブ依頼追加 (Wizard Ability)"),
+                              labelText: "サブクエスト追加 (Wizard Ability)"),
                           onSubmitted: (_) => _addSubTask(),
                         ),
                       ),

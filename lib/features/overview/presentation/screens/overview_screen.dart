@@ -5,6 +5,7 @@ import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/overview/domain/overview_service.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 
 /// T11: Wizard Lv15 俯瞰の魔眼 — Overview screen with calendar and kanban views.
 class OverviewScreen extends StatelessWidget {
@@ -24,6 +25,14 @@ class OverviewScreen extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('俯瞰の魔眼'),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.help_outline),
+              tooltip: '神託補佐（ヘルプ）',
+              onPressed: () => showHelpDialog(context,
+                  screen: HelpScreen.overview),
+            ),
+          ],
           bottom: const TabBar(
             tabs: [
               Tab(text: 'カレンダー'),
@@ -91,7 +100,7 @@ class _CalendarView extends StatelessWidget {
   Widget build(BuildContext context) {
     final grouped = service.groupTasksByDeadline(tasks);
     if (grouped.isEmpty) {
-      return const Center(child: Text('タスクがありません'));
+      return const Center(child: Text('クエストがありません'));
     }
 
     return ListView(
@@ -154,7 +163,7 @@ class _KanbanView extends StatelessWidget {
   Widget build(BuildContext context) {
     final grouped = service.groupTasksByStatus(tasks);
     if (grouped.isEmpty) {
-      return const Center(child: Text('タスクがありません'));
+      return const Center(child: Text('クエストがありません'));
     }
 
     return SingleChildScrollView(

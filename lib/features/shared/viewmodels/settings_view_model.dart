@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 import 'package:rpg_todo/features/shared/domain/tutorial_service.dart';
+import 'package:injectable/injectable.dart';
 
 /// 設定関連の状態を管理するViewModel
+@lazySingleton
 class SettingsViewModel extends ChangeNotifier {
   final SettingsRepository _settingsRepository;
   final TutorialService _tutorial;
@@ -122,14 +124,6 @@ class SettingsViewModel extends ChangeNotifier {
     await _load<bool>(_settingsRepository.getTutorialChoiceMade, (v) => _tutChosen = v, label: 'tutorialChoiceMade');
     await _load<bool>(_settingsRepository.getJobTutorialCompleted, (v) => _jobTutorialCompleted = v, label: 'jobTutorialCompleted');
     await _load<bool>(_settingsRepository.getDebugModeEnabled, (v) => _debugMode = v, label: 'debugMode');
-
-    // フォントサイズを0.85に固定（和風化改修）
-    if (_fontSize != 0.85) {
-      _fontSize = 0.85;
-      try {
-        await _settingsRepository.setFontSizeScale(0.85);
-      } catch (_) {}
-    }
 
     if (await _tutorial.repairSeenConcept(_tutorialStep, _sawConcept)) {
       _sawConcept = true;

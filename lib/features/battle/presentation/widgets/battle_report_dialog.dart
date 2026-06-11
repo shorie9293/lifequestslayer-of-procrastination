@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/battle/data/quiz_data.dart';
 import 'battle_result_header.dart';
 import 'bonus_message_list.dart';
 import 'level_up_section.dart';
 import 'knowledge_quest_section.dart';
 import 'fatigue_warning_section.dart';
+import 'reflection_input_dialog.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 class BattleReportDialog extends StatefulWidget {
@@ -18,6 +21,14 @@ class BattleReportDialog extends StatefulWidget {
   final bool isOverdueBoss;
   final String? fatigueWarning;
 
+  // v2.1: 振り返り入力連携
+  final String? taskId;
+  final String? taskTitle;
+  final QuestRank? aiDifficulty;
+  final int inputBonusExp;
+  final VoidCallback? onReflectionSubmit;
+  final Player? player;
+
   const BattleReportDialog({
     super.key,
     required this.coinsGained,
@@ -29,6 +40,12 @@ class BattleReportDialog extends StatefulWidget {
     this.onQuizWrong,
     this.isOverdueBoss = false,
     this.fatigueWarning,
+    this.taskId,
+    this.taskTitle,
+    this.aiDifficulty,
+    this.inputBonusExp = 50,
+    this.onReflectionSubmit,
+    this.player,
   });
 
   static Future<void> show(BuildContext context, {
@@ -39,6 +56,9 @@ class BattleReportDialog extends StatefulWidget {
     VoidCallback? onQuizWrong, bool isOverdueBoss = false,
     int? baseExp, String? fatigueWarning,
     int? fatigueWarnThreshold, int? dailyTasksCompleted,
+    String? taskId, String? taskTitle, QuestRank? aiDifficulty,
+    int inputBonusExp = 50, VoidCallback? onReflectionSubmit,
+    Player? player,
   }) => showDialog<void>(
     context: context, barrierDismissible: false,
     builder: (_) => BattleReportDialog(
@@ -48,6 +68,9 @@ class BattleReportDialog extends StatefulWidget {
       quizQuestion: quizQuestion, onQuizCorrect: onQuizCorrect,
       onQuizWrong: onQuizWrong, isOverdueBoss: isOverdueBoss,
       fatigueWarning: fatigueWarning,
+      taskId: taskId, taskTitle: taskTitle, aiDifficulty: aiDifficulty,
+      inputBonusExp: inputBonusExp, onReflectionSubmit: onReflectionSubmit,
+      player: player,
     ),
   );
 
@@ -56,8 +79,29 @@ class BattleReportDialog extends StatefulWidget {
 }
 
 class _BattleReportDialogState extends State<BattleReportDialog> {
+  bool _reflectionShown = false;
+
+  void _openReflection() {
+    if (_reflectionShown || widget.taskId == null) return;
+    _reflectionShown = true;
+
+    ReflectionInputDialog.show(
+      context,
+      taskId: widget.taskId!,
+      taskTitle: widget.taskTitle ?? '不明なクエスト',
+      aiDifficulty: widget.aiDifficulty ?? QuestRank.B,
+      inputBonusExp: widget.inputBonusExp,
+      onSaved: () {
+        widget.onReflectionSubmit?.call();
+      },
+      player: widget.player,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final hasReflection = widget.taskId != null;
+
     return SemanticHelper.container(
       testId: '${SemanticTypes.dialog}_battle_report',
       child: Dialog(
@@ -96,6 +140,28 @@ class _BattleReportDialogState extends State<BattleReportDialog> {
                 if (widget.fatigueWarning != null)
                   FatigueWarningSection(fatigueWarning: widget.fatigueWarning),
                 const SizedBox(height: 24),
+
+                // v2.1: 戦後の一息ボタン
+                if (hasReflection && !_reflectionShown) ...[
+                  SemanticHelper.interactive(
+                    testId: SemanticHelper.createTestId(
+                        SemanticTypes.button, 'open_reflection'),
+                    label: '戦後の一息を記す',
+                    child: ElevatedButton.icon(
+                      onPressed: _openReflection,
+                      icon: const Text('🌳', style: TextStyle(fontSize: 18)),
+                      label: const Text('戦後の一息を記す'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4CAF50),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 12),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+
                 SemanticHelper.interactive(
                   testId: SemanticHelper.createTestId(
                       SemanticTypes.button, 'close_report'),

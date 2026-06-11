@@ -143,8 +143,10 @@ class _FatigueGemDialog extends StatelessWidget {
                     );
                   }
                 } else {
+                  // UX-12: 二重遷移防止 — pop前にrootNavigatorを捕捉し、pop後に安全に遷移
+                  final rootNav = Navigator.of(context, rootNavigator: true);
                   Navigator.of(context).pop();
-                  Navigator.of(context).push(
+                  rootNav.push(
                     MaterialPageRoute(builder: (_) => const GemShopScreen()),
                   );
                 }

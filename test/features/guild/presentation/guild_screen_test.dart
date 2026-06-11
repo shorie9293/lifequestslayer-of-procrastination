@@ -141,7 +141,7 @@ void main() {
       await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 見積もり時間のテキストが表示されていることを確認（完全一致）
-      expect(find.text('未着手の依頼（見積もり）: 45分'), findsOneWidget);
+      expect(find.text('未着手のクエスト（見積もり）: 45分'), findsOneWidget);
     });
 
     testWidgets('複数ギルドタスクの見積もりが合計表示される', (tester) async {
@@ -158,7 +158,7 @@ void main() {
       await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 合計115分が表示されていることを確認
-      expect(find.text('未着手の依頼（見積もり）: 115分'), findsOneWidget);
+      expect(find.text('未着手のクエスト（見積もり）: 115分'), findsOneWidget);
     });
 
     testWidgets(
@@ -177,7 +177,7 @@ void main() {
       await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
       // 30分のみの合計が表示される
-      expect(find.text('未着手の依頼（見積もり）: 30分'), findsOneWidget);
+      expect(find.text('未着手のクエスト（見積もり）: 30分'), findsOneWidget);
     });
 
     // ━━━ 見積もり表示なし ━━━
@@ -202,7 +202,7 @@ void main() {
           (widget) =>
               widget is Text &&
               widget.data != null &&
-              widget.data!.contains('未着手の依頼（見積もり）'),
+              widget.data!.contains('未着手のクエスト（見積もり）'),
         ),
         findsNothing,
       );
@@ -224,7 +224,7 @@ void main() {
           (widget) =>
               widget is Text &&
               widget.data != null &&
-              widget.data!.contains('未着手の依頼（見積もり）'),
+              widget.data!.contains('未着手のクエスト（見積もり）'),
         ),
         findsNothing,
       );
@@ -347,12 +347,15 @@ void main() {
     testWidgets('緊急タスクがなく通常タスクのみの場合でも通常表示は崩れない',
         (tester) async {
       late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+      late String deadlineStr;
 
       await tester.runAsync(() async {
         vms = createViewModels();
         // 期限が48時間先 = 緊急ではない
         final deadline =
             DateTime.now().add(const Duration(hours: 48));
+        deadlineStr =
+            '${deadline.year}/${deadline.month.toString().padLeft(2, '0')}/${deadline.day.toString().padLeft(2, '0')}';
         vms.task.addTask('通常依頼', rank: QuestRank.B, deadline: deadline);
       });
 
@@ -360,7 +363,12 @@ void main() {
 
       // 緊急セクションは表示されない
       expect(find.byKey(AppKeys.guildUrgentSection), findsNothing);
-      // 通常依頼はギルドリストに表示される
+      // 通常依頼はコンパクト表示（難易度+期限のみ）で存在確認 → 展開するとタイトル表示
+      // コンパクト状態では期日が表示されている
+      expect(find.textContaining(deadlineStr), findsOneWidget);
+      // 展開するとタイトルが表示される
+      await tester.tap(find.textContaining(deadlineStr));
+      await tester.pumpAndSettle();
       expect(find.textContaining('通常依頼'), findsOneWidget);
     });
   });

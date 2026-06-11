@@ -5,6 +5,7 @@ import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
 import 'package:rpg_todo/features/character_customization/presentation/equipment_tab.dart';
+import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'widgets/coin_gem_balance_bar.dart';
 import 'widgets/home_shop_section.dart';
 import 'widgets/skin_section.dart';
@@ -38,6 +39,14 @@ class TownScreen extends StatelessWidget {
         key: AppKeys.townScreen,
         appBar: AppBar(
           title: Text("${scale.displayName} — ${hd['name']}"),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.help_outline),
+              tooltip: '神託補佐（ヘルプ）',
+              onPressed: () =>
+                  showHelpDialog(context, screen: HelpScreen.town),
+            ),
+          ],
           bottom: const TabBar(
             labelColor: Color(0xFFFFD700),
             unselectedLabelColor: Colors.white54,

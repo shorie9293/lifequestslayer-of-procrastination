@@ -8,6 +8,7 @@ import 'package:rpg_todo/features/guild/presentation/widgets/task_card.dart';
 import 'widgets/battle_report_dialog.dart';
 import 'widgets/particle_effect.dart';
 import 'widgets/combat_selection_bar.dart';
+import 'widgets/fatigue_gem_popup.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/features/battle/domain/battle_action.dart';
@@ -15,6 +16,7 @@ import 'package:rpg_todo/features/battle/data/quiz_data.dart';
 import 'package:rpg_todo/core/testing/tutorial_keys.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// M4禍津対策: 連打ガード用セット
@@ -90,8 +92,16 @@ class _BattleScreenState extends State<BattleScreen> {
       if (stillActive) {
         final task = taskVM.activeTasks.firstWhere((t) => t.id == taskId);
         if (task.subTasks.any((s) => !s.isCompleted)) {
+          // UX-3: 討伐失敗時、未完了サブタスクの名前を表示
+          final remaining = task.subTasks
+              .where((s) => !s.isCompleted)
+              .map((s) => '・${s.title}')
+              .join('\n');
           scaffoldMessenger.showSnackBar(
-            const SnackBar(content: Text("サブ依頼が残っています！")),
+            SnackBar(
+              content: Text("サブクエストが残っています:\n$remaining"),
+              duration: const Duration(seconds: 4),
+            ),
           );
         }
       }
@@ -117,34 +127,16 @@ class _BattleScreenState extends State<BattleScreen> {
     final isOverdueBoss = result['isOverdueBoss'] as bool? ?? false;
     final wrongAnswerPenaltyExp = result['wrongAnswerPenaltyExp'] as int? ?? 0;
     final wrongAnswerPenaltyCoins = result['wrongAnswerPenaltyCoins'] as int? ?? 0;
+    final showFatiguePopup = result['showFatiguePopup'] as bool? ?? false;
 
-    // 討伐成功メッセージ (SnackBar)
-    if (bonusMessages.isNotEmpty) {
-          scaffoldMessenger.showSnackBar(SnackBar(
-            content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-              Text("見事仕留めた！ $coinsGained 文を獲得しました！"),
-              const SizedBox(height: 4),
-              ...bonusMessages.map((msg) => Text(msg,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, color: Colors.amberAccent))),
-            ]),
-            duration: const Duration(seconds: 4),
-          ));
-    } else {
-      scaffoldMessenger.showSnackBar(
-        SnackBar(content: Text("見事仕留めた！ $coinsGained 文を獲得しました！")),
-      );
-    }
+    // UX-6: 戦果報告書の統合 — SnackBarを廃止し、全てのフィードバックを戦果報告書ダイアログに集約
 
     // 討伐完了パーティクルエフェクト → 戦果報告書（統合ダイアログ）
     // navigator を事前捕捉してあるので、リスト項目が dispose されても確実に pop できる。
     final dialogContext = navigator.context;
     bool effectClosed = false;
 
-    void showBattleReport() {
+    Future<void> showBattleReport() async {
       if (!dialogContext.mounted) return;
       final player = playerVM.player;
       // 疲労警告用の判定
@@ -158,7 +150,7 @@ class _BattleScreenState extends State<BattleScreen> {
         fatigueWarning = '疲れが溜まってきました。宿屋で一息つきませんか？';
       }
 
-      BattleReportDialog.show(
+      await BattleReportDialog.show(
         dialogContext,
         coinsGained: coinsGained,
         bonusMessages: bonusMessages,
@@ -192,6 +184,12 @@ class _BattleScreenState extends State<BattleScreen> {
         fatigueWarnThreshold: warnThresh,
         dailyTasksCompleted: dailyDone,
       );
+
+      // UX-12: 疲労ポップアップを戦果報告書の後に表示
+      // rootNavigator経由で二重遷移を防止する
+      if (showFatiguePopup && dialogContext.mounted) {
+        await FatigueGemPopup.show(dialogContext);
+      }
     }
 
     showGeneralDialog(
@@ -256,6 +254,14 @@ class _BattleScreenState extends State<BattleScreen> {
       key: AppKeys.battleScreen,
       appBar: AppBar(
         title: Text(_taskInCombat != null ? "⚔️ 戦術選択" : "修練場"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.help_outline),
+            tooltip: '神託補佐（ヘルプ）',
+            onPressed: () =>
+                showHelpDialog(context, screen: HelpScreen.battle),
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -277,7 +283,7 @@ class _BattleScreenState extends State<BattleScreen> {
                   ? const Center(
                       key: AppKeys.battleEmptyState,
                       child: Text(
-                        "依頼がありません。\n寄合所で受注してください！",
+                        "クエストがありません。\n寄合所で受注してください！",
                         textAlign: TextAlign.center,
                         style: TextStyle(fontSize: 20, color: Colors.grey),
                       ),
@@ -325,7 +331,7 @@ class _BattleScreenState extends State<BattleScreen> {
                             SemanticHelper.interactive(
                               testId: SemanticHelper.createTestId(
                                   SemanticTypes.button, 'cancel_task'),
-                              label: '依頼を寄合所に戻す',
+                              label: 'クエストを寄合所に戻す',
                               child: IconButton(
                                 key: AppKeys.battleCancel,
                                 icon: const Icon(Icons.undo, color: Colors.grey),
@@ -334,8 +340,9 @@ class _BattleScreenState extends State<BattleScreen> {
                                     context: context,
                                     builder: (ctx) => AlertDialog(
                                       key: AppKeys.confirmDialog,
-                                      title: const Text("依頼を戻す"),
-                                      content: const Text("この依頼を寄合所に戻しますか？"),
+                                      title: const Text("クエストを戻す"),
+                                      content: const Text(
+                                          "このクエストを寄合所に戻しますか？\n\n⚠ 撤退には体力を消耗します（討伐1回分と同量）"),
                                       actions: [
                                         TextButton(
                                           onPressed: () => Navigator.pop(ctx),
@@ -344,13 +351,18 @@ class _BattleScreenState extends State<BattleScreen> {
                                         TextButton(
                                           onPressed: () {
                                             Navigator.pop(ctx);
-                                            taskVM.cancelTask(task.id); taskVM.save();
+                                            // 体力消費：1タスク完了分
+                                            playerVM.player.dailyTasksCompleted++;
+                                            playerVM.save();
+                                            taskVM.cancelTask(task.id);
+                                            taskVM.save();
                                             ScaffoldMessenger.of(context).showSnackBar(
                                               const SnackBar(
-                                                  content: Text("依頼を寄合所に戻しました")),
+                                                  content: Text("クエストを寄合所に戻しました（体力を消耗した…）")),
                                             );
                                           },
-                                          child: const Text("戻す"),
+                                          child: const Text("戻す（体力消費）",
+                                              style: TextStyle(color: Colors.orange)),
                                         ),
                                       ],
                                     ),

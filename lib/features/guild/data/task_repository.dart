@@ -2,7 +2,9 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
+import 'package:injectable/injectable.dart';
 
+@LazySingleton(as: ITaskRepository)
 class TaskRepository implements ITaskRepository {
   static const String boxName = 'tasksBox';
   static const String _backupBoxName = 'tasksBox_backup';
@@ -30,7 +32,9 @@ class TaskRepository implements ITaskRepository {
       box = await _getBox();
 
       // Migration: convert legacy integer-keyed entries to ID-keyed entries.
-      final needsMigration = box.keys.any((k) => k is int);
+      // O(1) check: if first key is not int, migration already done
+      final needsMigration =
+          box.keys.isNotEmpty && box.keys.first is int;
       if (needsMigration) {
         final tasks = box.values.toList();
         await box.clear();
@@ -40,7 +44,25 @@ class TaskRepository implements ITaskRepository {
         await box.flush();
       }
 
-      return box.values.toList();
+      // Migration v1.6: 既存の期限を0:00→23:59:59に変換
+      final tasks = box.values.toList();
+      var needsDeadlineFix = false;
+      for (final t in tasks) {
+        if (t.deadline != null &&
+            t.deadline!.hour == 0 &&
+            t.deadline!.minute == 0 &&
+            t.deadline!.second == 0) {
+          t.deadline = DateTime(
+              t.deadline!.year, t.deadline!.month, t.deadline!.day, 23, 59, 59);
+          needsDeadlineFix = true;
+        }
+      }
+      if (needsDeadlineFix) {
+        await box.putAll({for (final t in tasks) t.id: t});
+        await box.flush();
+      }
+
+      return tasks;
     } catch (e) {
       // v1.3: 破損時にバックアップから復元を試みる
       debugPrint(
