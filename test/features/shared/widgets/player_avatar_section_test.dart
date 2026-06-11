@@ -73,7 +73,7 @@ void main() {
     });
 
     testWidgets('キャラクタースキン装備時に絵文字アイコンを表示', (tester) async {
-      final skin = CharacterSkin(
+      const skin = CharacterSkin(
         faceId: 'warrior_face',
         hairId: 'spiky',
         armorId: 'leather_armor',
@@ -98,7 +98,7 @@ void main() {
     });
 
     testWidgets('一部のみ装備時は装備済み部位のみ表示', (tester) async {
-      final skin = CharacterSkin(
+      const skin = CharacterSkin(
         faceId: 'sage_face',
         weaponId: 'longsword',
       );

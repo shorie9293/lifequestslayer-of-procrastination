@@ -230,7 +230,7 @@ void main() {
       }
     });
 
-    Future<FileCrossAppRewardService> _createService() async {
+    Future<FileCrossAppRewardService> createService() async {
       return FileCrossAppRewardService(
         filePath: tempFilePath,
         hiveBoxName: 'cross_app_rewards_test',
@@ -238,7 +238,7 @@ void main() {
     }
 
     test('ファイルが存在しない場合 空リストを返す', () async {
-      final service = await _createService();
+      final service = await createService();
       final rewards = await service.processPendingEvents(
         linkedUserId: 'test1234',
       );
@@ -255,7 +255,7 @@ void main() {
       });
       await File(tempFilePath).writeAsString('$line\n');
 
-      final service = await _createService();
+      final service = await createService();
       final rewards = await service.processPendingEvents(
         linkedUserId: 'test1234',
       );
@@ -279,7 +279,7 @@ void main() {
       });
       await File(tempFilePath).writeAsString('$line\n');
 
-      final service = await _createService();
+      final service = await createService();
 
       // 1回目: 処理される
       final rewards1 = await service.processPendingEvents(
@@ -304,7 +304,7 @@ void main() {
       });
       await File(tempFilePath).writeAsString('$line\n');
 
-      final service = await _createService();
+      final service = await createService();
       final rewards = await service.processPendingEvents(
         linkedUserId: null,
       );
@@ -321,7 +321,7 @@ void main() {
       });
       await File(tempFilePath).writeAsString('$line\n');
 
-      final service = await _createService();
+      final service = await createService();
       final rewards = await service.processPendingEvents(
         linkedUserId: 'test1234',
       );
@@ -339,9 +339,9 @@ void main() {
           'metadata': {'count': 1},
         }),
       ];
-      await File(tempFilePath).writeAsString(lines.join('\n') + '\n');
+      await File(tempFilePath).writeAsString('${lines.join('\n')}\n');
 
-      final service = await _createService();
+      final service = await createService();
       final rewards = await service.processPendingEvents(
         linkedUserId: 'test1234',
       );
@@ -373,9 +373,9 @@ void main() {
           'metadata': {},
         }),
       ];
-      await File(tempFilePath).writeAsString(lines.join('\n') + '\n');
+      await File(tempFilePath).writeAsString('${lines.join('\n')}\n');
 
-      final service = await _createService();
+      final service = await createService();
       final rewards = await service.processPendingEvents(
         linkedUserId: 'test1234',
       );
@@ -429,10 +429,10 @@ void main() {
             'metadata': {},
           }),
         ];
-        await File(tempFilePath).writeAsString(lines.join('\n') + '\n');
+        await File(tempFilePath).writeAsString('${lines.join('\n')}\n');
 
         // 新しいbox名で毎回異なるboxを使う
-        final boxName = 'cross_app_test_${eventType}';
+        final boxName = 'cross_app_test_$eventType';
         final service = FileCrossAppRewardService(
           filePath: tempFilePath,
           hiveBoxName: boxName,

@@ -241,7 +241,7 @@ void main() {
 
     group('BattlePhaseException', () {
       test('message に遷移情報が含まれる', () {
-        final ex = BattlePhaseException(
+        const ex = BattlePhaseException(
           'test error',
           from: BattleState.idle,
           to: BattleState.attacking,

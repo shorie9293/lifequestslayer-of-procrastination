@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:rpg_todo/domain/models/job.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
 

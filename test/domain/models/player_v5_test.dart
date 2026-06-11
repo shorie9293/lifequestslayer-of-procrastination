@@ -28,7 +28,7 @@ void main() {
   // ━━━ ヘルパー ━━━
 
   /// Player → bytes → Player の往復
-  Player _roundtrip(Player player) {
+  Player roundtrip(Player player) {
     final writer = BinaryWriterImpl(registry);
     adapter.write(writer, player);
     final bytes = writer.toBytes();
@@ -37,7 +37,7 @@ void main() {
   }
 
   /// 指定された format version で byte 列を偽装して読み込む（移行テスト用）
-  Player _readWithVersion(
+  Player readWithVersion(
     int version,
     void Function(BinaryWriter) writePayload,
   ) {
@@ -59,7 +59,7 @@ void main() {
   group('PlayerAdapter v5 roundtrip', () {
     test('デフォルト値の往復', () {
       final original = Player();
-      final restored = _roundtrip(original);
+      final restored = roundtrip(original);
 
       expect(restored.skillPoints, 0);
       expect(restored.unlockedSkillIds, isEmpty);
@@ -72,7 +72,7 @@ void main() {
         skillPoints: 5,
         unlockedSkillIds: ['war_flash', 'cle_prayer'],
       );
-      final restored = _roundtrip(player);
+      final restored = roundtrip(player);
 
       expect(restored.skillPoints, 5);
       expect(restored.unlockedSkillIds, ['war_flash', 'cle_prayer']);
@@ -90,7 +90,7 @@ void main() {
         streakDays: 7,
         gems: 10,
       );
-      final restored = _roundtrip(player);
+      final restored = roundtrip(player);
 
       expect(restored.jobLevels[Job.adventurer], 10);
       expect(restored.jobLevels[Job.warrior], 5);
@@ -108,7 +108,7 @@ void main() {
 
   group('v4 → v5 migration', () {
     test('v4 データ読み込み時に skillPoints が冒険者Lvに基づいて計算される', () {
-      final player = _readWithVersion(4, (writer) {
+      final player = readWithVersion(4, (writer) {
         // v4 の write を模倣（v4のフィールド列を手書き）
         // format version byte は _readWithVersion が上書きするのでここではダミー
         writer.writeByte(4); // dummy (overwritten)
@@ -162,7 +162,7 @@ void main() {
 
     test('v4 データで nodes 解放済みなら skillPoints が正しく差分計算される', () {
       // Lv9 冒険者 → 3ポイント獲得。2コスト使って war_flash 解放済み → 残り1
-      final player = _readWithVersion(4, (writer) {
+      final player = readWithVersion(4, (writer) {
         writer.writeByte(4);
         writer.writeMap({Job.adventurer: 9});
         writer.writeMap({Job.adventurer: 0});

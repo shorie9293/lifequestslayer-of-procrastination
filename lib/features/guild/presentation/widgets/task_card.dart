@@ -100,7 +100,7 @@ class _TaskCardState extends State<TaskCard>
       } else if (diff.inHours > 0) {
         final mins = diff.inMinutes % 60;
         _countdownText = '⏱ あと${diff.inHours}時間'
-            '${mins > 0 ? '${mins}分' : ''}';
+            '${mins > 0 ? '$mins分' : ''}';
       } else if (diff.inMinutes > 0) {
         _countdownText = '⏱ あと${diff.inMinutes}分';
       } else {

@@ -125,7 +125,7 @@ class _GuildScreenState extends State<GuildScreen> {
       QuestRank.A => '👹',
       QuestRank.B => '👺',
     };
-    final rankStr = '${rankEmoji} [${task.rank.name}]';
+    final rankStr = '$rankEmoji [${task.rank.name}]';
     if (task.deadline != null) {
       final d = task.deadline!;
       return '$rankStr  📅 ${d.year}/${d.month.toString().padLeft(2, '0')}/${d.day.toString().padLeft(2, '0')}';
@@ -141,10 +141,10 @@ class _GuildScreenState extends State<GuildScreen> {
     final hours = diff.inHours;
     final minutes = diff.inMinutes % 60;
     if (hours > 0) {
-      return 'あと${hours}時間${minutes > 0 ? '${minutes}分' : ''}';
+      return 'あと$hours時間${minutes > 0 ? '$minutes分' : ''}';
     }
     if (minutes > 0) {
-      return 'あと${minutes}分';
+      return 'あと$minutes分';
     }
     return 'まもなく締切';
   }

@@ -3,16 +3,16 @@ import 'package:rpg_todo/features/battle/domain/combo_system.dart';
 
 void main() {
   /// テスト用の固定時刻を返すクロック。
-  DateTime _now = DateTime(2026, 6, 7, 12, 0, 0);
-  DateTime _fixedClock() => _now;
+  DateTime now = DateTime(2026, 6, 7, 12, 0, 0);
+  DateTime fixedClock() => now;
 
   /// 時刻を進めるヘルパー。
-  void _advance(Duration d) => _now = _now.add(d);
+  void advance(Duration d) => now = now.add(d);
 
   group('ComboSystem', () {
     group('初期状態', () {
       test('コンボ数0、倍率1.0', () {
-        final combo = ComboSystem(clock: _fixedClock);
+        final combo = ComboSystem(clock: fixedClock);
         expect(combo.comboCount, 0);
         expect(combo.currentMultiplier, 1.0);
         expect(combo.isComboActive, false);
@@ -22,7 +22,7 @@ void main() {
 
     group('onVictory', () {
       test('討伐成功でコンボ数が増加', () {
-        final combo = ComboSystem(clock: _fixedClock);
+        final combo = ComboSystem(clock: fixedClock);
         combo.onVictory();
         expect(combo.comboCount, 1);
         combo.onVictory();
@@ -32,7 +32,7 @@ void main() {
       });
 
       test('コンボ倍率が正しく計算される', () {
-        final combo = ComboSystem(clock: _fixedClock);
+        final combo = ComboSystem(clock: fixedClock);
         // combo=0: multiplier=1.0
         expect(combo.currentMultiplier, 1.0);
 
@@ -55,7 +55,7 @@ void main() {
 
       test('コンボ倍率が上限を超えない', () {
         final combo = ComboSystem(
-          clock: _fixedClock,
+          clock: fixedClock,
           maxMultiplier: 3.0,
           multiplierStep: 0.1,
         );
@@ -69,14 +69,14 @@ void main() {
 
     group('タイムアウト', () {
       test('30分以内の討伐ではコンボ継続', () {
-        _now = DateTime(2026, 6, 7, 12, 0, 0);
-        final combo = ComboSystem(clock: _fixedClock);
+        now = DateTime(2026, 6, 7, 12, 0, 0);
+        final combo = ComboSystem(clock: fixedClock);
 
         combo.onVictory(); // combo=1
-        _advance(const Duration(minutes: 10));
+        advance(const Duration(minutes: 10));
 
         combo.onVictory(); // combo=2
-        _advance(const Duration(minutes: 20));
+        advance(const Duration(minutes: 20));
 
         combo.onVictory(); // combo=3
         expect(combo.comboCount, 3);
@@ -84,9 +84,9 @@ void main() {
       });
 
       test('30分経過でコンボリセット', () {
-        _now = DateTime(2026, 6, 7, 12, 0, 0);
+        now = DateTime(2026, 6, 7, 12, 0, 0);
         final combo = ComboSystem(
-          clock: _fixedClock,
+          clock: fixedClock,
           comboTimeout: const Duration(minutes: 30),
         );
 
@@ -96,22 +96,22 @@ void main() {
         expect(combo.comboCount, 3);
 
         // 30分経過
-        _advance(const Duration(minutes: 31));
+        advance(const Duration(minutes: 31));
         expect(combo.comboCount, 0);
         expect(combo.currentMultiplier, 1.0);
         expect(combo.isComboActive, false);
       });
 
       test('30分経過後の討伐はコンボ1から再開', () {
-        _now = DateTime(2026, 6, 7, 12, 0, 0);
-        final combo = ComboSystem(clock: _fixedClock);
+        now = DateTime(2026, 6, 7, 12, 0, 0);
+        final combo = ComboSystem(clock: fixedClock);
 
         combo.onVictory();
         combo.onVictory();
         combo.onVictory();
         expect(combo.comboCount, 3);
 
-        _advance(const Duration(minutes: 35));
+        advance(const Duration(minutes: 35));
         // タイムアウトを経ての討伐
         combo.onVictory();
         expect(combo.comboCount, 1); // リセットされて1から
@@ -119,9 +119,9 @@ void main() {
       });
 
       test('カスタムタイムアウト時間を設定可能', () {
-        _now = DateTime(2026, 6, 7, 12, 0, 0);
+        now = DateTime(2026, 6, 7, 12, 0, 0);
         final combo = ComboSystem(
-          clock: _fixedClock,
+          clock: fixedClock,
           comboTimeout: const Duration(minutes: 5),
         );
 
@@ -129,14 +129,14 @@ void main() {
         combo.onVictory();
         expect(combo.comboCount, 2);
 
-        _advance(const Duration(minutes: 6));
+        advance(const Duration(minutes: 6));
         expect(combo.comboCount, 0);
       });
     });
 
     group('onDefeat', () {
       test('敗北ではコンボ数は増加しない', () {
-        final combo = ComboSystem(clock: _fixedClock);
+        final combo = ComboSystem(clock: fixedClock);
         combo.onVictory();
         combo.onVictory();
         expect(combo.comboCount, 2);
@@ -146,8 +146,8 @@ void main() {
       });
 
       test('敗北後もタイムアウトまではコンボが維持される', () {
-        _now = DateTime(2026, 6, 7, 12, 0, 0);
-        final combo = ComboSystem(clock: _fixedClock);
+        now = DateTime(2026, 6, 7, 12, 0, 0);
+        final combo = ComboSystem(clock: fixedClock);
 
         combo.onVictory();
         combo.onVictory();
@@ -157,7 +157,7 @@ void main() {
         combo.onDefeat(); // 敗北
         expect(combo.comboCount, 3); // 維持
 
-        _advance(const Duration(minutes: 20)); // まだ30分未満
+        advance(const Duration(minutes: 20)); // まだ30分未満
         expect(combo.isComboActive, true);
         expect(combo.comboCount, 3);
 
@@ -169,7 +169,7 @@ void main() {
 
     group('reset', () {
       test('コンボを強制リセット', () {
-        final combo = ComboSystem(clock: _fixedClock);
+        final combo = ComboSystem(clock: fixedClock);
         combo.onVictory();
         combo.onVictory();
         combo.onVictory();
@@ -185,13 +185,13 @@ void main() {
 
     group('calcComboBonusExp', () {
       test('コンボ1ではボーナス0', () {
-        final combo = ComboSystem(clock: _fixedClock);
+        final combo = ComboSystem(clock: fixedClock);
         combo.onVictory(); // combo=1
         expect(combo.calcComboBonusExp(100), 0);
       });
 
       test('コンボ数に応じたボーナスEXPを計算', () {
-        final combo = ComboSystem(clock: _fixedClock);
+        final combo = ComboSystem(clock: fixedClock);
         combo.onVictory(); // combo=1
         combo.onVictory(); // combo=2, multiplier=1.1
         // bonus = 100 * (1.1 - 1.0) = 100 * 0.1 = 10
@@ -203,34 +203,34 @@ void main() {
       });
 
       test('タイムアウト後はボーナス0', () {
-        _now = DateTime(2026, 6, 7, 12, 0, 0);
-        final combo = ComboSystem(clock: _fixedClock);
+        now = DateTime(2026, 6, 7, 12, 0, 0);
+        final combo = ComboSystem(clock: fixedClock);
 
         combo.onVictory();
         combo.onVictory();
         combo.onVictory();
         expect(combo.calcComboBonusExp(100), 20);
 
-        _advance(const Duration(minutes: 31));
+        advance(const Duration(minutes: 31));
         expect(combo.calcComboBonusExp(100), 0);
       });
     });
 
     group('remainingComboTime', () {
       test('コンボ有効時の残り時間', () {
-        _now = DateTime(2026, 6, 7, 12, 0, 0);
-        final combo = ComboSystem(clock: _fixedClock);
+        now = DateTime(2026, 6, 7, 12, 0, 0);
+        final combo = ComboSystem(clock: fixedClock);
 
         combo.onVictory();
         combo.onVictory();
         expect(combo.remainingComboTime.inMinutes, 30);
 
-        _advance(const Duration(minutes: 10));
+        advance(const Duration(minutes: 10));
         expect(combo.remainingComboTime.inMinutes, 20);
       });
 
       test('コンボ無効時は Duration.zero', () {
-        final combo = ComboSystem(clock: _fixedClock);
+        final combo = ComboSystem(clock: fixedClock);
         expect(combo.remainingComboTime, Duration.zero);
 
         combo.onVictory(); // combo=1 では isComboActive=false
@@ -240,8 +240,8 @@ void main() {
 
     group('isComboActive', () {
       test('コンボ数2以上かつタイムアウトしていなければ true', () {
-        _now = DateTime(2026, 6, 7, 12, 0, 0);
-        final combo = ComboSystem(clock: _fixedClock);
+        now = DateTime(2026, 6, 7, 12, 0, 0);
+        final combo = ComboSystem(clock: fixedClock);
 
         expect(combo.isComboActive, false);
         combo.onVictory();
@@ -249,7 +249,7 @@ void main() {
         combo.onVictory();
         expect(combo.isComboActive, true); // combo=2 で true
 
-        _advance(const Duration(minutes: 31));
+        advance(const Duration(minutes: 31));
         expect(combo.isComboActive, false); // タイムアウト
       });
     });

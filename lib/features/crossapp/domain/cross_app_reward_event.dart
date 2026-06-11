@@ -37,19 +37,19 @@ class CrossAppRewardEvent {
     final metadata = json['metadata'] as Map<String, dynamic>?;
 
     if (eventId == null || eventId.isEmpty) {
-      throw FormatException('event_id は必須です');
+      throw const FormatException('event_id は必須です');
     }
     if (eventType == null || eventType.isEmpty) {
-      throw FormatException('event_type は必須です');
+      throw const FormatException('event_type は必須です');
     }
     if (!knownEventTypes.contains(eventType)) {
       // 未知のイベントタイプは許容するが、警告ログを残すのが望ましい
     }
     if (timestampStr == null || timestampStr.isEmpty) {
-      throw FormatException('timestamp は必須です');
+      throw const FormatException('timestamp は必須です');
     }
     if (userId == null || userId.isEmpty) {
-      throw FormatException('user_id は必須です');
+      throw const FormatException('user_id は必須です');
     }
 
     final timestamp = DateTime.tryParse(timestampStr);
@@ -70,7 +70,7 @@ class CrossAppRewardEvent {
   static CrossAppRewardEvent parseLine(String line) {
     final trimmed = line.trim();
     if (trimmed.isEmpty) {
-      throw FormatException('空行です');
+      throw const FormatException('空行です');
     }
     try {
       final decoded = json.decode(trimmed) as Map<String, dynamic>;

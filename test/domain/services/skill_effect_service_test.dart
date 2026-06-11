@@ -484,7 +484,6 @@ void main() {
       const wizardIds = ['wiz_foresight', 'wiz_split', 'wiz_transfer'];
 
       for (final ids in [warriorIds, clericIds, wizardIds]) {
-        int total = 0;
         for (final id in ids) {
           final cfg = skillEffectConfig[id]!;
           // Cost is stored in skillTreeDefinition, not here

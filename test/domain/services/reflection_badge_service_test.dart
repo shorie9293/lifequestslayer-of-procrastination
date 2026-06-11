@@ -40,7 +40,7 @@ void main() {
   // ── ヘルパー ──
 
   /// 振り返りを作成して保存する
-  Future<Reflection> _createReflection({
+  Future<Reflection> createReflection({
     String id = 'r1',
     String taskId = 't1',
     DateTime? date,
@@ -161,7 +161,7 @@ void main() {
       final player = Player();
       final messages = <String>[];
 
-      final reflection = await _createReflection(
+      final reflection = await createReflection(
         content: 'これは50文字以上の振り返り内容です。十分な長さがあれば内省バッジが獲得できます。テスト用の長文です。',
       );
 
@@ -178,7 +178,7 @@ void main() {
       final player = Player();
       final messages = <String>[];
 
-      final reflection = await _createReflection(content: '短い');
+      final reflection = await createReflection(content: '短い');
 
       player.recordReflection();
       await ReflectionBadgeService.checkBadges(
@@ -193,7 +193,7 @@ void main() {
       final player = Player();
       final messages = <String>[];
 
-      final reflection = await _createReflection(
+      final reflection = await createReflection(
         content: 'A' * 100,
       );
 
@@ -212,7 +212,7 @@ void main() {
       final player = Player();
       final messages = <String>[];
 
-      final reflection = await _createReflection(selfDifficulty: 4);
+      final reflection = await createReflection(selfDifficulty: 4);
 
       player.recordReflection();
       await ReflectionBadgeService.checkBadges(
@@ -227,7 +227,7 @@ void main() {
       final player = Player();
       final messages = <String>[];
 
-      final reflection = await _createReflection(selfDifficulty: 3);
+      final reflection = await createReflection(selfDifficulty: 3);
 
       player.recordReflection();
       await ReflectionBadgeService.checkBadges(
@@ -246,9 +246,9 @@ void main() {
       final now = DateTime.now();
 
       // 3日連続で振り返りを作成
-      await _createReflection(id: 's1', date: now.subtract(const Duration(days: 2)));
-      await _createReflection(id: 's2', date: now.subtract(const Duration(days: 1)));
-      await _createReflection(id: 's3', date: now);
+      await createReflection(id: 's1', date: now.subtract(const Duration(days: 2)));
+      await createReflection(id: 's2', date: now.subtract(const Duration(days: 1)));
+      await createReflection(id: 's3', date: now);
 
       player.recordReflection();
       player.recordReflection();
@@ -267,7 +267,7 @@ void main() {
       final now = DateTime.now();
 
       for (int i = 6; i >= 0; i--) {
-        await _createReflection(
+        await createReflection(
           id: 's7_$i',
           date: now.subtract(Duration(days: i)),
         );
@@ -289,9 +289,9 @@ void main() {
       final now = DateTime.now();
 
       // 1日おき（連続してない）
-      await _createReflection(id: 'g1', date: now.subtract(const Duration(days: 4)));
-      await _createReflection(id: 'g2', date: now.subtract(const Duration(days: 2)));
-      await _createReflection(id: 'g3', date: now);
+      await createReflection(id: 'g1', date: now.subtract(const Duration(days: 4)));
+      await createReflection(id: 'g2', date: now.subtract(const Duration(days: 2)));
+      await createReflection(id: 'g3', date: now);
 
       player.recordReflection();
       player.recordReflection();
@@ -312,11 +312,11 @@ void main() {
       final messages = <String>[];
 
       // AI=S(5), self=5 → 一致
-      await _createReflection(id: 'a1', selfDifficulty: 5, aiDifficulty: QuestRank.S);
+      await createReflection(id: 'a1', selfDifficulty: 5, aiDifficulty: QuestRank.S);
       // AI=A(3), self=3 → 一致
-      await _createReflection(id: 'a2', selfDifficulty: 3, aiDifficulty: QuestRank.A);
+      await createReflection(id: 'a2', selfDifficulty: 3, aiDifficulty: QuestRank.A);
       // AI=B(1), self=1 → 一致
-      await _createReflection(id: 'a3', selfDifficulty: 1, aiDifficulty: QuestRank.B);
+      await createReflection(id: 'a3', selfDifficulty: 1, aiDifficulty: QuestRank.B);
 
       player.recordReflection();
       player.recordReflection();
@@ -334,9 +334,9 @@ void main() {
       final player = Player();
       final messages = <String>[];
 
-      await _createReflection(id: 'm1', selfDifficulty: 5, aiDifficulty: QuestRank.S);
-      await _createReflection(id: 'm2', selfDifficulty: 3, aiDifficulty: QuestRank.A);
-      await _createReflection(id: 'm3', selfDifficulty: 3, aiDifficulty: QuestRank.S); // 不一致
+      await createReflection(id: 'm1', selfDifficulty: 5, aiDifficulty: QuestRank.S);
+      await createReflection(id: 'm2', selfDifficulty: 3, aiDifficulty: QuestRank.A);
+      await createReflection(id: 'm3', selfDifficulty: 3, aiDifficulty: QuestRank.S); // 不一致
 
       player.recordReflection();
       player.recordReflection();

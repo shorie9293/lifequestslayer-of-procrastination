@@ -216,18 +216,18 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return const Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('🌳', style: TextStyle(fontSize: 64)),
-          const SizedBox(height: 16),
-          const Text(
+          Text('🌳', style: TextStyle(fontSize: 64)),
+          SizedBox(height: 16),
+          Text(
             'まだ振り返りがありません。',
             style: TextStyle(fontSize: 18, color: Colors.white70),
           ),
-          const SizedBox(height: 8),
-          const Text(
+          SizedBox(height: 8),
+          Text(
             '討伐後に「戦後の一息」で\n学びを記してみましょう。',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14, color: Colors.white38),
@@ -392,10 +392,10 @@ class _ComparisonChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (data.isEmpty) return;
 
-    final leftPad = 30.0;
-    final rightPad = 12.0;
-    final topPad = 12.0;
-    final bottomPad = 28.0;
+    const leftPad = 30.0;
+    const rightPad = 12.0;
+    const topPad = 12.0;
+    const bottomPad = 28.0;
     final chartW = size.width - leftPad - rightPad;
     final chartH = size.height - topPad - bottomPad;
 
@@ -417,7 +417,7 @@ class _ComparisonChartPainter extends CustomPainter {
     }
 
     // Y軸ラベル
-    final labelStyle = TextStyle(color: Colors.white38, fontSize: 9);
+    const labelStyle = TextStyle(color: Colors.white38, fontSize: 9);
     for (int i = 1; i <= 5; i++) {
       final y = topPad + chartH * (1 - i / maxVal);
       final tp = TextPainter(
@@ -486,7 +486,7 @@ class _ComparisonChartPainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    selfLabel.paint(canvas, Offset(leftPad, 2));
+    selfLabel.paint(canvas, const Offset(leftPad, 2));
     aiLabel.paint(canvas, Offset(leftPad + selfLabel.width + 16, 2));
   }
 
@@ -639,10 +639,10 @@ class _TrendChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (data.length < 2) return;
 
-    final leftPad = 30.0;
-    final rightPad = 12.0;
-    final topPad = 12.0;
-    final bottomPad = 28.0;
+    const leftPad = 30.0;
+    const rightPad = 12.0;
+    const topPad = 12.0;
+    const bottomPad = 28.0;
     final chartW = size.width - leftPad - rightPad;
     final chartH = size.height - topPad - bottomPad;
 
@@ -749,7 +749,7 @@ class _TrendChartPainter extends CustomPainter {
       ),
       textDirection: TextDirection.ltr,
     )..layout();
-    selfLabel.paint(canvas, Offset(leftPad, 2));
+    selfLabel.paint(canvas, const Offset(leftPad, 2));
     aiLabel.paint(canvas, Offset(leftPad + selfLabel.width + 16, 2));
   }
 

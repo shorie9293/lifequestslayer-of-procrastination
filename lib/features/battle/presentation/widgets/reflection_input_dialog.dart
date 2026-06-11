@@ -220,7 +220,7 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
                   style: const TextStyle(color: Colors.white, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: '例: 小さく始める勇気が大事だと気づいた',
-                    hintStyle: TextStyle(color: Colors.white30, fontSize: 13),
+                    hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
                     filled: true,
                     fillColor: Colors.black26,
                     border: OutlineInputBorder(
@@ -229,7 +229,7 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: BorderSide(color: Colors.white12),
+                      borderSide: const BorderSide(color: Colors.white12),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -294,7 +294,7 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
                     border: Border.all(color: Colors.white12),
                   ),
                   child: Text(
-                    'AI推定: $_aiDifficultyLabel  /  あなた: ${_selfDifficulty}',
+                    'AI推定: $_aiDifficultyLabel  /  あなた: $_selfDifficulty',
                     style: const TextStyle(
                       fontSize: 12,
                       color: Colors.white54,

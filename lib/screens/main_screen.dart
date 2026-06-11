@@ -272,12 +272,12 @@ class _MainScreenState extends State<MainScreen> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
                 ),
-                child: Text(streakTitle!, style: const TextStyle(color: Colors.amberAccent, fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Text(streakTitle, style: const TextStyle(color: Colors.amberAccent, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
             ],
             if (legendMessage != null) ...[
               const SizedBox(height: 8),
-              Text(legendMessage!, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11, fontStyle: FontStyle.italic)),
+              Text(legendMessage, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11, fontStyle: FontStyle.italic)),
             ],
             const SizedBox(height: 24),
             SemanticHelper.interactive(

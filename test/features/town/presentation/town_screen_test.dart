@@ -119,7 +119,7 @@ Future<void> pumpTownScreen(WidgetTester tester, GameViewModel vm, PlayerViewMod
 
 void main() {
   group('TownScreen 町発展表示', () {
-    Future<PlayerViewModel> _createPlayerViewModel(int level) async {
+    Future<PlayerViewModel> createPlayerViewModel(int level) async {
       final playerVM = PlayerViewModel(_MockPlayerRepository(Player(jobLevels: {Job.adventurer: level})));
       await playerVM.load();
       return playerVM;
@@ -130,7 +130,7 @@ void main() {
       late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(5);
-        playerVM = await _createPlayerViewModel(5);
+        playerVM = await createPlayerViewModel(5);
       });
       await pumpTownScreen(tester, vm, playerVM);
 
@@ -142,7 +142,7 @@ void main() {
       late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(15);
-        playerVM = await _createPlayerViewModel(15);
+        playerVM = await createPlayerViewModel(15);
       });
       await pumpTownScreen(tester, vm, playerVM);
 
@@ -154,7 +154,7 @@ void main() {
       late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(30);
-        playerVM = await _createPlayerViewModel(30);
+        playerVM = await createPlayerViewModel(30);
       });
       await pumpTownScreen(tester, vm, playerVM);
 
@@ -166,7 +166,7 @@ void main() {
       late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(75);
-        playerVM = await _createPlayerViewModel(75);
+        playerVM = await createPlayerViewModel(75);
       });
       await pumpTownScreen(tester, vm, playerVM);
 
@@ -178,7 +178,7 @@ void main() {
       late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(120);
-        playerVM = await _createPlayerViewModel(120);
+        playerVM = await createPlayerViewModel(120);
       });
       await pumpTownScreen(tester, vm, playerVM);
 
@@ -190,7 +190,7 @@ void main() {
       late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(5);
-        playerVM = await _createPlayerViewModel(5);
+        playerVM = await createPlayerViewModel(5);
       });
       await pumpTownScreen(tester, vm, playerVM);
 
@@ -203,7 +203,7 @@ void main() {
       late PlayerViewModel playerVM;
       await tester.runAsync(() async {
         vm = await _createViewModelWithLevel(150);
-        playerVM = await _createPlayerViewModel(150);
+        playerVM = await createPlayerViewModel(150);
       });
       await pumpTownScreen(tester, vm, playerVM);
 

@@ -179,7 +179,7 @@ class _ActionButton extends StatelessWidget {
                     Text(
                       action.description,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Colors.white60,
                         fontSize: 10,
                         height: 1.2,

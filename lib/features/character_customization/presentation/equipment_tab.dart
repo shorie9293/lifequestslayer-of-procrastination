@@ -38,9 +38,9 @@ class _EquipmentTabState extends State<EquipmentTab> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: const Row(
+        const Padding(
+          padding: EdgeInsets.all(16),
+          child: Row(
             children: [
               Icon(Icons.face, color: Colors.white),
               SizedBox(width: 8),

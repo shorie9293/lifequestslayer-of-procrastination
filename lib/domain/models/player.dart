@@ -1149,7 +1149,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
   Player _readV3(BinaryReader reader) {
     final player = Player();
 
-    void _safeRead(String field, void Function() readFn) {
+    void safeRead(String field, void Function() readFn) {
       try {
         if (reader.availableBytes > 0) {
           readFn();
@@ -1159,89 +1159,89 @@ class PlayerAdapter extends TypeAdapter<Player> {
       }
     }
 
-    _safeRead('jobLevels', () {
+    safeRead('jobLevels', () {
       player.jobLevels =
           (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 1};
     });
-    _safeRead('jobExps', () {
+    safeRead('jobExps', () {
       player.jobExps =
           (reader.readMap() as Map?)?.cast<Job, int>() ?? {Job.adventurer: 0};
     });
-    _safeRead('activeSkills', () {
+    safeRead('activeSkills', () {
       player.activeSkills =
           (reader.readList() as List?)?.cast<Job>().toSet() ?? {};
     });
-    _safeRead('currentJob', () {
+    safeRead('currentJob', () {
       player.currentJob = (reader.read() as Job?) ?? Job.adventurer;
     });
-    _safeRead('comboCount', () {
+    safeRead('comboCount', () {
       if (reader.availableBytes >= 4) player.comboCount = reader.readInt();
     });
-    _safeRead('coins', () {
+    safeRead('coins', () {
       if (reader.availableBytes >= 4) player.coins = reader.readInt();
     });
-    _safeRead('homeItems', () {
+    safeRead('homeItems', () {
       player.homeItems =
           (reader.readList() as List?)?.cast<String>() ?? [];
     });
-    _safeRead('dailyTasksCompleted', () {
+    safeRead('dailyTasksCompleted', () {
       if (reader.availableBytes >= 4) player.dailyTasksCompleted = reader.readInt();
     });
-    _safeRead('weeklySRankCompleted', () {
+    safeRead('weeklySRankCompleted', () {
       if (reader.availableBytes >= 4) player.weeklySRankCompleted = reader.readInt();
     });
-    _safeRead('lastMissionResetDate', () {
+    safeRead('lastMissionResetDate', () {
       player.lastMissionResetDate = reader.read();
     });
-    _safeRead('nextDayTaskLimitOffset', () {
+    safeRead('nextDayTaskLimitOffset', () {
       if (reader.availableBytes >= 4) player.nextDayTaskLimitOffset = reader.readInt();
     });
-    _safeRead('todayTaskLimitOffset', () {
+    safeRead('todayTaskLimitOffset', () {
       if (reader.availableBytes >= 4) player.todayTaskLimitOffset = reader.readInt();
     });
-    _safeRead('lastRestDate', () {
+    safeRead('lastRestDate', () {
       player.lastRestDate = reader.read();
     });
-    _safeRead('totalTasksCompleted', () {
+    safeRead('totalTasksCompleted', () {
       if (reader.availableBytes >= 4) player.totalTasksCompleted = reader.readInt();
     });
-    _safeRead('totalSRankCompleted', () {
+    safeRead('totalSRankCompleted', () {
       if (reader.availableBytes >= 4) player.totalSRankCompleted = reader.readInt();
     });
-    _safeRead('totalARankCompleted', () {
+    safeRead('totalARankCompleted', () {
       if (reader.availableBytes >= 4) player.totalARankCompleted = reader.readInt();
     });
-    _safeRead('totalBRankCompleted', () {
+    safeRead('totalBRankCompleted', () {
       if (reader.availableBytes >= 4) player.totalBRankCompleted = reader.readInt();
     });
-    _safeRead('titles', () {
+    safeRead('titles', () {
       player.titles =
           (reader.readList() as List?)?.cast<String>() ?? [];
     });
-    _safeRead('equippedTitle', () {
+    safeRead('equippedTitle', () {
       player.equippedTitle = reader.read();
     });
-    _safeRead('equippedSkin', () {
+    safeRead('equippedSkin', () {
       player.equippedSkin = reader.read();
     });
-    _safeRead('characterSkin', () {
+    safeRead('characterSkin', () {
       player.characterSkin = CharacterSkin.fromMap(
         (reader.readMap() as Map?)?.cast<String, dynamic>() ?? {},
       );
     });
-    _safeRead('gems', () {
+    safeRead('gems', () {
       if (reader.availableBytes >= 4) player.gems = reader.readInt();
     });
-    _safeRead('streakDays', () {
+    safeRead('streakDays', () {
       if (reader.availableBytes >= 4) player.streakDays = reader.readInt();
     });
-    _safeRead('longestStreak', () {
+    safeRead('longestStreak', () {
       if (reader.availableBytes >= 4) player.longestStreak = reader.readInt();
     });
-    _safeRead('lastLoginDate', () {
+    safeRead('lastLoginDate', () {
       player.lastLoginDate = reader.read();
     });
-    _safeRead('timesWardenDefeated', () {
+    safeRead('timesWardenDefeated', () {
       if (reader.availableBytes >= 4) player.timesWardenDefeated = reader.readInt();
     });
 

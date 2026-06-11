@@ -6,7 +6,7 @@ import 'package:rpg_todo/features/battle/presentation/widgets/knowledge_quest_se
 void main() {
   group('KnowledgeQuestSection — Bug M3: 5+ choices RangeError', () {
     testWidgets('5個の選択肢でもRangeErrorが発生しない', (tester) async {
-      final quest = QuizQuestion(
+      const quest = QuizQuestion(
         id: 'test_5',
         question: '日本の首都は？',
         choices: ['東京', '大阪', '名古屋', '福岡', '札幌'],
@@ -36,7 +36,7 @@ void main() {
     });
 
     testWidgets('10個の選択肢でもRangeErrorが発生しない', (tester) async {
-      final quest = QuizQuestion(
+      const quest = QuizQuestion(
         id: 'test_10',
         question: 'テスト問題',
         choices: [
@@ -77,7 +77,7 @@ void main() {
     });
 
     testWidgets('従来の4選択肢も正しく動作する（回帰テスト）', (tester) async {
-      final quest = QuizQuestion(
+      const quest = QuizQuestion(
         id: 'test_4',
         question: '色は？',
         choices: ['赤', '青', '緑', '黄'],

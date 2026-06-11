@@ -4,7 +4,7 @@ import 'package:rpg_todo/domain/models/player.dart';
 void main() {
   group('JobSkill enum', () {
     test('全14スキルが定義されている', () {
-      final values = JobSkill.values;
+      const values = JobSkill.values;
       expect(values.length, 14);
       // Ronin
       expect(values, contains(JobSkill.roninSlots));

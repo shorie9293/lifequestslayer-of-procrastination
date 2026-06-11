@@ -7,11 +7,11 @@ import 'package:rpg_todo/features/battle/viewmodels/battle_view_model.dart';
 
 void main() {
   /// テスト用固定時刻。
-  DateTime _now = DateTime(2026, 6, 7, 12, 0, 0);
-  DateTime _fixedClock() => _now;
+  DateTime now = DateTime(2026, 6, 7, 12, 0, 0);
+  DateTime fixedClock() => now;
 
   /// テスト用タスク。
-  Task _testTask() => Task(
+  Task testTask() => Task(
         id: 'task-001',
         title: 'ゴブリンを討伐せよ',
         rank: QuestRank.B,
@@ -40,7 +40,7 @@ void main() {
     group('enterBattle', () {
       test('idle → facing に遷移', () {
         final vm = BattleViewModel();
-        final task = _testTask();
+        final task = testTask();
         vm.enterBattle(task);
         expect(vm.currentState, BattleState.facing);
         expect(vm.currentTask, task);
@@ -49,9 +49,9 @@ void main() {
 
       test('戦闘中に呼ぶと例外', () {
         final vm = BattleViewModel();
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         expect(
-          () => vm.enterBattle(_testTask()),
+          () => vm.enterBattle(testTask()),
           throwsA(isA<BattlePhaseException>()),
         );
       });
@@ -60,7 +60,7 @@ void main() {
     group('selectTactic', () {
       test('facing → attacking に遷移', () {
         final vm = BattleViewModel();
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.attack);
         expect(vm.currentState, BattleState.attacking);
         expect(vm.selectedTactic, BattleTactic.attack);
@@ -69,12 +69,12 @@ void main() {
       test('全戦術が設定可能', () {
         final vm = BattleViewModel();
 
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.defend);
         expect(vm.selectedTactic, BattleTactic.defend);
         vm.forceReset();
 
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.skill);
         expect(vm.selectedTactic, BattleTactic.skill);
       });
@@ -83,7 +83,7 @@ void main() {
     group('declareVictory', () {
       test('attacking → victory に遷移し、結果が返る', () {
         final vm = BattleViewModel();
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.attack);
 
         final result = vm.declareVictory(
@@ -102,14 +102,14 @@ void main() {
 
       test('コンボ数が増加する', () {
         final vm = BattleViewModel();
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.attack);
         vm.declareVictory(expGained: 100, coinsGained: 50);
         expect(vm.comboCount, 1);
 
         // 2回目の討伐
         vm.dismissResult();
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.attack);
         vm.declareVictory(expGained: 100, coinsGained: 50);
         expect(vm.comboCount, 2);
@@ -120,21 +120,21 @@ void main() {
         final vm = BattleViewModel();
 
         // 1回目: combo=1, ボーナスなし
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.attack);
         var result = vm.declareVictory(expGained: 100, coinsGained: 50);
         expect(result.comboBonusExp, 0);
         vm.dismissResult();
 
         // 2回目: combo=2, ボーナス = 100 * 0.1 = 10
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.attack);
         result = vm.declareVictory(expGained: 100, coinsGained: 50);
         expect(result.comboBonusExp, 10);
         vm.dismissResult();
 
         // 3回目: combo=3, ボーナス = 100 * 0.2 = 20
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.attack);
         result = vm.declareVictory(expGained: 100, coinsGained: 50);
         expect(result.comboBonusExp, 20);
@@ -144,7 +144,7 @@ void main() {
     group('declareDefeat', () {
       test('attacking → defeat に遷移し、結果が返る', () {
         final vm = BattleViewModel();
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.defend);
 
         final result = vm.declareDefeat(
@@ -162,13 +162,13 @@ void main() {
       test('敗北ではコンボ数は増加しない', () {
         final vm = BattleViewModel();
 
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.attack);
         vm.declareVictory(expGained: 100, coinsGained: 50);
         expect(vm.comboCount, 1);
 
         vm.dismissResult();
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.defend);
         vm.declareDefeat(penaltyExp: 30);
         expect(vm.comboCount, 1); // 変わらない
@@ -178,7 +178,7 @@ void main() {
     group('dismissResult', () {
       test('victory → idle', () {
         final vm = BattleViewModel();
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.attack);
         vm.declareVictory(expGained: 100, coinsGained: 50);
 
@@ -191,7 +191,7 @@ void main() {
 
       test('defeat → idle', () {
         final vm = BattleViewModel();
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.defend);
         vm.declareDefeat(penaltyExp: 30);
 
@@ -203,7 +203,7 @@ void main() {
     group('cancelBattle', () {
       test('facing → idle', () {
         final vm = BattleViewModel();
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.cancelBattle();
         expect(vm.currentState, BattleState.idle);
         expect(vm.currentTask, null);
@@ -216,7 +216,7 @@ void main() {
         vm.forceReset();
         expect(vm.currentState, BattleState.idle);
 
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.attack);
         vm.declareVictory(expGained: 100, coinsGained: 50);
         vm.forceReset();
@@ -228,17 +228,17 @@ void main() {
       test('コンボを強制リセット', () {
         final vm = BattleViewModel();
 
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.attack);
         vm.declareVictory(expGained: 100, coinsGained: 50);
         vm.dismissResult();
 
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.attack);
         vm.declareVictory(expGained: 100, coinsGained: 50);
         vm.dismissResult();
 
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         vm.selectTactic(BattleTactic.attack);
         vm.declareVictory(expGained: 100, coinsGained: 50);
 
@@ -252,7 +252,7 @@ void main() {
     group('カスタム ComboSystem', () {
       test('外部から ComboSystem を注入可能', () {
         final combo = ComboSystem(
-          clock: _fixedClock,
+          clock: fixedClock,
           multiplierStep: 0.2,
           maxMultiplier: 4.0,
         );
@@ -272,7 +272,7 @@ void main() {
         int notifyCount = 0;
         vm.addListener(() => notifyCount++);
 
-        vm.enterBattle(_testTask());
+        vm.enterBattle(testTask());
         expect(notifyCount, 1);
 
         vm.selectTactic(BattleTactic.attack);
@@ -298,7 +298,7 @@ void main() {
 
   group('BattleResult', () {
     test('全フィールドが正しく設定される', () {
-      final task = _testTask();
+      final task = testTask();
       final result = BattleResult(
         isVictory: true,
         task: task,
@@ -321,7 +321,7 @@ void main() {
     });
 
     test('敗北結果のフィールド', () {
-      final task = _testTask();
+      final task = testTask();
       final result = BattleResult(
         isVictory: false,
         task: task,

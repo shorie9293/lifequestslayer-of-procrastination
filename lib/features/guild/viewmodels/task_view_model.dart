@@ -90,12 +90,16 @@ class TaskViewModel extends ChangeNotifier {
     final now = DateTime.now();
     if (t.repeatInterval == RepeatInterval.weekly &&
         t.repeatWeekdays.isNotEmpty &&
-        !t.repeatWeekdays.contains(now.weekday)) return false;
+        !t.repeatWeekdays.contains(now.weekday)) {
+      return false;
+    }
     if (t.lastCompletedAt != null) {
       final l = t.lastCompletedAt!;
       if (now.year == l.year &&
           now.month == l.month &&
-          now.day == l.day) return false;
+          now.day == l.day) {
+        return false;
+      }
     }
     return true;
   }

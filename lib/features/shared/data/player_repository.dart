@@ -20,6 +20,7 @@ class PlayerRepository implements IPlayerRepository {
 
   /// loadPlayer() がデシリアライズ失敗した場合 true。
   /// ViewModel はこのフラグを見て save() をスキップすべき。
+  @override
   bool loadFailedDueToCorruption = false;
 
   Future<Box<Player>> _getBox() async {
