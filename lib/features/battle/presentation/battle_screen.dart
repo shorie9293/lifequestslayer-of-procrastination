@@ -11,11 +11,15 @@ import 'widgets/combat_selection_bar.dart';
 import 'widgets/fatigue_gem_popup.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/domain/models/battle_state.dart';
 import 'package:rpg_todo/features/battle/domain/battle_action.dart';
+import 'package:rpg_todo/features/battle/domain/battle_audio_service.dart';
+import 'package:rpg_todo/features/battle/viewmodels/battle_view_model.dart';
 import 'package:rpg_todo/features/battle/data/quiz_data.dart';
 import 'package:rpg_todo/core/testing/tutorial_keys.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/core/di/injection.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -29,15 +33,73 @@ class BattleScreen extends StatefulWidget {
   State<BattleScreen> createState() => _BattleScreenState();
 }
 
-class _BattleScreenState extends State<BattleScreen> {
+class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver {
+  late final BattleViewModel _battleVM;
+  late final BattleAudioService _audioService;
+
   /// 現在戦術選択フェイズにあるタスクのID。
   /// null の場合は通常のタスク一覧表示。
   String? _taskInCombat;
 
   Color _getRankColor(QuestRank rank) => RankColors.forRank(rank);
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+
+    _battleVM = getIt<BattleViewModel>();
+    _audioService = getIt<BattleAudioService>();
+
+    // 修練場BGMを開始
+    _audioService.onBattleStateChanged(BattleState.idle);
+
+    // BattleViewModelの状態変化をリッスンしてBGMを連動
+    _battleVM.addListener(_onBattleStateChanged);
+
+    // BattleAudioServiceのミュート状態変化でUIを再描画
+    _audioService.addListener(_onAudioChanged);
+  }
+
+  @override
+  void dispose() {
+    _battleVM.removeListener(_onBattleStateChanged);
+    _audioService.removeListener(_onAudioChanged);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      _audioService.stopAll();
+    } else if (state == AppLifecycleState.resumed) {
+      // 復帰時、現在の戦闘状態に応じたBGMを再開
+      _audioService.onBattleStateChanged(_battleVM.currentState);
+    }
+  }
+
+  /// BattleViewModelの状態変化をBGMに連動させる。
+  void _onBattleStateChanged() {
+    _audioService.onBattleStateChanged(_battleVM.currentState);
+  }
+
+  /// BattleAudioServiceのミュート状態変化でUIを再描画する。
+  void _onAudioChanged() {
+    setState(() {});
+  }
+
   /// 戦術選択バーを表示して討伐フェイズに移行する。
   void _enterCombatPhase(String taskId) {
+    // すでに戦闘中の場合は再入場を防ぐ
+    if (_battleVM.isInCombat) return;
+
+    final taskVM = context.read<TaskViewModel>();
+    final task = taskVM.activeTasks.firstWhere((t) => t.id == taskId);
+
+    _battleVM.enterBattle(task);
+
     setState(() {
       _taskInCombat = taskId;
     });
@@ -49,6 +111,9 @@ class _BattleScreenState extends State<BattleScreen> {
     final taskId = _taskInCombat;
     if (taskId == null) return;
 
+    // 戦術をBattleViewModelに登録
+    _battleVM.selectTactic(_mapActionToTactic(action));
+
     // 戦術選択UIを閉じる
     setState(() {
       _taskInCombat = null;
@@ -59,6 +124,18 @@ class _BattleScreenState extends State<BattleScreen> {
     // 例: attack → 標準, defend → EXP * 0.7 + 成功率UP, skill → 装備スキル効果発動
 
     _completeTask(context, taskId);
+  }
+
+  /// [BattleAction] を [BattleTactic] に変換する。
+  BattleTactic _mapActionToTactic(BattleAction action) {
+    switch (action) {
+      case BattleAction.attack:
+        return BattleTactic.attack;
+      case BattleAction.defend:
+        return BattleTactic.defend;
+      case BattleAction.skill:
+        return BattleTactic.skill;
+    }
   }
 
   void _completeTask(BuildContext context, String taskId) {
@@ -88,6 +165,12 @@ class _BattleScreenState extends State<BattleScreen> {
     final result = taskVM.completeTask(taskId);
 
     if (result == null) {
+      // 討伐失敗 → BattleViewModelに敗北を通知
+      _battleVM.declareDefeat(
+        penaltyExp: 0,
+        bonusMessages: const [],
+      );
+
       final stillActive = taskVM.activeTasks.any((t) => t.id == taskId);
       if (stillActive) {
         final task = taskVM.activeTasks.firstWhere((t) => t.id == taskId);
@@ -125,9 +208,18 @@ class _BattleScreenState extends State<BattleScreen> {
     final quizQuestion = result['quizQuestion'] as QuizQuestion?;
     final baseExp = result['baseExp'] as int;
     final isOverdueBoss = result['isOverdueBoss'] as bool? ?? false;
-    final wrongAnswerPenaltyExp = result['wrongAnswerPenaltyExp'] as int? ?? 0;
-    final wrongAnswerPenaltyCoins = result['wrongAnswerPenaltyCoins'] as int? ?? 0;
+    final wrongAnswerPenaltyExp =
+        result['wrongAnswerPenaltyExp'] as int? ?? 0;
+    final wrongAnswerPenaltyCoins =
+        result['wrongAnswerPenaltyCoins'] as int? ?? 0;
     final showFatiguePopup = result['showFatiguePopup'] as bool? ?? false;
+
+    // 討伐成功 → BattleViewModelに勝利を通知
+    _battleVM.declareVictory(
+      expGained: baseExp,
+      coinsGained: coinsGained,
+      bonusMessages: bonusMessages,
+    );
 
     // UX-6: 戦果報告書の統合 — SnackBarを廃止し、全てのフィードバックを戦果報告書ダイアログに集約
 
@@ -162,8 +254,8 @@ class _BattleScreenState extends State<BattleScreen> {
         quizQuestion: quizQuestion,
         onQuizCorrect: quizQuestion != null
             ? (q) {
-                taskVM.awardKnowledgeBonus(
-                    q.expBonusPercent, baseExp); taskVM.save();
+                taskVM.awardKnowledgeBonus(q.expBonusPercent, baseExp);
+                taskVM.save();
                 // 刻の番人討伐時は称号チェック
                 if (isOverdueBoss) {
                   playerVM.defeatTimeWarden();
@@ -184,6 +276,9 @@ class _BattleScreenState extends State<BattleScreen> {
         fatigueWarnThreshold: warnThresh,
         dailyTasksCompleted: dailyDone,
       );
+
+      // 戦果報告書を閉じた後、バトル状態をアイドルに戻す
+      _battleVM.dismissResult();
 
       // UX-12: 疲労ポップアップを戦果報告書の後に表示
       // rootNavigator経由で二重遷移を防止する
@@ -249,12 +344,43 @@ class _BattleScreenState extends State<BattleScreen> {
     }
 
     // 戦術選択フェイズのときは選択中のタスクをハイライト
-    
+    final bool isInCombat = _taskInCombat != null;
+
     return Scaffold(
       key: AppKeys.battleScreen,
       appBar: AppBar(
-        title: Text(_taskInCombat != null ? "⚔️ 戦術選択" : "修練場"),
+        title: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 300),
+          child: Text(
+            isInCombat ? "⚔️ 戦術選択" : "修練場",
+            key: ValueKey(isInCombat),
+          ),
+        ),
         actions: [
+          // BGMミュートトグル
+          IconButton(
+            icon: Icon(
+              _audioService.isBgmMuted
+                  ? Icons.music_off
+                  : Icons.music_note,
+              color:
+                  _audioService.isBgmMuted ? Colors.grey : Colors.amberAccent,
+              size: 20,
+            ),
+            tooltip: _audioService.isBgmMuted ? 'BGMを有効にする' : 'BGMを消音',
+            onPressed: () => _audioService.toggleBgmMute(),
+          ),
+          // SFXミュートトグル
+          IconButton(
+            icon: Icon(
+              _audioService.isSfxMuted ? Icons.volume_off : Icons.volume_up,
+              color:
+                  _audioService.isSfxMuted ? Colors.grey : Colors.amberAccent,
+              size: 20,
+            ),
+            tooltip: _audioService.isSfxMuted ? '効果音を有効にする' : '効果音を消音',
+            onPressed: () => _audioService.toggleSfxMute(),
+          ),
           IconButton(
             icon: const Icon(Icons.help_outline),
             tooltip: '神託補佐（ヘルプ）',
@@ -279,129 +405,164 @@ class _BattleScreenState extends State<BattleScreen> {
 
             // Active Tasks (Monsters)
             Expanded(
-              child: tasks.isEmpty
-                  ? const Center(
-                      key: AppKeys.battleEmptyState,
-                      child: Text(
-                        "クエストがありません。\n寄合所で受注してください！",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 20, color: Colors.grey),
-                      ),
-                    )
-                  : Column(
-                      children: [
-                        // 今日の見積もり時間
-                        if (taskVM.dailyEstimatedMinutes > 0)
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 8),
-                            color: Colors.black26,
-                            child: Row(
-                              children: [
-                                const Text("📊",
-                                    style: TextStyle(fontSize: 16)),
-                                const SizedBox(width: 8),
-                                Text(
-                                  "今日の戦い（見積もり）: ${taskVM.dailyEstimatedMinutes}分",
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.amberAccent,
-                                    fontWeight: FontWeight.bold,
+              child: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 400),
+                switchInCurve: Curves.easeOut,
+                switchOutCurve: Curves.easeIn,
+                child: tasks.isEmpty
+                    ? const Center(
+                        key: AppKeys.battleEmptyState,
+                        child: Text(
+                          "クエストがありません。\n寄合所で受注してください！",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 20, color: Colors.grey),
+                        ),
+                      )
+                    : Column(
+                        key: const ValueKey('task_list'),
+                        children: [
+                          // 今日の見積もり時間
+                          if (taskVM.dailyEstimatedMinutes > 0)
+                            Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 8),
+                              color: Colors.black26,
+                              child: Row(
+                                children: [
+                                  const Text("📊",
+                                      style: TextStyle(fontSize: 16)),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    "今日の戦い（見積もり）: ${taskVM.dailyEstimatedMinutes}分",
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.amberAccent,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                        Expanded(
-                          child: ListView.builder(
-                      key: AppKeys.battleActiveTaskList,
-                      padding: const EdgeInsets.all(16),
-                      itemCount: tasks.length,
-                      itemBuilder: (context, index) {
-                        final task = tasks[index];
-                        return TaskCard(
-                          task: task,
-                          color: _getRankColor(task.rank),
-                          onSubTaskToggle: (idx, _) {
-                            taskVM.toggleSubTask(task.id, idx);
-                            taskVM.save();
-                          },
-                          actions: [
-                            SemanticHelper.interactive(
-                              testId: SemanticHelper.createTestId(
-                                  SemanticTypes.button, 'cancel_task'),
-                              label: 'クエストを寄合所に戻す',
-                              child: IconButton(
-                                key: AppKeys.battleCancel,
-                                icon: const Icon(Icons.undo, color: Colors.grey),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (ctx) => AlertDialog(
-                                      key: AppKeys.confirmDialog,
-                                      title: const Text("クエストを戻す"),
-                                      content: const Text(
-                                          "このクエストを寄合所に戻しますか？\n\n⚠ 撤退には体力を消耗します（討伐1回分と同量）"),
-                                      actions: [
-                                        TextButton(
-                                          onPressed: () => Navigator.pop(ctx),
-                                          child: const Text("キャンセル"),
-                                        ),
-                                        TextButton(
+                          Expanded(
+                            child: ListView.builder(
+                              key: AppKeys.battleActiveTaskList,
+                              padding: const EdgeInsets.all(16),
+                              itemCount: tasks.length,
+                              itemBuilder: (context, index) {
+                                final task = tasks[index];
+                                final isInSelection =
+                                    _taskInCombat == task.id;
+                                return AnimatedContainer(
+                                  duration:
+                                      const Duration(milliseconds: 300),
+                                  curve: Curves.easeInOut,
+                                  transform: isInSelection
+                                      ? (Matrix4.identity()..scale(1.03))
+                                      : Matrix4.identity(),
+                                  child: TaskCard(
+                                    task: task,
+                                    color: _getRankColor(task.rank),
+                                    onSubTaskToggle: (idx, _) {
+                                      taskVM.toggleSubTask(task.id, idx);
+                                      taskVM.save();
+                                    },
+                                    actions: [
+                                      SemanticHelper.interactive(
+                                        testId: SemanticHelper.createTestId(
+                                            SemanticTypes.button,
+                                            'cancel_task'),
+                                        label: 'クエストを寄合所に戻す',
+                                        child: IconButton(
+                                          key: AppKeys.battleCancel,
+                                          icon: const Icon(Icons.undo,
+                                              color: Colors.grey),
                                           onPressed: () {
-                                            Navigator.pop(ctx);
-                                            // 体力消費：1タスク完了分
-                                            playerVM.player.dailyTasksCompleted++;
-                                            playerVM.save();
-                                            taskVM.cancelTask(task.id);
-                                            taskVM.save();
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(
-                                                  content: Text("クエストを寄合所に戻しました（体力を消耗した…）")),
+                                            showDialog(
+                                              context: context,
+                                              builder: (ctx) => AlertDialog(
+                                                key: AppKeys.confirmDialog,
+                                                title: const Text(
+                                                    "クエストを戻す"),
+                                                content: const Text(
+                                                    "このクエストを寄合所に戻しますか？\n\n⚠ 撤退には体力を消耗します（討伐1回分と同量）"),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () =>
+                                                        Navigator.pop(ctx),
+                                                    child: const Text(
+                                                        "キャンセル"),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () {
+                                                      Navigator.pop(ctx);
+                                                      // 体力消費：1タスク完了分
+                                                      playerVM
+                                                              .player
+                                                              .dailyTasksCompleted++;
+                                                      playerVM.save();
+                                                      taskVM.cancelTask(
+                                                          task.id);
+                                                      taskVM.save();
+                                                      ScaffoldMessenger.of(
+                                                              context)
+                                                          .showSnackBar(
+                                                        const SnackBar(
+                                                            content: Text(
+                                                                "クエストを寄合所に戻しました（体力を消耗した…）")),
+                                                      );
+                                                    },
+                                                    child: const Text(
+                                                        "戻す（体力消費）",
+                                                        style: TextStyle(
+                                                            color: Colors
+                                                                .orange)),
+                                                  ),
+                                                ],
+                                              ),
                                             );
                                           },
-                                          child: const Text("戻す（体力消費）",
-                                              style: TextStyle(color: Colors.orange)),
+                                          tooltip: "寄合所に戻す",
                                         ),
-                                      ],
-                                    ),
-                                  );
-                                },
-                                tooltip: "寄合所に戻す",
-                              ),
+                                      ),
+                                      SemanticHelper.interactive(
+                                        testId: SemanticHelper.createTestId(
+                                            SemanticTypes.button,
+                                            'complete_task'),
+                                        label: '討つ！',
+                                        child: IconButton(
+                                          key: index == 0
+                                              ? TutorialKeys
+                                                  .battleCompleteKey
+                                              : null,
+                                          icon: const Text('⚔️',
+                                              style:
+                                                  TextStyle(fontSize: 24)),
+                                          onPressed: () =>
+                                              _enterCombatPhase(task.id),
+                                          tooltip: "討つ！",
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
                             ),
-                            SemanticHelper.interactive(
-                              testId: SemanticHelper.createTestId(
-                                  SemanticTypes.button, 'complete_task'),
-                              label: '討つ！',
-                              child: IconButton(
-                                key: index == 0
-                                    ? TutorialKeys.battleCompleteKey
-                                    : null,
-                                icon: const Text('⚔️',
-                                    style: TextStyle(fontSize: 24)),
-                                onPressed: () => _enterCombatPhase(task.id),
-                                tooltip: "討つ！",
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                          ),
+                        ],
+                      ),
               ),
             ),
           ],
         ),
       ),
       // ── 戦術選択バー（下部オーバーレイ） ──
-      bottomNavigationBar: _taskInCombat != null
+      bottomNavigationBar: isInCombat
           ? CombatSelectionBar(
               onActionSelected: _onActionSelected,
               skillAvailable: _isSkillAvailable(playerVM.player),
-              skillUnavailableReason: _skillUnavailableReason(playerVM.player),
+              skillUnavailableReason:
+                  _skillUnavailableReason(playerVM.player),
             )
           : null,
     );

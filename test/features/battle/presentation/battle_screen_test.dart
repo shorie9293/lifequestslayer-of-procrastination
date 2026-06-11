@@ -5,12 +5,16 @@ import 'package:rpg_todo/features/battle/presentation/battle_screen.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/battle/viewmodels/battle_view_model.dart';
+import 'package:rpg_todo/features/battle/domain/battle_audio_service.dart';
+import 'package:rpg_todo/domain/models/battle_state.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/core/di/injection.dart';
 
 // ━━━ DI Mock リポジトリ（Hive非依存） ━━━
 
@@ -78,6 +82,36 @@ class _MockSettingsRepository extends SettingsRepository {
   Future<void> setDebugModeEnabled(bool v) async {}
 }
 
+/// テスト用のオーディオサービス（実際の音声再生を行わない）。
+class _TestBattleAudioService extends BattleAudioService {
+  bool _bgmMuted = false;
+  bool _sfxMuted = false;
+
+  @override
+  bool get isBgmMuted => _bgmMuted;
+
+  @override
+  bool get isSfxMuted => _sfxMuted;
+
+  @override
+  Future<void> onBattleStateChanged(BattleState newState) async {
+    // テスト中は音声再生をスキップ
+    notifyListeners();
+  }
+
+  @override
+  Future<void> toggleBgmMute() async {
+    _bgmMuted = !_bgmMuted;
+    notifyListeners();
+  }
+
+  @override
+  Future<void> toggleSfxMute() async {
+    _sfxMuted = !_sfxMuted;
+    notifyListeners();
+  }
+}
+
 /// テスト用のDI注入済みViewModel群を生成
 ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings})
     createViewModels() {
@@ -85,6 +119,22 @@ class _MockSettingsRepository extends SettingsRepository {
   final taskVM = TaskViewModel(_MockTaskRepository(), playerVM);
   final settingsVM = SettingsViewModel(_MockSettingsRepository());
   return (task: taskVM, player: playerVM, settings: settingsVM);
+}
+
+/// テスト用のgetItを初期化する。
+/// BattleScreenがgetIt経由でBattleViewModel/BattleAudioServiceを取得するため。
+void setUpGetIt() {
+  // getItが既に登録されている場合はリセット
+  if (getIt.isRegistered<BattleViewModel>()) {
+    getIt.unregister<BattleViewModel>();
+  }
+  if (getIt.isRegistered<BattleAudioService>()) {
+    getIt.unregister<BattleAudioService>();
+  }
+
+  getIt.registerLazySingleton<BattleViewModel>(() => BattleViewModel());
+  getIt.registerLazySingleton<BattleAudioService>(
+      () => _TestBattleAudioService());
 }
 
 /// BattleScreen をポンプするヘルパー
@@ -112,6 +162,10 @@ Future<void> pumpBattleScreen(
 }
 
 void main() {
+  setUp(() {
+    setUpGetIt();
+  });
+
   group('BattleScreen 見積もり時間表示テスト', () {
     // ━━━ 見積もり表示あり ━━━
 
@@ -249,14 +303,25 @@ void main() {
       final completeButton = find.byTooltip('討つ！');
       expect(completeButton, findsOneWidget);
 
-      // 連打: 2回連続でタップ（同一フレーム内で2度実行されるように）
+      // 1回目タップ: 戦術選択フェイズに入る
       await tester.tap(completeButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 戦術選択バーが表示されている
+      expect(find.text('攻撃'), findsOneWidget);
+
+      // 2回目のタップは isInCombat ガードでブロックされる
       await tester.tap(completeButton);
       await tester.pump();
 
+      // 攻撃ボタンをタップして討伐実行
+      await tester.tap(find.text('攻撃'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
       // パーティクルエフェクトが1つだけ存在することを確認
       // 連打ガードにより2つ目がブロックされ、1つの ParticleBurst のみ表示
-      await tester.pump(const Duration(milliseconds: 100));
       final particleTexts = find.text('クエスト完了\n💥');
       expect(particleTexts, findsOneWidget);
     });
@@ -288,11 +353,16 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // 完了ボタン（⚔️）をタップしてタスク完了
-      // ParticleBurst 完了後に Navigator.pop(ctx) が呼ばれることを検証
+      // 討つ！ボタンをタップ → 戦術選択フェイズ
       final completeButton = find.byTooltip('討つ！');
       expect(completeButton, findsOneWidget);
       await tester.tap(completeButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 戦術選択バーから「攻撃」を選択 → 討伐実行
+      expect(find.text('攻撃'), findsOneWidget);
+      await tester.tap(find.text('攻撃'));
       await tester.pump();
 
       // ParticleBurst が表示されるのを待つ
@@ -300,7 +370,6 @@ void main() {
       expect(find.text('クエスト完了\n💥'), findsOneWidget);
 
       // ParticleBurst のアニメーション完了を待つ（pumpAndSettle で確実に）
-      // Navigator.of(ctx).pop() が呼ばれ ParticleBurst ダイアログが閉じられる
       await tester.pumpAndSettle(const Duration(milliseconds: 2000));
 
       // ParticleBurst ダイアログが閉じられたことを確認
@@ -420,6 +489,151 @@ void main() {
 
       // タスクがギルドに戻されたことを確認
       expect(vms.task.activeTasks.length, 0);
+    });
+  });
+
+  // ━━━ v2.1: BGM/BattleViewModel 統合テスト ━━━
+
+  group('v2.1 BGM統合テスト', () {
+    testWidgets('討つ！タップでBattleViewModelがfacing状態になる', (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+        vms.player.player.jobLevels[vms.player.player.currentJob] = 2;
+        vms.task.addTask('BGMテスト', rank: QuestRank.B);
+        final taskId = vms.task.tasks.first.id;
+        vms.task.acceptTask(taskId);
+      });
+
+      await pumpBattleScreen(
+          tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // ExpansionTileを展開
+      final taskTitle = find.text('[B] BGMテスト');
+      expect(taskTitle, findsOneWidget);
+      await tester.tap(taskTitle);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 討つ！ボタンをタップ
+      final completeButton = find.byTooltip('討つ！');
+      expect(completeButton, findsOneWidget);
+      await tester.tap(completeButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // BattleViewModelがfacing状態になっているか
+      final battleVM = getIt<BattleViewModel>();
+      expect(battleVM.currentState, BattleState.facing);
+      expect(battleVM.currentTask, isNotNull);
+      expect(battleVM.currentTask!.title, 'BGMテスト');
+    });
+
+    testWidgets('戦術選択バーが表示される', (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+        vms.player.player.jobLevels[vms.player.player.currentJob] = 2;
+        vms.task.addTask('戦術選択テスト', rank: QuestRank.B);
+        final taskId = vms.task.tasks.first.id;
+        vms.task.acceptTask(taskId);
+      });
+
+      await pumpBattleScreen(
+          tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // ExpansionTileを展開
+      final taskTitle = find.text('[B] 戦術選択テスト');
+      expect(taskTitle, findsOneWidget);
+      await tester.tap(taskTitle);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 討つ！ボタンをタップ
+      final completeButton = find.byTooltip('討つ！');
+      await tester.tap(completeButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // AppBarが「⚔️ 戦術選択」になっている
+      expect(find.text('⚔️ 戦術選択'), findsOneWidget);
+
+      // 戦術選択バー（攻撃/防御/スキル）が表示されている
+      expect(find.text('攻撃'), findsOneWidget);
+      expect(find.text('防御'), findsOneWidget);
+    });
+
+    testWidgets('戦術選択後にBattleViewModelがattacking状態になる', (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+        vms.player.player.jobLevels[vms.player.player.currentJob] = 2;
+        vms.task.addTask('攻撃テスト', rank: QuestRank.B);
+        final taskId = vms.task.tasks.first.id;
+        vms.task.acceptTask(taskId);
+      });
+
+      await pumpBattleScreen(
+          tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // ExpansionTileを展開
+      final taskTitle = find.text('[B] 攻撃テスト');
+      expect(taskTitle, findsOneWidget);
+      await tester.tap(taskTitle);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 討つ！ボタンをタップ
+      final completeButton = find.byTooltip('討つ！');
+      await tester.tap(completeButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 戦術選択バーで「攻撃」をタップ
+      final attackButton = find.text('攻撃');
+      expect(attackButton, findsOneWidget);
+      await tester.tap(attackButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // BattleViewModelが戦術を選択し、その後の討伐完了で victory または defeat 状態になる
+      final battleVM = getIt<BattleViewModel>();
+      expect(battleVM.selectedTactic, BattleTactic.attack);
+      // タスク討伐完了後は victory または defeat（タスクの状態による）
+      expect(
+        battleVM.currentState,
+        anyOf(BattleState.victory, BattleState.defeat),
+      );
+    });
+
+    testWidgets('BGMミュートトグルが動作する', (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+      });
+
+      await pumpBattleScreen(
+          tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // BGMミュートボタンを探す
+      final muteButton = find.byTooltip('BGMを消音');
+      expect(muteButton, findsOneWidget);
+
+      // タップしてミュート
+      await tester.tap(muteButton);
+      await tester.pump();
+
+      // ミュートボタンのツールチップが変わる
+      expect(find.byTooltip('BGMを有効にする'), findsOneWidget);
+
+      // 再度タップしてミュート解除
+      await tester.tap(find.byTooltip('BGMを有効にする'));
+      await tester.pump();
+      expect(find.byTooltip('BGMを消音'), findsOneWidget);
     });
   });
 }

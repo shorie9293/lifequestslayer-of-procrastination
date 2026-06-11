@@ -14,6 +14,9 @@ import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/theme_view_model.dart';
 import 'package:rpg_todo/core/infrastructure/iap_service.dart';
 
+import 'package:rpg_todo/features/battle/domain/battle_audio_service.dart';
+import 'package:rpg_todo/features/battle/viewmodels/battle_view_model.dart';
+
 import 'injection.config.dart';
 
 final getIt = GetIt.instance;
@@ -23,7 +26,13 @@ final getIt = GetIt.instance;
   preferRelativeImports: true,
   asExtension: false,
 )
-void configureDependencies() => initGetIt(getIt);
+void configureDependencies() {
+  initGetIt(getIt);
+
+  // 戦闘系サービス（injectable未対応のため手動登録）
+  getIt.registerLazySingleton<BattleAudioService>(() => BattleAudioService());
+  getIt.registerLazySingleton<BattleViewModel>(() => BattleViewModel());
+}
 
 /// 全VMのデータロードとアプリライフサイクル監視を統括する。
 /// main()内で configureDependencies() の後に呼ぶこと。
