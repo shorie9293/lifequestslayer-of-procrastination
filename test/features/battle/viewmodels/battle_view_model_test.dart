@@ -10,8 +10,6 @@ void main() {
   DateTime _now = DateTime(2026, 6, 7, 12, 0, 0);
   DateTime _fixedClock() => _now;
 
-  void _advance(Duration d) => _now = _now.add(d);
-
   /// テスト用タスク。
   Task _testTask() => Task(
         id: 'task-001',

@@ -11,9 +11,6 @@ void fprint(String msg) => print('[TASK_REPO_TEST] $msg');
 /// Helper: get typed box reference (already opened by repo)
 Box<Task> _getTypedBox() => Hive.box<Task>('tasksBox');
 
-/// Helper: get backup box reference
-Box _getBackupBox() => Hive.box('tasksBox_backup');
-
 void main() {
   late TaskRepository repo;
 

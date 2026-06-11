@@ -9,9 +9,6 @@ import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 /// fprint = forced print (always prints even in test)
 void fprint(String msg) => print('[REFLECTION_REPO_TEST] $msg');
 
-/// Helper: get typed box reference (already opened by repo)
-Box<Reflection> _getTypedBox() => Hive.box<Reflection>('reflections');
-
 void main() {
   late ReflectionRepository repo;
 

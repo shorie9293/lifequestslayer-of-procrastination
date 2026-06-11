@@ -116,6 +116,7 @@ class _TsundokuIdentityLinkDialogState
   }
 
   /// ダイアログを表示し、設定された user_id（または null）を返す
+  // ignore: unused_element — 将来の連携UIから呼び出される予定
   static Future<String?> show(BuildContext context, {String? currentUserId}) {
     return showDialog<String>(
       context: context,

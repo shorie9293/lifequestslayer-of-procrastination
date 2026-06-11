@@ -5,8 +5,6 @@ import 'package:hive/hive.dart';
 import 'package:hive/src/binary/binary_reader_impl.dart';
 import 'package:hive/src/binary/binary_writer_impl.dart';
 import 'package:rpg_todo/domain/models/player.dart';
-import 'package:rpg_todo/domain/models/skill_tree.dart';
-
 /// Hive の BinaryWriter / BinaryReader を使った PlayerAdapter の
 /// シリアライズ／デシリアライズ ラウンドトリップ テスト。
 void main() {
