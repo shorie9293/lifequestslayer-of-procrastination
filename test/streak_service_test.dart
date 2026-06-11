@@ -27,6 +27,14 @@ void main() {
       expect(StreakService.calcStreakReward(30), 5000);
     });
 
+    test('calcStreakReward - 60日ストリークで8000', () {
+      expect(StreakService.calcStreakReward(60), 8000);
+    });
+
+    test('calcStreakReward - 100日ストリークで10000', () {
+      expect(StreakService.calcStreakReward(100), 10000);
+    });
+
     test('calcStreakReward - 1日以下は0', () {
       expect(StreakService.calcStreakReward(0), 0);
       expect(StreakService.calcStreakReward(1), 0);
@@ -35,7 +43,12 @@ void main() {
     test('calcStreakReward - 定義外の日数は0', () {
       expect(StreakService.calcStreakReward(4), 0);
       expect(StreakService.calcStreakReward(10), 0);
-      expect(StreakService.calcStreakReward(100), 5000); // >= 30 days returns max reward
+    });
+
+    test('calcStreakReward - 100日超は10000', () {
+      expect(StreakService.calcStreakReward(31), 5000);
+      expect(StreakService.calcStreakReward(61), 8000);
+      expect(StreakService.calcStreakReward(101), 10000);
     });
   });
 }

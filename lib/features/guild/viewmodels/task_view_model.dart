@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart' hide DateUtils;
+import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
@@ -207,6 +208,7 @@ class TaskViewModel extends ChangeNotifier {
     if (i != -1 && idx >= 0 && idx < _tasks[i].subTasks.length) {
       _tasks[i].subTasks[idx].isCompleted =
           !_tasks[i].subTasks[idx].isCompleted;
+      HapticFeedback.lightImpact();
       notifyListeners();
       _autoSave();
     }

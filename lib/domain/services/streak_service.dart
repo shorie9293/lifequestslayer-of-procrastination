@@ -35,6 +35,8 @@ class StreakService {
 
   /// ストリーク日数に応じた報酬を計算
   static int calcStreakReward(int days) {
+    if (days >= 100) return 10000;
+    if (days >= 60) return 8000;
     if (days >= 30) return 5000;
     if (days == 14) return 2000;
     if (days == 7) return 1000;

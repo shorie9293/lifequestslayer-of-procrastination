@@ -59,10 +59,12 @@ class TaskCard extends StatefulWidget {
   State<TaskCard> createState() => _TaskCardState();
 }
 
-class _TaskCardState extends State<TaskCard> {
+class _TaskCardState extends State<TaskCard>
+    with SingleTickerProviderStateMixin {
   late Timer _timer;
   String _countdownText = '';
   Color? _currentUrgencyColor;
+  final Set<int> _animatingSubtasks = {};
 
   @override
   void initState() {
@@ -334,27 +336,51 @@ class _TaskCardState extends State<TaskCard> {
                             _task.subTasks.asMap().entries.map((entry) {
                           final idx = entry.key;
                           final sub = entry.value;
+                          final isAnimating = _animatingSubtasks.contains(idx);
                           return ListTile(
                             key: Key('subtask_${_task.id}_$idx'),
                             dense: true,
                             title: Text(sub.title,
                                 style: TextStyle(
                                     color: textColor, fontSize: 16)),
-                            leading: SemanticHelper.toggle(
-                              testId:
-                                  '${SemanticTypes.toggle}_subtask_${_task.id}_$idx',
-                              value: sub.isCompleted,
-                              child: Checkbox(
-                                key: Key('chk_subtask_${_task.id}_$idx'),
+                            leading: TweenAnimationBuilder<double>(
+                              tween: Tween<double>(
+                                begin: isAnimating ? 0.0 : 1.0,
+                                end: 1.0,
+                              ),
+                              duration: const Duration(milliseconds: 350),
+                              curve: Curves.elasticOut,
+                              builder: (context, scale, child) =>
+                                  Transform.scale(scale: scale, child: child),
+                              child: SemanticHelper.toggle(
+                                testId:
+                                    '${SemanticTypes.toggle}_subtask_${_task.id}_$idx',
                                 value: sub.isCompleted,
-                                onChanged: widget.onSubTaskToggle != null
-                                    ? (val) =>
-                                        widget.onSubTaskToggle!(idx, val)
-                                    : null,
-                                checkColor: Colors.black,
-                                activeColor: Colors.amberAccent,
-                                shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(4)),
+                                child: Checkbox(
+                                  key: Key('chk_subtask_${_task.id}_$idx'),
+                                  value: sub.isCompleted,
+                                  onChanged: widget.onSubTaskToggle != null
+                                      ? (val) {
+                                          widget.onSubTaskToggle!(idx, val);
+                                          setState(() {
+                                            _animatingSubtasks.add(idx);
+                                          });
+                                          Future.delayed(
+                                              const Duration(milliseconds: 400),
+                                              () {
+                                            if (mounted) {
+                                              setState(() {
+                                                _animatingSubtasks.remove(idx);
+                                              });
+                                            }
+                                          });
+                                        }
+                                      : null,
+                                  checkColor: Colors.black,
+                                  activeColor: Colors.amberAccent,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(4)),
+                                ),
                               ),
                             ),
                           );

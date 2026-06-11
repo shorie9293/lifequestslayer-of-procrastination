@@ -53,4 +53,23 @@ final List<TitleDefinition> kAllTitles = [
     requiredCount: 1,
     getProgress: (p) => p.timesWardenDefeated,
   ),
+  // ── ストリーク称号（UX-10） ──
+  TitleDefinition(
+    id: '月を跨ぎし者',
+    condition: 'ストリーク30日達成',
+    requiredCount: 30,
+    getProgress: (p) => p.streakDays,
+  ),
+  TitleDefinition(
+    id: '継続の達人',
+    condition: 'ストリーク60日達成',
+    requiredCount: 60,
+    getProgress: (p) => p.streakDays,
+  ),
+  TitleDefinition(
+    id: '時の支配者',
+    condition: 'ストリーク100日達成',
+    requiredCount: 100,
+    getProgress: (p) => p.streakDays,
+  ),
 ];

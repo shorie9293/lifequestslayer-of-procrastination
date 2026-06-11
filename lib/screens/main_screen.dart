@@ -228,6 +228,19 @@ class _MainScreenState extends State<MainScreen> {
 
   void _showStreakRewardDialog(int reward, int streak) {
     final emoji = streak >= 30 ? '⭐' : streak >= 14 ? '🌟' : streak >= 7 ? '🔥' : '✨';
+    // ── ストリーク称号（UX-10） ──
+    String? streakTitle;
+    String? legendMessage;
+    if (streak >= 100) {
+      streakTitle = '【称号】時の支配者';
+      legendMessage = '伝説の領域へ⋯⋯時の流れすら味方につけた冒険者よ、\nその歩みはもはや神話の一節なり。';
+    } else if (streak >= 60) {
+      streakTitle = '【称号】継続の達人';
+      legendMessage = '継続こそ最大の力。二ヶ月の積み重ねが、\n凡人の域を超えた達人の境地を開く。';
+    } else if (streak >= 30) {
+      streakTitle = '【称号】月を跨ぎし者';
+      legendMessage = '一ヶ月を超えし者にのみ与えられし称号。\n日々の積み重ねが、ここに一つの伝説を刻む。';
+    }
     showGeneralDialog(
       context: context, barrierDismissible: true, barrierLabel: '', barrierColor: Colors.black87,
       transitionDuration: const Duration(milliseconds: 600),
@@ -250,6 +263,22 @@ class _MainScreenState extends State<MainScreen> {
             Text('$streak日連続ログイン！', style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
             Text('💰 +$reward 文', style: const TextStyle(color: Colors.amber, fontSize: 40, fontWeight: FontWeight.bold)),
+            if (streakTitle != null) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.amber.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+                ),
+                child: Text(streakTitle!, style: const TextStyle(color: Colors.amberAccent, fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ],
+            if (legendMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(legendMessage!, textAlign: TextAlign.center, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 11, fontStyle: FontStyle.italic)),
+            ],
             const SizedBox(height: 24),
             SemanticHelper.interactive(
               testId: SemanticHelper.createTestId(SemanticTypes.button, 'claim_streak_reward'), label: 'ストリーク報酬を受け取る',

@@ -109,13 +109,14 @@ class PlayerViewModel extends ChangeNotifier {
       _player.weeklySRankCompleted = 0;
     }
     if (!login) return;
-    StreakService.checkAndUpdateStreak(_player, now);
+    final streakReward = StreakService.checkAndUpdateStreak(_player, now);
+    if (streakReward > 0) {
+      pendingStreakReward = streakReward;
+    }
     if (changed) {
       _player.coins += 50;
       pendingLoginBonusAmount = 50;
     }
-    // streak reward is set in StreakService.checkAndUpdateStreak
-    // We expose it through the player; callers check streakDays
   }
 
   // ── 操作 ──
