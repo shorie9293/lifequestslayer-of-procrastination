@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/town/domain/random_event.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// Overlay widget to display a random town event.
 class TownEventOverlay extends StatelessWidget {
@@ -44,10 +45,13 @@ class TownEventOverlay extends StatelessWidget {
                     style: const TextStyle(fontSize: 15, height: 1.5),
                   ),
                   const SizedBox(height: 20),
-                  ElevatedButton(
-                    key: AppKeys.townEventClose,
-                    onPressed: onClose,
-                    child: const Text('閉じる'),
+                  SemanticHelper.interactive(
+                    testId: SemanticHelper.createTestId(SemanticTypes.button, 'town_event_close'),
+                    child: ElevatedButton(
+                      key: AppKeys.townEventClose,
+                      onPressed: onClose,
+                      child: const Text('閉じる'),
+                    ),
                   ),
                 ],
               ),

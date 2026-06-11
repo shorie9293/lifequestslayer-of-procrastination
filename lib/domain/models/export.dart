@@ -5,5 +5,6 @@ export 'reflection.dart';
 export 'reflection_badge.dart';
 export 'skill_slot.dart';
 export 'skill_tree.dart';
+export 'skill_effects.dart';
 export 'title_definition.dart';
 export 'battle_state.dart';

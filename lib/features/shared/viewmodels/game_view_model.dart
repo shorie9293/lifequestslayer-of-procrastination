@@ -215,8 +215,14 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   // ── ライフサイクル ──
   @override void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
-      _playerVM.save().catchError((e) => debugPrint('GameViewModel: lifecycle player save failed: $e'));
-      _taskVM.save().catchError((e) => debugPrint('GameViewModel: lifecycle task save failed: $e'));
+      _playerVM.save().catchError((e) {
+        debugPrint('GameViewModel: lifecycle player save failed: $e');
+        _playerVM.onSaveError?.call();
+      });
+      _taskVM.save().catchError((e) {
+        debugPrint('GameViewModel: lifecycle task save failed: $e');
+        _taskVM.onSaveError?.call();
+      });
     }
   }
 
@@ -247,6 +253,8 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
       await Future.wait([_playerVM.save(), _taskVM.save()]);
     } catch (e) {
       debugPrint('GameViewModel: save failed: $e');
+      _playerVM.onSaveError?.call();
+      _taskVM.onSaveError?.call();
     } finally {
       _isSaving = false;
       if (_pending) {
@@ -256,6 +264,8 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
           await Future.wait([_playerVM.save(), _taskVM.save()]);
         } catch (e) {
           debugPrint('GameViewModel: retry save failed: $e');
+          _playerVM.onSaveError?.call();
+          _taskVM.onSaveError?.call();
         }
       }
     }

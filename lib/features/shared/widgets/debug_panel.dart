@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// デバッグパネル — ModalBottomSheetで値を自由操作
 ///
@@ -117,7 +118,10 @@ class _DebugPanelState extends State<DebugPanel> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                ElevatedButton(onPressed: _setCoins, child: const Text('設定')),
+                SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(SemanticTypes.button, 'debug_set_coins'),
+                  child: ElevatedButton(onPressed: _setCoins, child: const Text('設定')),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -140,7 +144,10 @@ class _DebugPanelState extends State<DebugPanel> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                ElevatedButton(onPressed: _setGems, child: const Text('設定')),
+                SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(SemanticTypes.button, 'debug_set_gems'),
+                  child: ElevatedButton(onPressed: _setGems, child: const Text('設定')),
+                ),
               ],
             ),
             const SizedBox(height: 16),
@@ -165,18 +172,24 @@ class _DebugPanelState extends State<DebugPanel> {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _completeAll,
-                    icon: const Icon(Icons.done_all, size: 18),
-                    label: const Text('全クエスト完了'),
+                  child: SemanticHelper.interactive(
+                    testId: SemanticHelper.createTestId(SemanticTypes.button, 'debug_complete_all'),
+                    child: OutlinedButton.icon(
+                      onPressed: _completeAll,
+                      icon: const Icon(Icons.done_all, size: 18),
+                      label: const Text('全クエスト完了'),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _addTestTasks,
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('テストクエスト追加'),
+                  child: SemanticHelper.interactive(
+                    testId: SemanticHelper.createTestId(SemanticTypes.button, 'debug_add_test_tasks'),
+                    child: OutlinedButton.icon(
+                      onPressed: _addTestTasks,
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('テストクエスト追加'),
+                    ),
                   ),
                 ),
               ],
@@ -219,9 +232,12 @@ class _DebugPanelState extends State<DebugPanel> {
 
   Widget _expButton(int amount) {
     return Expanded(
-      child: ElevatedButton(
-        onPressed: () => _addExp(amount),
-        child: Text('+$amount'),
+      child: SemanticHelper.interactive(
+        testId: SemanticHelper.createTestId(SemanticTypes.button, 'debug_add_exp_$amount'),
+        child: ElevatedButton(
+          onPressed: () => _addExp(amount),
+          child: Text('+$amount'),
+        ),
       ),
     );
   }

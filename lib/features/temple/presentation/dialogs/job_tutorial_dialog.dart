@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 職業説明チュートリアルダイアログ。
 /// 冒険者Lv10到達時に表示され、全16スキル（4職業×4）の解説と
@@ -305,28 +306,40 @@ class _JobTutorialDialogState extends State<JobTutorialDialog> {
         children: [
           // 戻るボタン
           if (_currentPage > 0 && _currentPage < _totalPages - 1)
-            TextButton(
-              onPressed: _previousPage,
-              child: const Text('← 戻る'),
+            SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(SemanticTypes.button, 'tutorial_prev'),
+              child: TextButton(
+                onPressed: _previousPage,
+                child: const Text('← 戻る'),
+              ),
             )
           else
             const SizedBox.shrink(),
           // スキップ
           if (_currentPage < _totalPages - 1 && widget.onSkip != null)
-            TextButton(
-              onPressed: widget.onSkip,
-              child: const Text('スキップ'),
+            SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(SemanticTypes.button, 'tutorial_skip'),
+              child: TextButton(
+                onPressed: widget.onSkip,
+                child: const Text('スキップ'),
+              ),
             ),
           // 次へ / 閉じる
           if (_currentPage < _totalPages - 1)
-            ElevatedButton(
-              onPressed: _nextPage,
-              child: const Text('次へ →'),
+            SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(SemanticTypes.button, 'tutorial_next'),
+              child: ElevatedButton(
+                onPressed: _nextPage,
+                child: const Text('次へ →'),
+              ),
             )
           else
-            ElevatedButton(
-              onPressed: widget.onClose,
-              child: const Text('閉じる'),
+            SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(SemanticTypes.button, 'tutorial_close'),
+              child: ElevatedButton(
+                onPressed: widget.onClose,
+                child: const Text('閉じる'),
+              ),
             ),
         ],
       ),

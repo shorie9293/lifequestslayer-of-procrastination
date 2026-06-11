@@ -84,6 +84,7 @@ class AvatarPreviewWidget extends StatelessWidget {
         width: iconSize,
         height: iconSize,
         fit: BoxFit.cover,
+        semanticLabel: 'アバター画像',
         errorBuilder: (_, __, ___) =>
             Icon(Icons.person, color: Colors.white54, size: iconSize * 0.6),
       ),

@@ -114,6 +114,7 @@ class _CharacterAvatar extends StatelessWidget {
         width: 56,
         height: 56,
         fit: BoxFit.cover,
+        semanticLabel: 'プレイヤーアバター',
         errorBuilder: (_, __, ___) =>
             const Icon(Icons.person, color: Colors.white54, size: 32),
       ),
