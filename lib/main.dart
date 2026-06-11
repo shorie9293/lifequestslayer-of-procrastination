@@ -12,6 +12,7 @@ import 'screens/main_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/core/infrastructure/notification_service.dart';
 import 'package:rpg_todo/core/infrastructure/iap_service.dart';
 import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
@@ -29,6 +30,7 @@ void main() async {
   Hive.registerAdapter(RepeatIntervalAdapter()); // TypeId: 5
   Hive.registerAdapter(SubTaskAdapter()); // TypeId: 6
   Hive.registerAdapter(JobSkillAdapter()); // TypeId: 10
+  Hive.registerAdapter(ReflectionAdapter()); // TypeId: 7
 
   // Boxes are opened in Repositories on demand/init.
 

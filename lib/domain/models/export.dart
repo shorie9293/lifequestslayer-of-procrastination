@@ -3,6 +3,7 @@ export 'task.dart';
 export 'player.dart';
 export 'reflection.dart';
 export 'reflection_badge.dart';
+export 'gryphon_report.dart';
 export 'skill_slot.dart';
 export 'skill_tree.dart';
 export 'skill_effects.dart';
