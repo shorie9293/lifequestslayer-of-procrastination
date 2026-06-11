@@ -7,6 +7,9 @@ import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/services/fatigue_service.dart';
 import 'package:rpg_todo/domain/services/streak_service.dart';
 import 'package:rpg_todo/domain/services/title_service.dart';
+import 'package:rpg_todo/domain/services/reflection_badge_service.dart';
+import 'package:rpg_todo/domain/models/reflection.dart';
+import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
 import 'package:rpg_todo/core/utils/date_utils.dart';
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
@@ -50,6 +53,31 @@ class PlayerViewModel extends ChangeNotifier {
 
   List<({TitleDefinition def, int progress, bool isUnlocked})> get titleProgressList =>
       TitleService.getTitleProgressList(_player);
+
+  /// 獲得済みの内省バッジID一覧。
+  List<String> get reflectionBadges => _player.reflectionBadges;
+
+  /// 累計振り返り回数。
+  int get totalReflections => _player.totalReflections;
+
+  /// 振り返りを記録し、内省バッジをチェックする。
+  /// [bonusMessages] に獲得したバッジのメッセージが追加される。
+  Future<void> checkReflectionBadges({
+    required ReflectionRepository repository,
+    required Reflection latestReflection,
+    List<String>? bonusMessages,
+  }) async {
+    _player.recordReflection();
+    final messages = bonusMessages ?? <String>[];
+    await ReflectionBadgeService.checkBadges(
+      _player,
+      messages,
+      repository: repository,
+      latestReflection: latestReflection,
+    );
+    notifyListeners();
+    _autoSave();
+  }
 
   bool canAcceptQuest(QuestRank rank, int currentCount) =>
       _player.canAcceptQuest(rank, currentCount);

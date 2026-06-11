@@ -272,6 +272,12 @@ class Player {
   /// 解放済みのスキルノードID一覧。
   List<String> unlockedSkillIds = [];
 
+  // --- v6: 内省バッジシステム ---
+  /// 累計振り返り回数。
+  int totalReflections = 0;
+  /// 獲得済み内省バッジID一覧。
+  List<String> reflectionBadges = [];
+
   /// T9: 集中の型 — ポモドーロセッションがアクティブか
   bool get isPomodoroActive {
     if (pomodoroStartTime == null) return false;
@@ -383,6 +389,8 @@ class Player {
     Map<String, TaskStreak>? taskStreaks,
     this.skillPoints = 0,
     List<String>? unlockedSkillIds,
+    this.totalReflections = 0,
+    List<String>? reflectionBadges,
   })  : characterSkin = characterSkin ?? const CharacterSkin(), jobLevels = jobLevels ?? {Job.adventurer: 1},
         jobExps = jobExps ?? {Job.adventurer: 0},
         activeSkills = activeSkills ?? {},
@@ -395,7 +403,8 @@ class Player {
         taskProjects = taskProjects ?? {},
         snoozedTasks = snoozedTasks ?? {},
         taskStreaks = taskStreaks ?? {},
-        unlockedSkillIds = unlockedSkillIds ?? [];
+        unlockedSkillIds = unlockedSkillIds ?? [],
+        reflectionBadges = reflectionBadges ?? [];
 
   // Getters for current job (Compatibility)
   int get level => jobLevels[currentJob] ?? 1;
@@ -620,6 +629,13 @@ class Player {
   /// このノードが解放済みか。
   bool isSkillUnlocked(String nodeId) => unlockedSkillIds.contains(nodeId);
 
+  // --- v6: 内省バッジ ---
+
+  /// 振り返りを1回記録する。
+  void recordReflection() {
+    totalReflections++;
+  }
+
   bool addExp(int amount) {
     // レベル上限到達時はEXPを加算しない
     int lvl = jobLevels[currentJob] ?? 1;
@@ -717,6 +733,9 @@ class Player {
         // v5: スキルツリー
         'skillPoints': skillPoints,
         'unlockedSkillIds': unlockedSkillIds,
+        // v6: 内省バッジ
+        'totalReflections': totalReflections,
+        'reflectionBadges': reflectionBadges,
       };
 
   factory Player.fromJson(Map<String, dynamic> json) {
@@ -801,6 +820,11 @@ class Player {
       unlockedSkillIds: (json['unlockedSkillIds'] as List<dynamic>?)
               ?.cast<String>() ??
           [],
+      // v6: 内省バッジ
+      totalReflections: (json['totalReflections'] as int?) ?? 0,
+      reflectionBadges: (json['reflectionBadges'] as List<dynamic>?)
+              ?.cast<String>() ??
+          [],
     );
   }
 }
@@ -809,7 +833,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
   @override
   final int typeId = 3;
 
-  static const int _formatVersion = 5;
+  static const int _formatVersion = 6;
 
   /// Release でも logcat に出力する簡易ロガー
   void _log(String msg, [Object? error]) {
@@ -823,6 +847,9 @@ class PlayerAdapter extends TypeAdapter<Player> {
     _log('Reading Player data (formatVersion=$version, currentVersion=$_formatVersion)');
 
     try {
+      if (version == 6) {
+        return _readV6(reader);
+      }
       if (version == 5) {
         return _readV5(reader);
       }
@@ -852,6 +879,26 @@ class PlayerAdapter extends TypeAdapter<Player> {
       debugPrint('[PlayerAdapter] Stack: $s');
       return Player();
     }
+  }
+
+  Player _readV6(BinaryReader reader) {
+    final player = _readV5(reader);
+
+    try {
+      if (reader.availableBytes >= 4) {
+        player.totalReflections = reader.readInt();
+      }
+    } catch (e) { _log('totalReflections read failed', e); }
+    try {
+      if (reader.availableBytes > 0) {
+        final raw = reader.readList();
+        player.reflectionBadges =
+            (raw as List?)?.cast<String>() ?? [];
+      }
+    } catch (e) { _log('reflectionBadges read failed', e); }
+
+    _log('Player v6 read complete (totalReflections=${player.totalReflections}, badges=${player.reflectionBadges.length})');
+    return player;
   }
 
   Player _readV5(BinaryReader reader) {
@@ -1266,5 +1313,8 @@ class PlayerAdapter extends TypeAdapter<Player> {
     // v5: スキルツリー
     writer.writeInt(obj.skillPoints);
     writer.writeList(obj.unlockedSkillIds);
+    // v6: 内省バッジ
+    writer.writeInt(obj.totalReflections);
+    writer.writeList(obj.reflectionBadges);
   }
 }

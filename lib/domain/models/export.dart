@@ -2,6 +2,7 @@ export 'job.dart';
 export 'task.dart';
 export 'player.dart';
 export 'reflection.dart';
+export 'reflection_badge.dart';
 export 'skill_slot.dart';
 export 'skill_tree.dart';
 export 'title_definition.dart';

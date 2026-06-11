@@ -29,6 +29,13 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
+
+# Code coverage
+coverage/
+
+# Linux build artifacts
+linux/flutter/
+
 /build/
 build/
 

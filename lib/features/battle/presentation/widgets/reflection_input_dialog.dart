@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:uuid/uuid.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
+import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/domain/services/reflection_badge_service.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart';
 
@@ -10,6 +12,8 @@ import 'package:takamagahara_ui/takamagahara_ui.dart';
 /// 戦果報告書の後に表示し、任意で「何を学んだか」の短文と
 /// 自己評価難易度（1-5）を入力できる。
 /// 入力に応じてボーナスXPが付与される。
+///
+/// [player] が指定された場合、保存時に内省バッジのチェックが行われる。
 class ReflectionInputDialog extends StatefulWidget {
   final String taskId;
   final String taskTitle;
@@ -17,6 +21,7 @@ class ReflectionInputDialog extends StatefulWidget {
   final int inputBonusExp;
   final VoidCallback onSaved;
   final VoidCallback onSkipped;
+  final Player? player;
 
   const ReflectionInputDialog({
     super.key,
@@ -26,6 +31,7 @@ class ReflectionInputDialog extends StatefulWidget {
     required this.inputBonusExp,
     required this.onSaved,
     required this.onSkipped,
+    this.player,
   });
 
   /// ダイアログを表示する。
@@ -37,6 +43,7 @@ class ReflectionInputDialog extends StatefulWidget {
     required QuestRank aiDifficulty,
     int inputBonusExp = 50,
     required VoidCallback onSaved,
+    Player? player,
   }) {
     return showDialog<bool>(
       context: context,
@@ -48,6 +55,7 @@ class ReflectionInputDialog extends StatefulWidget {
         inputBonusExp: inputBonusExp,
         onSaved: onSaved,
         onSkipped: () {},
+        player: player,
       ),
     );
   }
@@ -83,6 +91,29 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
     );
 
     await _repository.save(reflection);
+
+    // プレイヤーが指定されていれば内省バッジをチェック
+    if (widget.player != null) {
+      widget.player!.recordReflection();
+      final badgeMessages = <String>[];
+      await ReflectionBadgeService.checkBadges(
+        widget.player!,
+        badgeMessages,
+        repository: _repository,
+        latestReflection: reflection,
+      );
+      // バッジ獲得メッセージがあれば onSaved の前に SnackBar で通知
+      if (badgeMessages.isNotEmpty && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(badgeMessages.join('\n')),
+            duration: const Duration(seconds: 3),
+            backgroundColor: const Color(0xFF4CAF50),
+          ),
+        );
+      }
+    }
+
     widget.onSaved();
 
     if (mounted) {
