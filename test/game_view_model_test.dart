@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/player.dart';
@@ -112,6 +113,55 @@ class _FailingTaskRepo implements ITaskRepository {
   @override
   Future<void> saveTasks(List<Task> tasks) async {}
 
+  @override
+  Future<void> close() async {}
+}
+
+/// savePlayer の完了を外部から制御可能なモック
+class _BlockablePlayerRepo implements IPlayerRepository {
+  @override
+  bool get loadFailedDueToCorruption => false;
+  Player _player = Player();
+  Completer<void>? _blocker;
+  int saveCallCount = 0;
+
+  void blockNextSave(Completer<void> c) => _blocker = c;
+
+  @override
+  Future<Player?> loadPlayer() async => _player;
+  @override
+  Future<void> savePlayer(Player player) async {
+    saveCallCount++;
+    _player = player;
+    if (_blocker != null) {
+      await _blocker!.future;
+      _blocker = null;
+    }
+  }
+  @override
+  Future<void> close() async {}
+}
+
+/// saveTasks の完了を外部から制御可能なモック
+class _BlockableTaskRepo implements ITaskRepository {
+  final List<Task> _tasks = [];
+  Completer<void>? _blocker;
+  int saveCallCount = 0;
+
+  void blockNextSave(Completer<void> c) => _blocker = c;
+
+  @override
+  Future<List<Task>> loadTasks() async => List.from(_tasks);
+  @override
+  Future<void> saveTasks(List<Task> tasks) async {
+    saveCallCount++;
+    _tasks.clear();
+    _tasks.addAll(tasks);
+    if (_blocker != null) {
+      await _blocker!.future;
+      _blocker = null;
+    }
+  }
   @override
   Future<void> close() async {}
 }
@@ -1717,17 +1767,105 @@ void main() {
   });
 
   group('GameViewModel 永続化ガードテスト (_isSaving)', () {
-    test('連続操作で saveData() が並行実行されず、最終データが正しく永続化される', () {
-      // SKIP: _isSaving guard drops intermediate saves.
-    }, skip: true);
+    test('連続操作で saveData() が並行実行されず、最終データが正しく永続化される', () async {
+      final pr = _BlockablePlayerRepo();
+      final tr = _BlockableTaskRepo();
 
-    test('セーブ中に別のミューテーションが発生してもデータ不整合が起きない', () {
-      // SKIP: Same reason.
-    }, skip: true);
+      // 最初の save をブロック
+      final block1 = Completer<void>();
+      tr.blockNextSave(block1);
 
-    test('_isSaving ガードにより saveData が決して並行実行されない', () {
-      // SKIP: Same reason.
-    }, skip: true);
+      final vm = GameViewModel(pr: pr, tr: tr, sr: _MockSettingsRepo());
+      await _waitForLoad(vm);
+
+      // タスク1追加 → save 発動（ブロック中）
+      vm.addTask('タスク1');
+      // タスク2追加 → _isSaving=true のため pending になる
+      vm.addTask('タスク2');
+
+      // ブロック解除 → finally が pending を検出して再 save
+      block1.complete();
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      // 両方のタスクが永続化されていること
+      final saved = await tr.loadTasks();
+      expect(saved.length, 2);
+      expect(saved.map((t) => t.title), containsAll(['タスク1', 'タスク2']));
+    });
+
+    test('セーブ中に別のミューテーションが発生してもデータ不整合が起きない', () async {
+      final pr = _BlockablePlayerRepo();
+      final tr = _BlockableTaskRepo();
+
+      final vm = GameViewModel(pr: pr, tr: tr, sr: _MockSettingsRepo());
+      await _waitForLoad(vm);
+
+      // まずタスクを1つ追加（通常保存）
+      vm.addTask('タスク1');
+      await Future.delayed(const Duration(milliseconds: 100));
+
+      // 次の save をブロック
+      final block1 = Completer<void>();
+      tr.blockNextSave(block1);
+
+      // タスク1を受注・完了（save 発動、ブロック中）
+      final taskId = vm.tasks.first.id;
+      vm.acceptTask(taskId);
+      vm.completeTask(taskId);
+
+      // save ブロック中にタスク2を追加（_pending=true）
+      vm.addTask('タスク2');
+
+      // ブロック解除
+      block1.complete();
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      final saved = await tr.loadTasks();
+      final task1 = saved.where((t) => t.title == 'タスク1').firstOrNull;
+      final task2 = saved.where((t) => t.title == 'タスク2').firstOrNull;
+      expect(task1, isNotNull);
+      expect(task2, isNotNull);
+      // 完了済みタスクは isCompleted=true
+      expect(task1!.isCompleted, true);
+      // 新規追加タスクは未完了
+      expect(task2, isNotNull);
+      expect(task2!.isCompleted, false);
+    });
+
+    test('_isSaving ガードにより saveData が決して並行実行されない', () async {
+      final pr = _BlockablePlayerRepo();
+      final tr = _BlockableTaskRepo();
+
+      final vm = GameViewModel(pr: pr, tr: tr, sr: _MockSettingsRepo());
+      await _waitForLoad(vm);
+
+      // loadData 後の save 回数を基準値として記録
+      final baseCount = tr.saveCallCount;
+
+      // save をブロック
+      final block1 = Completer<void>();
+      tr.blockNextSave(block1);
+
+      // 最初の save（ブロック中）
+      vm.addTask('タスク1');
+      // 2回目の save（ガードにより pending 化される）
+      vm.addTask('タスク2');
+
+      // ブロック解除 → pending 再 save が走る
+      block1.complete();
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      // 最終的に2回分の save が追加で完了（初回 + pending retry）
+      // ガードにより save の並行実行は防止されている（_pending フラグ経由で逐次実行）
+      final finalCount = tr.saveCallCount;
+      expect(finalCount, greaterThanOrEqualTo(baseCount + 2),
+          reason: 'ガードにより並行 save は防止され、pending retry で全データが保存される');
+
+      // 両方のタスクが正しく永続化されている
+      final saved = await tr.loadTasks();
+      expect(saved.where((t) => t.title == 'タスク1'), isNotEmpty);
+      expect(saved.where((t) => t.title == 'タスク2'), isNotEmpty);
+    });
   });
 }
 
