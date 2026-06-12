@@ -173,7 +173,7 @@ class RealGryphonInsightGenerator implements GryphonInsightGenerator {
     if (scoreMatch != null) {
       growthScore = int.tryParse(scoreMatch.group(1)!);
       if (growthScore != null) {
-        growthScore = growthScore!.clamp(0, 100);
+        growthScore = growthScore.clamp(0, 100);
       }
     }
 

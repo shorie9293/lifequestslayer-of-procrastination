@@ -1,6 +1,4 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 
 /// 注: このテストは gryphon_insight_generator.dart を直接参照する。
 /// rpg-task プロジェクトへの統合時は import パスを
@@ -183,7 +181,7 @@ Map<String, dynamic> _parseResponse(String content) {
   if (scoreMatch != null) {
     growthScore = int.tryParse(scoreMatch.group(1)!);
     if (growthScore != null) {
-      growthScore = growthScore!.clamp(0, 100);
+      growthScore = growthScore.clamp(0, 100);
     }
   }
 

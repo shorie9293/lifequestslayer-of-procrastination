@@ -29,7 +29,7 @@ class FakeGryphonInsightGenerator {
     _lastSelfDifficulties = selfDifficulties;
 
     if (_fixedResponse != null) {
-      return _fixedResponse!;
+      return _fixedResponse;
     }
 
     return {
