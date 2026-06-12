@@ -116,6 +116,7 @@ class Task {
   DateTime? deadline; // 完成期限
   int? repeatAfterDays; // Cleric Lv1 後追いの祈り: N日後に再活性化
   List<String> tags; // wizardTags: 札（タグ）
+  DateTime? cancelledAt; // M12: 手動取消時刻。autoDeploy時に再配備を抑制する
 
   Task({
     required this.id,
@@ -132,6 +133,7 @@ class Task {
     this.deadline,
     this.repeatAfterDays,
     List<String>? tags,
+    this.cancelledAt,
   })  : subTasks = subTasks ?? [],
         repeatWeekdays = repeatWeekdays ?? [],
         tags = tags ?? [];
@@ -176,6 +178,7 @@ class Task {
         'deadline': deadline?.toIso8601String(),
         'repeatAfterDays': repeatAfterDays,
         'tags': tags,
+        'cancelledAt': cancelledAt?.toIso8601String(),
       };
 
   factory Task.fromJson(Map<String, dynamic> json) {
@@ -204,6 +207,9 @@ class Task {
           : null,
       repeatAfterDays: json['repeatAfterDays'] as int?,
       tags: (json['tags'] as List<dynamic>?)?.cast<String>(),
+      cancelledAt: json['cancelledAt'] != null
+          ? DateTime.parse(json['cancelledAt'] as String)
+          : null,
     );
   }
 }
@@ -232,6 +238,11 @@ class TaskAdapter extends TypeAdapter<Task> {
       task.deadline = reader.read();
       task.repeatAfterDays = reader.read();
       task.tags = (reader.read() as List?)?.cast<String>() ?? [];
+      try {
+        task.cancelledAt = reader.read();
+      } catch (_) {
+        // M12: 旧データには cancelledAt がないためフォールバック
+      }
     } catch (e) {
       // 過去のデータを読み込んだ場合のフォールバック
     }
@@ -254,5 +265,6 @@ class TaskAdapter extends TypeAdapter<Task> {
     writer.write(obj.deadline);
     writer.write(obj.repeatAfterDays);
     writer.write(obj.tags);
+    writer.write(obj.cancelledAt);
   }
 }

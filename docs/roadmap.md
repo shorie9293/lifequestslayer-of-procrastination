@@ -396,17 +396,20 @@ v2.1では以下の5機能でこの課題を克服する。
 
 ---
 
-### 🌐 v2.2「神々の連環の章」（予定 — 他現世β後に策定）
+### 🌐 v2.2「神々の連環の章」（検証日: 令和八年水無月十二日）
 
-本格策定は `tsundoku-quest` と `DAIKOKU` のβ開顕後に行う。
-骨子のみ以下に示す：
+基礎実装は進行中。本格的な横断統合は `tsundoku-quest` と `kozuchi` のβ開顕後に行う。
 
-| 項目 | 内容 |
-|------|------|
-| **高天原ユニバーサルID** | 全現世で同一の冒険者を識別する共通ID体系。`shared_preferences` でUUID共有＋Hive Box `universal_profile` |
-| **クロス報酬** | tsundoku-questの読了→rpg-taskで限定称号／rpg-taskのストリーク→DAIKOKUで特別金銭悟りボーナス |
-| **神々の通路** | FastAPI製の軽量連携サーバー。認証共通化＋スコア同期API。`shinsho/jingi.md` に設計を刻む |
-| **学びの循環** | 「読む(tsundoku)→実践する(rpg-task)→悟る(DAIKOKU)」— 大願の三現世横断具現化 |
+#### 実装状況（令和八年水無月十二日現在）
+
+| 項目 | 内容 | 状態 | 詳細 |
+|------|------|------|------|
+| **高天原ユニバーサルID** | 全現世横断の共通ID体系 | ✅ 実装済 | `packages/takamagahara_identity/` (v0.1.0): UniversalId/UUID v4生成・検証、UniversalProfile（immutable）、HiveProfileStorage（Box `universal_profile` 永続化＋バックアップ復元）、UuidBridge（SharedPreferences経由のクロスアプリUUID共有）。rpg-task・tsundoku-questにpath dependencyとして配線済。46試験（Flutter SDKキャッシュ要修復にて現在再検証待ち） |
+| **クロス報酬（設計）** | 報酬イベント定義＋スキーマ | ✅ 設計完了 | 7イベントタイプ定義（book_completed, reading_streak, level_up, xp_milestone, trophy_written, daily_mission_complete, pages_milestone）。11クロスアプリ称号定義。JSONLデータコントラクト＋JSON Schema検証。Supabase auth.users(id)によるID紐付け。Zettelkasten: `03_現世カタログ/08_クロスサービス報酬設計.md` |
+| **クロス報酬（rpg-task側）** | CrossAppRewardService＋称号 | ✅ 実装・試験通過 | `lib/features/crossapp/` (6ファイル): FileCrossAppRewardService（JSONL読取→Hive Box `cross_app_rewards`による冪等性→称号/コイン/EXP報酬付与）。CrossAppTitleDefinition（11称号＋閾値マッチング）。TsundokuIdentityLinkDialog（ID紐付けUI）。CrossAppRewardDialog（報酬通知UI）。**30/30試験全通過（flutter test）** ✅ |
+| **クロス報酬（tsundoku側）** | TsundokuRewardEventExporter | ⚠️ コード有・試験再建要 | `tsundoku_reward_event_exporter.dart` (161行) 実装済。AdventurerProvider/DailyMissionProvider/WarTrophyProvider/BookDataProviderにトリガーフック配線済。試験ファイルは旧scratch workspace消失により再建必要（→ t_1ea5f744） |
+| **神々の通路** | FastAPI連携サーバー | ❌ 再建要 | 旧実装（39試験・11エンドポイント・SQLite永続化）はscratch workspace消失。仕様・エンドポイント定義はZettelkastenに残存。再建タスク t_648c9ef3 にて再具現化予定 |
+| **学びの循環** | tsundoku→rpg-task→kozuchi | ⏸️ 延期 | kozuchi β開顕後に策定 |
 
 ---
 

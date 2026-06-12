@@ -187,6 +187,7 @@ class TaskViewModel extends ChangeNotifier {
     }
     _tasks[i].status = TaskStatus.active;
     _tasks[i].activeAt = DateTime.now();
+    _tasks[i].cancelledAt = null; // M12: 再受注時に取消フラグをクリア
     notifyListeners();
     _autoSave();
     return null;
@@ -202,6 +203,7 @@ class TaskViewModel extends ChangeNotifier {
     final i = _tasks.indexWhere((t) => t.id == id);
     if (i != -1) {
       _tasks[i].status = TaskStatus.inGuild;
+      _tasks[i].cancelledAt = DateTime.now(); // M12: 再起動時のautoDeploy抑制
       notifyListeners();
       _autoSave();
     }
@@ -268,9 +270,10 @@ class TaskViewModel extends ChangeNotifier {
     final now = DateTime.now();
     final tomorrow = now.add(const Duration(days: 1));
 
-    // 今日 + 明日が期限のタスクを集める
+    // 今日 + 明日が期限のタスクを集める（ただし手動取消されたものは除外）
     final urgentTasks = guildTasks.where((t) =>
         t.deadline != null &&
+        t.cancelledAt == null && // M12: 手動取消されたタスクは再配備しない
         (DateUtils.isSameDay(t.deadline!, now) ||
          DateUtils.isSameDay(t.deadline!, tomorrow))).toList();
 
