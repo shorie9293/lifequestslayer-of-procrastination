@@ -34,7 +34,7 @@ void main() {
     }) {
       return Task(
         id: id,
-        title: 'テストタスク',
+        title: 'テストクエスト',
         status: TaskStatus.active,
         rank: QuestRank.B,
         repeatInterval: repeatInterval,
@@ -42,7 +42,7 @@ void main() {
       );
     }
 
-    test('repeatAfterDays設定タスク完了時はisCompleted=false、lastCompletedAtが設定される', () {
+    test('repeatAfterDays設定クエスト完了時はisCompleted=false、lastCompletedAtが設定される', () {
       final task = makeTask(id: 'r1', repeatAfterDays: 3);
       final player = Player();
       player.jobLevels[Job.cleric] = 1;
@@ -57,14 +57,14 @@ void main() {
 
       expect(result, isNotNull);
       expect(task.isCompleted, isFalse,
-          reason: 'repeatAfterDaysタスクは完了してもisCompleted=falseのまま再活性化待ち');
+          reason: 'repeatAfterDaysクエストは完了してもisCompleted=falseのまま再活性化待ち');
       expect(task.lastCompletedAt, isNotNull,
-          reason: 'repeatAfterDaysタスクはlastCompletedAtが記録される');
+          reason: 'repeatAfterDaysクエストはlastCompletedAtが記録される');
       expect(task.status, equals(TaskStatus.active),
-          reason: 'repeatAfterDaysタスクはactive状態を維持');
+          reason: 'repeatAfterDaysクエストはactive状態を維持');
     });
 
-    test('repeatAfterDays=nullの通常タスクは完了時にisCompleted=trueになる', () {
+    test('repeatAfterDays=nullの通常クエストは完了時にisCompleted=trueになる', () {
       final task = makeTask(id: 'r2');
       final player = Player();
       player.jobLevels[Job.cleric] = 1;
@@ -79,7 +79,7 @@ void main() {
 
       expect(result, isNotNull);
       expect(task.isCompleted, isTrue,
-          reason: 'repeatAfterDaysなしのタスクは通常通り完了');
+          reason: 'repeatAfterDaysなしのクエストは通常通り完了');
       expect(task.status, equals(TaskStatus.inGuild));
     });
 
@@ -147,7 +147,7 @@ void main() {
   });
 
   group('Cleric Lv5: 微睡みの加護 (snooze)', () {
-    test('snoozeTask: タスクのdeadlineが翌日に延期される', () {
+    test('snoozeTask: クエストのdeadlineが翌日に延期される', () {
       final player = Player();
       player.jobLevels[Job.cleric] = 5;
       player.currentJob = Job.cleric;
@@ -155,7 +155,7 @@ void main() {
       final now = DateTime(2026, 5, 28, 15, 0);
       final task = Task(
         id: 's1',
-        title: '締切タスク',
+        title: '締切クエスト',
         status: TaskStatus.active,
         deadline: DateTime(2026, 5, 28, 23, 59),
       );
@@ -186,10 +186,10 @@ void main() {
       player.snoozeTask(task.id, task, now);
 
       expect(player.snoozedTasks, contains(task.id),
-          reason: 'snoozeしたタスクIDがsnoozedTasksに記録される');
+          reason: 'snoozeしたクエストIDがsnoozedTasksに記録される');
     });
 
-    test('snoozeTask: deadlineがnullのタスクはsnoozeされない', () {
+    test('snoozeTask: deadlineがnullのクエストはsnoozeされない', () {
       final player = Player();
       player.jobLevels[Job.cleric] = 5;
       player.currentJob = Job.cleric;
@@ -205,12 +205,12 @@ void main() {
       player.snoozeTask(task.id, task, now);
 
       expect(task.deadline, isNull,
-          reason: 'deadlineなしタスクはsnoozeされない');
+          reason: 'deadlineなしクエストはsnoozeされない');
       expect(player.snoozedTasks, isNot(contains(task.id)),
-          reason: 'deadlineなしタスクはsnoozedTasksに記録されない');
+          reason: 'deadlineなしクエストはsnoozedTasksに記録されない');
     });
 
-    test('snoozeTask: 同一タスクを2回snoozeすると2日延期', () {
+    test('snoozeTask: 同一クエストを2回snoozeすると2日延期', () {
       final player = Player();
       player.jobLevels[Job.cleric] = 5;
       player.currentJob = Job.cleric;
@@ -247,7 +247,7 @@ void main() {
 
       // snoozeは既存deadlineから +1日、期限切れdeadlineなら1日進む
       expect(task.deadline!.day, equals(29),
-          reason: '期限切れタスクでもsnoozeでdeadlineが1日延期');
+          reason: '期限切れクエストでもsnoozeでdeadlineが1日延期');
     });
   });
 
@@ -335,12 +335,12 @@ void main() {
           reason: '7日以上のstreakでEXP+20%ボーナス');
     });
 
-    test('getTaskStreakBonus: streakなしのタスクは倍率1.0', () {
+    test('getTaskStreakBonus: streakなしのクエストは倍率1.0', () {
       final player = Player();
 
       final bonus = player.getTaskStreakBonus('unknown-task');
       expect(bonus, equals(1.0),
-          reason: 'streak未記録のタスクは通常倍率');
+          reason: 'streak未記録のクエストは通常倍率');
     });
 
     test('TaskCompletionService: streak7日でEXP+20%ボーナス', () {
@@ -362,7 +362,7 @@ void main() {
 
       final task = Task(
         id: 'st7',
-        title: 'streakタスク',
+        title: 'streakクエスト',
         status: TaskStatus.active,
         rank: QuestRank.B,
       );

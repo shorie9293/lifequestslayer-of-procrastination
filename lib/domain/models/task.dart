@@ -112,7 +112,7 @@ class Task {
   DateTime? lastCompletedAt;
   List<SubTask> subTasks;
   int? targetTimeMinutes; // 見積もり時間（分）
-  DateTime? activeAt; // タスク開始日時（アクティブ化した日時）
+  DateTime? activeAt; // クエスト開始日時（アクティブ化した日時）
   DateTime? deadline; // 完成期限
   int? repeatAfterDays; // Cleric Lv1 後追いの祈り: N日後に再活性化
   List<String> tags; // wizardTags: 札（タグ）

@@ -149,7 +149,7 @@ class _GuildScreenState extends State<GuildScreen> {
     return 'まもなく締切';
   }
 
-  /// 緊急セクションウィジェット（24時間以内の期限タスク）
+  /// 緊急セクションウィジェット（24時間以内の期限クエスト）
   Widget _buildUrgentSection(BuildContext context, List<Task> urgentTasks) {
     return Container(
       key: AppKeys.guildUrgentSection,
@@ -183,7 +183,7 @@ class _GuildScreenState extends State<GuildScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          // 緊急タスク一覧
+          // 緊急クエスト一覧
           ...urgentTasks.map((task) {
             final diff = task.deadline!.difference(DateTime.now());
             final timeStr = _formatTimeRemaining(diff);

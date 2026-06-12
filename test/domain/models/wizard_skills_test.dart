@@ -58,7 +58,7 @@ void main() {
     test('complete returns null when wizardSubtask active and subtasks not all done', () {
       final task = Task(
         id: 'st1',
-        title: 'サブタスクあり',
+        title: 'サブクエストあり',
         status: TaskStatus.active,
         subTasks: [
           SubTask(title: 'サブ1', isCompleted: true),
@@ -79,13 +79,13 @@ void main() {
       );
 
       expect(result, isNull,
-          reason: 'wizardSubtask装備中に未完了サブタスクがあると完了不可');
+          reason: 'wizardSubtask装備中に未完了サブクエストがあると完了不可');
     });
 
     test('complete succeeds when wizardSubtask active and all subtasks done', () {
       final task = Task(
         id: 'st2',
-        title: '全サブタスク完了',
+        title: '全サブクエスト完了',
         status: TaskStatus.active,
         subTasks: [
           SubTask(title: 'サブ1', isCompleted: true),
@@ -106,13 +106,13 @@ void main() {
       );
 
       expect(result, isNotNull,
-          reason: '全サブタスク完了ならwizardSubtask装備中でも完了可能');
+          reason: '全サブクエスト完了ならwizardSubtask装備中でも完了可能');
     });
 
     test('complete succeeds (no subtask check) when wizardSubtask NOT equipped', () {
       final task = Task(
         id: 'st3',
-        title: '未完了サブタスクあり',
+        title: '未完了サブクエストあり',
         status: TaskStatus.active,
         subTasks: [
           SubTask(title: 'サブ1', isCompleted: false),
@@ -132,13 +132,13 @@ void main() {
       );
 
       expect(result, isNotNull,
-          reason: 'wizardSubtask未装備ならサブタスク未完了でも完了可能');
+          reason: 'wizardSubtask未装備ならサブクエスト未完了でも完了可能');
     });
 
     test('complete does not block when subtasks list is empty', () {
       final task = Task(
         id: 'st4',
-        title: 'サブタスクなし',
+        title: 'サブクエストなし',
         status: TaskStatus.active,
       );
       final player = Player(
@@ -155,7 +155,7 @@ void main() {
       );
 
       expect(result, isNotNull,
-          reason: 'サブタスクが空ならwizardSubtask装備中でも完了可能');
+          reason: 'サブクエストが空ならwizardSubtask装備中でも完了可能');
     });
   });
 
@@ -169,7 +169,7 @@ void main() {
     });
 
     test('can set tags on Task', () {
-      final task = Task(id: 't2', title: '札付きタスク', tags: ['神事', '緊急']);
+      final task = Task(id: 't2', title: '札付きクエスト', tags: ['神事', '緊急']);
       expect(task.tags, ['神事', '緊急']);
     });
 
@@ -298,7 +298,7 @@ void main() {
       service = TaskCompletionService();
     });
 
-    test('全タスク完了でプロジェクトボーナスEXPが付与される', () {
+    test('全クエスト完了でプロジェクトボーナスEXPが付与される', () {
       final project = ProjectGroup(
         name: '試練の陣',
         bonusExp: 300,
@@ -347,7 +347,7 @@ void main() {
       expect(
         result2!.bonusMessages.any((m) => m.contains('計画の陣')),
         isTrue,
-        reason: '全タスク完了でプロジェクトボーナスメッセージが付与される',
+        reason: '全クエスト完了でプロジェクトボーナスメッセージが付与される',
       );
       // EXPが通常Bランク100 + ボーナス300 = 400以上
       expect(result2.expGain, greaterThanOrEqualTo(400),

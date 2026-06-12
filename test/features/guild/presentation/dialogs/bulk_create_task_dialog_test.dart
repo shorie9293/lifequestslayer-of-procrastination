@@ -256,7 +256,7 @@ void main() {
       final inputField = tester.widget<TextField>(
         find.byKey(AppKeys.bulkCreateTaskInput),
       );
-      inputField.controller!.text = 'タスク1\n\nタスク2\n   \nタスク3';
+      inputField.controller!.text = 'クエスト1\n\nクエスト2\n   \nクエスト3';
       await tester.pump();
 
       await tester.tap(find.byKey(AppKeys.bulkCreateTaskSubmit));

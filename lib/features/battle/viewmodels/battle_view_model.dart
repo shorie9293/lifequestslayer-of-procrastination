@@ -11,7 +11,7 @@ enum BattleTactic {
   /// 通常攻撃 — 標準的な討伐。
   attack,
 
-  /// 防御 — サブタスク未完了でも経験値半減で撤退可能。
+  /// 防御 — サブクエスト未完了でも経験値半減で撤退可能。
   defend,
 
   /// スキル — ジョブスキルに応じた特殊効果（v2.1スキルツリー連動）。
@@ -25,7 +25,7 @@ class BattleResult {
   /// 討伐に成功したか。
   final bool isVictory;
 
-  /// 討伐対象のタスク。
+  /// 討伐対象のクエスト。
   final Task task;
 
   /// 獲得EXP。
@@ -79,7 +79,7 @@ class BattleViewModel extends ChangeNotifier {
   final BattlePhase _phase = BattlePhase();
   final ComboSystem _combo;
 
-  /// 現在戦闘中のタスク（対峙中のみ非null）。
+  /// 現在戦闘中のクエスト（対峙中のみ非null）。
   Task? _currentTask;
 
   /// 選択中の戦術。
@@ -103,7 +103,7 @@ class BattleViewModel extends ChangeNotifier {
   /// 戦闘が終了したかどうか。
   bool get isFinished => _phase.isFinished;
 
-  /// 現在戦闘中のタスク。
+  /// 現在戦闘中のクエスト。
   Task? get currentTask => _currentTask;
 
   /// 選択中の戦術。
@@ -131,7 +131,7 @@ class BattleViewModel extends ChangeNotifier {
 
   /// 戦闘を開始する（idle → facing）。
   ///
-  /// [task] に討伐対象のタスクを渡す。
+  /// [task] に討伐対象のクエストを渡す。
   /// すでに戦闘中の場合は [BattlePhaseException] を投げる。
   void enterBattle(Task task) {
     _phase.startBattle();

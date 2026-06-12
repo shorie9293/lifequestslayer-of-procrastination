@@ -156,7 +156,7 @@ extension JobSkillMeta on JobSkill {
   }
 }
 
-/// Cleric Lv10: タスクごとの連続完了記録
+/// Cleric Lv10: クエストごとの連続完了記録
 class TaskStreak {
   int currentStreak;
   DateTime lastCompletedDate;
@@ -333,15 +333,15 @@ class Player {
   List<String> tags;
   List<ProjectGroup> projects;
 
-  // --- v4: wizardTags — タグ→タスクIDの逆引きマップ ---
+  // --- v4: wizardTags — タグ→クエストIDの逆引きマップ ---
   Map<String, List<String>> taskTags;
-  // --- v4: wizardProject — タスクID→プロジェクト名の逆引きマップ ---
+  // --- v4: wizardProject — クエストID→プロジェクト名の逆引きマップ ---
   Map<String, String> taskProjects;
 
   // --- v4: Cleric スキル用 ---
-  /// Lv5: 微睡みの加護 — snooze済みタスクID → snooze実行日
+  /// Lv5: 微睡みの加護 — snooze済みクエストID → snooze実行日
   Map<String, DateTime> snoozedTasks = {};
-  /// Lv10: 連続の誓い — タスクごとの連続完了記録
+  /// Lv10: 連続の誓い — クエストごとの連続完了記録
   Map<String, TaskStreak> taskStreaks = {};
 
   Player({
@@ -419,10 +419,10 @@ class Player {
 
   Map<QuestRank, int> get questSlots {
     // Mastery: Adventurer Lv10 unlocks max slots permanently?
-    // Request: "冒険者のスキル(タスクランク、数の解放)は常時オン" implies if Adventurer mastered, we use Adventurer stats?
+    // Request: "冒険者のスキル(クエストランク、数の解放)は常時オン" implies if Adventurer mastered, we use Adventurer stats?
     // "基本色は20レベルになると...冒険者は10レベル"
     // "各職業のレベルは転職しても維持"
-    // "冒険者のスキルのタスクランク...は常時オン" -> This likely means if you master Adventurer, you get the slots of a high level adventurer even if you are Lv1 Warrior.
+    // "冒険者のスキルのクエストランク...は常時オン" -> This likely means if you master Adventurer, you get the slots of a high level adventurer even if you are Lv1 Warrior.
 
     int refLevel = level;
     if (isMastered(Job.adventurer)) {
@@ -503,7 +503,7 @@ class Player {
 
   // --- wizardTags ---
 
-  /// タスクに札（タグ）を付ける
+  /// クエストに札（タグ）を付ける
   void tagTask(String taskId, String tag) {
     taskTags.putIfAbsent(tag, () => []);
     if (!taskTags[tag]!.contains(taskId)) {
@@ -511,7 +511,7 @@ class Player {
     }
   }
 
-  /// タスクから札を外す
+  /// クエストから札を外す
   void untagTask(String taskId, String tag) {
     taskTags[tag]?.remove(taskId);
     if (taskTags[tag]?.isEmpty ?? false) {
@@ -519,19 +519,19 @@ class Player {
     }
   }
 
-  /// 指定された札に紐づくタスクID一覧を返す
+  /// 指定された札に紐づくクエストID一覧を返す
   List<String> getTaskIdsByTag(String tag) {
     return List.unmodifiable(taskTags[tag] ?? []);
   }
 
   // --- wizardProject ---
 
-  /// タスクをプロジェクトに所属させる
+  /// クエストをプロジェクトに所属させる
   void addToProject(String taskId, String projectName) {
     taskProjects[taskId] = projectName;
   }
 
-  /// タスクをプロジェクトから外す
+  /// クエストをプロジェクトから外す
   void removeFromProject(String taskId) {
     taskProjects.remove(taskId);
   }
@@ -539,7 +539,7 @@ class Player {
   // v1.3: レベル上限（powオーバーフロー防止）
   static const int maxLevel = 99;
 
-  /// Cleric Lv5: 微睡みの加護 — タスクのdeadlineを翌日に延期
+  /// Cleric Lv5: 微睡みの加護 — クエストのdeadlineを翌日に延期
   void snoozeTask(String taskId, Task task, DateTime now) {
     if (task.deadline == null) return;
     final currentDeadline = task.deadline!;
@@ -548,7 +548,7 @@ class Player {
     snoozedTasks[taskId] = now;
   }
 
-  /// Cleric Lv10: 連続の誓い — タスク完了を記録しstreakを更新
+  /// Cleric Lv10: 連続の誓い — クエスト完了を記録しstreakを更新
   void recordTaskCompletion(String taskId, DateTime completedDate) {
     final today = DateTime(completedDate.year, completedDate.month, completedDate.day);
     final existing = taskStreaks[taskId];

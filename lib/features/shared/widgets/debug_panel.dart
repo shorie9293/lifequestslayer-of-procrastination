@@ -8,7 +8,7 @@ import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// デバッグパネル — ModalBottomSheetで値を自由操作
 ///
-/// コイン/Gemの直接設定、EXP追加、タスク一括完了、テストタスク追加が可能。
+/// コイン/Gemの直接設定、EXP追加、クエスト一括完了、テストクエスト追加が可能。
 /// SettingsViewModel.isDebugMode == true の時のみ表示される。
 class DebugPanel extends StatefulWidget {
   final SettingsViewModel settingsVM;

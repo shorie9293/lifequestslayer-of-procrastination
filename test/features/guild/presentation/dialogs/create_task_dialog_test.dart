@@ -167,8 +167,8 @@ void main() {
     });
 
     testWidgets('編集モードで開いて閉じてもdisposeエラーが発生しない', (tester) async {
-      // 既存タスクを作成
-      gameVM.addTask('テストタスク', rank: QuestRank.A);
+      // 既存クエストを作成
+      gameVM.addTask('テストクエスト', rank: QuestRank.A);
       await tester.pump(const Duration(milliseconds: 100));
       final task = gameVM.tasks.first;
 

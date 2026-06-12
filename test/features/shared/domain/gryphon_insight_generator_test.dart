@@ -119,7 +119,7 @@ void main() {
       expect(result['nextSteps'], isNotEmpty);
     });
 
-    test('高難易度タスクのフォールバック', () {
+    test('高難易度クエストのフォールバック', () {
       final result = _fallbackInsight(
         ['難しいタスクだった', '挑戦的だった'],
         [85, 90],
@@ -128,7 +128,7 @@ void main() {
       expect(result['growthScore'], greaterThanOrEqualTo(80));
     });
 
-    test('低難易度タスクのフォールバック', () {
+    test('低難易度クエストのフォールバック', () {
       final result = _fallbackInsight(
         ['簡単だった'],
         [20],

@@ -199,7 +199,7 @@ void main() {
           _TestReflection(
             id: 'r1',
             taskId: 't1',
-            taskTitle: '今週のタスク',
+            taskTitle: '今週のクエスト',
             createdAt: DateTime(2026, 6, 2), // 火曜（6/1の週）
             content: '集中できた',
             selfDifficulty: 60,
@@ -207,7 +207,7 @@ void main() {
           _TestReflection(
             id: 'r2',
             taskId: 't2',
-            taskTitle: '先週のタスク',
+            taskTitle: '先週のクエスト',
             createdAt: DateTime(2026, 5, 28), // 先週
             content: '頑張った',
             selfDifficulty: 80,
@@ -266,7 +266,7 @@ void main() {
           _TestReflection(
             id: 'r1',
             taskId: 't1',
-            taskTitle: 'タスク1',
+            taskTitle: 'クエスト1',
             createdAt: DateTime(2026, 6, 2),
             content: '良い週だった',
             selfDifficulty: 70,
@@ -291,7 +291,7 @@ void main() {
           _TestReflection(
             id: 'r1',
             taskId: 't1',
-            taskTitle: '日曜のタスク',
+            taskTitle: '日曜のクエスト',
             createdAt: DateTime(2026, 6, 1, 0, 0), // 日曜 0:00
             content: '早起き',
             selfDifficulty: 50,
@@ -311,7 +311,7 @@ void main() {
           _TestReflection(
             id: 'r1',
             taskId: 't1',
-            taskTitle: '翌週のタスク',
+            taskTitle: '翌週のクエスト',
             createdAt: DateTime(2026, 6, 8, 0, 0), // 翌週日曜
             content: '新たな週',
             selfDifficulty: 50,

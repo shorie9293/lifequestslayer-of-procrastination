@@ -6,7 +6,7 @@ import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 /// 一括クエスト作成ダイアログ
-/// 複数のタスクを一度に登録するためのテキストエリアとランクセレクターを提供する。
+/// 複数のクエストを一度に登録するためのテキストエリアとランクセレクターを提供する。
 class BulkCreateTaskDialog extends StatefulWidget {
   const BulkCreateTaskDialog({super.key});
 

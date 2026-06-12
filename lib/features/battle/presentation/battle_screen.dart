@@ -37,8 +37,8 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
   late final BattleViewModel _battleVM;
   late final BattleAudioService _audioService;
 
-  /// 現在戦術選択フェイズにあるタスクのID。
-  /// null の場合は通常のタスク一覧表示。
+  /// 現在戦術選択フェイズにあるクエストのID。
+  /// null の場合は通常のクエスト一覧表示。
   String? _taskInCombat;
 
   Color _getRankColor(QuestRank rank) => RankColors.forRank(rank);
@@ -139,7 +139,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
   }
 
   void _completeTask(BuildContext context, String taskId) {
-    // M4禍津対策: 連打ガード。同一タスクの二重実行を防止する。
+    // M4禍津対策: 連打ガード。同一クエストの二重実行を防止する。
     if (_completingTaskIds.contains(taskId)) return;
     _completingTaskIds.add(taskId);
 
@@ -148,7 +148,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
     final settingsVM = context.read<SettingsViewModel>();
 
     // 重要: この関数は非同期ダイアログ/SnackBar を多数スケジュールする。
-    // タスク討伐後に ListView から当該アイテムが dispose されると `context` が unmounted になるため、
+    // クエスト討伐後に ListView から当該アイテムが dispose されると `context` が unmounted になるため、
     // Navigator / ScaffoldMessenger は関数冒頭で捕捉しておく（Flutter 公式の async callback パターン）。
     final navigator = Navigator.of(context, rootNavigator: true);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
@@ -175,7 +175,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
       if (stillActive) {
         final task = taskVM.activeTasks.firstWhere((t) => t.id == taskId);
         if (task.subTasks.any((s) => !s.isCompleted)) {
-          // UX-3: 討伐失敗時、未完了サブタスクの名前を表示
+          // UX-3: 討伐失敗時、未完了サブクエストの名前を表示
           final remaining = task.subTasks
               .where((s) => !s.isCompleted)
               .map((s) => '・${s.title}')
@@ -329,7 +329,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
       final messenger = ScaffoldMessenger.of(context);
       taskVM.onSaveError = () {
         messenger.showSnackBar(
-          const SnackBar(content: Text("タスクデータの保存に失敗しました")),
+          const SnackBar(content: Text("クエストデータの保存に失敗しました")),
         );
       };
     }
@@ -343,7 +343,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
       };
     }
 
-    // 戦術選択フェイズのときは選択中のタスクをハイライト
+    // 戦術選択フェイズのときは選択中のクエストをハイライト
     final bool isInCombat = _taskInCombat != null;
 
     return Scaffold(
@@ -496,7 +496,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
                                                   TextButton(
                                                     onPressed: () {
                                                       Navigator.pop(ctx);
-                                                      // 体力消費：1タスク完了分
+                                                      // 体力消費：1クエスト完了分
                                                       playerVM
                                                               .player
                                                               .dailyTasksCompleted++;

@@ -67,7 +67,7 @@ void main() {
       test('長文＋連携パターンでA（キーワードなし複雑パターン）', () {
         expect(
           DifficultyEstimator.estimateRank(
-              '来週のタスクを洗い出しからスケジュール調整までの準備作業を進める'),
+              '来週のクエストを洗い出しからスケジュール調整までの準備作業を進める'),
           QuestRank.A,
         );
       });
@@ -82,7 +82,7 @@ void main() {
         expect(DifficultyEstimator.estimateRank('メール返信'), QuestRank.B);
       });
 
-      test('短い日常タスクはB', () {
+      test('短い日常クエストはB', () {
         expect(DifficultyEstimator.estimateRank('ゴミ出し'), QuestRank.B);
       });
 
@@ -133,7 +133,7 @@ void main() {
         expect(DifficultyEstimator.estimateRank('勉強する'), QuestRank.B);
       });
 
-      test('「買い物と掃除と洗濯」でB（日常タスクの列挙）', () {
+      test('「買い物と掃除と洗濯」でB（日常クエストの列挙）', () {
         expect(DifficultyEstimator.estimateRank('買い物と掃除と洗濯'),
             QuestRank.B);
       });

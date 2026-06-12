@@ -14,12 +14,12 @@ void main() {
       }
     });
 
-    test('getTitleProgressList - タスク完了数が反映される', () {
+    test('getTitleProgressList - クエスト完了数が反映される', () {
       final player = Player()..totalTasksCompleted = 10;
       // checkTitles を呼んで称号を実際に獲得させる
       TitleService.checkTitles(player, []);
       final progress = TitleService.getTitleProgressList(player);
-      // 「見習い冒険者」は完了タスク10で獲得
+      // 「見習い冒険者」は完了クエスト10で獲得
       final beginnerTitle = progress.firstWhere((p) => p.def.id == '見習い冒険者');
       expect(beginnerTitle.progress, 10);
       expect(beginnerTitle.isUnlocked, true);
@@ -29,7 +29,7 @@ void main() {
       final player = Player()..totalTasksCompleted = 100;
       final messages = <String>[];
       TitleService.checkTitles(player, messages);
-      // 100タスク完了で「ベテラン」を獲得
+      // 100クエスト完了で「ベテラン」を獲得
       expect(player.titles.contains('ベテラン'), true);
       expect(messages.any((m) => m.contains('ベテラン')), true);
     });

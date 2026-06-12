@@ -5,7 +5,7 @@ import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 知識クエスト（クイズ）ダイアログ
 ///
-/// タスク完了後に 30% の確率で表示される。
+/// クエスト完了後に 30% の確率で表示される。
 /// 正解時は [onCorrect] が呼ばれ、呼び出し元が awardKnowledgeBonus() を実行する。
 /// スキップ・不正解時はボーナスなし。
 ///

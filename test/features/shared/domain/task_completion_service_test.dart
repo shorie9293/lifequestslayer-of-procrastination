@@ -49,14 +49,14 @@ void main() {
     }) {
       return Task(
         id: id,
-        title: 'テストタスク',
+        title: 'テストクエスト',
         status: TaskStatus.active,
         rank: rank,
         deadline: deadline,
       );
     }
 
-    test('期限切れタスク完了時に強制クイズ（drawHardQuizQuestion）が呼ばれる', () {
+    test('期限切れクエスト完了時に強制クイズ（drawHardQuizQuestion）が呼ばれる', () {
       final task = makeTask(
         id: 'overdue-1',
         deadline: DateTime.now().subtract(const Duration(hours: 1)),
@@ -72,13 +72,13 @@ void main() {
 
       expect(result, isNotNull);
       expect(result!.quizQuestion, isNotNull,
-          reason: '期限切れタスクではクイズが強制発動されるべき');
+          reason: '期限切れクエストではクイズが強制発動されるべき');
       expect(result.bonusMessages,
           anyElement(contains('刻の番人')),
           reason: '期限切れメッセージがbonusMessagesに含まれるべき');
     });
 
-    test('期限切れタスクでknowledgeQuestEnabled=falseでもクイズが発動する', () {
+    test('期限切れクエストでknowledgeQuestEnabled=falseでもクイズが発動する', () {
       final task = makeTask(
         id: 'overdue-2',
         deadline: DateTime.now().subtract(const Duration(days: 1)),
@@ -100,7 +100,7 @@ void main() {
           reason: '期限切れメッセージが含まれるべき');
     });
 
-    test('期限切れでないタスクでは通常通りクイズ抽選（確率0%なのでnull）', () {
+    test('期限切れでないクエストでは通常通りクイズ抽選（確率0%なのでnull）', () {
       final futureDeadline = DateTime.now().add(const Duration(days: 1));
       final task = makeTask(
         id: 'not-overdue',
@@ -120,10 +120,10 @@ void main() {
       expect(result!.quizQuestion, isNull);
       expect(result.bonusMessages,
           isNot(anyElement(contains('期限'))),
-          reason: '期限内のタスクには期限切れメッセージがないべき');
+          reason: '期限内のクエストには期限切れメッセージがないべき');
     });
 
-    test('deadlineがnullのタスクは期限切れ処理なし', () {
+    test('deadlineがnullのクエストは期限切れ処理なし', () {
       final task = makeTask(
         id: 'no-deadline',
         deadline: null,
@@ -141,10 +141,10 @@ void main() {
       expect(result!.quizQuestion, isNull);
       expect(result.bonusMessages,
           isNot(anyElement(contains('期限'))),
-          reason: 'deadlineなしタスクには期限切れメッセージがないべき');
+          reason: 'deadlineなしクエストには期限切れメッセージがないべき');
     });
 
-    test('期限切れタスク完了時にEXPが減少するペナルティがある', () {
+    test('期限切れクエスト完了時にEXPが減少するペナルティがある', () {
       // Bランク基本EXP=100
       final task = makeTask(
         id: 'overdue-penalty',
@@ -164,10 +164,10 @@ void main() {
       expect(result, isNotNull);
       // 通常100だが、期限切れペナルティで減少
       expect(result!.expGain, lessThan(100),
-          reason: '期限切れタスクではEXPが減少するペナルティがあるべき');
+          reason: '期限切れクエストではEXPが減少するペナルティがあるべき');
     });
 
-    test('期限切れタスクではcoinsも半減する（倍ペナルティ）', () {
+    test('期限切れクエストではcoinsも半減する（倍ペナルティ）', () {
       final task = makeTask(
         id: 'overdue-coin-penalty',
         rank: QuestRank.A, // Aランク基本coins=30
@@ -186,7 +186,7 @@ void main() {
       expect(result, isNotNull);
       // Aランク基本30文 → 期限切れで半減 → 15文（小数点切捨て）
       expect(result!.coinsGained, equals(15),
-          reason: '期限切れタスクではcoinsも半減（倍ペナルティ）すべき');
+          reason: '期限切れクエストではcoinsも半減（倍ペナルティ）すべき');
     });
 
     test('期限内・残り1時間以内でReverseBonus（XP 1.5倍）が発動する', () {
@@ -239,7 +239,7 @@ void main() {
           reason: 'ボーナスメッセージは含まれないべき');
     });
 
-    test('期限切れタスクではisOverdueBoss=trueが返る', () {
+    test('期限切れクエストではisOverdueBoss=trueが返る', () {
       final task = makeTask(
         id: 'overdue-boss-flag',
         deadline: DateTime.now().subtract(const Duration(hours: 1)),
@@ -255,10 +255,10 @@ void main() {
 
       expect(result, isNotNull);
       expect(result!.isOverdueBoss, isTrue,
-          reason: '期限切れタスクではisOverdueBoss=trueが返るべき');
+          reason: '期限切れクエストではisOverdueBoss=trueが返るべき');
     });
 
-    test('期限内タスクではisOverdueBoss=falseが返る', () {
+    test('期限内クエストではisOverdueBoss=falseが返る', () {
       final task = makeTask(
         id: 'normal-boss-flag',
         deadline: DateTime.now().add(const Duration(days: 1)),
@@ -274,7 +274,7 @@ void main() {
 
       expect(result, isNotNull);
       expect(result!.isOverdueBoss, isFalse,
-          reason: '期限内タスクではisOverdueBoss=falseが返るべき');
+          reason: '期限内クエストではisOverdueBoss=falseが返るべき');
     });
   });
 
@@ -339,7 +339,7 @@ void main() {
     });
   });
 
-  group('TaskCompletionService - 繰り返しタスク (RoninRepeatTask)', () {
+  group('TaskCompletionService - 繰り返しクエスト (RoninRepeatTask)', () {
     late TaskCompletionService service;
 
     setUp(() {
@@ -405,7 +405,7 @@ void main() {
       expect(task.status, TaskStatus.inGuild);
     });
 
-    test('後方互換:Cleric mastered+activeSkillsで繰り返しタスクが機能', () {
+    test('後方互換:Cleric mastered+activeSkillsで繰り返しクエストが機能', () {
       final task = makeRepeatTask();
       final player = Player(
         jobLevels: {Job.adventurer: 1, Job.cleric: 15},
@@ -426,10 +426,10 @@ void main() {
       expect(task.lastCompletedAt, isNotNull);
     });
 
-    test('repeatInterval=noneのタスクはRoninRepeatTask有無に関わらずisCompleted=true', () {
+    test('repeatInterval=noneのクエストはRoninRepeatTask有無に関わらずisCompleted=true', () {
       final task = Task(
         id: 'normal-1',
-        title: '通常タスク',
+        title: '通常クエスト',
         status: TaskStatus.active,
         rank: QuestRank.B,
         repeatInterval: RepeatInterval.none,

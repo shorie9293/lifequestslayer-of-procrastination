@@ -23,7 +23,7 @@ class AppKeys {
   static const Key guildKnowledgeQuestToggle = Key('tgl_knowledge_quest');
   static const Key guildUrgentSection = Key('sec_urgent_quests');
 
-  // ━━━ タスクカード ━━━
+  // ━━━ クエストカード ━━━
   static const Key taskCard = Key('card_task');
   static const Key taskCardCheck = Key('btn_complete_task');
   static const Key taskCardDelete = Key('btn_delete_task');
@@ -37,7 +37,7 @@ class AppKeys {
   static const Key tutorialSkip = Key('btn_skip_tutorial');
   static const Key tutorialReward = Key('btn_reward_accept');
 
-  // ━━━ タスク作成フォーム ━━━
+  // ━━━ クエスト作成フォーム ━━━
   static const Key formTaskDialog = Key('dlg_create_task');
   static const Key formTaskTitle = Key('txt_task_title');
   static const Key formTaskDetail = Key('txt_task_detail');

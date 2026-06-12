@@ -51,7 +51,7 @@ class QuizService {
     return _questions[_rng.nextInt(_questions.length)];
   }
 
-  /// 期限切れタスク用の強制クイズ（刻の番人討伐クイズ）を抽選する。
+  /// 期限切れクエスト用の強制クイズ（刻の番人討伐クイズ）を抽選する。
   /// overdueQuizzes プールから常に100%で出題し、
   /// 高い expBonusPercent の問題を優先的に選ぶ。
   static QuizQuestion? drawHardQuizQuestion() {

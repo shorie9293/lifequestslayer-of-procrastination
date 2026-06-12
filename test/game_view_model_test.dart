@@ -119,7 +119,7 @@ class _FailingTaskRepo implements ITaskRepository {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   group('GameViewModel 永続化テスト（Mock）', () {
-    test('タスク完了（Bランク）が永続化され、再読み込みでレベル・タスク状態が維持される', () async {
+    test('クエスト完了（Bランク）が永続化され、再読み込みでレベル・クエスト状態が維持される', () async {
       final pr = _MockPlayerRepo();
       final tr = _MockTaskRepo();
       final sr = _MockSettingsRepo();
@@ -130,7 +130,7 @@ void main() {
 
       vm1.addTask('テストクエスト', rank: QuestRank.B);
 
-      // タスクを受け入れて完了（Bランク=100EXP → Lv1→Lv2）
+      // クエストを受け入れて完了（Bランク=100EXP → Lv1→Lv2）
       final taskId = vm1.tasks.first.id;
       vm1.acceptTask(taskId);
       final result = vm1.completeTask(taskId);
@@ -146,7 +146,7 @@ void main() {
       final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm2);
 
-      // 検証: タスクは完了状態で永続化されている
+      // 検証: クエストは完了状態で永続化されている
       expect(vm2.tasks.length, 1);
       expect(vm2.tasks.first.isCompleted, true);
       expect(vm2.tasks.first.status, TaskStatus.inGuild);
@@ -154,11 +154,11 @@ void main() {
       expect(vm2.player.level, 2);
       // 検証: コインが獲得されている
       expect(vm2.player.coins, greaterThan(0));
-      // 検証: 累計タスク完了数
+      // 検証: 累計クエスト完了数
       expect(vm2.player.totalTasksCompleted, 1);
     });
 
-    test('複数タスクの完了が永続化される', () async {
+    test('複数クエストの完了が永続化される', () async {
       final pr = _MockPlayerRepo();
       final tr = _MockTaskRepo();
       final sr = _MockSettingsRepo();
@@ -166,7 +166,7 @@ void main() {
       final vm1 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm1);
 
-      // 3つのタスクを追加
+      // 3つのクエストを追加
       vm1.addTask('クエスト1', rank: QuestRank.B);
       vm1.addTask('クエスト2', rank: QuestRank.B);
       vm1.addTask('クエスト3', rank: QuestRank.B);
@@ -183,7 +183,7 @@ void main() {
       final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm2);
 
-      // 全タスクが完了状態
+      // 全クエストが完了状態
       expect(vm2.tasks.length, 3);
       expect(vm2.tasks.every((t) => t.isCompleted), true);
       // プレイヤーデータも維持
@@ -261,13 +261,13 @@ void main() {
       expect(() => vm.addGems(100), returnsNormally);
       expect(() => vm.addTask('テスト', rank: QuestRank.B), returnsNormally);
       expect(vm.player.gems, 100); // 宝石が実際に追加されている
-      expect(vm.tasks.length, 1); // タスクが実際に追加されている
+      expect(vm.tasks.length, 1); // クエストが実際に追加されている
     });
   });
 
   group('GameViewModel ビジネスロジックテスト', () {
     // --- (1) dailyEstimatedMinutes ---
-    test('dailyEstimatedMinutes はアクティブタスクのtargetTimeMinutes合計を返す', () async {
+    test('dailyEstimatedMinutes はアクティブクエストのtargetTimeMinutes合計を返す', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -275,9 +275,9 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.addTask('タスク1', rank: QuestRank.B, targetTimeMinutes: 30);
-      vm.addTask('タスク2', rank: QuestRank.A, targetTimeMinutes: 60);
-      vm.addTask('タスク3', rank: QuestRank.S, targetTimeMinutes: 120);
+      vm.addTask('クエスト1', rank: QuestRank.B, targetTimeMinutes: 30);
+      vm.addTask('クエスト2', rank: QuestRank.A, targetTimeMinutes: 60);
+      vm.addTask('クエスト3', rank: QuestRank.S, targetTimeMinutes: 120);
 
       // S/Aランク受注にはレベルが必要
       vm.player.jobLevels[vm.player.currentJob] = 10;
@@ -289,7 +289,7 @@ void main() {
       expect(vm.dailyEstimatedMinutes, 30 + 60 + 120);
     });
 
-    test('dailyEstimatedMinutes はtargetTimeMinutesがnullのタスクを無視する', () async {
+    test('dailyEstimatedMinutes はtargetTimeMinutesがnullのクエストを無視する', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -297,15 +297,15 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.addTask('タスク1', rank: QuestRank.B, targetTimeMinutes: 45);
-      vm.addTask('タスク2', rank: QuestRank.B); // null → 0扱い
+      vm.addTask('クエスト1', rank: QuestRank.B, targetTimeMinutes: 45);
+      vm.addTask('クエスト2', rank: QuestRank.B); // null → 0扱い
       vm.acceptTask(vm.tasks[0].id);
       vm.acceptTask(vm.tasks[1].id);
 
       expect(vm.dailyEstimatedMinutes, 45);
     });
 
-    test('dailyEstimatedMinutes はギルド内のタスクを含まない', () async {
+    test('dailyEstimatedMinutes はギルド内のクエストを含まない', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -321,7 +321,7 @@ void main() {
       expect(vm.dailyEstimatedMinutes, 30);
     });
 
-    test('dailyEstimatedMinutes は全タスクがギルド内なら0を返す', () async {
+    test('dailyEstimatedMinutes は全クエストがギルド内なら0を返す', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -336,7 +336,7 @@ void main() {
     });
 
     // --- (2) guildEstimatedMinutes ---
-    test('guildEstimatedMinutes はギルドタスクのtargetTimeMinutes合計を返す', () async {
+    test('guildEstimatedMinutes はギルドクエストのtargetTimeMinutes合計を返す', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -350,7 +350,7 @@ void main() {
       expect(vm.guildEstimatedMinutes, 90);
     });
 
-    test('guildEstimatedMinutes はアクティブタスクを含まない', () async {
+    test('guildEstimatedMinutes はアクティブクエストを含まない', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -366,7 +366,7 @@ void main() {
       expect(vm.guildEstimatedMinutes, 30);
     });
 
-    test('guildEstimatedMinutes はtargetTimeMinutesがnullのタスクを無視する', () async {
+    test('guildEstimatedMinutes はtargetTimeMinutesがnullのクエストを無視する', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -442,7 +442,7 @@ void main() {
     });
 
     // --- (4) completeTask() with warrior combo bonus ---
-    test('Warriorコンボ: 戦士でタスク完了時にコンボカウントが増加しボーナスが加算される', () async {
+    test('Warriorコンボ: 戦士でクエスト完了時にコンボカウントが増加しボーナスが加算される', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -463,7 +463,7 @@ void main() {
       // comboCount>1 でないとボーナスメッセージは出ない
     });
 
-    test('Warriorコンボ: 連続タスクでコンボが累積する', () async {
+    test('Warriorコンボ: 連続クエストでコンボが累積する', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -687,7 +687,7 @@ void main() {
     });
 
     // --- (8) completeTask() triggering mission completion ---
-    test('デイリーミッション: 3タスク目完了時に+200コイン', () async {
+    test('デイリーミッション: 3クエスト目完了時に+200コイン', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -710,7 +710,7 @@ void main() {
       expect(vm.player.dailyTasksCompleted, 3);
     });
 
-    test('デイリーミッション: 3タスク未満ではデイリーボーナスなし', () async {
+    test('デイリーミッション: 3クエスト未満ではデイリーボーナスなし', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -756,7 +756,7 @@ void main() {
     });
 
     // --- (9) completeTask() returning null when sub-tasks incomplete ---
-    test('サブタスク未完了: Wizard状態でサブタスク未完了ならnullを返す', () async {
+    test('サブクエスト未完了: Wizard状態でサブクエスト未完了ならnullを返す', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -768,7 +768,7 @@ void main() {
       vm.changeJob(Job.wizard);
       vm.player.equippedSkills.add(EquippedSkill(skill: JobSkill.wizardSubtask));
 
-      vm.addTask('サブタスク付き', rank: QuestRank.B, subTasks: [
+      vm.addTask('サブクエスト付き', rank: QuestRank.B, subTasks: [
         SubTask(title: 'ステップ1'),
         SubTask(title: 'ステップ2'),
       ]);
@@ -778,7 +778,7 @@ void main() {
       expect(result, isNull);
     });
 
-    test('サブタスク完了: Wizard状態で全サブタスク完了なら成功する', () async {
+    test('サブクエスト完了: Wizard状態で全サブクエスト完了なら成功する', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -789,7 +789,7 @@ void main() {
       vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
       vm.changeJob(Job.wizard);
 
-      vm.addTask('サブタスク付き', rank: QuestRank.B, subTasks: [
+      vm.addTask('サブクエスト付き', rank: QuestRank.B, subTasks: [
         SubTask(title: 'ステップ1', isCompleted: true),
         SubTask(title: 'ステップ2', isCompleted: true),
       ]);
@@ -800,7 +800,7 @@ void main() {
       expect(result!['baseExp'], 100);
     });
 
-    test('サブタスク未完了: Wizard状態でなければサブタスク未完了でも成功する', () async {
+    test('サブクエスト未完了: Wizard状態でなければサブクエスト未完了でも成功する', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -809,7 +809,7 @@ void main() {
       await _waitForLoad(vm);
 
       // Adventurer（非Wizard）
-      vm.addTask('サブタスク付き', rank: QuestRank.B, subTasks: [
+      vm.addTask('サブクエスト付き', rank: QuestRank.B, subTasks: [
         SubTask(title: 'ステップ1'), // 未完了
       ]);
       vm.acceptTask(vm.tasks[0].id);
@@ -818,7 +818,7 @@ void main() {
       expect(result, isNotNull);
     });
 
-    test('サブタスク: toggleSubTaskで1つずつ完了させてから全体完了できる', () async {
+    test('サブクエスト: toggleSubTaskで1つずつ完了させてから全体完了できる', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -829,7 +829,7 @@ void main() {
       vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
       vm.changeJob(Job.wizard);
 
-      vm.addTask('サブタスク付き', rank: QuestRank.B, subTasks: [
+      vm.addTask('サブクエスト付き', rank: QuestRank.B, subTasks: [
         SubTask(title: 'ステップ1'),
         SubTask(title: 'ステップ2'),
       ]);
@@ -846,7 +846,7 @@ void main() {
       expect(result, isNotNull);
     });
 
-    test('addTasks: 複数タイトルを一括追加すると、指定されたランクでタスクが生成される', () async {
+    test('addTasks: 複数タイトルを一括追加すると、指定されたランクでクエストが生成される', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -881,7 +881,7 @@ void main() {
       expect(vm.tasks, isEmpty);
     });
 
-    test('addTasks: 空文字のタイトルがあってもタスクは作成される（addTaskと同じ挙動）', () async {
+    test('addTasks: 空文字のタイトルがあってもクエストは作成される（addTaskと同じ挙動）', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -897,7 +897,7 @@ void main() {
       expect(vm.tasks[2].title, 'もう一つのクエスト');
     });
 
-    test('addTasks: Bランクを指定すると全タスクがBランクで作成される', () async {
+    test('addTasks: Bランクを指定すると全クエストがBランクで作成される', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -905,14 +905,14 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.addTasks(['タスクX'], QuestRank.B);
+      vm.addTasks(['クエストX'], QuestRank.B);
 
       expect(vm.tasks.length, 1);
       expect(vm.tasks.first.rank, QuestRank.B);
     });
 
     // --- (10) completeTask() with repeat interval (cleric skill) ---
-    test('繰り返しタスク: Clericで繰り返しタスク完了時はisCompleted=false、最終完了日時が記録される',
+    test('繰り返しクエスト: Clericで繰り返しクエスト完了時はisCompleted=false、最終完了日時が記録される',
         () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
@@ -937,7 +937,7 @@ void main() {
       expect(task.status, TaskStatus.active); // アクティブのまま継続
     });
 
-    test('繰り返しタスク: Cleric以外では通常通りisCompleted=trueになる', () async {
+    test('繰り返しクエスト: Cleric以外では通常通りisCompleted=trueになる', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -958,7 +958,7 @@ void main() {
       expect(task.status, TaskStatus.inGuild);
     });
 
-    test('繰り返しタスク: ClericでrepeatInterval=noneの通常タスクは完了扱いになる', () async {
+    test('繰り返しクエスト: ClericでrepeatInterval=noneの通常クエストは完了扱いになる', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -982,12 +982,12 @@ void main() {
   });
 
   group('GameViewModel 神託1: _autoDeployTodaysTasks', () {
-    test('今日期限のタスクがloadData後に自動配備されactiveになる', () async {
+    test('今日期限のクエストがloadData後に自動配備されactiveになる', () async {
       final pr = _MockPlayerRepo();
       final tr = _MockTaskRepo();
       final sr = _MockSettingsRepo();
 
-      // VM1で今日期限のタスクを作成
+      // VM1で今日期限のクエストを作成
       final vm1 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm1);
       final today = DateTime.now();
@@ -1000,14 +1000,14 @@ void main() {
       final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm2);
 
-      // 今日期限のタスクが自動配備されてactiveになっている
+      // 今日期限のクエストが自動配備されてactiveになっている
       expect(vm2.tasks.length, 1);
       final task = vm2.tasks.first;
       expect(task.status, TaskStatus.active,
-          reason: '今日期限のタスクはloadData後に自動でactiveになるべき');
+          reason: '今日期限のクエストはloadData後に自動でactiveになるべき');
     });
 
-    test('未来の期限のタスクはloadData後に自動配備されずinGuildのまま', () async {
+    test('未来の期限のクエストはloadData後に自動配備されずinGuildのまま', () async {
       final pr = _MockPlayerRepo();
       final tr = _MockTaskRepo();
       final sr = _MockSettingsRepo();
@@ -1024,10 +1024,10 @@ void main() {
 
       final task = vm2.tasks.first;
       expect(task.status, TaskStatus.inGuild,
-          reason: '未来期限のタスクは自動配備されない');
+          reason: '未来期限のクエストは自動配備されない');
     });
 
-    test('期限なしのタスクは自動配備されない', () async {
+    test('期限なしのクエストは自動配備されない', () async {
       final pr = _MockPlayerRepo();
       final tr = _MockTaskRepo();
       final sr = _MockSettingsRepo();
@@ -1044,7 +1044,7 @@ void main() {
       final task = vm2.tasks.first;
       expect(task.deadline, isNull);
       expect(task.status, TaskStatus.inGuild,
-          reason: '期限なしのタスクは自動配備されない');
+          reason: '期限なしのクエストは自動配備されない');
     });
 
     test('ランク優先順位（S > A > B）で自動配備される（Lv10で全スロット解放）', () async {
@@ -1075,7 +1075,7 @@ void main() {
       expect(activeTasks.length, 3,
           reason: 'Lv10ではS/A/B全スロット解放済み');
 
-      // タスクが存在することだけ確認（順序はモックのstrictさにおいて確認不要）
+      // クエストが存在することだけ確認（順序はモックのstrictさにおいて確認不要）
       expect(
           activeTasks.any((t) => t.rank == QuestRank.S), true,
           reason: 'Sランクが配備されていること');
@@ -1096,7 +1096,7 @@ void main() {
       await _waitForLoad(vm1);
 
       final today = DateTime.now();
-      // S, A, B×2 の今日期限タスクを追加（Lv1ではB×1のみ受注可能）
+      // S, A, B×2 の今日期限クエストを追加（Lv1ではB×1のみ受注可能）
       vm1.addTask('S期限本日', rank: QuestRank.S, deadline: today);
       vm1.addTask('A期限本日', rank: QuestRank.A, deadline: today);
       vm1.addTask('B期限1', rank: QuestRank.B, deadline: today);
@@ -1116,7 +1116,7 @@ void main() {
           reason: 'Lv1で受注可能なBランクが優先されるべき');
     });
 
-    test('明日期限のタスクも自動配備される', () async {
+    test('明日期限のクエストも自動配備される', () async {
       final pr = _MockPlayerRepo();
       final tr = _MockTaskRepo();
       final sr = _MockSettingsRepo();
@@ -1137,10 +1137,10 @@ void main() {
 
       final task = vm2.tasks.first;
       expect(task.status, TaskStatus.active,
-          reason: '明日期限のタスクも自動配備されるべき');
+          reason: '明日期限のクエストも自動配備されるべき');
     });
 
-    test('通常期限（明日/今日以外）のタスクは自動配備されない', () async {
+    test('通常期限（明日/今日以外）のクエストは自動配備されない', () async {
       final pr = _MockPlayerRepo();
       final tr = _MockTaskRepo();
       final sr = _MockSettingsRepo();
@@ -1159,7 +1159,7 @@ void main() {
 
       final task = vm2.tasks.first;
       expect(task.status, TaskStatus.inGuild,
-          reason: '明後日以降の期限のタスクは自動配備されないべき');
+          reason: '明後日以降の期限のクエストは自動配備されないべき');
     });
 
     test('max 6件制限: 既に6件activeな場合は新規配備されない', () async {
@@ -1173,19 +1173,19 @@ void main() {
       vm1.player.jobLevels[vm1.player.currentJob] = 10;
       final today = DateTime.now();
 
-      // 6件のactiveタスクを手動で受注
+      // 6件のactiveクエストを手動で受注
       for (int i = 1; i <= 6; i++) {
-        vm1.addTask('手動タスク$i', rank: QuestRank.B);
+        vm1.addTask('手動クエスト$i', rank: QuestRank.B);
       }
-      // 今日期限のタスクを追加（guild状態）
+      // 今日期限のクエストを追加（guild状態）
       vm1.addTask('今日期限だが配備されない', rank: QuestRank.A, deadline: today);
 
-      // 全手動タスクをaccept
+      // 全手動クエストをaccept
       for (final t in vm1.guildTasks.where((t) => t.title.startsWith('手動'))) {
         vm1.acceptTask(t.id);
       }
-      // guildTasksから今日期限のタスクをaccept（max 6 capに引っかかるはず）
-      // ただしLv10: S=1, A=2, B=3 = 6スロット。手動タスクでB×3が使われてA×2空きあり
+      // guildTasksから今日期限のクエストをaccept（max 6 capに引っかかるはず）
+      // ただしLv10: S=1, A=2, B=3 = 6スロット。手動クエストでB×3が使われてA×2空きあり
       // → 現在のacceptTaskロジックではキャパが許せばacceptされる
       // autoDeployでmax 6 capをテストするには、6件全て埋めてから試す必要がある
       // だが既に手動でB×3埋めたので、Aスロット2つ使う
@@ -1198,7 +1198,7 @@ void main() {
       final vm2 = GameViewModel(pr: pr, tr: tr, sr: sr);
       await _waitForLoad(vm2);
 
-      // 6件手動 + 1件guild = 7件のタスクがあるはず
+      // 6件手動 + 1件guild = 7件のクエストがあるはず
       expect(vm2.tasks.length, 7);
       // activeは6件以下（max cap）
       final activeCount =
@@ -1208,8 +1208,8 @@ void main() {
     });
   });
 
-  group('estimateMinutes 神託5: 過去完了タスクからの時間推定', () {
-    test('同ランクの完了タスクから平均時間を推定する', () async {
+  group('estimateMinutes 神託5: 過去完了クエストからの時間推定', () {
+    test('同ランクの完了クエストから平均時間を推定する', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -1217,7 +1217,7 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      // 完了タスクを追加
+      // 完了クエストを追加
       vm.addTask('レポート作成', rank: QuestRank.B, targetTimeMinutes: 30);
       vm.addTask('コーディング', rank: QuestRank.B, targetTimeMinutes: 60);
       vm.addTask('簡単な作業', rank: QuestRank.B, targetTimeMinutes: 15);
@@ -1233,7 +1233,7 @@ void main() {
       expect(estimate, 35);
     });
 
-    test('同ランクかつ類似タイトルの完了タスクがあればそれも含めて平均する', () async {
+    test('同ランクかつ類似タイトルの完了クエストがあればそれも含めて平均する', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -1241,11 +1241,11 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      // Bランク完了タスク
+      // Bランク完了クエスト
       vm.addTask('資料作成', rank: QuestRank.B, targetTimeMinutes: 45);
       vm.addTask('買い物', rank: QuestRank.B, targetTimeMinutes: 20);
 
-      // Aランク完了タスク（類似タイトル: 「資料作成」を含む）→ 推定対象に含まれる
+      // Aランク完了クエスト（類似タイトル: 「資料作成」を含む）→ 推定対象に含まれる
       vm.addTask('企画資料作成', rank: QuestRank.A, targetTimeMinutes: 120);
 
       for (final t in List<Task>.from(vm.tasks)) {
@@ -1258,7 +1258,7 @@ void main() {
       expect(estimate, (45 + 20 + 120) ~/ 3); // 61
     });
 
-    test('完了タスクがない場合はnullを返す', () async {
+    test('完了クエストがない場合はnullを返す', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -1270,7 +1270,7 @@ void main() {
       expect(estimate, isNull);
     });
 
-    test('完了タスクが全てtargetTimeMinutes未設定ならnullを返す', () async {
+    test('完了クエストが全てtargetTimeMinutes未設定ならnullを返す', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -1286,7 +1286,7 @@ void main() {
       expect(estimate, isNull);
     });
 
-    test('異なるランクの完了タスクは推定に含めない', () async {
+    test('異なるランクの完了クエストは推定に含めない', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -1430,7 +1430,7 @@ void main() {
     });
   });
 
-  group('GameViewModel 期限切れタスク完了テスト', () {
+  group('GameViewModel 期限切れクエスト完了テスト', () {
     setUp(() {
       QuizService.setQuestions([
         const QuizQuestion(
@@ -1454,7 +1454,7 @@ void main() {
       QuizService.probability = 0.30;
     });
 
-    test('期限切れタスク完了時にクイズが強制発動されbonusMessagesに期限切れメッセージが含まれる',
+    test('期限切れクエスト完了時にクイズが強制発動されbonusMessagesに期限切れメッセージが含まれる',
         () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
@@ -1478,13 +1478,13 @@ void main() {
       final result = vm.completeTask(vm.tasks[0].id);
       expect(result, isNotNull);
       expect(result!['quizQuestion'], isNotNull,
-          reason: '期限切れタスクではクイズが強制発動されるべき');
+          reason: '期限切れクエストではクイズが強制発動されるべき');
       expect(result['bonusMessages'],
           anyElement(contains('刻の番人')),
           reason: '期限切れメッセージがbonusMessagesに含まれるべき');
     });
 
-    test('期限切れタスク完了時にEXPが減少する', () async {
+    test('期限切れクエスト完了時にEXPが減少する', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -1499,10 +1499,10 @@ void main() {
       final result = vm.completeTask(vm.tasks[0].id);
       expect(result, isNotNull);
       expect(result!['baseExp'], lessThan(100),
-          reason: '期限切れタスクではEXPが減少するべき');
+          reason: '期限切れクエストではEXPが減少するべき');
     });
 
-    test('期限切れでないタスクでは通常通りクイズ抽選（確率0%でnull）',
+    test('期限切れでないクエストでは通常通りクイズ抽選（確率0%でnull）',
         () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
@@ -1520,10 +1520,10 @@ void main() {
       final result = vm.completeTask(vm.tasks[0].id);
       expect(result, isNotNull);
       expect(result!['quizQuestion'], isNull,
-          reason: '期限内タスクでは通常の抽選のみ');
+          reason: '期限内クエストでは通常の抽選のみ');
       expect(result['bonusMessages'],
           isNot(anyElement(contains('期限切れ'))),
-          reason: '期限内タスクに期限切れメッセージはない');
+          reason: '期限内クエストに期限切れメッセージはない');
     });
   });
 
@@ -1632,7 +1632,7 @@ void main() {
 
   // ━━━ O2: 緊急依頼書表示 ━━━
   group('urgentGuildTasks 緊急依頼書', () {
-    test('期限が24時間以内のギルドタスクを返す', () async {
+    test('期限が24時間以内のギルドクエストを返す', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -1655,7 +1655,7 @@ void main() {
       expect(urgent.first.title, '緊急クエスト');
     });
 
-    test('期限切れのギルドタスクも含む', () async {
+    test('期限切れのギルドクエストも含む', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),
@@ -1673,7 +1673,7 @@ void main() {
       expect(urgent.first.title, '期限切れクエスト');
     });
 
-    test('アクティブなタスクは含まない', () async {
+    test('アクティブなクエストは含まない', () async {
       final vm = GameViewModel(
         pr: _MockPlayerRepo(),
         tr: _MockTaskRepo(),

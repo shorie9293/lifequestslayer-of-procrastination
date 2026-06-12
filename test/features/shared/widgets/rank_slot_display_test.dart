@@ -37,7 +37,7 @@ void main() {
       expect(find.text('B'), findsOneWidget);
     });
 
-    testWidgets('Lv10: S1枠 A2枠 B3枠(タスク0で空)', (tester) async {
+    testWidgets('Lv10: S1枠 A2枠 B3枠(クエスト0で空)', (tester) async {
       final player = Player();
       player.jobLevels[Job.adventurer] = 10;
       await tester.pumpWidget(buildFrame(player: player));
@@ -46,7 +46,7 @@ void main() {
       expect(find.text('B'), findsOneWidget);
     });
 
-    testWidgets('アクティブタスク数を反映', (tester) async {
+    testWidgets('アクティブクエスト数を反映', (tester) async {
       final player = Player();
       player.jobLevels[Job.adventurer] = 10;
       final tasks = [

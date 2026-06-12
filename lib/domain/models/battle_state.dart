@@ -6,7 +6,7 @@
 /// [facing]    - 敵と対峙中（戦術選択UI表示中）
 /// [attacking] - 戦術実行中（アニメーション再生中）
 /// [victory]   - 討伐成功（戦果報告書表示中）
-/// [defeat]    - 討伐失敗／撤退（サブタスク未完了など）
+/// [defeat]    - 討伐失敗／撤退（サブクエスト未完了など）
 enum BattleState {
   idle,
   facing,

@@ -87,11 +87,11 @@ Future<void> _waitForLoad(GameViewModel vm) async {
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('M12 禍津: 戦場から寄合所に戻したタスクが再起動で戦場に戻るバグ', () {
+  group('M12 禍津: 戦場から寄合所に戻したクエストが再起動で戦場に戻るバグ', () {
     test(
-        '今日期限 + accept → cancel したタスクは、新VMで再読み込みしても inGuild のままであるべき',
+        '今日期限 + accept → cancel したクエストは、新VMで再読み込みしても inGuild のままであるべき',
         () async {
-      // ── 準備: 今日期限のタスクを作成し、受注→取消 する ──
+      // ── 準備: 今日期限のクエストを作成し、受注→取消 する ──
       final pr = _MockPlayerRepo();
       final tr = _MockTaskRepo();
       final sr = _TestSettingsRepo();
@@ -124,14 +124,14 @@ void main() {
       await _waitForLoad(vm2);
 
       // ★ これが現在のバグ: autoDeployTodaysTasks() が
-      //    手動取消したタスクを再度戦場に配備してしまう
+      //    手動取消したクエストを再度戦場に配備してしまう
       final reloadedTask = vm2.tasks.first;
       expect(reloadedTask.status, TaskStatus.inGuild,
-          reason: '手動で戦場から戻したタスクは、再起動後も寄合所(inGuild)に留まるべき');
+          reason: '手動で戦場から戻したクエストは、再起動後も寄合所(inGuild)に留まるべき');
     });
 
     test(
-        '明日期限 + accept → cancel したタスクも、再起動後は inGuild のままであるべき',
+        '明日期限 + accept → cancel したクエストも、再起動後は inGuild のままであるべき',
         () async {
       final pr = _MockPlayerRepo();
       final tr = _MockTaskRepo();
@@ -156,11 +156,11 @@ void main() {
 
       final reloadedTask = vm2.tasks.first;
       expect(reloadedTask.status, TaskStatus.inGuild,
-          reason: '取消した明日期限タスクも再起動後は寄合所に留まるべき');
+          reason: '取消した明日期限クエストも再起動後は寄合所に留まるべき');
     });
 
     test(
-        '期限なしタスクを cancel した後、再起動で inGuild が維持される（リグレッション防止）',
+        '期限なしクエストを cancel した後、再起動で inGuild が維持される（リグレッション防止）',
         () async {
       final pr = _MockPlayerRepo();
       final tr = _MockTaskRepo();
@@ -171,7 +171,7 @@ void main() {
 
       vm1.player.jobLevels[vm1.player.currentJob] = 10;
 
-      // 期限なしタスク
+      // 期限なしクエスト
       vm1.addTask('期限なしクエスト', rank: QuestRank.B);
       final taskId = vm1.tasks.first.id;
 
@@ -185,11 +185,11 @@ void main() {
 
       final reloadedTask = vm2.tasks.first;
       expect(reloadedTask.status, TaskStatus.inGuild,
-          reason: '期限なしタスクは自動配備対象外だが、念のため確認');
+          reason: '期限なしクエストは自動配備対象外だが、念のため確認');
     });
 
     test(
-        '取消していない今日期限タスクは、これまで通り自動配備される（後方互換性）',
+        '取消していない今日期限クエストは、これまで通り自動配備される（後方互換性）',
         () async {
       final pr = _MockPlayerRepo();
       final tr = _MockTaskRepo();
@@ -212,7 +212,7 @@ void main() {
 
       final reloadedTask = vm2.tasks.first;
       expect(reloadedTask.status, TaskStatus.active,
-          reason: '一度も受注していない今日期限タスクは自動配備されるべき（既存動作）');
+          reason: '一度も受注していない今日期限クエストは自動配備されるべき（既存動作）');
     });
   });
 }

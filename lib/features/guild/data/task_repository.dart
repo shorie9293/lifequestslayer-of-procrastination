@@ -93,16 +93,16 @@ class TaskRepository implements ITaskRepository {
 
 
 
-  /// タスクをIDキーで冪等保存する。
+  /// クエストをIDキーで冪等保存する。
   /// putAll() + deleteAll() の2段階方式。
-  /// 空リスト時も box.clear() で正しく永続化する（全タスク削除の反映）。
+  /// 空リスト時も box.clear() で正しく永続化する（全クエスト削除の反映）。
   /// v1.3: 保存前にバックアップBoxへ退避し、書き込み失敗時の復元を可能にする。
   @override
   Future<void> saveTasks(List<Task> tasks) async {
     final box = await _getBox();
     final backup = await _getBackupBox();
 
-    // v1.3: 保存前に全タスクのキーセットをバックアップ
+    // v1.3: 保存前に全クエストのキーセットをバックアップ
     try {
       await backup.put('keys', box.keys.toList());
       await backup.put('count', box.length);
@@ -118,10 +118,10 @@ class TaskRepository implements ITaskRepository {
       return;
     }
 
-    // 現在のタスクを一括 upsert
+    // 現在のクエストを一括 upsert
     await box.putAll({for (final t in tasks) t.id: t});
 
-    // 削除されたタスクのキーを除去
+    // 削除されたクエストのキーを除去
     final currentIds = tasks.map((t) => t.id).toSet();
     final keysToDelete =
         box.keys.where((k) => !currentIds.contains(k)).toList();

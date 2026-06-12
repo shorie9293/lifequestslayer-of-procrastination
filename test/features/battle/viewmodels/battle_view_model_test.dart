@@ -10,7 +10,7 @@ void main() {
   DateTime now = DateTime(2026, 6, 7, 12, 0, 0);
   DateTime fixedClock() => now;
 
-  /// テスト用タスク。
+  /// テスト用クエスト。
   Task testTask() => Task(
         id: 'task-001',
         title: 'ゴブリンを討伐せよ',

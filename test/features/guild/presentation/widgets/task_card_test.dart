@@ -3,7 +3,7 @@ import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/presentation/widgets/task_card.dart';
 
 /// TaskCard の isUrgent 判定テスト
-/// 前提バグ：修練場(active)のタスクで期限が迫っていても緊急判定が false になる
+/// 前提バグ：修練場(active)のクエストで期限が迫っていても緊急判定が false になる
 /// → status 条件を外す修正の検証
 void main() {
   group('TaskCard isUrgent 判定', () {
@@ -77,7 +77,7 @@ void main() {
         status: TaskStatus.active,
       );
       final card = TaskCard(task: task, actions: const []);
-      // _getRankEnemyEmoji は private だが、active タスクでは leading に表示されている
+      // _getRankEnemyEmoji は private だが、active クエストでは leading に表示されている
       // ウィジェットテストで確認するのが適切なため、ここでは構造の検証に留める
       expect(card.task.rank, QuestRank.S);
     });

@@ -114,7 +114,7 @@ class DifficultyEstimator {
   /// AI（魔導書）推定を試み、フォールバックとしてキーワード推定を使用する。
   ///
   /// [griffon] が null の場合はキーワード推定にフォールバックする。
-  /// [pastTaskTitles] は AI 推定時の類似タスク判定に使用される。
+  /// [pastTaskTitles] は AI 推定時の類似クエスト判定に使用される。
   static Future<GriffonEstimation> estimateWithAI(
     String title,
     List<String> pastTaskTitles,

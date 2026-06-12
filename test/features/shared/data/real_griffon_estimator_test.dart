@@ -86,7 +86,7 @@ void main() {
     });
 
     group('buildUserMessage', () {
-      test('過去タスク履歴ありの場合', () {
+      test('過去クエスト履歴ありの場合', () {
         final estimator = RealGriffonEstimator(apiKey: 'test-key');
         final message = estimator.buildUserMessage(
           '本番デプロイ',
@@ -98,11 +98,11 @@ void main() {
         expect(message, contains('買い物'));
       });
 
-      test('過去タスク履歴なしの場合', () {
+      test('過去クエスト履歴なしの場合', () {
         final estimator = RealGriffonEstimator(apiKey: 'test-key');
         final message = estimator.buildUserMessage('新規タスク', []);
         expect(message, contains('新規タスク'));
-        expect(message, contains('過去のタスク履歴なし'));
+        expect(message, contains('過去のクエスト履歴なし'));
       });
     });
 

@@ -101,12 +101,12 @@ void main() {
       expect(find.text('+1000'), findsOneWidget);
     });
 
-    testWidgets('全タスク完了ボタンがある', (tester) async {
+    testWidgets('全クエスト完了ボタンがある', (tester) async {
       await tester.pumpWidget(buildPanel());
       expect(find.text('全クエスト完了'), findsOneWidget);
     });
 
-    testWidgets('テストタスク追加ボタンがある', (tester) async {
+    testWidgets('テストクエスト追加ボタンがある', (tester) async {
       await tester.pumpWidget(buildPanel());
       expect(find.text('テストクエスト追加'), findsOneWidget);
     });
@@ -145,13 +145,13 @@ void main() {
       expect(vm.player.currentExp, greaterThan(before));
     });
 
-    test('debugAddTestTasks でタスクが3件追加される', () {
+    test('debugAddTestTasks でクエストが3件追加される', () {
       final before = vm.tasks.length;
       vm.debugAddTestTasks();
       expect(vm.tasks.length, before + 3);
     });
 
-    test('debugCompleteAllActive でアクティブタスクが完了する', () {
+    test('debugCompleteAllActive でアクティブクエストが完了する', () {
       vm.debugAddTestTasks();
       for (final t in vm.tasks.toList()) {
         vm.acceptTask(t.id);

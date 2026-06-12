@@ -17,7 +17,7 @@ void main() {
       expect((DateTime(2020, 1, 1)).isBefore(now), isTrue, reason: '固定過去日付は現在より前');
     });
 
-    test('deadlineがnullのタスクでisOverdueがfalseになる', () {
+    test('deadlineがnullのクエストでisOverdueがfalseになる', () {
       final task = Task(
         id: 'test-1',
         title: 'テスト',
@@ -27,7 +27,7 @@ void main() {
       expect(isOverdue, isFalse);
     });
 
-    test('deadlineが過去のタスクでisOverdueがtrueになる', () {
+    test('deadlineが過去のクエストでisOverdueがtrueになる', () {
       final task = Task(
         id: 'test-2',
         title: 'テスト',
@@ -49,7 +49,7 @@ void main() {
       final service = TaskCompletionService();
       final task = Task(
         id: 'test-3',
-        title: '期限切れタスク',
+        title: '期限切れクエスト',
         status: TaskStatus.active,
         deadline: DateTime.now().subtract(const Duration(days: 2)),
       );
@@ -66,7 +66,7 @@ void main() {
       print('RESULT quizQuestion: ${result!.quizQuestion}');
       print('RESULT bonusMessages: ${result.bonusMessages}');
       print('RESULT expGain: ${result.expGain}');
-      expect(result.quizQuestion, isNotNull, reason: '期限切れタスクのクイズはnon-null');
+      expect(result.quizQuestion, isNotNull, reason: '期限切れクエストのクイズはnon-null');
       expect(result.bonusMessages, anyElement(contains('刻の番人')),
           reason: '期限切れメッセージが含まれるべき');
       expect(result.expGain, lessThan(100), reason: 'EXPが減少しているべき');

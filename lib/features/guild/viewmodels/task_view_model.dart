@@ -12,7 +12,7 @@ import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:injectable/injectable.dart';
 
-/// タスクのCRUDと操作を管理するViewModel
+/// クエストのCRUDと操作を管理するViewModel
 @lazySingleton
 class TaskViewModel extends ChangeNotifier {
   final ITaskRepository _taskRepository;
@@ -58,7 +58,7 @@ class TaskViewModel extends ChangeNotifier {
   }
   KozuchiQuest? get kozuchiQuest => _kozuchiQuest;
 
-  // ── タスクフィルタ ──
+  // ── クエストフィルタ ──
   List<Task> get activeTasks => _tasks.where((t) =>
       t.status == TaskStatus.active && !t.isCompleted && _visible(t)).toList();
 
@@ -220,7 +220,7 @@ class TaskViewModel extends ChangeNotifier {
     }
   }
 
-  /// タスク完了。戻り値は完了結果のマップ
+  /// クエスト完了。戻り値は完了結果のマップ
   Map<String, dynamic>? completeTask(String id,
       {bool knowledgeQuestEnabled = true, bool debugMode = false}) {
     if (_completing.contains(id)) return null;
@@ -265,20 +265,20 @@ class TaskViewModel extends ChangeNotifier {
     }
   }
 
-  /// 神託1: 今日・明日が期限のギルドタスクを自動配備（最大6件まで）
+  /// 神託1: 今日・明日が期限のギルドクエストを自動配備（最大6件まで）
   void autoDeployTodaysTasks() {
     final now = DateTime.now();
     final tomorrow = now.add(const Duration(days: 1));
 
-    // 今日 + 明日が期限のタスクを集める（ただし手動取消されたものは除外）
+    // 今日 + 明日が期限のクエストを集める（ただし手動取消されたものは除外）
     final urgentTasks = guildTasks.where((t) =>
         t.deadline != null &&
-        t.cancelledAt == null && // M12: 手動取消されたタスクは再配備しない
+        t.cancelledAt == null && // M12: 手動取消されたクエストは再配備しない
         (DateUtils.isSameDay(t.deadline!, now) ||
          DateUtils.isSameDay(t.deadline!, tomorrow))).toList();
 
     if (urgentTasks.isEmpty) {
-      debugPrint('[神託] 近日期限のギルドタスクはありません');
+      debugPrint('[神託] 近日期限のギルドクエストはありません');
       return;
     }
 
@@ -327,7 +327,7 @@ class TaskViewModel extends ChangeNotifier {
     addTask('デバッグ：古代遺跡の調査', rank: QuestRank.A, targetTimeMinutes: 60);
   }
 
-  /// バックアップ復元時にタスクリストを差し替える。
+  /// バックアップ復元時にクエストリストを差し替える。
   void setTasks(List<Task> tasks) {
     _tasks = tasks;
     notifyListeners();

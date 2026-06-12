@@ -178,7 +178,7 @@ void main() {
       await tester.runAsync(() async {
         vms = createViewModels();
 
-        // 見積もり時間付きのタスクを追加して受注（active 状態にする）
+        // 見積もり時間付きのクエストを追加して受注（active 状態にする）
         vms.task.addTask('テストクエスト', rank: QuestRank.B, targetTimeMinutes: 30);
         final taskId = vms.task.tasks.first.id;
         vms.task.acceptTask(taskId);
@@ -191,13 +191,13 @@ void main() {
       expect(find.text('今日の戦い（見積もり）: 30分'), findsOneWidget);
     });
 
-    testWidgets('複数タスクの見積もり時間が合計表示される', (tester) async {
+    testWidgets('複数クエストの見積もり時間が合計表示される', (tester) async {
       late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
         vms = createViewModels();
 
-        // 2つのタスク（30分 + 45分 = 75分、両方Bランクで受注可能）
+        // 2つのクエスト（30分 + 45分 = 75分、両方Bランクで受注可能）
         // デフォルトLv1ではBランク1枠しかないのでLv2に昇格
         vms.player.player.jobLevels[vms.player.player.currentJob] = 2;
         vms.task.addTask('クエストA', rank: QuestRank.B, targetTimeMinutes: 30);
@@ -224,7 +224,7 @@ void main() {
       await tester.runAsync(() async {
         vms = createViewModels();
 
-        // targetTimeMinutes なしのタスクを追加して受注
+        // targetTimeMinutes なしのクエストを追加して受注
         vms.task.addTask('テストクエスト', rank: QuestRank.B);
         final taskId = vms.task.tasks.first.id;
         vms.task.acceptTask(taskId);
@@ -245,12 +245,12 @@ void main() {
       );
     });
 
-    testWidgets('見積もり0分（タスクなし）の場合は表示されない', (tester) async {
+    testWidgets('見積もり0分（クエストなし）の場合は表示されない', (tester) async {
       late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
         vms = createViewModels();
-        // タスクを追加しない → dailyEstimatedMinutes = 0
+        // クエストを追加しない → dailyEstimatedMinutes = 0
       });
 
       await pumpBattleScreen(
@@ -272,10 +272,10 @@ void main() {
     });
   });
 
-  // ━━━ M4禍津: タスク連打でダイアログ多重表示 ━━━
+  // ━━━ M4禍津: クエスト連打でダイアログ多重表示 ━━━
 
-  group('M4 タスク連打ガードテスト', () {
-    testWidgets('タスク完了ボタンを連打してもダイアログは1つだけ表示される',
+  group('M4 クエスト連打ガードテスト', () {
+    testWidgets('クエスト完了ボタンを連打してもダイアログは1つだけ表示される',
         (tester) async {
       late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
       late String taskId;
@@ -330,7 +330,7 @@ void main() {
   // ━━━ M5禍津: maybePop() が無関係ダイアログを閉じる ━━━
 
   group('M5 maybePop 無関係ダイアログテスト', () {
-    testWidgets('タスク完了後、先に開いていたダイアログが閉じられない',
+    testWidgets('クエスト完了後、先に開いていたダイアログが閉じられない',
         (tester) async {
       late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
       late String taskId;
@@ -471,7 +471,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // ダイアログが閉じられ、タスクはactiveのまま
+      // ダイアログが閉じられ、クエストはactiveのまま
       expect(find.byKey(AppKeys.confirmDialog), findsNothing);
       expect(vms.task.activeTasks.length, 1);
 
@@ -487,7 +487,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // タスクがギルドに戻されたことを確認
+      // クエストがギルドに戻されたことを確認
       expect(vms.task.activeTasks.length, 0);
     });
   });
@@ -602,7 +602,7 @@ void main() {
       // BattleViewModelが戦術を選択し、その後の討伐完了で victory または defeat 状態になる
       final battleVM = getIt<BattleViewModel>();
       expect(battleVM.selectedTactic, BattleTactic.attack);
-      // タスク討伐完了後は victory または defeat（タスクの状態による）
+      // クエスト討伐完了後は victory または defeat（クエストの状態による）
       expect(
         battleVM.currentState,
         anyOf(BattleState.victory, BattleState.defeat),

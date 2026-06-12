@@ -3,13 +3,13 @@ import 'package:http/http.dart' as http;
 
 /// 週次グリフォン報告のための AI インサイト生成インターフェース。
 ///
-/// [GriffonEstimator] が個別タスクの難易度推定を行うのに対し、
+/// [GriffonEstimator] が個別クエストの難易度推定を行うのに対し、
 /// こちらは週間の振り返り集合から洞察を生成する。
 abstract class GryphonInsightGenerator {
   /// 週間の振り返り一覧から AI インサイトを生成する。
   ///
   /// [reflectionContents] 振り返り本文のリスト
-  /// [taskTitles] 対応するタスクタイトルのリスト
+  /// [taskTitles] 対応するクエストタイトルのリスト
   /// [selfDifficulties] 自己評価難易度のリスト
   ///
   /// 戻り値: `{trends, strengths, nextSteps, growthScore}` を含むマップ
@@ -57,7 +57,7 @@ class RealGryphonInsightGenerator implements GryphonInsightGenerator {
         '【次の一手】NEXT_STEPS:\n'
         '来週に向けた具体的で実践可能なアクション提案を2〜3個、箇条書きで提示。\n\n'
         '【成長スコア】GROWTH_SCORE:\n'
-        '0〜100の数値で今週の総合成長度を評価（自己評価難易度の高いタスクに'
+        '0〜100の数値で今週の総合成長度を評価（自己評価難易度の高いクエストに'
         '対する振り返りの深さを重視）。\n\n'
         '【出力形式】\n'
         'TRENDS: (今週の傾向)\n'
@@ -81,7 +81,7 @@ class RealGryphonInsightGenerator implements GryphonInsightGenerator {
     } else {
       for (var i = 0; i < reflectionContents.length; i++) {
         buffer.writeln('--- 振り返り ${i + 1} ---');
-        buffer.writeln('タスク: ${taskTitles.length > i ? taskTitles[i] : "不明"}');
+        buffer.writeln('クエスト: ${taskTitles.length > i ? taskTitles[i] : "不明"}');
         buffer.writeln('自己評価難易度: ${selfDifficulties.length > i ? selfDifficulties[i] : "未記入"}/100');
         buffer.writeln('振り返り内容: ${reflectionContents[i]}');
         buffer.writeln();
@@ -201,27 +201,27 @@ class RealGryphonInsightGenerator implements GryphonInsightGenerator {
 
     String trends;
     if (total == 0) {
-      trends = '今週はまだ振り返りが記録されていません。まずは小さなタスクから振り返りを始めてみましょう。';
+      trends = '今週はまだ振り返りが記録されていません。まずは小さなクエストから振り返りを始めてみましょう。';
     } else if (count < total) {
       trends = '今週は$total件中$count件の振り返りが記録されました。内容のある振り返りを増やすことで、より深い洞察が得られます。';
     } else {
-      trends = '今週は$total件すべてのタスクで振り返りが記録されました。継続的な内省の習慣が身についています。';
+      trends = '今週は$total件すべてのクエストで振り返りが記録されました。継続的な内省の習慣が身についています。';
     }
 
     String strengths;
     if (avgDifficulty > 70) {
-      strengths = '平均自己評価難易度が${avgDifficulty.round()}/100と高く、困難なタスクに積極的に挑戦した週でした。挑戦する勇気が最大の強みです。';
+      strengths = '平均自己評価難易度が${avgDifficulty.round()}/100と高く、困難なクエストに積極的に挑戦した週でした。挑戦する勇気が最大の強みです。';
     } else if (avgDifficulty > 40) {
-      strengths = 'バランスの取れた難易度のタスクに取り組んだ週でした。安定した遂行力が光ります。';
+      strengths = 'バランスの取れた難易度のクエストに取り組んだ週でした。安定した遂行力が光ります。';
     } else {
-      strengths = '軽量タスクを着実に完了させた週でした。習慣化の力が育っています。';
+      strengths = '軽量クエストを着実に完了させた週でした。習慣化の力が育っています。';
     }
 
     String nextSteps;
     if (avgDifficulty < 30) {
-      nextSteps = '- 難易度の高いタスクに1つ挑戦してみましょう\n- 振り返りの記述をより具体的に（「何が難しかったか」「次はどうするか」）';
+      nextSteps = '- 難易度の高いクエストに1つ挑戦してみましょう\n- 振り返りの記述をより具体的に（「何が難しかったか」「次はどうするか」）';
     } else if (count < 3) {
-      nextSteps = '- 来週は3件以上の振り返りを目標に\n- タスク完了直後の「戦後の一息」を習慣化しましょう';
+      nextSteps = '- 来週は3件以上の振り返りを目標に\n- クエスト完了直後の「戦後の一息」を習慣化しましょう';
     } else {
       nextSteps = '- 振り返りの内容を週末に見返し、来週の目標を立てましょう\n- 苦手な領域を特定し、集中的に強化する1週間に';
     }

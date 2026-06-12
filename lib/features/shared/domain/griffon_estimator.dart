@@ -31,15 +31,15 @@ class GriffonEstimation {
   }
 }
 
-/// 魔導書解析AI — 過去のタスク履歴から難易度と見積もり時間を推定する。
+/// 魔導書解析AI — 過去のクエスト履歴から難易度と見積もり時間を推定する。
 ///
 /// 具象実装は LLM API（DeepSeek 等）を呼び出す [RealGriffonEstimator]、
 /// テスト用の [FakeGriffonEstimator] はテストファイルに定義する。
 abstract class GriffonEstimator {
-  /// タスクタイトルと過去のタスク履歴から推定結果を返す。
+  /// クエストタイトルと過去のクエスト履歴から推定結果を返す。
   ///
-  /// [title] 推定対象のタスクタイトル。
-  /// [pastTaskTitles] 過去に完了したタスクのタイトル一覧（類似度判定に使用）。
+  /// [title] 推定対象のクエストタイトル。
+  /// [pastTaskTitles] 過去に完了したクエストのタイトル一覧（類似度判定に使用）。
   Future<GriffonEstimation> estimate(
     String title,
     List<String> pastTaskTitles,

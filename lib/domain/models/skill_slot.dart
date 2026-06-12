@@ -35,7 +35,7 @@ class ProjectGroup {
   String name;
   List<String> taskIds;
   List<String> tags;
-  int bonusExp; // wizardProject: 全タスク完了時のボーナスEXP
+  int bonusExp; // wizardProject: 全クエスト完了時のボーナスEXP
 
   ProjectGroup({
     required this.name,

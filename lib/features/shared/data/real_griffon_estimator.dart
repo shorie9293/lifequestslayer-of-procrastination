@@ -6,7 +6,7 @@ import 'package:rpg_todo/domain/models/task.dart';
 
 /// DeepSeek APIを使用した魔導書解析推定サービスの実装。
 ///
-/// 過去のタスク履歴から類似タスクを分析し、
+/// 過去のクエスト履歴から類似クエストを分析し、
 /// 難易度ランクと見積もり時間をAIが推定する。
 ///
 /// 環境変数 DEEPSEEK_API_KEY からAPIキーを取得する。
@@ -35,12 +35,12 @@ class RealGriffonEstimator implements GriffonEstimator {
   String buildSystemPrompt() {
     return 'あなたは「魔導書（グリフォン）」——過去のクエスト履歴を解析し、'
         '新たなクエストの難易度を予見する古代の知性体である。\n\n'
-        '与えられたタスクタイトルと過去のタスク履歴から、'
+        '与えられたクエストタイトルと過去のクエスト履歴から、'
         '適切な難易度ランク（S/A/B）と見積もり所要時間（分）を推定せよ。\n\n'
         '【難易度基準】\n'
-        '- Sランク: 本番/緊急/障害/締切に関わる最重要タスク（所要60〜180分）\n'
-        '- Aランク: 実装/設計/分析など専門性を要する中規模タスク（所要30〜90分）\n'
-        '- Bランク: 日常的な軽量タスク（所要5〜30分）\n\n'
+        '- Sランク: 本番/緊急/障害/締切に関わる最重要クエスト（所要60〜180分）\n'
+        '- Aランク: 実装/設計/分析など専門性を要する中規模クエスト（所要30〜90分）\n'
+        '- Bランク: 日常的な軽量クエスト（所要5〜30分）\n\n'
         '【出力形式】\n'
         'RANK: (S|A|B)\n'
         'MINUTES: (数値)\n'
@@ -51,10 +51,10 @@ class RealGriffonEstimator implements GriffonEstimator {
   String buildUserMessage(String title, List<String> pastTaskTitles) {
     final pastTasksStr = pastTaskTitles.isNotEmpty
         ? pastTaskTitles.map((t) => '- $t').join('\n')
-        : '（過去のタスク履歴なし）';
-    return '【新規タスク】$title\n\n'
-        '【過去の完了タスク】\n$pastTasksStr\n\n'
-        '上記の新規タスクの難易度と見積もり時間を推定せよ。';
+        : '（過去のクエスト履歴なし）';
+    return '【新規クエスト】$title\n\n'
+        '【過去の完了クエスト】\n$pastTasksStr\n\n'
+        '上記の新規クエストの難易度と見積もり時間を推定せよ。';
   }
 
   @override

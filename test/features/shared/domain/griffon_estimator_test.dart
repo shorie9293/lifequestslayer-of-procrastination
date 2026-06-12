@@ -3,7 +3,7 @@ import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/shared/domain/griffon_estimator.dart';
 import 'package:rpg_todo/features/shared/domain/difficulty_estimator.dart';
 
-/// テスト用 FakeGriffonEstimator — 過去タスク名と推定結果のマップを持つ
+/// テスト用 FakeGriffonEstimator — 過去クエスト名と推定結果のマップを持つ
 class FakeGriffonEstimator implements GriffonEstimator {
   final Map<String, GriffonEstimation> _estimations;
 
@@ -41,7 +41,7 @@ void main() {
     });
 
     group('AI推定', () {
-      test('過去の類似タスクからSランク＋見積もり時間を返す', () async {
+      test('過去の類似クエストからSランク＋見積もり時間を返す', () async {
         final result = await estimator.estimate(
           '本番デプロイの最終確認と手順書作成',
           ['本番デプロイ', '手順書作成', 'リリース作業'],
@@ -50,7 +50,7 @@ void main() {
         expect(result.estimatedMinutes, 120);
       });
 
-      test('過去の類似タスクからAランク＋見積もり時間を返す', () async {
+      test('過去の類似クエストからAランク＋見積もり時間を返す', () async {
         final result = await estimator.estimate(
           '週次レポートの作成と提出',
           ['月次レポート', '資料作成'],
@@ -59,7 +59,7 @@ void main() {
         expect(result.estimatedMinutes, 45);
       });
 
-      test('過去の類似タスクからBランク＋見積もり時間を返す', () async {
+      test('過去の類似クエストからBランク＋見積もり時間を返す', () async {
         final result = await estimator.estimate(
           '買い物リストの作成',
           ['買い物', '掃除'],
@@ -69,7 +69,7 @@ void main() {
       });
 
       test('AI推定がなくてもキーワードベース推定にフォールバック', () async {
-        final result = await estimator.estimate('未知のタスク', []);
+        final result = await estimator.estimate('未知のクエスト', []);
         expect(result.rank, isNotNull);
         expect(result.estimatedMinutes, isNull);
       });
@@ -77,7 +77,7 @@ void main() {
 
     group('見積もり時間', () {
       test('estimatedMinutesがnullでもランクは返る', () async {
-        final result = await estimator.estimate('未知のタスク', []);
+        final result = await estimator.estimate('未知のクエスト', []);
         expect(result.rank, isA<QuestRank>());
         expect(result.estimatedMinutes, isNull);
       });
@@ -146,9 +146,9 @@ void main() {
     });
 
     test('見積もり時間なしでもランク推定は動作', () async {
-      // FakeGriffonEstimator が知らないタスクの場合、estimatedMinutes は null
+      // FakeGriffonEstimator が知らないクエストの場合、estimatedMinutes は null
       final result = await DifficultyEstimator.estimateWithAI(
-        '未知のタスク',
+        '未知のクエスト',
         [],
         griffonEstimator,
       );

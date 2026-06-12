@@ -7,7 +7,7 @@ import 'package:rpg_todo/domain/services/skill_effect_service.dart';
 import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
 import 'package:rpg_todo/features/battle/data/quiz_data.dart';
 
-/// タスク完了時の計算結果
+/// クエスト完了時の計算結果
 class TaskCompletionResult {
   final bool leveledUp;
   final int coinsGained;
@@ -36,15 +36,15 @@ class TaskCompletionResult {
   });
 }
 
-/// タスク完了のロジック（GameViewModelから分離）
+/// クエスト完了のロジック（GameViewModelから分離）
 class TaskCompletionService {
   final Random _rng;
 
   TaskCompletionService({Random? rng}) : _rng = rng ?? Random();
 
-  /// タスクを完了し、結果を返す。PlayerとTaskは呼び出し元で更新する。
-  /// 戻り値がnullの場合は完了不可（サブタスク未完了など）。
-  /// [allTasks] は wizardProject ボーナス判定用の全タスクリスト（任意）。
+  /// クエストを完了し、結果を返す。PlayerとTaskは呼び出し元で更新する。
+  /// 戻り値がnullの場合は完了不可（サブクエスト未完了など）。
+  /// [allTasks] は wizardProject ボーナス判定用の全クエストリスト（任意）。
   TaskCompletionResult? complete({
     required Task task,
     required Player player,
@@ -52,7 +52,7 @@ class TaskCompletionService {
     required bool knowledgeQuestEnabled,
     List<Task>? allTasks,
   }) {
-    // Wizard Lv1: 分割の理 — サブタスク完了チェック
+    // Wizard Lv1: 分割の理 — サブクエスト完了チェック
     if (player.isSkillEquipped(JobSkill.wizardSubtask) && task.subTasks.isNotEmpty) {
       if (task.subTasks.any((s) => !s.isCompleted)) {
         return null;
@@ -63,7 +63,7 @@ class TaskCompletionService {
     if (player.canUseSkill(Job.cleric) && task.repeatAfterDays != null) {
       task.lastCompletedAt = DateTime.now();
     } else if (
-        // Ronin (冒険者): 繰り返しタスクは isCompleted にせず lastCompletedAt を更新
+        // Ronin (冒険者): 繰り返しクエストは isCompleted にせず lastCompletedAt を更新
         // 後方互換: Cleric mastery でも動作
         task.repeatInterval != RepeatInterval.none &&
         (player.hasSkill(JobSkill.roninRepeatTask) ||
@@ -74,7 +74,7 @@ class TaskCompletionService {
       task.status = TaskStatus.inGuild;
     }
 
-    // Cleric Lv10: 連続の誓い — タスク完了をstreakに記録
+    // Cleric Lv10: 連続の誓い — クエスト完了をstreakに記録
     player.recordTaskCompletion(task.id, DateTime.now());
 
     final bonusMessages = <String>[];
@@ -304,9 +304,9 @@ class TaskCompletionService {
             .where((p) => p.name == projectName)
             .firstOrNull;
         if (project != null && project.bonusExp > 0) {
-          // プロジェクトに属する全タスクが完了しているか
+          // プロジェクトに属する全クエストが完了しているか
           final allProjectTaskIds = project.taskIds.toSet();
-          // 現在完了したタスク + 他の全タスクの完了状態を確認
+          // 現在完了したクエスト + 他の全クエストの完了状態を確認
           final allProjectTasks = allTasks
               .where((t) => allProjectTaskIds.contains(t.id));
           final allDone = allProjectTasks.every((t) =>

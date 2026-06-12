@@ -51,7 +51,7 @@ void main() {
     });
   });
 
-  group('TaskViewModel - 繰り返しタスク表示 (RoninRepeatTask)', () {
+  group('TaskViewModel - 繰り返しクエスト表示 (RoninRepeatTask)', () {
     late _MockPlayerRepo playerRepo;
     late PlayerViewModel playerVm;
     late _MockTaskRepo taskRepo;
@@ -66,7 +66,7 @@ void main() {
       await taskVm.load();
     });
 
-    test('RoninRepeatTask有効時:今日完了済みの繰り返しタスクはactiveTasksに非表示', () {
+    test('RoninRepeatTask有効時:今日完了済みの繰り返しクエストはactiveTasksに非表示', () {
       // Set up: Ronin Lv10 (mastered → roninRepeatTask available)
       playerVm.player.jobLevels[Job.adventurer] = 10;
       playerVm.player.currentJob = Job.adventurer;
@@ -82,7 +82,7 @@ void main() {
       expect(taskVm.activeTasks, isEmpty);
     });
 
-    test('RoninRepeatTask有効時:昨日完了の繰り返しタスクはactiveTasksに表示', () {
+    test('RoninRepeatTask有効時:昨日完了の繰り返しクエストはactiveTasksに表示', () {
       playerVm.player.jobLevels[Job.adventurer] = 10;
       playerVm.player.currentJob = Job.adventurer;
 
@@ -113,11 +113,11 @@ void main() {
       expect(taskVm.activeTasks.length, 1);
     });
 
-    test('repeatInterval=noneのタスクは常に表示', () {
+    test('repeatInterval=noneのクエストは常に表示', () {
       playerVm.player.jobLevels[Job.adventurer] = 10;
 
       final today = DateTime.now();
-      taskVm.addTask('通常タスク',
+      taskVm.addTask('通常クエスト',
           repeatInterval: RepeatInterval.none);
       final task = taskVm.tasks.first;
       task.lastCompletedAt = today;

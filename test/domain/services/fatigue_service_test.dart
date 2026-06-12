@@ -51,7 +51,7 @@ void main() {
   });
 
   group('progress', () {
-    test('タスク完了0で0.0を返す', () {
+    test('クエスト完了0で0.0を返す', () {
       final player = createPlayer(dailyTasksCompleted: 0);
       expect(FatigueService.progress(player), 0.0);
     });

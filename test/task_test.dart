@@ -5,8 +5,8 @@ import 'package:rpg_todo/domain/models/task.dart';
 void main() {
   group('SubTask', () {
     test('デフォルトで未完了', () {
-      final sub = SubTask(title: 'サブタスク');
-      expect(sub.title, 'サブタスク');
+      final sub = SubTask(title: 'サブクエスト');
+      expect(sub.title, 'サブクエスト');
       expect(sub.isCompleted, false);
     });
 
@@ -55,7 +55,7 @@ void main() {
 
   group('Task', () {
     test('デフォルト値が正しく設定される', () {
-      final task = Task(id: 'test1', title: 'テストタスク');
+      final task = Task(id: 'test1', title: 'テストクエスト');
       expect(task.status, TaskStatus.inGuild);
       expect(task.isCompleted, false);
       expect(task.rank, QuestRank.B);
@@ -64,12 +64,12 @@ void main() {
       expect(task.repeatWeekdays, isEmpty);
     });
 
-    test('サブタスク付きでタスクを作成できる', () {
+    test('サブクエスト付きでクエストを作成できる', () {
       final subTasks = [
         SubTask(title: 'サブ1'),
         SubTask(title: 'サブ2', isCompleted: true),
       ];
-      final task = Task(id: 'test2', title: '親タスク', subTasks: subTasks);
+      final task = Task(id: 'test2', title: '親クエスト', subTasks: subTasks);
       expect(task.subTasks.length, 2);
       expect(task.subTasks[0].title, 'サブ1');
       expect(task.subTasks[1].isCompleted, true);
@@ -102,7 +102,7 @@ void main() {
     });
 
     test('round-trip: default Task matches original', () {
-      final original = Task(id: 'test-1', title: 'デフォルトタスク');
+      final original = Task(id: 'test-1', title: 'デフォルトクエスト');
       final jsonStr = jsonEncode(original.toJson());
       final restored = Task.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
       expect(restored.id, original.id);
@@ -168,7 +168,7 @@ void main() {
     test('round-trip: Task with DateTime fields (null) matches original', () {
       final original = Task(
         id: 'dt-null-test',
-        title: '期限なしタスク',
+        title: '期限なしクエスト',
       );
 
       final jsonStr = jsonEncode(original.toJson());

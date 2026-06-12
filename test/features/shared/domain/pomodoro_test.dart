@@ -63,7 +63,7 @@ void main() {
     }) {
       return Task(
         id: id,
-        title: 'テストタスク',
+        title: 'テストクエスト',
         status: TaskStatus.active,
         rank: rank,
       );

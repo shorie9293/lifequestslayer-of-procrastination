@@ -172,7 +172,7 @@ class SettingsRepository {
   /// 魔導書解析AI（GriffonEstimator）の有効/無効フラグ。
   ///
   /// デフォルトは false（キーワードベース推定のみ）。
-  /// AI推定が有効な場合、タスク作成時に過去の完了タスク履歴から
+  /// AI推定が有効な場合、クエスト作成時に過去の完了クエスト履歴から
   /// 難易度と見積もり時間をAIが提案する。
   Future<bool> getGriffonEnabled() async {
     try {
