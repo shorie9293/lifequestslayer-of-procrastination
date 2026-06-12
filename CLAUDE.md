@@ -48,8 +48,8 @@ flutter build web
 # Run tests
 flutter test
 
-# Analyze code
-flutter analyze
+# Analyze code (CI runs with --no-fatal-infos — warnings = CI failure)
+flutter analyze --no-fatal-infos
 
 # Get dependencies
 flutter pub get
@@ -61,3 +61,11 @@ flutter pub get
 - State is managed via `Provider` and `ChangeNotifier`
 - Hive is used for persistent local storage
 - RPG-themed UI: tasks appear as guild quests, players gain XP on completion
+
+## ⛩️ Push Gate
+
+**Pre-push hook** at `.git/hooks/pre-push` runs `flutter analyze --no-fatal-infos` before every push.
+- Warnings (not just errors) cause exit code 1 = push REJECTED.
+- This mirrors the CI check exactly — no more 4-consecutive CI failures from missed warnings.
+- Info-level issues (deprecated API, unused print, etc.) are suppressed by `--no-fatal-infos` and won't block.
+- Always run tests (`flutter test`) before pushing, even though the hook doesn't enforce it.
