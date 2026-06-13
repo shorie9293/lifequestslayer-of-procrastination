@@ -6,6 +6,7 @@ import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
 
 import 'package:rpg_todo/features/battle/domain/battle_audio_service.dart';
 import 'package:rpg_todo/features/battle/viewmodels/battle_view_model.dart';
@@ -25,6 +26,9 @@ void configureDependencies() {
   // 戦闘系サービス（injectable未対応のため手動登録）
   getIt.registerLazySingleton<BattleAudioService>(() => BattleAudioService());
   getIt.registerLazySingleton<BattleViewModel>(() => BattleViewModel());
+
+  // 町開発 ViewModel（Hive box に依存するため手動登録）
+  getIt.registerLazySingleton<TownViewModel>(() => TownViewModel());
 }
 
 /// 全VMのデータロードとアプリライフサイクル監視を統括する。
@@ -33,10 +37,13 @@ Future<void> initializeViewModels() async {
   final playerVM = getIt<PlayerViewModel>();
   final taskVM = getIt<TaskViewModel>();
   final settingsVM = getIt<SettingsViewModel>();
+  final townVM = getIt<TownViewModel>();
 
   await playerVM.load();
   await taskVM.load();
   await settingsVM.load();
+  await townVM.load();
+  townVM.initialize();
 
   // ★ v1.6: PlayerRepositoryへのアクセス
   final playerRepo = getIt<IPlayerRepository>();

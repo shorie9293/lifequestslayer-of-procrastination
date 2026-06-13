@@ -12,6 +12,7 @@ import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
+import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/theme_view_model.dart';
 import 'package:rpg_todo/features/kozuchi/domain/kozuchi_quest_model.dart';
@@ -24,19 +25,21 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   late final PlayerViewModel _playerVM;
   late final TaskViewModel _taskVM;
   late final ShopViewModel _shopVM;
+  TownViewModel? _townVM;
   late final SettingsViewModel _settingsVM;
   late final ThemeViewModel _themeVM;
   final IPlayerRepository _playerRepo;
   final ITaskRepository _taskRepo;
   final SettingsRepository _settingsRepo;
 
-  GameViewModel({IPlayerRepository? pr, ITaskRepository? tr, SettingsRepository? sr})
+  GameViewModel({IPlayerRepository? pr, ITaskRepository? tr, SettingsRepository? sr, TownViewModel? tv})
     : _playerRepo = pr ?? PlayerRepository(),
       _taskRepo = tr ?? TaskRepository(),
       _settingsRepo = sr ?? SettingsRepository() {
     _playerVM = PlayerViewModel(_playerRepo);
     _taskVM = TaskViewModel(_taskRepo, _playerVM);
     _shopVM = ShopViewModel(_playerVM);
+    _townVM = tv;
     _settingsVM = SettingsViewModel(_settingsRepo);
     _themeVM = ThemeViewModel(_playerVM);
     loadData();
@@ -69,7 +72,7 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   bool get isWeeklyMissionComplete => _playerVM.isWeeklyMissionComplete;
   int get streakDays => _playerVM.streakDays;
   int get dailyEstimatedMinutes => _taskVM.dailyEstimatedMinutes;
-  TownScale get townScale => _playerVM.townScale;
+  TownScale get townScale => _townVM?.townScale ?? _playerVM.townScale;
   int get guildEstimatedMinutes => _taskVM.guildEstimatedMinutes;
   List<({TitleDefinition def, int progress, bool isUnlocked})> get titleProgressList => _playerVM.titleProgressList;
   List<Task> get urgentGuildTasks => _taskVM.urgentGuildTasks;
@@ -81,6 +84,9 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   static const int weeklyMissionGoal = 1;
   int? pendingLoginBonusAmount;
   int? pendingStreakReward;
+
+  /// 町開発 ViewModel へのアクセサ（null可）。
+  TownViewModel? get townVM => _townVM;
 
   // ── 委譲メソッド ──
   int? estimateMinutes(String title, QuestRank rank) => _taskVM.estimateMinutes(title, rank);
@@ -124,6 +130,13 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
         knowledgeQuestEnabled: _settingsVM.isKnowledgeQuestEnabled,
         debugMode: _settingsVM.isDebugMode);
     if (result != null) {
+      // 町にXPを付与（クエストランクに応じた量）
+      if (_townVM != null) {
+        final task = _taskVM.tasks.firstWhere((t) => t.id == id);
+        final townXp = _townXpForRank(task.rank);
+        _townVM!.addTownXp(townXp);
+      }
+
       if (_settingsVM.tutorialStep == 2) completeTutorialStep(2);
       _playerVM.checkAndResetMissions(DateTime.now());
       if (result['leveledUp'] == true &&
@@ -135,6 +148,18 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
       _save();
     }
     return result;
+  }
+
+  /// クエストランクから町XPを計算する。
+  int _townXpForRank(QuestRank rank) {
+    switch (rank) {
+      case QuestRank.S:
+        return 50;
+      case QuestRank.A:
+        return 30;
+      case QuestRank.B:
+        return 10;
+    }
   }
 
   void awardKnowledgeBonus(int pct, int base) => _taskVM.awardKnowledgeBonus(pct, base);
@@ -235,6 +260,7 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     _settingsVM.dispose();
     _themeVM.dispose();
     _shopVM.dispose();
+    _townVM?.dispose();
     super.dispose();
   }
 
@@ -250,7 +276,9 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     _isSaving = true;
     _pending = false;
     try {
-      await Future.wait([_playerVM.save(), _taskVM.save()]);
+      final futures = <Future>[_playerVM.save(), _taskVM.save()];
+      if (_townVM != null) futures.add(_townVM!.save());
+      await Future.wait(futures);
     } catch (e) {
       debugPrint('GameViewModel: save failed: $e');
       _playerVM.onSaveError?.call();
@@ -261,7 +289,9 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
         _pending = false;
         // 保留中のデータ（後続のaddTask等による変更）を保存
         try {
-          await Future.wait([_playerVM.save(), _taskVM.save()]);
+          final futures2 = <Future>[_playerVM.save(), _taskVM.save()];
+          if (_townVM != null) futures2.add(_townVM!.save());
+          await Future.wait(futures2);
         } catch (e) {
           debugPrint('GameViewModel: retry save failed: $e');
           _playerVM.onSaveError?.call();
@@ -275,6 +305,10 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     await _playerVM.load();
     await _taskVM.load();
     await _settingsVM.load();
+    if (_townVM != null) {
+      await _townVM!.load();
+      _townVM!.initialize();
+    }
     try { _playerVM.checkAndResetMissions(DateTime.now(), login: true); } catch (e, s) { debugPrint('[VM] missions error: $e\n$s'); }
     try { WidgetsBinding.instance.addObserver(this); } catch (_) {}
     try { _taskVM.autoDeployTodaysTasks(); } catch (e, s) { debugPrint('[VM] autoDeploy error: $e\n$s'); }

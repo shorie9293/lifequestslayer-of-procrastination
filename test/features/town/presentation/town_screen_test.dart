@@ -1,10 +1,13 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/town/presentation/town_screen.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
+import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
@@ -80,7 +83,7 @@ class _MockSettingsRepository extends SettingsRepository {
 }
 
 /// 指定された冒険者レベルのPlayerでViewModelを生成
-Future<GameViewModel> _createViewModelWithLevel(int level) async {
+Future<GameViewModel> _createViewModelWithLevel(int level, TownViewModel townVM) async {
   final player = Player(
     jobLevels: {Job.adventurer: level},
   );
@@ -88,6 +91,7 @@ Future<GameViewModel> _createViewModelWithLevel(int level) async {
     pr: _MockPlayerRepository(player),
     tr: _MockTaskRepository(),
     sr: _MockSettingsRepository(),
+    tv: townVM,
   );
   final start = DateTime.now();
   while (!vm.isLoaded) {
@@ -100,13 +104,14 @@ Future<GameViewModel> _createViewModelWithLevel(int level) async {
   return vm;
 }
 
-Future<void> pumpTownScreen(WidgetTester tester, GameViewModel vm, PlayerViewModel playerVM) async {
+Future<void> pumpTownScreen(WidgetTester tester, GameViewModel vm, PlayerViewModel playerVM, TownViewModel townVM) async {
   await tester.pumpWidget(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<GameViewModel>.value(value: vm),
         ChangeNotifierProvider<PlayerViewModel>.value(value: playerVM),
         ChangeNotifierProvider<ShopViewModel>(create: (_) => ShopViewModel(playerVM)),
+        ChangeNotifierProvider<TownViewModel>.value(value: townVM),
       ],
       child: const MaterialApp(
         home: TownScreen(),
@@ -118,69 +123,101 @@ Future<void> pumpTownScreen(WidgetTester tester, GameViewModel vm, PlayerViewMod
 }
 
 void main() {
+  late Directory tempDir;
+
+  setUp(() async {
+    tempDir = Directory.systemTemp.createTempSync('hive_test_');
+    Hive.init(tempDir.path);
+  });
+
+  tearDown(() async {
+    await Hive.close();
+    if (tempDir.existsSync()) {
+      tempDir.deleteSync(recursive: true);
+    }
+  });
+
   group('TownScreen 町発展表示', () {
-    Future<PlayerViewModel> createPlayerViewModel(int level) async {
-      final playerVM = PlayerViewModel(_MockPlayerRepository(Player(jobLevels: {Job.adventurer: level})));
+    Future<(PlayerViewModel, TownViewModel)> createViewModels(int townLevel) async {
+      final playerVM = PlayerViewModel(_MockPlayerRepository(Player(jobLevels: {Job.adventurer: 5})));
       await playerVM.load();
-      return playerVM;
+      final townVM = TownViewModel();
+      townVM.initialize();
+      townVM.setTownLevelForTest(townLevel);
+      return (playerVM, townVM);
     }
 
-    testWidgets('Lv.5 の冒険者は「荒野のキャンプ」と表示される', (tester) async {
+    testWidgets('町Lv.1 では「荒野のキャンプ」と表示される', (tester) async {
       late GameViewModel vm;
       late PlayerViewModel playerVM;
+      late TownViewModel townVM;
       await tester.runAsync(() async {
-        vm = await _createViewModelWithLevel(5);
-        playerVM = await createPlayerViewModel(5);
+        final vms = await createViewModels(1);
+        playerVM = vms.$1;
+        townVM = vms.$2;
+        vm = await _createViewModelWithLevel(5, townVM);
       });
-      await pumpTownScreen(tester, vm, playerVM);
+      await pumpTownScreen(tester, vm, playerVM, townVM);
 
       expect(find.textContaining('荒野のキャンプ'), findsWidgets);
     });
 
-    testWidgets('Lv.15 の冒険者は「小さな集落」と表示される', (tester) async {
+    testWidgets('町Lv.11 では「小さな集落」と表示される', (tester) async {
       late GameViewModel vm;
       late PlayerViewModel playerVM;
+      late TownViewModel townVM;
       await tester.runAsync(() async {
-        vm = await _createViewModelWithLevel(15);
-        playerVM = await createPlayerViewModel(15);
+        final vms = await createViewModels(11);
+        playerVM = vms.$1;
+        townVM = vms.$2;
+        vm = await _createViewModelWithLevel(5, townVM);
       });
-      await pumpTownScreen(tester, vm, playerVM);
+      await pumpTownScreen(tester, vm, playerVM, townVM);
 
       expect(find.textContaining('小さな集落'), findsWidgets);
     });
 
-    testWidgets('Lv.30 の冒険者は「活気ある町」と表示される', (tester) async {
+    testWidgets('町Lv.26 では「活気ある町」と表示される', (tester) async {
       late GameViewModel vm;
       late PlayerViewModel playerVM;
+      late TownViewModel townVM;
       await tester.runAsync(() async {
-        vm = await _createViewModelWithLevel(30);
-        playerVM = await createPlayerViewModel(30);
+        final vms = await createViewModels(26);
+        playerVM = vms.$1;
+        townVM = vms.$2;
+        vm = await _createViewModelWithLevel(5, townVM);
       });
-      await pumpTownScreen(tester, vm, playerVM);
+      await pumpTownScreen(tester, vm, playerVM, townVM);
 
       expect(find.textContaining('活気ある町'), findsWidgets);
     });
 
-    testWidgets('Lv.75 の冒険者は「王都」と表示される', (tester) async {
+    testWidgets('町Lv.51 では「王都」と表示される', (tester) async {
       late GameViewModel vm;
       late PlayerViewModel playerVM;
+      late TownViewModel townVM;
       await tester.runAsync(() async {
-        vm = await _createViewModelWithLevel(75);
-        playerVM = await createPlayerViewModel(75);
+        final vms = await createViewModels(51);
+        playerVM = vms.$1;
+        townVM = vms.$2;
+        vm = await _createViewModelWithLevel(5, townVM);
       });
-      await pumpTownScreen(tester, vm, playerVM);
+      await pumpTownScreen(tester, vm, playerVM, townVM);
 
       expect(find.textContaining('王都'), findsWidgets);
     });
 
-    testWidgets('Lv.120 の冒険者は「天空の都」と表示される', (tester) async {
+    testWidgets('町Lv.101 では「天空の都」と表示される', (tester) async {
       late GameViewModel vm;
       late PlayerViewModel playerVM;
+      late TownViewModel townVM;
       await tester.runAsync(() async {
-        vm = await _createViewModelWithLevel(120);
-        playerVM = await createPlayerViewModel(120);
+        final vms = await createViewModels(101);
+        playerVM = vms.$1;
+        townVM = vms.$2;
+        vm = await _createViewModelWithLevel(5, townVM);
       });
-      await pumpTownScreen(tester, vm, playerVM);
+      await pumpTownScreen(tester, vm, playerVM, townVM);
 
       expect(find.textContaining('天空の都'), findsWidgets);
     });
@@ -188,11 +225,14 @@ void main() {
     testWidgets('次の段階への必要レベルが表示される（最大段階以外）', (tester) async {
       late GameViewModel vm;
       late PlayerViewModel playerVM;
+      late TownViewModel townVM;
       await tester.runAsync(() async {
-        vm = await _createViewModelWithLevel(5);
-        playerVM = await createPlayerViewModel(5);
+        final vms = await createViewModels(5);
+        playerVM = vms.$1;
+        townVM = vms.$2;
+        vm = await _createViewModelWithLevel(5, townVM);
       });
-      await pumpTownScreen(tester, vm, playerVM);
+      await pumpTownScreen(tester, vm, playerVM, townVM);
 
       // 「次の発展まで Lv.11」のような表示がある
       expect(find.textContaining('Lv.11'), findsOneWidget);
@@ -201,11 +241,14 @@ void main() {
     testWidgets('天空の都では次の段階表示がない', (tester) async {
       late GameViewModel vm;
       late PlayerViewModel playerVM;
+      late TownViewModel townVM;
       await tester.runAsync(() async {
-        vm = await _createViewModelWithLevel(150);
-        playerVM = await createPlayerViewModel(150);
+        final vms = await createViewModels(150);
+        playerVM = vms.$1;
+        townVM = vms.$2;
+        vm = await _createViewModelWithLevel(5, townVM);
       });
-      await pumpTownScreen(tester, vm, playerVM);
+      await pumpTownScreen(tester, vm, playerVM, townVM);
 
       // 次の段階表示がないことを確認（「次の発展」のテキストがない）
       expect(find.textContaining('次の発展'), findsNothing);

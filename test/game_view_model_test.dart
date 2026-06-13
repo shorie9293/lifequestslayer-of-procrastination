@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hive/hive.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/skill_slot.dart';
@@ -168,6 +170,20 @@ class _BlockableTaskRepo implements ITaskRepository {
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  late Directory tempDir;
+
+  setUp(() async {
+    tempDir = Directory.systemTemp.createTempSync('hive_test_');
+    Hive.init(tempDir.path);
+  });
+
+  tearDown(() async {
+    await Hive.close();
+    if (tempDir.existsSync()) {
+      tempDir.deleteSync(recursive: true);
+    }
+  });
+
   group('GameViewModel 永続化テスト（Mock）', () {
     test('クエスト完了（Bランク）が永続化され、再読み込みでレベル・クエスト状態が維持される', () async {
       final pr = _MockPlayerRepo();
