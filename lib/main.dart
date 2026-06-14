@@ -7,6 +7,7 @@ import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
+import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
 import 'package:rpg_todo/core/di/injection.dart';
 import 'screens/main_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -129,6 +130,8 @@ class RPGTodoApp extends StatelessWidget {
             value: getIt<TaskViewModel>()),
         ChangeNotifierProvider<ShopViewModel>.value(
             value: getIt<ShopViewModel>()),
+        ChangeNotifierProvider<TownViewModel>.value(
+            value: getIt<TownViewModel>()),
         ChangeNotifierProvider<SettingsViewModel>.value(
             value: getIt<SettingsViewModel>()),
         ChangeNotifierProvider<ThemeViewModel>.value(
