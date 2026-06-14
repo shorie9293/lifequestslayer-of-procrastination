@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import 'package:rpg_todo/features/town/domain/town_level.dart';
 import 'package:rpg_todo/features/town/domain/building.dart';
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
@@ -19,9 +21,6 @@ class TownViewModel extends ChangeNotifier {
 
   /// Hive box。テストでは外部から注入可能。
   Box<dynamic>? _box;
-
-  /// Hiveアクセスが失敗したかどうか（キャッシュ）。再試行を防ぐ。
-  bool _hiveFailed = false;
 
   TownViewModel();
 
@@ -81,9 +80,10 @@ class TownViewModel extends ChangeNotifier {
 
   /// Hive box を取得する（遅延オープン）。
   /// 破損時は自動的に box を削除・再作成する。
+  /// _hiveFailed による永続ロックアウトは行わず、毎回復旧を試みる。
   Future<Box<dynamic>?> _getBox() async {
     if (_box != null && _box!.isOpen) return _box;
-    if (_hiveFailed) return null;
+
     try {
       _box = await _openBoxSafe();
       return _box;
@@ -91,16 +91,35 @@ class TownViewModel extends ChangeNotifier {
       debugPrint('[TownVM] Failed to open box: $e');
       // 破損boxを削除して再作成を試みる
       try {
-        await Hive.deleteBoxFromDisk(_boxName);
+        await _forceDeleteBox();
         debugPrint('[TownVM] Deleted corrupted box, recreating...');
         _box = await _openBoxSafe();
-        _hiveFailed = false;
         return _box;
       } catch (e2) {
         debugPrint('[TownVM] Recovery also failed: $e2');
-        _hiveFailed = true;
         return null;
       }
+    }
+  }
+
+  /// Hive box を強制的に削除する。
+  /// deleteBoxFromDisk が .lock ファイルで失敗する場合に備え、
+  /// 手動でロックファイルと box ファイルを削除してから再試行する。
+  Future<void> _forceDeleteBox() async {
+    try {
+      await Hive.deleteBoxFromDisk(_boxName);
+    } catch (_) {
+      // lock ファイルが残っている場合、手動で削除
+      final dir = await getApplicationDocumentsDirectory();
+      final lockFile = File('${dir.path}/$_boxName.lock');
+      final hiveFile = File('${dir.path}/$_boxName.hive');
+      if (await lockFile.exists()) {
+        await lockFile.delete();
+      }
+      if (await hiveFile.exists()) {
+        await hiveFile.delete();
+      }
+      debugPrint('[TownVM] Force-deleted box files via direct file removal');
     }
   }
 
