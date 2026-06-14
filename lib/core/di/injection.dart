@@ -76,6 +76,7 @@ Future<void> initializeViewModels() async {
       onPause: () async {
         await _safeSave(playerVM, 'player');
         await _safeSave(taskVM, 'task');
+        await townVM.save().catchError((e) => debugPrint('[DI] town save failed: $e'));
       },
     ));
   } catch (_) {}

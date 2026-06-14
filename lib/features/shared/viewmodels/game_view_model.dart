@@ -248,6 +248,9 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
         debugPrint('GameViewModel: lifecycle task save failed: $e');
         _taskVM.onSaveError?.call();
       });
+      _townVM?.save().catchError((e) {
+        debugPrint('GameViewModel: lifecycle town save failed: $e');
+      });
     }
   }
 

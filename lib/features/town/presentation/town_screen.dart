@@ -146,13 +146,17 @@ class _TownTab extends StatelessWidget {
                     townLevel: townVM.townLevel.level,
                     playerCoins: player.coins,
                     onUpgrade: (building) {
-                      townVM.upgradeBuilding(
+                      final success = townVM.upgradeBuilding(
                         building,
                         playerCoins: player.coins,
                         spendCoins: (amount) {
                           playerVM.spendCoins(amount);
                         },
                       );
+                      if (success) {
+                        playerVM.save();
+                        townVM.save();
+                      }
                     },
                   ),
                   const SizedBox(height: 24),
