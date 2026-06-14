@@ -130,26 +130,37 @@ class TownViewModel extends ChangeNotifier {
     final box = await _getBox();
     if (box == null) return;
 
-    final data = box.get(_key);
-    if (data != null && data is Map) {
-      final map = Map<String, dynamic>.from(data);
-      if (map['townLevel'] != null) {
-        _townLevel = TownLevel.fromJson(
-          map['townLevel'] as Map<String, dynamic>,
-        );
-      }
-      if (map['buildings'] != null) {
-        final buildingsJson =
-            map['buildings'] as Map<String, dynamic>;
-        _buildings.clear();
-        for (final entry in buildingsJson.entries) {
-          final building = Building.fromString(entry.key);
-          final state = BuildingState.fromJson(
-            entry.value as Map<String, dynamic>,
+    try {
+      final data = box.get(_key);
+      if (data != null && data is Map) {
+        final map = Map<String, dynamic>.from(data);
+        if (map['townLevel'] != null && map['townLevel'] is Map) {
+          _townLevel = TownLevel.fromJson(
+            map['townLevel'] as Map<String, dynamic>,
           );
-          _buildings[building] = state;
+        }
+        if (map['buildings'] != null && map['buildings'] is Map) {
+          final buildingsJson =
+              map['buildings'] as Map<String, dynamic>;
+          _buildings.clear();
+          for (final entry in buildingsJson.entries) {
+            try {
+              final building = Building.fromString(entry.key);
+              final state = BuildingState.fromJson(
+                entry.value as Map<String, dynamic>,
+              );
+              _buildings[building] = state;
+            } catch (e) {
+              debugPrint('[TownVM] Skipping corrupted building entry: $e');
+            }
+          }
         }
       }
+    } catch (e) {
+      debugPrint('[TownVM] Load failed (data corrupted): $e');
+      // 破損時は全データを初期化
+      _townLevel = TownLevel();
+      _buildings.clear();
     }
     // Ensure all buildings exist even if not in saved data
     for (final building in Building.values) {
