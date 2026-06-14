@@ -80,6 +80,7 @@ class TownViewModel extends ChangeNotifier {
   }
 
   /// Hive box を取得する（遅延オープン）。
+  /// 破損時は自動的に box を削除・再作成する。
   Future<Box<dynamic>?> _getBox() async {
     if (_box != null && _box!.isOpen) return _box;
     if (_hiveFailed) return null;
@@ -87,9 +88,19 @@ class TownViewModel extends ChangeNotifier {
       _box = await _openBoxSafe();
       return _box;
     } catch (e) {
-      _hiveFailed = true;
       debugPrint('[TownVM] Failed to open box: $e');
-      return null;
+      // 破損boxを削除して再作成を試みる
+      try {
+        await Hive.deleteBoxFromDisk(_boxName);
+        debugPrint('[TownVM] Deleted corrupted box, recreating...');
+        _box = await _openBoxSafe();
+        _hiveFailed = false;
+        return _box;
+      } catch (e2) {
+        debugPrint('[TownVM] Recovery also failed: $e2');
+        _hiveFailed = true;
+        return null;
+      }
     }
   }
 
