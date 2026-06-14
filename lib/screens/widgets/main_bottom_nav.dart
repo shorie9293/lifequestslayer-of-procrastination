@@ -33,7 +33,7 @@ class MainBottomNav extends StatelessWidget {
           ),
           BottomNavigationBarItem(
             icon: Text('⛩️', style: TextStyle(fontSize: 24)),
-            label: '社',
+            label: '寺院',
           ),
           BottomNavigationBarItem(
             icon: Text('🏮', style: TextStyle(fontSize: 24)),

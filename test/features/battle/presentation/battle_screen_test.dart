@@ -80,34 +80,36 @@ class _MockSettingsRepository extends SettingsRepository {
   Future<bool> getDebugModeEnabled() async => false;
   @override
   Future<void> setDebugModeEnabled(bool v) async {}
+  @override
+  Future<bool> getSfxEnabled() async => true;
+  @override
+  Future<void> setSfxEnabled(bool enabled) async {}
+  @override
+  Future<bool> getBattleSceneEnabled() async => true;
+  @override
+  Future<void> setBattleSceneEnabled(bool enabled) async {}
 }
 
 /// テスト用のオーディオサービス（実際の音声再生を行わない）。
 class _TestBattleAudioService extends BattleAudioService {
-  bool _bgmMuted = false;
-  bool _sfxMuted = false;
+  bool _sfxOn = true;
 
   @override
-  bool get isBgmMuted => _bgmMuted;
+  bool get sfxEnabled => _sfxOn;
 
   @override
-  bool get isSfxMuted => _sfxMuted;
-
-  @override
-  Future<void> onBattleStateChanged(BattleState newState) async {
-    // テスト中は音声再生をスキップ
+  void setSfxEnabled(bool enabled) {
+    _sfxOn = enabled;
     notifyListeners();
   }
 
   @override
-  Future<void> toggleBgmMute() async {
-    _bgmMuted = !_bgmMuted;
+  Future<void> playVictory() async {
     notifyListeners();
   }
 
   @override
-  Future<void> toggleSfxMute() async {
-    _sfxMuted = !_sfxMuted;
+  Future<void> playDefeat() async {
     notifyListeners();
   }
 }
@@ -609,7 +611,7 @@ void main() {
       );
     });
 
-    testWidgets('BGMミュートトグルが動作する', (tester) async {
+    testWidgets('効果音トグルが動作する', (tester) async {
       late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
 
       await tester.runAsync(() async {
@@ -619,21 +621,21 @@ void main() {
       await pumpBattleScreen(
           tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
-      // BGMミュートボタンを探す
-      final muteButton = find.byTooltip('BGMを消音');
-      expect(muteButton, findsOneWidget);
+      // 効果音トグルボタンを探す（デフォルトON）
+      final sfxOnButton = find.byTooltip('効果音を消す');
+      expect(sfxOnButton, findsOneWidget);
 
-      // タップしてミュート
-      await tester.tap(muteButton);
+      // タップしてオフ
+      await tester.tap(sfxOnButton);
       await tester.pump();
 
-      // ミュートボタンのツールチップが変わる
-      expect(find.byTooltip('BGMを有効にする'), findsOneWidget);
+      // ツールチップが変わる
+      expect(find.byTooltip('効果音をつける'), findsOneWidget);
 
-      // 再度タップしてミュート解除
-      await tester.tap(find.byTooltip('BGMを有効にする'));
+      // 再度タップしてオン
+      await tester.tap(find.byTooltip('効果音をつける'));
       await tester.pump();
-      expect(find.byTooltip('BGMを消音'), findsOneWidget);
+      expect(find.byTooltip('効果音を消す'), findsOneWidget);
     });
   });
 }

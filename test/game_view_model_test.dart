@@ -81,6 +81,14 @@ class _MockSettingsRepo extends SettingsRepository {
   Future<bool> getDebugModeEnabled() async => false;
   @override
   Future<void> setDebugModeEnabled(bool v) async {}
+  @override
+  Future<bool> getSfxEnabled() async => true;
+  @override
+  Future<void> setSfxEnabled(bool enabled) async {}
+  @override
+  Future<bool> getBattleSceneEnabled() async => true;
+  @override
+  Future<void> setBattleSceneEnabled(bool enabled) async {}
 }
 
 /// テスト時にエラーをthrowする PlayerRepository モック

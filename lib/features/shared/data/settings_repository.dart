@@ -189,4 +189,40 @@ class SettingsRepository {
       await box.put('griffonEnabled', enabled);
     } catch (_) {}
   }
+
+  // ── 効果音（SFX） ─────────────────────────────────────
+
+  Future<bool> getSfxEnabled() async {
+    try {
+      final box = await _openSettingsBox();
+      return box.get('sfxEnabled', defaultValue: true) as bool;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<void> setSfxEnabled(bool enabled) async {
+    try {
+      final box = await _openSettingsBox();
+      await box.put('sfxEnabled', enabled);
+    } catch (_) {}
+  }
+
+  // ── 戦闘シーン（討伐演出） ──────────────────────────
+
+  Future<bool> getBattleSceneEnabled() async {
+    try {
+      final box = await _openSettingsBox();
+      return box.get('battleSceneEnabled', defaultValue: true) as bool;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  Future<void> setBattleSceneEnabled(bool enabled) async {
+    try {
+      final box = await _openSettingsBox();
+      await box.put('battleSceneEnabled', enabled);
+    } catch (_) {}
+  }
 }

@@ -76,6 +76,14 @@ class _TestSettingsRepo extends SettingsRepository {
   Future<bool> getDebugModeEnabled() async => false;
   @override
   Future<void> setDebugModeEnabled(bool v) async {}
+  @override
+  Future<bool> getSfxEnabled() async => true;
+  @override
+  Future<void> setSfxEnabled(bool enabled) async {}
+  @override
+  Future<bool> getBattleSceneEnabled() async => true;
+  @override
+  Future<void> setBattleSceneEnabled(bool enabled) async {}
 }
 
 Future<void> _waitForLoad(GameViewModel vm) async {

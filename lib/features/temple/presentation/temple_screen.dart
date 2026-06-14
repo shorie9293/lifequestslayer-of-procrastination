@@ -30,7 +30,7 @@ class TempleScreen extends StatelessWidget {
     return Scaffold(
       key: AppKeys.templeScreen,
       appBar: AppBar(
-        title: const Text('社'),
+        title: const Text('寺院'),
         actions: [
           IconButton(
             icon: const Icon(Icons.help_outline),

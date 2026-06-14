@@ -97,6 +97,14 @@ class _MockSettingsRepo extends SettingsRepository {
   Future<void> saveFatiguePopupDate(DateTime d) async {}
   @override
   Future<void> deleteFatiguePopupDate() async {}
+  @override
+  Future<bool> getSfxEnabled() async => true;
+  @override
+  Future<void> setSfxEnabled(bool enabled) async {}
+  @override
+  Future<bool> getBattleSceneEnabled() async => true;
+  @override
+  Future<void> setBattleSceneEnabled(bool enabled) async {}
 }
 
 void main() {

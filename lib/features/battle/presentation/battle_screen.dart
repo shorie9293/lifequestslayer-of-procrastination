@@ -11,7 +11,6 @@ import 'widgets/combat_selection_bar.dart';
 import 'widgets/fatigue_gem_popup.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
-import 'package:rpg_todo/domain/models/battle_state.dart';
 import 'package:rpg_todo/features/battle/domain/battle_action.dart';
 import 'package:rpg_todo/features/battle/domain/battle_audio_service.dart';
 import 'package:rpg_todo/features/battle/viewmodels/battle_view_model.dart';
@@ -51,19 +50,12 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
     _battleVM = getIt<BattleViewModel>();
     _audioService = getIt<BattleAudioService>();
 
-    // 修練場BGMを開始
-    _audioService.onBattleStateChanged(BattleState.idle);
-
-    // BattleViewModelの状態変化をリッスンしてBGMを連動
-    _battleVM.addListener(_onBattleStateChanged);
-
-    // BattleAudioServiceのミュート状態変化でUIを再描画
+    // BattleAudioServiceの変化でUIを再描画
     _audioService.addListener(_onAudioChanged);
   }
 
   @override
   void dispose() {
-    _battleVM.removeListener(_onBattleStateChanged);
     _audioService.removeListener(_onAudioChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
@@ -74,32 +66,31 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
       _audioService.stopAll();
-    } else if (state == AppLifecycleState.resumed) {
-      // 復帰時、現在の戦闘状態に応じたBGMを再開
-      _audioService.onBattleStateChanged(_battleVM.currentState);
     }
   }
 
-  /// BattleViewModelの状態変化をBGMに連動させる。
-  void _onBattleStateChanged() {
-    _audioService.onBattleStateChanged(_battleVM.currentState);
-  }
-
-  /// BattleAudioServiceのミュート状態変化でUIを再描画する。
+  /// BattleAudioServiceの状態変化でUIを再描画する。
   void _onAudioChanged() {
     setState(() {});
   }
 
   /// 戦術選択バーを表示して討伐フェイズに移行する。
+  /// 戦闘シーンOFFの場合は即討伐完了する。
   void _enterCombatPhase(String taskId) {
-    // すでに戦闘中の場合は再入場を防ぐ
     if (_battleVM.isInCombat) return;
+
+    final settingsVM = context.read<SettingsViewModel>();
+
+    if (!settingsVM.isBattleSceneEnabled) {
+      // 戦闘シーンOFF → 即討伐
+      _completeTask(context, taskId);
+      return;
+    }
 
     final taskVM = context.read<TaskViewModel>();
     final task = taskVM.activeTasks.firstWhere((t) => t.id == taskId);
 
     _battleVM.enterBattle(task);
-
     setState(() {
       _taskInCombat = taskId;
     });
@@ -165,11 +156,12 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
     final result = taskVM.completeTask(taskId);
 
     if (result == null) {
-      // 討伐失敗 → BattleViewModelに敗北を通知
+      // 討伐失敗 → BattleViewModelに敗北を通知 + SFX再生
       _battleVM.declareDefeat(
         penaltyExp: 0,
         bonusMessages: const [],
       );
+      _audioService.playDefeat();
 
       final stillActive = taskVM.activeTasks.any((t) => t.id == taskId);
       if (stillActive) {
@@ -214,12 +206,13 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
         result['wrongAnswerPenaltyCoins'] as int? ?? 0;
     final showFatiguePopup = result['showFatiguePopup'] as bool? ?? false;
 
-    // 討伐成功 → BattleViewModelに勝利を通知
+    // 討伐成功 → BattleViewModelに勝利を通知 + SFX再生
     _battleVM.declareVictory(
       expGained: baseExp,
       coinsGained: coinsGained,
       bonusMessages: bonusMessages,
     );
+    _audioService.playVictory();
 
     // UX-6: 戦果報告書の統合 — SnackBarを廃止し、全てのフィードバックを戦果報告書ダイアログに集約
 
@@ -357,29 +350,50 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
           ),
         ),
         actions: [
-          // BGMミュートトグル
-          IconButton(
-            icon: Icon(
-              _audioService.isBgmMuted
-                  ? Icons.music_off
-                  : Icons.music_note,
-              color:
-                  _audioService.isBgmMuted ? Colors.grey : Colors.amberAccent,
-              size: 20,
-            ),
-            tooltip: _audioService.isBgmMuted ? 'BGMを有効にする' : 'BGMを消音',
-            onPressed: () => _audioService.toggleBgmMute(),
+          // 効果音トグル（SettingsViewModel連動）
+          Consumer<SettingsViewModel>(
+            builder: (context, settings, _) {
+              return IconButton(
+                icon: Icon(
+                  settings.isSfxEnabled
+                      ? Icons.volume_up
+                      : Icons.volume_off,
+                  color: settings.isSfxEnabled
+                      ? Colors.amberAccent
+                      : Colors.grey,
+                  size: 20,
+                ),
+                tooltip: settings.isSfxEnabled
+                    ? '効果音を消す'
+                    : '効果音をつける',
+                onPressed: () {
+                  settings.setSfxEnabled(!settings.isSfxEnabled);
+                  _audioService.setSfxEnabled(!settings.isSfxEnabled);
+                },
+              );
+            },
           ),
-          // SFXミュートトグル
-          IconButton(
-            icon: Icon(
-              _audioService.isSfxMuted ? Icons.volume_off : Icons.volume_up,
-              color:
-                  _audioService.isSfxMuted ? Colors.grey : Colors.amberAccent,
-              size: 20,
-            ),
-            tooltip: _audioService.isSfxMuted ? '効果音を有効にする' : '効果音を消音',
-            onPressed: () => _audioService.toggleSfxMute(),
+          // 戦闘シーントグル
+          Consumer<SettingsViewModel>(
+            builder: (context, settings, _) {
+              return IconButton(
+                icon: Icon(
+                  settings.isBattleSceneEnabled
+                      ? Icons.sports_kabaddi
+                      : Icons.flash_on,
+                  color: settings.isBattleSceneEnabled
+                      ? Colors.amberAccent
+                      : Colors.orangeAccent,
+                  size: 20,
+                ),
+                tooltip: settings.isBattleSceneEnabled
+                    ? '戦闘シーン：ON（タップで即討伐に）'
+                    : '戦闘シーン：OFF（即討伐）',
+                onPressed: () =>
+                    settings.setBattleSceneEnabled(
+                        !settings.isBattleSceneEnabled),
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.help_outline),
