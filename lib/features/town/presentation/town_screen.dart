@@ -154,7 +154,6 @@ class _TownTab extends StatelessWidget {
                         },
                       );
                       if (success) {
-                        playerVM.save();
                         townVM.save();
                       }
                     },
