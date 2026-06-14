@@ -51,7 +51,11 @@ class ShopViewModel extends ChangeNotifier {
       return null;
     }
     final r = FatigueService.restAtInn(_playerVM.player, tier, DateTime.now());
-    if (r == null) notifyListeners();
+    if (r == null) {
+      _playerVM.notifyListeners();
+      _playerVM.save();
+      notifyListeners();
+    }
     return r;
   }
 
