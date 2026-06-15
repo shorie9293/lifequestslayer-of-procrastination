@@ -153,6 +153,7 @@ class TownViewModel extends ChangeNotifier {
       ),
     };
     await box.put(_key, data);
+    await box.flush();
   }
 
   /// 町データを Hive から読み込む。

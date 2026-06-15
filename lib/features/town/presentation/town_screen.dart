@@ -154,7 +154,9 @@ class _TownTab extends StatelessWidget {
                         },
                       );
                       if (success) {
-                        townVM.save();
+                        townVM.save().catchError((e, s) {
+                          debugPrint('[TownScreen] upgrade save failed: $e\n$s');
+                        });
                       }
                     },
                   ),
