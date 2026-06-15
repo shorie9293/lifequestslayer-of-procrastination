@@ -158,18 +158,18 @@ class TownViewModel extends ChangeNotifier {
         final map = Map<String, dynamic>.from(data);
         if (map['townLevel'] != null && map['townLevel'] is Map) {
           _townLevel = TownLevel.fromJson(
-            map['townLevel'] as Map<String, dynamic>,
+            Map<String, dynamic>.from(map['townLevel'] as Map),
           );
         }
         if (map['buildings'] != null && map['buildings'] is Map) {
           final buildingsJson =
-              map['buildings'] as Map<String, dynamic>;
+              Map<String, dynamic>.from(map['buildings'] as Map);
           _buildings.clear();
           for (final entry in buildingsJson.entries) {
             try {
               final building = Building.fromString(entry.key);
               final state = BuildingState.fromJson(
-                entry.value as Map<String, dynamic>,
+                Map<String, dynamic>.from(entry.value as Map),
               );
               _buildings[building] = state;
             } catch (e) {
