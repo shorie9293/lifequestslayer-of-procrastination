@@ -79,53 +79,44 @@ class TownViewModel extends ChangeNotifier {
   }
 
   /// Hive box を取得する（遅延オープン）。
-  /// 破損時は自動的に box を削除・再作成する。
-  /// _hiveFailed による永続ロックアウトは行わず、毎回復旧を試みる。
+  /// Hive box を取得する。破損時は lock ファイルのみ除去し再試行する。
+  /// データファイルは削除しない（データ救出を優先）。
   Future<Box<dynamic>?> _getBox() async {
     if (_box != null && _box!.isOpen) return _box;
 
     try {
-      _box = await _openBoxSafe();
+      _box = await Hive.openBox<dynamic>(_boxName);
       return _box;
     } catch (e) {
       debugPrint('[TownVM] Failed to open box: $e');
-      // 破損boxを削除して再作成を試みる
+      // lock ファイルが残っている可能性 → 除去して再試行
       try {
-        await _forceDeleteBox();
-        debugPrint('[TownVM] Deleted corrupted box, recreating...');
-        _box = await _openBoxSafe();
+        final dir = await getApplicationDocumentsDirectory();
+        final lockFile = File('${dir.path}/$_boxName.lock');
+        if (await lockFile.exists()) {
+          await lockFile.delete();
+          debugPrint('[TownVM] Removed stale lock file, retrying...');
+        }
+        _box = await Hive.openBox<dynamic>(_boxName);
         return _box;
       } catch (e2) {
-        debugPrint('[TownVM] Recovery also failed: $e2');
-        return null;
+        debugPrint('[TownVM] Retry also failed: $e2');
+        // 最終手段：box を削除して再作成
+        try {
+          final dir = await getApplicationDocumentsDirectory();
+          final hiveFile = File('${dir.path}/$_boxName.hive');
+          final lockFile = File('${dir.path}/$_boxName.lock');
+          if (await lockFile.exists()) await lockFile.delete();
+          if (await hiveFile.exists()) await hiveFile.delete();
+          debugPrint('[TownVM] Deleted box files, recreating...');
+          _box = await Hive.openBox<dynamic>(_boxName);
+          return _box;
+        } catch (e3) {
+          debugPrint('[TownVM] All recovery failed: $e3');
+          return null;
+        }
       }
     }
-  }
-
-  /// Hive box を強制的に削除する。
-  /// deleteBoxFromDisk が .lock ファイルで失敗する場合に備え、
-  /// 手動でロックファイルと box ファイルを削除してから再試行する。
-  Future<void> _forceDeleteBox() async {
-    try {
-      await Hive.deleteBoxFromDisk(_boxName);
-    } catch (_) {
-      // lock ファイルが残っている場合、手動で削除
-      final dir = await getApplicationDocumentsDirectory();
-      final lockFile = File('${dir.path}/$_boxName.lock');
-      final hiveFile = File('${dir.path}/$_boxName.hive');
-      if (await lockFile.exists()) {
-        await lockFile.delete();
-      }
-      if (await hiveFile.exists()) {
-        await hiveFile.delete();
-      }
-      debugPrint('[TownVM] Force-deleted box files via direct file removal');
-    }
-  }
-
-  /// Hive.openBox を安全に呼ぶ。同期エラーも捕捉する。
-  Future<Box<dynamic>> _openBoxSafe() async {
-    return await Hive.openBox<dynamic>(_boxName);
   }
 
   /// テスト用にカスタム Box を注入する。
