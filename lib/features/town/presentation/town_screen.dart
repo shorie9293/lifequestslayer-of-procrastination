@@ -146,6 +146,7 @@ class _TownTab extends StatelessWidget {
                     townLevel: townVM.townLevel.level,
                     playerCoins: player.coins,
                     onUpgrade: (building) {
+                      final messenger = ScaffoldMessenger.of(context);
                       final success = townVM.upgradeBuilding(
                         building,
                         playerCoins: player.coins,
@@ -154,8 +155,15 @@ class _TownTab extends StatelessWidget {
                         },
                       );
                       if (success) {
-                        townVM.save().catchError((e, s) {
+                        townVM.save().then((_) {
+                          messenger.showSnackBar(
+                            const SnackBar(content: Text('✅ 保存完了'), duration: Duration(seconds: 1)),
+                          );
+                        }).catchError((e, s) {
                           debugPrint('[TownScreen] upgrade save failed: $e\n$s');
+                          messenger.showSnackBar(
+                            SnackBar(content: Text('❌ 保存失敗: $e'), duration: const Duration(seconds: 3)),
+                          );
                         });
                       }
                     },
