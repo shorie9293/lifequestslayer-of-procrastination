@@ -57,7 +57,7 @@ class TownViewModel extends ChangeNotifier {
   /// [playerCoins] プレイヤーの現在の所持コイン。
   /// [spendCoins] コインを消費するコールバック。
   ///
-  /// 成功した場合は true、コイン不足・最大レベルなどの場合は false を返す。
+  /// 成功した場合は true を返し、自動的に Hive に保存する。
   bool upgradeBuilding(
     Building building, {
     required int playerCoins,
