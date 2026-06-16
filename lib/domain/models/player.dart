@@ -284,6 +284,9 @@ class Player {
     return DateTime.now().difference(pomodoroStartTime!).inMinutes < pomodoroMinutes;
   }
 
+  /// 残心【初段】: 侍系ジョブかどうか
+  bool get isSamuraiLine => currentJob == Job.samurai;
+
   /// T9: 集中の型 — ポモドーロセッションを開始
   void startPomodoro() {
     pomodoroStartTime = DateTime.now();

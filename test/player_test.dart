@@ -183,6 +183,29 @@ void main() {
     });
   });
 
+  // ━━━ isSamuraiLine ━━━
+  group('Player isSamuraiLine', () {
+    test('侍 (Job.samurai) → isSamuraiLine == true', () {
+      final player = Player(currentJob: Job.samurai);
+      expect(player.isSamuraiLine, true);
+    });
+
+    test('法師 (Job.monk) → isSamuraiLine == false', () {
+      final player = Player(currentJob: Job.monk);
+      expect(player.isSamuraiLine, false);
+    });
+
+    test('陰陽師 (Job.mystic) → isSamuraiLine == false', () {
+      final player = Player(currentJob: Job.mystic);
+      expect(player.isSamuraiLine, false);
+    });
+
+    test('冒険者 (Job.adventurer) → isSamuraiLine == false', () {
+      final player = Player(currentJob: Job.adventurer);
+      expect(player.isSamuraiLine, false);
+    });
+  });
+
   // ━━━ toJson / fromJson round-trip ━━━
   group('Player.toJson / fromJson', () {
     test('toJson produces all expected fields', () {

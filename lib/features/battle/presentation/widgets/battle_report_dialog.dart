@@ -100,7 +100,7 @@ class _BattleReportDialogState extends State<BattleReportDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final hasReflection = widget.taskId != null;
+    final hasReflection = widget.taskId != null && (widget.player?.isSamuraiLine ?? true);
 
     return SemanticHelper.container(
       testId: '${SemanticTypes.dialog}_battle_report',
