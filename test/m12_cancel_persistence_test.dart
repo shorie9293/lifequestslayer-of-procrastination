@@ -87,9 +87,11 @@ class _TestSettingsRepo extends SettingsRepository {
 }
 
 Future<void> _waitForLoad(GameViewModel vm) async {
-  while (!vm.isLoaded) {
+  for (var i = 0; i < 500; i++) { // 最大5秒
+    if (vm.isLoaded) return;
     await Future.delayed(const Duration(milliseconds: 10));
   }
+  throw Exception('GameViewModel のロードがタイムアウトしました');
 }
 
 void main() {

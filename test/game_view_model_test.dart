@@ -176,6 +176,15 @@ class _BlockableTaskRepo implements ITaskRepository {
   Future<void> close() async {}
 }
 
+/// 全保存が完了するまでポーリング待機する。
+Future<void> _waitForSettled(_BlockableTaskRepo tr, int expectedTaskCount) async {
+  for (var i = 0; i < 100; i++) {
+    final saved = await tr.loadTasks();
+    if (saved.length >= expectedTaskCount) return;
+    await Future.delayed(const Duration(milliseconds: 50));
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   late Directory tempDir;
@@ -1809,13 +1818,13 @@ void main() {
 
       // ブロック解除 → finally が pending を検出して再 save
       block1.complete();
-      await Future.delayed(const Duration(milliseconds: 300));
+      await _waitForSettled(tr, 2); // 全保存完了を待機（Future.delayed より堅牢）
 
       // 両方のタスクが永続化されていること
       final saved = await tr.loadTasks();
       expect(saved.length, 2);
       expect(saved.map((t) => t.title), containsAll(['タスク1', 'タスク2']));
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     test('セーブ中に別のミューテーションが発生してもデータ不整合が起きない', () async {
       final pr = _BlockablePlayerRepo();
@@ -1842,7 +1851,7 @@ void main() {
 
       // ブロック解除
       block1.complete();
-      await Future.delayed(const Duration(milliseconds: 300));
+      await _waitForSettled(tr, 2); // 全保存完了を待機
 
       final saved = await tr.loadTasks();
       final task1 = saved.where((t) => t.title == 'タスク1').firstOrNull;
@@ -1854,7 +1863,7 @@ void main() {
       // 新規追加タスクは未完了
       expect(task2, isNotNull);
       expect(task2!.isCompleted, false);
-    });
+    }, timeout: const Timeout(Duration(seconds: 10)));
 
     test('_isSaving ガードにより saveData が決して並行実行されない', () async {
       final pr = _BlockablePlayerRepo();
@@ -1863,33 +1872,26 @@ void main() {
       final vm = GameViewModel(pr: pr, tr: tr, sr: _MockSettingsRepo());
       await _waitForLoad(vm);
 
-      // loadData 後の save 回数を基準値として記録
       final baseCount = tr.saveCallCount;
 
-      // save をブロック
       final block1 = Completer<void>();
       tr.blockNextSave(block1);
 
-      // 最初の save（ブロック中）
       vm.addTask('タスク1');
-      // 2回目の save（ガードにより pending 化される）
       vm.addTask('タスク2');
 
-      // ブロック解除 → pending 再 save が走る
       block1.complete();
-      await Future.delayed(const Duration(milliseconds: 300));
+      // 全保存が完了するまでポーリングで待機（最大5秒）
+      await _waitForSettled(tr, 2);
 
-      // 最終的に2回分の save が追加で完了（初回 + pending retry）
-      // ガードにより save の並行実行は防止されている（_pending フラグ経由で逐次実行）
-      final finalCount = tr.saveCallCount;
-      expect(finalCount, greaterThanOrEqualTo(baseCount + 2),
-          reason: 'ガードにより並行 save は防止され、pending retry で全データが保存される');
-
-      // 両方のタスクが正しく永続化されている
       final saved = await tr.loadTasks();
       expect(saved.where((t) => t.title == 'タスク1'), isNotEmpty);
       expect(saved.where((t) => t.title == 'タスク2'), isNotEmpty);
-    });
+
+      final finalCount = tr.saveCallCount;
+      expect(finalCount, greaterThanOrEqualTo(baseCount + 2),
+          reason: 'ガードにより並行 save は防止され、pending retry で全データが保存される');
+    }, timeout: const Timeout(Duration(seconds: 10)));
   });
 }
 
