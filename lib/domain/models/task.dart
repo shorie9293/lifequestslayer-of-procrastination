@@ -114,7 +114,7 @@ class Task {
   int? targetTimeMinutes; // 見積もり時間（分）
   DateTime? activeAt; // クエスト開始日時（アクティブ化した日時）
   DateTime? deadline; // 完成期限
-  int? repeatAfterDays; // Cleric Lv1 後追いの祈り: N日後に再活性化
+  int? repeatAfterDays; // Monk Lv1 後追いの祈り: N日後に再活性化
   List<String> tags; // wizardTags: 札（タグ）
   DateTime? cancelledAt; // M12: 手動取消時刻。autoDeploy時に再配備を抑制する
 

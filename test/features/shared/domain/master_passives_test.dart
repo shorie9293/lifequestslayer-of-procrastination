@@ -15,8 +15,8 @@ void main() {
       test('lastDailyComplete and warriorDailyBuff update on first daily completion',
           () {
         final player = Player();
-        player.jobLevels[Job.warrior] = 15;
-        player.currentJob = Job.warrior;
+        player.jobLevels[Job.samurai] = 15;
+        player.currentJob = Job.samurai;
         final task = Task(
           id: 'bushido-1',
           title: 'test',
@@ -42,8 +42,8 @@ void main() {
 
       test('warriorDailyBuff does NOT increment on same day', () {
         final player = Player();
-        player.jobLevels[Job.warrior] = 15;
-        player.currentJob = Job.warrior;
+        player.jobLevels[Job.samurai] = 15;
+        player.currentJob = Job.samurai;
         player.lastDailyComplete = DateTime.now();
         player.warriorDailyBuff = 5; // Pre-set
 
@@ -69,8 +69,8 @@ void main() {
     group('TaskCompletionService - Bushido EXP bonus', () {
       test('Bushido buff applies EXP multiplier when buff > 0', () {
         final player = Player();
-        player.jobLevels[Job.warrior] = 15;
-        player.currentJob = Job.warrior;
+        player.jobLevels[Job.samurai] = 15;
+        player.currentJob = Job.samurai;
         player.warriorDailyBuff = 10; // 1.0% multiplier
         final task = Task(
           id: 'bushido-exp-1',
@@ -96,8 +96,8 @@ void main() {
 
       test('Bushido buff is 0 when warriorDailyBuff is 0', () {
         final player = Player();
-        player.jobLevels[Job.warrior] = 15;
-        player.currentJob = Job.warrior;
+        player.jobLevels[Job.samurai] = 15;
+        player.currentJob = Job.samurai;
         player.warriorDailyBuff = 0;
         final task = Task(
           id: 'bushido-exp-2',

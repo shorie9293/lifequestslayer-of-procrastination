@@ -85,38 +85,38 @@ class TempleScreen extends StatelessWidget {
             _buildJobCard(
               context,
               playerVM,
-              Job.warrior,
+              Job.samurai,
               "侍",
               Icons.shield,
               "攻撃特化。\n特性: コンボボーナス (連続達成でEXP増)",
               Colors.red,
-              player.currentJob == Job.warrior,
+              player.currentJob == Job.samurai,
               canChangeJob,
-              AppKeys.templeJobCardWarrior,
+              AppKeys.templeJobCardSamurai,
             ),
             _buildJobCard(
               context,
               playerVM,
-              Job.cleric,
+              Job.monk,
               "法師",
               Icons.health_and_safety,
               "回復・支援。\n特性: 繰り返しクエスト (日/週)",
               Colors.cyan,
-              player.currentJob == Job.cleric,
+              player.currentJob == Job.monk,
               canChangeJob,
-              AppKeys.templeJobCardCleric,
+              AppKeys.templeJobCardMonk,
             ),
             _buildJobCard(
               context,
               playerVM,
-              Job.wizard,
+              Job.mystic,
               "陰陽師",
               Icons.auto_fix_high,
               "知識・管理。\n特性: プロジェクト管理 (サブクエスト)",
               Colors.deepPurple,
-              player.currentJob == Job.wizard,
+              player.currentJob == Job.mystic,
               canChangeJob,
-              AppKeys.templeJobCardWizard,
+              AppKeys.templeJobCardMystic,
             ),
 
             // ━━━ スキルスロットセクション ━━━
@@ -519,11 +519,11 @@ class TempleScreen extends StatelessWidget {
     switch (job) {
       case Job.adventurer:
         return '浪人';
-      case Job.warrior:
+      case Job.samurai:
         return '侍';
-      case Job.cleric:
+      case Job.monk:
         return '法師';
-      case Job.wizard:
+      case Job.mystic:
         return '陰陽師';
     }
   }

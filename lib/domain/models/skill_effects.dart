@@ -10,9 +10,9 @@ import 'job.dart';
 ///
 /// | Path     | Theme              | Key Stats                         |
 /// |----------|--------------------|-----------------------------------|
-/// | Warrior  | Speed / Crit       | combo, crit, pre-emptive bonus    |
-/// | Cleric   | Healing / Buffs    | penalty reduction, streak protect |
-/// | Wizard   | Efficiency / Plan  | late-bonus window, subquest, early|
+/// | Samurai  | Speed / Crit       | combo, crit, pre-emptive bonus    |
+/// | Monk     | Healing / Buffs    | penalty reduction, streak protect |
+/// | Mystic   | Efficiency / Plan  | late-bonus window, subquest, early|
 ///
 /// ## Progression calibration
 ///
@@ -22,9 +22,9 @@ import 'job.dart';
 ///
 /// Each path's total EXP gain potential is roughly equivalent (~25-35%
 /// average increase at full unlock), but through different mechanics:
-/// - Warrior: bursty (crit + combo spikes)
-/// - Cleric: protective (minimizes losses, steady bonus)
-/// - Wizard: strategic (rewards planning and subquest use)
+/// - Samurai: bursty (crit + combo spikes)
+/// - Monk: protective (minimizes losses, steady bonus)
+/// - Mystic: strategic (rewards planning and subquest use)
 class SkillEffectConfig {
   /// The skill node ID this effect belongs to.
   final String nodeId;
@@ -123,16 +123,16 @@ class SkillEffectConfig {
 /// This map is the single source of truth for numerical balancing.
 /// The [SkillEffectService] reads from here to apply effects at runtime.
 const Map<String, SkillEffectConfig> skillEffectConfig = {
-  // ═══ Warrior Path — Speed / Crit ═══
+  // ═══ Samurai Path — Speed / Crit ═══
   //
-  // Theme: Burst damage. Combo spikes + crit lottery give the Warrior
+  // Theme: Burst damage. Combo spikes + crit lottery give the Samurai
   // the highest potential single-task EXP, but with variance.
   // Full path (9 pts): ~30% average EXP increase.
 
   // 一閃 (Flash) — 15% chance for +40% bonus EXP. Pre-emptive strike.
   'war_flash': SkillEffectConfig(
     nodeId: 'war_flash',
-    tree: Job.warrior,
+    tree: Job.samurai,
     bonusExpChance: 0.15,
     bonusExpMultiplier: 0.40,
   ),
@@ -141,7 +141,7 @@ const Map<String, SkillEffectConfig> skillEffectConfig = {
   // combo multiplier step +0.05 (from 0.1 → 0.15).
   'war_combo': SkillEffectConfig(
     nodeId: 'war_combo',
-    tree: Job.warrior,
+    tree: Job.samurai,
     comboExpPerCount: 20,       // base is 10, so effective +10 per combo
     comboStepBonus: 0.05,       // base is 0.10, so effective 0.15
   ),
@@ -149,21 +149,21 @@ const Map<String, SkillEffectConfig> skillEffectConfig = {
   // 会心 (Critical) — 10% chance for 2× EXP on any task completion.
   'war_critical': SkillEffectConfig(
     nodeId: 'war_critical',
-    tree: Job.warrior,
+    tree: Job.samurai,
     critChance: 0.10,
     critMultiplier: 2.0,
   ),
 
-  // ═══ Cleric Path — Healing / Buffs ═══
+  // ═══ Monk Path — Healing / Buffs ═══
   //
   // Theme: Damage mitigation. Reduces losses rather than adding gains,
-  // making Cleric the safest path for streak-conscious players.
+  // making Monk the safest path for streak-conscious players.
   // Full path (9 pts): prevents ~30% potential EXP loss.
 
   // 祈り (Prayer) — +5% base EXP. Nurtures engagement.
   'cle_prayer': SkillEffectConfig(
     nodeId: 'cle_prayer',
-    tree: Job.cleric,
+    tree: Job.monk,
     baseExpMultiplier: 1.05,
   ),
 
@@ -171,7 +171,7 @@ const Map<String, SkillEffectConfig> skillEffectConfig = {
   // Overdue tasks normally lose 50% EXP; with Heal they lose only 25%.
   'cle_heal': SkillEffectConfig(
     nodeId: 'cle_heal',
-    tree: Job.cleric,
+    tree: Job.monk,
     penaltyReduction: 0.50,
   ),
 
@@ -179,12 +179,12 @@ const Map<String, SkillEffectConfig> skillEffectConfig = {
   // Also enables once-per-week streak break protection (behavioural).
   'cle_ward': SkillEffectConfig(
     nodeId: 'cle_ward',
-    tree: Job.cleric,
+    tree: Job.monk,
     streakBonusMultiplier: 0.10,
     streakBonusMinStreak: 3,
   ),
 
-  // ═══ Wizard Path — Efficiency / Planning ═══
+  // ═══ Mystic Path — Efficiency / Planning ═══
   //
   // Theme: Strategic rewards. Bonuses scale with planning effort —
   // the more you subquest and plan ahead, the more you earn.
@@ -193,7 +193,7 @@ const Map<String, SkillEffectConfig> skillEffectConfig = {
   // 先見 (Foresight) — +10% base EXP, extends late-bonus window to 3h.
   'wiz_foresight': SkillEffectConfig(
     nodeId: 'wiz_foresight',
-    tree: Job.wizard,
+    tree: Job.mystic,
     baseExpMultiplier: 1.10,
     lateBonusWindowHours: 3,
   ),
@@ -201,7 +201,7 @@ const Map<String, SkillEffectConfig> skillEffectConfig = {
   // 分割 (Split) — +15% per subquest, +25% bonus for completing all subquests.
   'wiz_split': SkillEffectConfig(
     nodeId: 'wiz_split',
-    tree: Job.wizard,
+    tree: Job.mystic,
     perSubquestBonus: 0.15,
     subquestCompletionBonus: 0.25,
   ),
@@ -210,7 +210,7 @@ const Map<String, SkillEffectConfig> skillEffectConfig = {
   // Rewards proactive planning.
   'wiz_transfer': SkillEffectConfig(
     nodeId: 'wiz_transfer',
-    tree: Job.wizard,
+    tree: Job.mystic,
     earlyBonusMultiplier: 0.15,
     earlyBonusThresholdHours: 24,
   ),

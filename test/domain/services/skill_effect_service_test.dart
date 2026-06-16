@@ -23,15 +23,15 @@ void main() {
     });
 
     test('each node has correct tree assignment', () {
-      expect(skillEffectConfig['war_flash']!.tree, Job.warrior);
-      expect(skillEffectConfig['war_combo']!.tree, Job.warrior);
-      expect(skillEffectConfig['war_critical']!.tree, Job.warrior);
-      expect(skillEffectConfig['cle_prayer']!.tree, Job.cleric);
-      expect(skillEffectConfig['cle_heal']!.tree, Job.cleric);
-      expect(skillEffectConfig['cle_ward']!.tree, Job.cleric);
-      expect(skillEffectConfig['wiz_foresight']!.tree, Job.wizard);
-      expect(skillEffectConfig['wiz_split']!.tree, Job.wizard);
-      expect(skillEffectConfig['wiz_transfer']!.tree, Job.wizard);
+      expect(skillEffectConfig['war_flash']!.tree, Job.samurai);
+      expect(skillEffectConfig['war_combo']!.tree, Job.samurai);
+      expect(skillEffectConfig['war_critical']!.tree, Job.samurai);
+      expect(skillEffectConfig['cle_prayer']!.tree, Job.monk);
+      expect(skillEffectConfig['cle_heal']!.tree, Job.monk);
+      expect(skillEffectConfig['cle_ward']!.tree, Job.monk);
+      expect(skillEffectConfig['wiz_foresight']!.tree, Job.mystic);
+      expect(skillEffectConfig['wiz_split']!.tree, Job.mystic);
+      expect(skillEffectConfig['wiz_transfer']!.tree, Job.mystic);
     });
 
     test('no two nodes share the same ID', () {

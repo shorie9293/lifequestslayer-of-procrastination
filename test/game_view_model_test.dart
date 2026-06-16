@@ -275,7 +275,7 @@ void main() {
       // 直接プレイヤーを操作してから保存
       vm1.addGems(50);
       vm1.player.jobLevels[Job.adventurer] = 10; // 転職制限：浪人Lv10必要
-      vm1.changeJob(Job.warrior);
+      vm1.changeJob(Job.samurai);
 
       await Future.delayed(const Duration(milliseconds: 200));
 
@@ -283,7 +283,7 @@ void main() {
       await _waitForLoad(vm2);
 
       expect(vm2.player.gems, 50);
-      expect(vm2.player.currentJob, Job.warrior);
+      expect(vm2.player.currentJob, Job.samurai);
     });
   });
 
@@ -525,7 +525,7 @@ void main() {
       await _waitForLoad(vm);
 
       vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
-      vm.changeJob(Job.warrior);
+      vm.changeJob(Job.samurai);
       vm.addTask('クエスト', rank: QuestRank.B);
       vm.acceptTask(vm.tasks[0].id);
 
@@ -546,7 +546,7 @@ void main() {
       await _waitForLoad(vm);
 
       vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
-      vm.changeJob(Job.warrior);
+      vm.changeJob(Job.samurai);
 
       // 1回目
       vm.addTask('クエスト1', rank: QuestRank.B);
@@ -839,8 +839,8 @@ void main() {
       await _waitForLoad(vm);
 
       vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
-      vm.changeJob(Job.wizard);
-      vm.player.equippedSkills.add(EquippedSkill(skill: JobSkill.wizardSubtask));
+      vm.changeJob(Job.mystic);
+      vm.player.equippedSkills.add(EquippedSkill(skill: JobSkill.mysticSubtask));
 
       vm.addTask('サブクエスト付き', rank: QuestRank.B, subTasks: [
         SubTask(title: 'ステップ1'),
@@ -861,7 +861,7 @@ void main() {
       await _waitForLoad(vm);
 
       vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
-      vm.changeJob(Job.wizard);
+      vm.changeJob(Job.mystic);
 
       vm.addTask('サブクエスト付き', rank: QuestRank.B, subTasks: [
         SubTask(title: 'ステップ1', isCompleted: true),
@@ -901,7 +901,7 @@ void main() {
       await _waitForLoad(vm);
 
       vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
-      vm.changeJob(Job.wizard);
+      vm.changeJob(Job.mystic);
 
       vm.addTask('サブクエスト付き', rank: QuestRank.B, subTasks: [
         SubTask(title: 'ステップ1'),
@@ -996,7 +996,7 @@ void main() {
       await _waitForLoad(vm);
 
       vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
-      vm.changeJob(Job.cleric);
+      vm.changeJob(Job.monk);
 
       vm.addTask('毎日クエスト', rank: QuestRank.B,
           repeatInterval: RepeatInterval.daily);
@@ -1041,7 +1041,7 @@ void main() {
       await _waitForLoad(vm);
 
       vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
-      vm.changeJob(Job.cleric);
+      vm.changeJob(Job.monk);
 
       vm.addTask('通常クエスト', rank: QuestRank.B);
       vm.acceptTask(vm.tasks[0].id);
@@ -1465,11 +1465,11 @@ void main() {
 
       // 転職制限：浪人Lv10必要、テスト用に一時的に設定
       vm.player.jobLevels[Job.adventurer] = 10;
-      vm.changeJob(Job.warrior);
+      vm.changeJob(Job.samurai);
 
       // 戦士Lv9→Lv10
-      vm.player.jobLevels[Job.warrior] = 9;
-      vm.player.jobExps[Job.warrior] = 700;
+      vm.player.jobLevels[Job.samurai] = 9;
+      vm.player.jobExps[Job.samurai] = 700;
       // 冒険者レベルはLv1のまま（テスト条件）
       vm.player.jobLevels[Job.adventurer] = 1;
 
@@ -1480,7 +1480,7 @@ void main() {
 
       expect(result, isNotNull);
       expect(result!['leveledUp'], true);
-      expect(vm.player.jobLevels[Job.warrior], 10);
+      expect(vm.player.jobLevels[Job.samurai], 10);
       // 冒険者レベルがLv10に達していないので発動しない
       expect(vm.showJobTutorial, false);
     });
@@ -1614,7 +1614,7 @@ void main() {
       expect(vm.player.jobLevels[Job.adventurer], 1);
       expect(vm.player.currentJob, Job.adventurer);
 
-      vm.changeJob(Job.warrior);
+      vm.changeJob(Job.samurai);
       // 転職できないので冒険者のまま
       expect(vm.player.currentJob, Job.adventurer);
     });
@@ -1629,8 +1629,8 @@ void main() {
       // 浪人Lv10に設定
       vm.player.jobLevels[Job.adventurer] = 10;
 
-      vm.changeJob(Job.warrior);
-      expect(vm.player.currentJob, Job.warrior);
+      vm.changeJob(Job.samurai);
+      expect(vm.player.currentJob, Job.samurai);
     });
 
     test('他職Lv5では別の他職に転職できない（現在の職業Lv10必要）', () async {
@@ -1642,14 +1642,14 @@ void main() {
       await _waitForLoad(vm);
       // 浪人Lv10→侍に転職
       vm.player.jobLevels[Job.adventurer] = 10;
-      vm.changeJob(Job.warrior);
-      expect(vm.player.currentJob, Job.warrior);
+      vm.changeJob(Job.samurai);
+      expect(vm.player.currentJob, Job.samurai);
       // 侍Lv5（Lv10未満）
-      vm.player.jobLevels[Job.warrior] = 5;
+      vm.player.jobLevels[Job.samurai] = 5;
 
       // 陰陽師に転職しようとするが、侍Lv10未満なので不可
-      vm.changeJob(Job.wizard);
-      expect(vm.player.currentJob, Job.warrior,
+      vm.changeJob(Job.mystic);
+      expect(vm.player.currentJob, Job.samurai,
           reason: '現在の職業Lv10未満では他職に転職不可');
     });
 
@@ -1662,13 +1662,13 @@ void main() {
       await _waitForLoad(vm);
       // 浪人Lv10→侍に転職
       vm.player.jobLevels[Job.adventurer] = 10;
-      vm.changeJob(Job.warrior);
-      expect(vm.player.currentJob, Job.warrior);
+      vm.changeJob(Job.samurai);
+      expect(vm.player.currentJob, Job.samurai);
       // 侍Lv10に設定
-      vm.player.jobLevels[Job.warrior] = 10;
+      vm.player.jobLevels[Job.samurai] = 10;
 
-      vm.changeJob(Job.wizard);
-      expect(vm.player.currentJob, Job.wizard);
+      vm.changeJob(Job.mystic);
+      expect(vm.player.currentJob, Job.mystic);
     });
 
     test('浪人は常に転職可能（自分自身）', () async {
@@ -1680,8 +1680,8 @@ void main() {
       await _waitForLoad(vm);
       // 侍Lv10
       vm.player.jobLevels[Job.adventurer] = 10;
-      vm.changeJob(Job.warrior);
-      vm.player.jobLevels[Job.warrior] = 10;
+      vm.changeJob(Job.samurai);
+      vm.player.jobLevels[Job.samurai] = 10;
 
       // 浪人に戻る（常に可能）
       vm.changeJob(Job.adventurer);
@@ -1699,8 +1699,8 @@ void main() {
       vm.tryEnableDebugMode('11111111');
       expect(vm.isDebugMode, true);
 
-      vm.changeJob(Job.warrior);
-      expect(vm.player.currentJob, Job.warrior);
+      vm.changeJob(Job.samurai);
+      expect(vm.player.currentJob, Job.samurai);
     });
   });
 

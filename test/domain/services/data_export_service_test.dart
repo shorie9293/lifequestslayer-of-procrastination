@@ -56,10 +56,10 @@ void main() {
 
     test('round-trip: Player fields like jobLevels, coins, gems, currentJob survive', () {
       final originalPlayer = Player(
-        jobLevels: {Job.adventurer: 15, Job.warrior: 8, Job.cleric: 3},
-        jobExps: {Job.adventurer: 500, Job.warrior: 200},
-        activeSkills: {Job.warrior},
-        currentJob: Job.warrior,
+        jobLevels: {Job.adventurer: 15, Job.samurai: 8, Job.monk: 3},
+        jobExps: {Job.adventurer: 500, Job.samurai: 200},
+        activeSkills: {Job.samurai},
+        currentJob: Job.samurai,
         comboCount: 5,
         coins: 9999,
         gems: 50,
@@ -241,18 +241,18 @@ void main() {
       final player = Player(
         jobLevels: {
           Job.adventurer: 20,
-          Job.warrior: 15,
-          Job.cleric: 10,
-          Job.wizard: 5,
+          Job.samurai: 15,
+          Job.monk: 10,
+          Job.mystic: 5,
         },
         jobExps: {
           Job.adventurer: 1000,
-          Job.warrior: 800,
-          Job.cleric: 500,
-          Job.wizard: 200,
+          Job.samurai: 800,
+          Job.monk: 500,
+          Job.mystic: 200,
         },
-        activeSkills: {Job.warrior, Job.cleric},
-        currentJob: Job.wizard,
+        activeSkills: {Job.samurai, Job.monk},
+        currentJob: Job.mystic,
         comboCount: 10,
         coins: 50000,
         gems: 200,

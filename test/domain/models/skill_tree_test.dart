@@ -94,7 +94,7 @@ void main() {
     });
 
     test('各ツリーに 3 ノードずつ', () {
-      for (final tree in [Job.warrior, Job.cleric, Job.wizard]) {
+      for (final tree in [Job.samurai, Job.monk, Job.mystic]) {
         final nodes =
             skillTreeDefinition.values.where((n) => n.tree == tree).toList();
         expect(nodes.length, 3, reason: 'Tree $tree should have 3 nodes');
@@ -116,7 +116,7 @@ void main() {
     });
 
     test('各パスのコスト合計は 9', () {
-      for (final tree in [Job.warrior, Job.cleric, Job.wizard]) {
+      for (final tree in [Job.samurai, Job.monk, Job.mystic]) {
         final total = skillTreeDefinition.values
             .where((n) => n.tree == tree)
             .fold<int>(0, (sum, n) => sum + n.pointCost);

@@ -281,12 +281,12 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                   ],
                 ),
                 if (player.hasSkill(JobSkill.roninRepeatTask) ||
-                    player.canUseSkill(Job.cleric)) ...[
+                    player.canUseSkill(Job.monk)) ...[
                   const SizedBox(height: 16),
                   DropdownButtonFormField<RepeatInterval>(
                     value: _selectedRepeat,
                     decoration: const InputDecoration(
-                        labelText: "繰り返し (果てなき挑戦 / Cleric)"),
+                        labelText: "繰り返し (果てなき挑戦 / Monk)"),
                     items: RepeatInterval.values.map((r) {
                       return DropdownMenuItem(
                         value: r,
@@ -312,7 +312,7 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                     )
                   ]
                 ],
-                if (player.canUseSkill(Job.wizard)) ...[
+                if (player.canUseSkill(Job.mystic)) ...[
                   const SizedBox(height: 16),
                   Row(
                     children: [

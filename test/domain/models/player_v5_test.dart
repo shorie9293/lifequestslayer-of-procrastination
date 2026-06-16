@@ -80,9 +80,9 @@ void main() {
 
     test('全フィールドの往復', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 10, Job.warrior: 5},
-        jobExps: {Job.adventurer: 42, Job.warrior: 100},
-        currentJob: Job.warrior,
+        jobLevels: {Job.adventurer: 10, Job.samurai: 5},
+        jobExps: {Job.adventurer: 42, Job.samurai: 100},
+        currentJob: Job.samurai,
         comboCount: 3,
         coins: 500,
         skillPoints: 3,
@@ -93,8 +93,8 @@ void main() {
       final restored = roundtrip(player);
 
       expect(restored.jobLevels[Job.adventurer], 10);
-      expect(restored.jobLevels[Job.warrior], 5);
-      expect(restored.currentJob, Job.warrior);
+      expect(restored.jobLevels[Job.samurai], 5);
+      expect(restored.currentJob, Job.samurai);
       expect(restored.comboCount, 3);
       expect(restored.coins, 500);
       expect(restored.skillPoints, 3);
@@ -249,13 +249,13 @@ void main() {
       final player = Player(
         jobLevels: {
           Job.adventurer: 1,
-          Job.warrior: 3,
+          Job.samurai: 3,
         },
         jobExps: {
           Job.adventurer: 0,
-          Job.warrior: 0,
+          Job.samurai: 0,
         },
-        currentJob: Job.warrior,
+        currentJob: Job.samurai,
       );
 
       // Lv3 warrior → expNext ≈ 50*1.4^2 ≈ 98

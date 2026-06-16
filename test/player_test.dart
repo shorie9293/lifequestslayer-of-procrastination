@@ -133,10 +133,10 @@ void main() {
 
     test('カスタムPlayerの読み書きが一致する（全フィールド）', () async {
       final original = Player(
-        jobLevels: {Job.adventurer: 5, Job.warrior: 3},
-        jobExps: {Job.adventurer: 200, Job.warrior: 100},
-        activeSkills: {Job.warrior},
-        currentJob: Job.warrior,
+        jobLevels: {Job.adventurer: 5, Job.samurai: 3},
+        jobExps: {Job.adventurer: 200, Job.samurai: 100},
+        activeSkills: {Job.samurai},
+        currentJob: Job.samurai,
         comboCount: 3,
         coins: 500,
         homeItems: ['tent', 'sword'],
@@ -220,10 +220,10 @@ void main() {
 
     test('round-trip: custom Player with all fields populated matches original', () {
       final original = Player(
-        jobLevels: {Job.adventurer: 10, Job.warrior: 5, Job.cleric: 3, Job.wizard: 1},
-        jobExps: {Job.adventurer: 500, Job.warrior: 200, Job.cleric: 100, Job.wizard: 50},
-        activeSkills: {Job.warrior, Job.cleric},
-        currentJob: Job.warrior,
+        jobLevels: {Job.adventurer: 10, Job.samurai: 5, Job.monk: 3, Job.mystic: 1},
+        jobExps: {Job.adventurer: 500, Job.samurai: 200, Job.monk: 100, Job.mystic: 50},
+        activeSkills: {Job.samurai, Job.monk},
+        currentJob: Job.samurai,
         comboCount: 3,
         coins: 9999,
         gems: 100,

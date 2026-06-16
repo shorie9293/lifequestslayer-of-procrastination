@@ -30,8 +30,8 @@ void main() {
       final playerVm = PlayerViewModel(_MockPlayerRepo());
       await playerVm.load();
       final themeVm = ThemeViewModel(playerVm);
-      playerVm.changeJob(Job.warrior, debugMode: true);
-      expect(themeVm.currentTheme, GameThemes.forJob(Job.warrior));
+      playerVm.changeJob(Job.samurai, debugMode: true);
+      expect(themeVm.currentTheme, GameThemes.forJob(Job.samurai));
     });
   });
 }

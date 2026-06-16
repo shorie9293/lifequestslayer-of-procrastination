@@ -44,7 +44,7 @@ void main() {
   group('TempleScreen — Skill Slot Section', () {
     testWidgets('shows slot count header (1/X)', (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 1, Job.warrior: 1}));
+          playerWithLevels({Job.adventurer: 1, Job.samurai: 1}));
       final vm = PlayerViewModel(repo);
       await vm.load();
 
@@ -62,7 +62,7 @@ void main() {
 
     testWidgets('shows 2 slots when adventurer Lv10', (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 1}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 1}));
       final vm = PlayerViewModel(repo);
       await vm.load();
 
@@ -77,7 +77,7 @@ void main() {
 
     testWidgets('shows empty slot text when slot empty', (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 1, Job.warrior: 1}));
+          playerWithLevels({Job.adventurer: 1, Job.samurai: 1}));
       final vm = PlayerViewModel(repo);
       await vm.load();
 
@@ -109,10 +109,10 @@ void main() {
     testWidgets('equipped skill shows job name and skill name and remove btn',
         (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 1}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 1}));
       final vm = PlayerViewModel(repo);
       await vm.load();
-      vm.equipSkill(JobSkill.warriorCombo, debugMode: true);
+      vm.equipSkill(JobSkill.samuraiCombo, debugMode: true);
 
       await tester.pumpWidget(createTempleScreen(vm));
       await tester.pump();
@@ -129,10 +129,10 @@ void main() {
 
     testWidgets('remove button unequips skill', (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 1}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 1}));
       final vm = PlayerViewModel(repo);
       await vm.load();
-      vm.equipSkill(JobSkill.warriorCombo, debugMode: true);
+      vm.equipSkill(JobSkill.samuraiCombo, debugMode: true);
 
       await tester.pumpWidget(createTempleScreen(vm));
       await tester.pump();
@@ -150,7 +150,7 @@ void main() {
     testWidgets('dropdown shows add button when slot empty and skills available',
         (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 1}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 1}));
       final vm = PlayerViewModel(repo);
       await vm.load();
 
@@ -167,7 +167,7 @@ void main() {
 
     testWidgets('dropdown contains equippable skills', (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 5}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 5}));
       final vm = PlayerViewModel(repo);
       await vm.load();
 
@@ -182,7 +182,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      // Warrior Lv5 skills should be visible:
+      // Samurai Lv5 skills should be visible:
       // warriorCombo (Lv1) and warriorFatigueReverse (Lv5)
       expect(find.textContaining('連撃の構え'), findsWidgets);
       // warriorPomodoro (Lv10) and warriorBushido (Lv15) should not appear
@@ -192,7 +192,7 @@ void main() {
 
     testWidgets('selecting a skill from dropdown equips it', (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 1}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 1}));
       final vm = PlayerViewModel(repo);
       await vm.load();
 
@@ -213,7 +213,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       expect(vm.player.equippedSkills.length, 1);
-      expect(vm.player.equippedSkills.first.skill, JobSkill.warriorCombo);
+      expect(vm.player.equippedSkills.first.skill, JobSkill.samuraiCombo);
     });
   });
 
@@ -242,10 +242,10 @@ void main() {
     testWidgets('warrior skills show correct lock state at Lv5',
         (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 5}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 5}));
       final vm = PlayerViewModel(repo);
       await vm.load();
-      vm.changeJob(Job.warrior);
+      vm.changeJob(Job.samurai);
 
       await tester.pumpWidget(createTempleScreen(vm));
       await tester.pump();
@@ -266,10 +266,10 @@ void main() {
 
     testWidgets('cleric skills show correct lock state at Lv10', (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.cleric: 10}));
+          playerWithLevels({Job.adventurer: 10, Job.monk: 10}));
       final vm = PlayerViewModel(repo);
       await vm.load();
-      vm.changeJob(Job.cleric);
+      vm.changeJob(Job.monk);
 
       await tester.pumpWidget(createTempleScreen(vm));
       await tester.pump();
@@ -290,10 +290,10 @@ void main() {
     testWidgets('wizard skills show correct lock state at Lv15+',
         (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.wizard: 15}));
+          playerWithLevels({Job.adventurer: 10, Job.mystic: 15}));
       final vm = PlayerViewModel(repo);
       await vm.load();
-      vm.changeJob(Job.wizard);
+      vm.changeJob(Job.mystic);
 
       await tester.pumpWidget(createTempleScreen(vm));
       await tester.pump();
@@ -314,11 +314,11 @@ void main() {
     testWidgets('master skill shows 常時発動 badge on equipped slot',
         (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 15}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 15}));
       final vm = PlayerViewModel(repo);
       await vm.load();
       // Equip warriorBushido (Lv15, isMasterSkill)
-      vm.equipSkill(JobSkill.warriorBushido, debugMode: true);
+      vm.equipSkill(JobSkill.samuraiBushido, debugMode: true);
 
       await tester.pumpWidget(createTempleScreen(vm));
       await tester.pump();
@@ -332,11 +332,11 @@ void main() {
     testWidgets('ronin mastered shows 常時スキル発動中 on adventurer card',
         (tester) async {
       final repo =
-          _MockPlayerRepo(playerWithLevels({Job.adventurer: 10, Job.warrior: 1}));
+          _MockPlayerRepo(playerWithLevels({Job.adventurer: 10, Job.samurai: 1}));
       final vm = PlayerViewModel(repo);
       await vm.load();
       // Change to non-adventurer so the adventurer card shows "常時スキル発動中"
-      vm.changeJob(Job.warrior);
+      vm.changeJob(Job.samurai);
 
       await tester.pumpWidget(createTempleScreen(vm));
       await tester.pump();
@@ -352,7 +352,7 @@ void main() {
     testWidgets('job change button visible for unlocked classes at Ronin Lv10',
         (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 1}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 1}));
       final vm = PlayerViewModel(repo);
       await vm.load();
 
@@ -362,22 +362,22 @@ void main() {
       // Ronin Lv10 unlocks other jobs
       expect(find.textContaining('浪人Lv.10 解放'), findsNothing);
       // Job cards are clickable for unlocked jobs
-      expect(find.byKey(AppKeys.templeJobCardWarrior), findsOneWidget);
+      expect(find.byKey(AppKeys.templeJobCardSamurai), findsOneWidget);
     });
 
     testWidgets('can change from non-adventurer job at Lv10', (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 10}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 10}));
       final vm = PlayerViewModel(repo);
       await vm.load();
-      vm.changeJob(Job.warrior);
+      vm.changeJob(Job.samurai);
 
       await tester.pumpWidget(createTempleScreen(vm));
       await tester.pump();
 
       // Should be able to see other job cards as unlocked
-      expect(find.byKey(AppKeys.templeJobCardCleric), findsOneWidget);
-      expect(find.byKey(AppKeys.templeJobCardWizard), findsOneWidget);
+      expect(find.byKey(AppKeys.templeJobCardMonk), findsOneWidget);
+      expect(find.byKey(AppKeys.templeJobCardMystic), findsOneWidget);
     });
 
     testWidgets('cannot change job when adventurer < Lv10', (tester) async {
@@ -396,10 +396,10 @@ void main() {
   group('TempleScreen — ON/OFF Toggle on Equipped Skill', () {
     testWidgets('equipped skill shows ON/OFF toggle', (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 1}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 1}));
       final vm = PlayerViewModel(repo);
       await vm.load();
-      vm.equipSkill(JobSkill.warriorCombo, debugMode: true);
+      vm.equipSkill(JobSkill.samuraiCombo, debugMode: true);
 
       await tester.pumpWidget(createTempleScreen(vm));
       await tester.pump();
@@ -413,10 +413,10 @@ void main() {
 
     testWidgets('toggling OFF disables the skill', (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 1}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 1}));
       final vm = PlayerViewModel(repo);
       await vm.load();
-      vm.equipSkill(JobSkill.warriorCombo, debugMode: true);
+      vm.equipSkill(JobSkill.samuraiCombo, debugMode: true);
 
       await tester.pumpWidget(createTempleScreen(vm));
       await tester.pump();
@@ -436,11 +436,11 @@ void main() {
 
     testWidgets('toggling ON re-enables the skill', (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 1}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 1}));
       final vm = PlayerViewModel(repo);
       await vm.load();
       // Equip with debugMode=true then set inactive
-      vm.equipSkill(JobSkill.warriorCombo, debugMode: true);
+      vm.equipSkill(JobSkill.samuraiCombo, debugMode: true);
       vm.player.equippedSkills.first.isActive = false;
 
       await tester.pumpWidget(createTempleScreen(vm));
@@ -458,7 +458,7 @@ void main() {
 
     testWidgets('no toggle shown on empty slot row', (tester) async {
       final repo = _MockPlayerRepo(
-          playerWithLevels({Job.adventurer: 10, Job.warrior: 1}));
+          playerWithLevels({Job.adventurer: 10, Job.samurai: 1}));
       final vm = PlayerViewModel(repo);
       await vm.load();
 

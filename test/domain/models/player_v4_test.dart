@@ -14,11 +14,11 @@ void main() {
     test('can set equippedSkills', () {
       final player = Player(equippedSkills: [
         EquippedSkill(skill: JobSkill.roninSlots),
-        EquippedSkill(skill: JobSkill.warriorCombo),
+        EquippedSkill(skill: JobSkill.samuraiCombo),
       ]);
       expect(player.equippedSkills.length, 2);
       expect(player.equippedSkills[0].skill, JobSkill.roninSlots);
-      expect(player.equippedSkills[1].skill, JobSkill.warriorCombo);
+      expect(player.equippedSkills[1].skill, JobSkill.samuraiCombo);
     });
 
     test('default pomodoro settings', () {
@@ -93,7 +93,7 @@ void main() {
       final original = Player(
         equippedSkills: [
           EquippedSkill(skill: JobSkill.roninSlots),
-          EquippedSkill(skill: JobSkill.warriorBushido),
+          EquippedSkill(skill: JobSkill.samuraiBushido),
         ],
         pomodoroMinutes: 30,
         tags: ['仕事', 'プライベート'],
@@ -103,7 +103,7 @@ void main() {
       final restored = box.get('p')!;
       expect(restored.equippedSkills.length, 2);
       expect(restored.equippedSkills[0].skill, JobSkill.roninSlots);
-      expect(restored.equippedSkills[1].skill, JobSkill.warriorBushido);
+      expect(restored.equippedSkills[1].skill, JobSkill.samuraiBushido);
       expect(restored.pomodoroMinutes, 30);
       expect(restored.tags, ['仕事', 'プライベート']);
       expect(restored.projects.length, 1);
@@ -114,11 +114,11 @@ void main() {
       // v3 had activeSkills (Set<Job>). v4 migrates to equippedSkills.
       final player = Player();
       // Deprecated activeSkills still accessible
-      player.activeSkills.add(Job.warrior);
+      player.activeSkills.add(Job.samurai);
       await box.put('p', player);
       final restored = box.get('p')!;
       // activeSkills is deprecated but should survive round-trip
-      expect(restored.activeSkills, contains(Job.warrior));
+      expect(restored.activeSkills, contains(Job.samurai));
     });
   });
 
@@ -129,9 +129,9 @@ void main() {
       // ignore: deprecated_member_use
       expect(player.activeSkills, isEmpty);
       // ignore: deprecated_member_use
-      player.activeSkills.add(Job.warrior);
+      player.activeSkills.add(Job.samurai);
       // ignore: deprecated_member_use
-      expect(player.activeSkills, contains(Job.warrior));
+      expect(player.activeSkills, contains(Job.samurai));
     });
   });
 
@@ -163,8 +163,8 @@ void main() {
 
     test('Lv10 adventurer has roninRepeatTask even when currentJob is warrior', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 10, Job.warrior: 1},
-        currentJob: Job.warrior,
+        jobLevels: {Job.adventurer: 10, Job.samurai: 1},
+        currentJob: Job.samurai,
       );
       // Ronin skills are always on when adventurer is mastered
       expect(player.hasSkill(JobSkill.roninRepeatTask), true);
@@ -173,44 +173,44 @@ void main() {
 
     test('Lv1 warrior does NOT have warriorBushido (requires Lv15)', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 1, Job.warrior: 1},
-        currentJob: Job.warrior,
+        jobLevels: {Job.adventurer: 1, Job.samurai: 1},
+        currentJob: Job.samurai,
       );
-      expect(player.hasSkill(JobSkill.warriorBushido), false);
+      expect(player.hasSkill(JobSkill.samuraiBushido), false);
     });
 
     test('equippedSkills grants specific skill when level requirement is met', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 1, Job.warrior: 10},
+        jobLevels: {Job.adventurer: 1, Job.samurai: 10},
         currentJob: Job.adventurer,
         equippedSkills: [
-          EquippedSkill(skill: JobSkill.warriorPomodoro), // requires Lv10
+          EquippedSkill(skill: JobSkill.samuraiPomodoro), // requires Lv10
         ],
       );
-      expect(player.hasSkill(JobSkill.warriorPomodoro), true);
+      expect(player.hasSkill(JobSkill.samuraiPomodoro), true);
     });
 
     test('equippedSkills does NOT grant skill if level is insufficient', () {
       final player = Player(
-        jobLevels: {Job.warrior: 5},
+        jobLevels: {Job.samurai: 5},
         currentJob: Job.adventurer,
         equippedSkills: [
-          EquippedSkill(skill: JobSkill.warriorBushido), // requires Lv15
+          EquippedSkill(skill: JobSkill.samuraiBushido), // requires Lv15
         ],
       );
-      expect(player.hasSkill(JobSkill.warriorBushido), false);
+      expect(player.hasSkill(JobSkill.samuraiBushido), false);
     });
 
     test('v3 compat: isMastered + activeSkills grants all job skills', () {
       final player = Player(
-        jobLevels: {Job.cleric: 15},
+        jobLevels: {Job.monk: 15},
         currentJob: Job.adventurer,
       );
       // ignore: deprecated_member_use
-      player.activeSkills.add(Job.cleric);
-      // Cleric Lv15 mastered → all Cleric skills available via v3 compat
-      expect(player.hasSkill(JobSkill.clericRepeatAfter), true);
-      expect(player.hasSkill(JobSkill.clericEnlightenment), true);
+      player.activeSkills.add(Job.monk);
+      // Monk Lv15 mastered → all Cleric skills available via v3 compat
+      expect(player.hasSkill(JobSkill.monkRepeatAfter), true);
+      expect(player.hasSkill(JobSkill.monkEnlightenment), true);
     });
   });
 }

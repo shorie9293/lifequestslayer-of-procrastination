@@ -5,20 +5,20 @@ import 'package:rpg_todo/domain/models/skill_slot.dart';
 void main() {
   group('EquippedSkill', () {
     test('Construction and properties', () {
-      final eq = EquippedSkill(skill: JobSkill.warriorCombo);
-      expect(eq.skill, JobSkill.warriorCombo);
+      final eq = EquippedSkill(skill: JobSkill.samuraiCombo);
+      expect(eq.skill, JobSkill.samuraiCombo);
     });
 
     test('Equality', () {
-      final a = EquippedSkill(skill: JobSkill.warriorCombo);
-      final b = EquippedSkill(skill: JobSkill.warriorCombo);
-      final c = EquippedSkill(skill: JobSkill.clericStreak);
+      final a = EquippedSkill(skill: JobSkill.samuraiCombo);
+      final b = EquippedSkill(skill: JobSkill.samuraiCombo);
+      final c = EquippedSkill(skill: JobSkill.monkStreak);
       expect(a, b);
       expect(a, isNot(c));
     });
 
     test('fromJson / toJson round trip', () {
-      final original = EquippedSkill(skill: JobSkill.wizardProject);
+      final original = EquippedSkill(skill: JobSkill.mysticProject);
       final json = original.toJson();
       final restored = EquippedSkill.fromJson(json);
       expect(restored.skill, original.skill);

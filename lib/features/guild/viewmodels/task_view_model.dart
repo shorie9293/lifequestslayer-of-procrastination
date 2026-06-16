@@ -85,7 +85,7 @@ class TaskViewModel extends ChangeNotifier {
 
   bool _visible(Task t) {
     final hasRepeatSkill = _playerVM.player.hasSkill(JobSkill.roninRepeatTask) ||
-        _playerVM.player.canUseSkill(Job.cleric);
+        _playerVM.player.canUseSkill(Job.monk);
     if (!hasRepeatSkill || t.repeatInterval == RepeatInterval.none) return true;
     final now = DateTime.now();
     if (t.repeatInterval == RepeatInterval.weekly &&

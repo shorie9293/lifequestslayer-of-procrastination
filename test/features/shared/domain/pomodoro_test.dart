@@ -74,8 +74,8 @@ void main() {
       final task = makeTask(id: 'pomo-1');
       final player = Player();
       // Give player Warrior Lv10 to have warriorPomodoro
-      player.jobLevels[Job.warrior] = 10;
-      player.currentJob = Job.warrior;
+      player.jobLevels[Job.samurai] = 10;
+      player.currentJob = Job.samurai;
       // Start pomodoro session
       player.startPomodoro();
 
@@ -89,7 +89,7 @@ void main() {
       expect(result, isNotNull);
       final expGain = result!.expGain;
       // B-rank base is 100, no combo (warrior current job but 0 combo).
-      // Warrior combo: comboCount starts at 0, is incremented inside complete().
+      // Samurai combo: comboCount starts at 0, is incremented inside complete().
       // Actually warrior combo: comboCount++ before the check, so comboCount becomes 1
       // 1*10 = 10 bonus => base 100 + 10 = 110
       // Then pomodoro bonus: 110 * 1.5 = 165
@@ -125,8 +125,8 @@ void main() {
         () {
       final task = makeTask(id: 'pomo-3');
       final player = Player();
-      player.jobLevels[Job.warrior] = 10;
-      player.currentJob = Job.warrior;
+      player.jobLevels[Job.samurai] = 10;
+      player.currentJob = Job.samurai;
       // Do NOT start pomodoro
 
       final result = service.complete(
@@ -137,7 +137,7 @@ void main() {
       );
 
       expect(result, isNotNull);
-      // Warrior combo: comboCount becomes 1, bonus 10 => 110
+      // Samurai combo: comboCount becomes 1, bonus 10 => 110
       // No pomodoro bonus
       expect(result!.expGain, 110);
       expect(result.bonusMessages,

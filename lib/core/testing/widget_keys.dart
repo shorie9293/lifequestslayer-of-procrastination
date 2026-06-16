@@ -73,9 +73,9 @@ class AppKeys {
   // ━━━ 神殿（転職） ━━━
   static const Key templeScreen = Key('screen_temple');
   static const Key templeJobCardAdventurer = Key('card_job_adventurer');
-  static const Key templeJobCardWarrior = Key('card_job_warrior');
-  static const Key templeJobCardCleric = Key('card_job_cleric');
-  static const Key templeJobCardWizard = Key('card_job_wizard');
+  static const Key templeJobCardSamurai = Key('card_job_samurai');
+  static const Key templeJobCardMonk = Key('card_job_monk');
+  static const Key templeJobCardMystic = Key('card_job_mystic');
   static const Key templeSkillToggle = Key('tgl_skill_inherit');
   static const Key templeSkillSlotSection = Key('sec_skill_slots');
   static const Key templeSkillSlotDropdown = Key('dd_skill_slot');

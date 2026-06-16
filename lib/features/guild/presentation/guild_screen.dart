@@ -305,7 +305,7 @@ class _GuildScreenState extends State<GuildScreen> {
               },
             ),
           ),
-          if (playerVM.player.canUseSkill(Job.cleric))
+          if (playerVM.player.canUseSkill(Job.monk))
             SemanticHelper.interactive(
               testId: SemanticHelper.createTestId(SemanticTypes.button, 'recurring_tasks'),
               label: '繰り返し任務一覧',

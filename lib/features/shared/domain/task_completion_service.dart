@@ -52,29 +52,29 @@ class TaskCompletionService {
     required bool knowledgeQuestEnabled,
     List<Task>? allTasks,
   }) {
-    // Wizard Lv1: 分割の理 — サブクエスト完了チェック
-    if (player.isSkillEquipped(JobSkill.wizardSubtask) && task.subTasks.isNotEmpty) {
+    // Mystic Lv1: 分割の理 — サブクエスト完了チェック
+    if (player.isSkillEquipped(JobSkill.mysticSubtask) && task.subTasks.isNotEmpty) {
       if (task.subTasks.any((s) => !s.isCompleted)) {
         return null;
       }
     }
 
-    // Cleric: repeatAfterDays の処理
-    if (player.canUseSkill(Job.cleric) && task.repeatAfterDays != null) {
+    // Monk: repeatAfterDays の処理
+    if (player.canUseSkill(Job.monk) && task.repeatAfterDays != null) {
       task.lastCompletedAt = DateTime.now();
     } else if (
         // Ronin (冒険者): 繰り返しクエストは isCompleted にせず lastCompletedAt を更新
-        // 後方互換: Cleric mastery でも動作
+        // 後方互換: Monk mastery でも動作
         task.repeatInterval != RepeatInterval.none &&
         (player.hasSkill(JobSkill.roninRepeatTask) ||
-         player.canUseSkill(Job.cleric))) {
+         player.canUseSkill(Job.monk))) {
       task.lastCompletedAt = DateTime.now();
     } else {
       task.isCompleted = true;
       task.status = TaskStatus.inGuild;
     }
 
-    // Cleric Lv10: 連続の誓い — クエスト完了をstreakに記録
+    // Monk Lv10: 連続の誓い — クエスト完了をstreakに記録
     player.recordTaskCompletion(task.id, DateTime.now());
 
     final bonusMessages = <String>[];
@@ -109,8 +109,8 @@ class TaskCompletionService {
       if (expGain > prev) bonusMessages.add("🔮 先見の理！ +${expGain - prev} EXP");
     }
 
-    // Warrior: コンボボーナス
-    if (player.canUseSkill(Job.warrior)) {
+    // Samurai: コンボボーナス
+    if (player.canUseSkill(Job.samurai)) {
       player.comboCount++;
       // v2.1: 連撃 (war_combo) boosts combo EXP per count from 10 → 20
       final comboExpEach = skillEffects.hasCombo ? skillEffects.comboExpPerCount : 10;
@@ -148,14 +148,14 @@ class TaskCompletionService {
       }
     }
 
-    // Warrior Lv10: 集中の型 — ポモドーロアクティブ中は+50% EXP
-    if (player.hasSkill(JobSkill.warriorPomodoro) && player.isPomodoroActive) {
+    // Samurai Lv10: 集中の型 — ポモドーロアクティブ中は+50% EXP
+    if (player.hasSkill(JobSkill.samuraiPomodoro) && player.isPomodoroActive) {
       expGain = (expGain * 1.5).round();
       bonusMessages.add("🧘 集中の型ボーナス！ +50% EXP");
     }
 
-    // Warrior Lv15: 武士道の極意 — 蓄積バフ
-    if (player.hasSkill(JobSkill.warriorBushido) && player.warriorDailyBuff > 0) {
+    // Samurai Lv15: 武士道の極意 — 蓄積バフ
+    if (player.hasSkill(JobSkill.samuraiBushido) && player.warriorDailyBuff > 0) {
       final buffMultiplier = 1.0 + (player.warriorDailyBuff / 1000.0);
       final prevExp = expGain;
       expGain = (expGain * buffMultiplier).round();
@@ -165,7 +165,7 @@ class TaskCompletionService {
       }
     }
 
-    // Cleric Lv10: 連続の誓い — 7日間streakで+20% EXP
+    // Monk Lv10: 連続の誓い — 7日間streakで+20% EXP
     if (player.getTaskStreakBonus(task.id) > 1.0) {
       expGain = (expGain * player.getTaskStreakBonus(task.id)).round();
       bonusMessages.add("📿 連続の誓いボーナス！ +20% EXP");
@@ -208,8 +208,8 @@ class TaskCompletionService {
     if (task.rank == QuestRank.A) player.totalARankCompleted++;
     if (task.rank == QuestRank.B) player.totalBRankCompleted++;
 
-    // T10: Warrior Lv15 武士道の極意 — 本日の完了を記録
-    if (player.hasSkill(JobSkill.warriorBushido)) {
+    // T10: Samurai Lv15 武士道の極意 — 本日の完了を記録
+    if (player.hasSkill(JobSkill.samuraiBushido)) {
       player.recordDailyCompletion();
     }
 
@@ -293,9 +293,9 @@ class TaskCompletionService {
       }
     }
 
-    // Wizard Lv10: 計画の陣 — プロジェクト全完了ボーナス
+    // Mystic Lv10: 計画の陣 — プロジェクト全完了ボーナス
     int projectBonusExp = 0;
-    if (player.isSkillEquipped(JobSkill.wizardProject) &&
+    if (player.isSkillEquipped(JobSkill.mysticProject) &&
         allTasks != null &&
         allTasks.isNotEmpty) {
       final projectName = player.taskProjects[task.id];

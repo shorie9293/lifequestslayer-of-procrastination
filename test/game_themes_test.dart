@@ -12,20 +12,20 @@ void main() {
     });
 
     test('warrior（侍）テーマは墨黒基調', () {
-      final theme = GameThemes.forJob(Job.warrior);
+      final theme = GameThemes.forJob(Job.samurai);
       expect(theme.brightness, Brightness.dark);
       expect(theme.scaffoldBackgroundColor, const Color(0xFF1A0D0D));
     });
 
     test('cleric（法師）テーマは青緑アクセント', () {
-      final theme = GameThemes.forJob(Job.cleric);
+      final theme = GameThemes.forJob(Job.monk);
       expect(theme.brightness, Brightness.dark);
       final primary = theme.colorScheme.primary;
       expect(primary, const Color(0xFF4DB6AC));
     });
 
     test('wizard（陰陽師）テーマは深紫基調に金アクセント', () {
-      final theme = GameThemes.forJob(Job.wizard);
+      final theme = GameThemes.forJob(Job.mystic);
       expect(theme.brightness, Brightness.dark);
       expect(theme.scaffoldBackgroundColor, const Color(0xFF1A1040));
       expect(theme.colorScheme.primary, const Color(0xFFD4A038));

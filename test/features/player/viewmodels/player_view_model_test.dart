@@ -42,16 +42,16 @@ void main() {
 
   test('changeJob respects debugMode', () async {
     await vm.load();
-    vm.changeJob(Job.warrior, debugMode: true);
-    expect(vm.player.currentJob, Job.warrior);
+    vm.changeJob(Job.samurai, debugMode: true);
+    expect(vm.player.currentJob, Job.samurai);
   });
 
   group('equipSkill / unequipSkill', () {
     test('equipSkill adds skill to equippedSkills', () async {
       await vm.load();
-      vm.equipSkill(JobSkill.warriorCombo);
+      vm.equipSkill(JobSkill.samuraiCombo);
       expect(
-        vm.player.equippedSkills.any((es) => es.skill == JobSkill.warriorCombo),
+        vm.player.equippedSkills.any((es) => es.skill == JobSkill.samuraiCombo),
         isTrue,
       );
     });
@@ -59,31 +59,31 @@ void main() {
     test('equipSkill respects slot limit', () async {
       await vm.load();
       // Player starts with Lv1 adventurer → 1 slot
-      vm.equipSkill(JobSkill.clericRepeatAfter); // 1st slot - ok
-      vm.equipSkill(JobSkill.wizardSubtask); // 2nd slot - should fail (only 1)
+      vm.equipSkill(JobSkill.monkRepeatAfter); // 1st slot - ok
+      vm.equipSkill(JobSkill.mysticSubtask); // 2nd slot - should fail (only 1)
       expect(vm.player.equippedSkills.length, 1);
     });
 
     test('equipSkill does not double-add same skill', () async {
       await vm.load();
-      vm.equipSkill(JobSkill.warriorCombo);
-      vm.equipSkill(JobSkill.warriorCombo);
+      vm.equipSkill(JobSkill.samuraiCombo);
+      vm.equipSkill(JobSkill.samuraiCombo);
       final count = vm.player.equippedSkills
-          .where((es) => es.skill == JobSkill.warriorCombo)
+          .where((es) => es.skill == JobSkill.samuraiCombo)
           .length;
       expect(count, 1);
     });
 
     test('unequipSkill removes skill at slotIndex', () async {
       await vm.load();
-      vm.equipSkill(JobSkill.warriorCombo);
+      vm.equipSkill(JobSkill.samuraiCombo);
       vm.unequipSkill(0);
       expect(vm.player.equippedSkills.length, 0);
     });
 
     test('unequipSkill with out-of-range index does nothing', () async {
       await vm.load();
-      vm.equipSkill(JobSkill.warriorCombo);
+      vm.equipSkill(JobSkill.samuraiCombo);
       vm.unequipSkill(5); // out of range
       expect(vm.player.equippedSkills.length, 1);
     });
@@ -95,8 +95,8 @@ void main() {
       final p = vm.player;
       p.jobLevels[Job.adventurer] = 10;
       // Manually notify
-      vm.equipSkill(JobSkill.warriorCombo); // slot 1
-      vm.equipSkill(JobSkill.clericRepeatAfter); // slot 2 - should work now
+      vm.equipSkill(JobSkill.samuraiCombo); // slot 1
+      vm.equipSkill(JobSkill.monkRepeatAfter); // slot 2 - should work now
       expect(vm.player.equippedSkills.length, 2);
     });
   });

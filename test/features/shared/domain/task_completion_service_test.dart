@@ -408,11 +408,11 @@ void main() {
     test('後方互換:Cleric mastered+activeSkillsで繰り返しクエストが機能', () {
       final task = makeRepeatTask();
       final player = Player(
-        jobLevels: {Job.adventurer: 1, Job.cleric: 15},
+        jobLevels: {Job.adventurer: 1, Job.monk: 15},
         currentJob: Job.adventurer,
       );
       // ignore: deprecated_member_use
-      player.activeSkills.add(Job.cleric);
+      player.activeSkills.add(Job.monk);
 
       final result = service.complete(
         task: task,

@@ -31,7 +31,7 @@ class SkillEffectService {
     return skillEffectConfig[id];
   }
 
-  // ━━━ Warrior — Speed / Crit ━━━
+  // ━━━ Samurai — Speed / Crit ━━━
 
   /// Whether 一閃 is unlocked.
   bool get hasFlash => _has('war_flash');
@@ -78,7 +78,7 @@ class SkillEffectService {
     return 0;
   }
 
-  // ━━━ Cleric — Healing / Buffs ━━━
+  // ━━━ Monk — Healing / Buffs ━━━
 
   /// Whether 祈り is unlocked.
   bool get hasPrayer => _has('cle_prayer');
@@ -118,7 +118,7 @@ class SkillEffectService {
     return cfg?.streakBonusMinStreak ?? 0;
   }
 
-  // ━━━ Wizard — Efficiency / Planning ━━━
+  // ━━━ Mystic — Efficiency / Planning ━━━
 
   /// Whether 先見 is unlocked.
   bool get hasForesight => _has('wiz_foresight');

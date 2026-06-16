@@ -10,23 +10,23 @@ void main() {
   // ═══════════════════════════════════════════
   group('canUseSkill(Job)', () {
     test('現在の職業なら常に true（Lv1でも）', () {
-      final player = Player(currentJob: Job.warrior);
-      expect(player.canUseSkill(Job.warrior), true);
+      final player = Player(currentJob: Job.samurai);
+      expect(player.canUseSkill(Job.samurai), true);
     });
 
     test('現在の職業でなければ、mastered+activeSkills登録が必要', () {
       final player = Player(
         currentJob: Job.adventurer,
-        jobLevels: {Job.adventurer: 1, Job.warrior: 1},
+        jobLevels: {Job.adventurer: 1, Job.samurai: 1},
       );
       // warrior Lv1 → not mastered
-      expect(player.canUseSkill(Job.warrior), false);
+      expect(player.canUseSkill(Job.samurai), false);
     });
 
     test('adventurer mastered (Lv10) → Ronin常時オン', () {
       final player = Player(
-        currentJob: Job.warrior,
-        jobLevels: {Job.adventurer: 10, Job.warrior: 1},
+        currentJob: Job.samurai,
+        jobLevels: {Job.adventurer: 10, Job.samurai: 1},
       );
       // Ronin mastered → always true even when currentJob is warrior
       expect(player.canUseSkill(Job.adventurer), true);
@@ -34,8 +34,8 @@ void main() {
 
     test('adventurer Lv9 (not mastered) → false when not current', () {
       final player = Player(
-        currentJob: Job.warrior,
-        jobLevels: {Job.adventurer: 9, Job.warrior: 1},
+        currentJob: Job.samurai,
+        jobLevels: {Job.adventurer: 9, Job.samurai: 1},
       );
       expect(player.canUseSkill(Job.adventurer), false);
     });
@@ -43,20 +43,20 @@ void main() {
     test('他職業 mastered (Lv14) + activeSkills登録 → true', () {
       final player = Player(
         currentJob: Job.adventurer,
-        jobLevels: {Job.adventurer: 1, Job.warrior: 14},
+        jobLevels: {Job.adventurer: 1, Job.samurai: 14},
       );
       // ignore: deprecated_member_use
-      player.activeSkills.add(Job.warrior);
-      expect(player.canUseSkill(Job.warrior), true);
+      player.activeSkills.add(Job.samurai);
+      expect(player.canUseSkill(Job.samurai), true);
     });
 
     test('他職業 mastered でも activeSkills未登録 → false', () {
       final player = Player(
         currentJob: Job.adventurer,
-        jobLevels: {Job.adventurer: 1, Job.warrior: 14},
+        jobLevels: {Job.adventurer: 1, Job.samurai: 14},
       );
       // activeSkills に warrior なし
-      expect(player.canUseSkill(Job.warrior), false);
+      expect(player.canUseSkill(Job.samurai), false);
     });
 
     test('全4職業をテスト', () {
@@ -65,48 +65,48 @@ void main() {
       expect(ronin.canUseSkill(Job.adventurer), true);
 
       // Warrior
-      final warrior = Player(currentJob: Job.warrior);
-      expect(warrior.canUseSkill(Job.warrior), true);
+      final warrior = Player(currentJob: Job.samurai);
+      expect(warrior.canUseSkill(Job.samurai), true);
 
       // Cleric
-      final cleric = Player(currentJob: Job.cleric);
-      expect(cleric.canUseSkill(Job.cleric), true);
+      final cleric = Player(currentJob: Job.monk);
+      expect(cleric.canUseSkill(Job.monk), true);
 
       // Wizard
-      final wizard = Player(currentJob: Job.wizard);
-      expect(wizard.canUseSkill(Job.wizard), true);
+      final wizard = Player(currentJob: Job.mystic);
+      expect(wizard.canUseSkill(Job.mystic), true);
     });
 
     test('cleric mastered + activeSkills → wizard からでも使用可', () {
       final player = Player(
-        currentJob: Job.wizard,
-        jobLevels: {Job.wizard: 1, Job.cleric: 14},
+        currentJob: Job.mystic,
+        jobLevels: {Job.mystic: 1, Job.monk: 14},
       );
       // ignore: deprecated_member_use
-      player.activeSkills.add(Job.cleric);
-      expect(player.canUseSkill(Job.cleric), true);
+      player.activeSkills.add(Job.monk);
+      expect(player.canUseSkill(Job.monk), true);
     });
 
     test('wizard mastered + activeSkills → warrior からでも使用可', () {
       final player = Player(
-        currentJob: Job.warrior,
-        jobLevels: {Job.warrior: 1, Job.wizard: 14},
+        currentJob: Job.samurai,
+        jobLevels: {Job.samurai: 1, Job.mystic: 14},
       );
       // ignore: deprecated_member_use
-      player.activeSkills.add(Job.wizard);
-      expect(player.canUseSkill(Job.wizard), true);
+      player.activeSkills.add(Job.mystic);
+      expect(player.canUseSkill(Job.mystic), true);
     });
 
     test('activeSkills に複数職業登録 → 全職業使用可', () {
       final player = Player(
         currentJob: Job.adventurer,
-        jobLevels: {Job.adventurer: 1, Job.warrior: 14, Job.cleric: 14},
+        jobLevels: {Job.adventurer: 1, Job.samurai: 14, Job.monk: 14},
       );
       // ignore: deprecated_member_use
-      player.activeSkills.addAll([Job.warrior, Job.cleric]);
-      expect(player.canUseSkill(Job.warrior), true);
-      expect(player.canUseSkill(Job.cleric), true);
-      expect(player.canUseSkill(Job.wizard), false); // 未登録
+      player.activeSkills.addAll([Job.samurai, Job.monk]);
+      expect(player.canUseSkill(Job.samurai), true);
+      expect(player.canUseSkill(Job.monk), true);
+      expect(player.canUseSkill(Job.mystic), false); // 未登録
     });
   });
 
@@ -130,35 +130,35 @@ void main() {
     });
 
     test('warrior Lv13 → not mastered', () {
-      final player = Player(jobLevels: {Job.warrior: 13});
-      expect(player.isMastered(Job.warrior), false);
+      final player = Player(jobLevels: {Job.samurai: 13});
+      expect(player.isMastered(Job.samurai), false);
     });
 
     test('warrior Lv14 → mastered (isMastered uses >=14)', () {
-      final player = Player(jobLevels: {Job.warrior: 14});
-      expect(player.isMastered(Job.warrior), true);
+      final player = Player(jobLevels: {Job.samurai: 14});
+      expect(player.isMastered(Job.samurai), true);
     });
 
     test('warrior Lv15 → mastered', () {
-      final player = Player(jobLevels: {Job.warrior: 15});
-      expect(player.isMastered(Job.warrior), true);
+      final player = Player(jobLevels: {Job.samurai: 15});
+      expect(player.isMastered(Job.samurai), true);
     });
 
     test('cleric Lv14 → mastered', () {
-      final player = Player(jobLevels: {Job.cleric: 14});
-      expect(player.isMastered(Job.cleric), true);
+      final player = Player(jobLevels: {Job.monk: 14});
+      expect(player.isMastered(Job.monk), true);
     });
 
     test('wizard Lv14 → mastered', () {
-      final player = Player(jobLevels: {Job.wizard: 14});
-      expect(player.isMastered(Job.wizard), true);
+      final player = Player(jobLevels: {Job.mystic: 14});
+      expect(player.isMastered(Job.mystic), true);
     });
 
     test('未設定の職業 → デフォルト Lv1 → not mastered', () {
       final player = Player();
-      expect(player.isMastered(Job.warrior), false);
-      expect(player.isMastered(Job.cleric), false);
-      expect(player.isMastered(Job.wizard), false);
+      expect(player.isMastered(Job.samurai), false);
+      expect(player.isMastered(Job.monk), false);
+      expect(player.isMastered(Job.mystic), false);
     });
   });
 
@@ -183,8 +183,8 @@ void main() {
 
     test('Ronin Lv10 mastered → warrior転職後もRoninスキル常時オン', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 10, Job.warrior: 1},
-        currentJob: Job.warrior,
+        jobLevels: {Job.adventurer: 10, Job.samurai: 1},
+        currentJob: Job.samurai,
       );
       expect(player.hasSkill(JobSkill.roninSlots), true);
       expect(player.hasSkill(JobSkill.roninRepeatTask), true);
@@ -192,8 +192,8 @@ void main() {
 
     test('Ronin Lv10 mastered → wizard転職後もRoninスキル常時オン', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 10, Job.wizard: 1},
-        currentJob: Job.wizard,
+        jobLevels: {Job.adventurer: 10, Job.mystic: 1},
+        currentJob: Job.mystic,
       );
       expect(player.hasSkill(JobSkill.roninSlots), true);
       expect(player.hasSkill(JobSkill.roninRepeatTask), true);
@@ -203,196 +203,196 @@ void main() {
   group('hasSkill(JobSkill) — Warrior skills', () {
     test('Lv1 warrior → warriorComboのみ有効', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 1, Job.warrior: 1},
-        currentJob: Job.warrior,
+        jobLevels: {Job.adventurer: 1, Job.samurai: 1},
+        currentJob: Job.samurai,
       );
-      expect(player.hasSkill(JobSkill.warriorCombo), true);
-      expect(player.hasSkill(JobSkill.warriorFatigueReverse), false);
-      expect(player.hasSkill(JobSkill.warriorPomodoro), false);
-      expect(player.hasSkill(JobSkill.warriorBushido), false);
+      expect(player.hasSkill(JobSkill.samuraiCombo), true);
+      expect(player.hasSkill(JobSkill.samuraiFatigueReverse), false);
+      expect(player.hasSkill(JobSkill.samuraiPomodoro), false);
+      expect(player.hasSkill(JobSkill.samuraiBushido), false);
     });
 
     test('Lv5 warrior → combo + fatigueReverse 有効', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 1, Job.warrior: 5},
-        currentJob: Job.warrior,
+        jobLevels: {Job.adventurer: 1, Job.samurai: 5},
+        currentJob: Job.samurai,
       );
-      expect(player.hasSkill(JobSkill.warriorCombo), true);
-      expect(player.hasSkill(JobSkill.warriorFatigueReverse), true);
-      expect(player.hasSkill(JobSkill.warriorPomodoro), false);
-      expect(player.hasSkill(JobSkill.warriorBushido), false);
+      expect(player.hasSkill(JobSkill.samuraiCombo), true);
+      expect(player.hasSkill(JobSkill.samuraiFatigueReverse), true);
+      expect(player.hasSkill(JobSkill.samuraiPomodoro), false);
+      expect(player.hasSkill(JobSkill.samuraiBushido), false);
     });
 
     test('Lv10 warrior → combo + fatigueReverse + pomodoro 有効', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 1, Job.warrior: 10},
-        currentJob: Job.warrior,
+        jobLevels: {Job.adventurer: 1, Job.samurai: 10},
+        currentJob: Job.samurai,
       );
-      expect(player.hasSkill(JobSkill.warriorCombo), true);
-      expect(player.hasSkill(JobSkill.warriorFatigueReverse), true);
-      expect(player.hasSkill(JobSkill.warriorPomodoro), true);
-      expect(player.hasSkill(JobSkill.warriorBushido), false);
+      expect(player.hasSkill(JobSkill.samuraiCombo), true);
+      expect(player.hasSkill(JobSkill.samuraiFatigueReverse), true);
+      expect(player.hasSkill(JobSkill.samuraiPomodoro), true);
+      expect(player.hasSkill(JobSkill.samuraiBushido), false);
     });
 
     test('Lv15 warrior → 全Warriorスキル有効', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 1, Job.warrior: 15},
-        currentJob: Job.warrior,
+        jobLevels: {Job.adventurer: 1, Job.samurai: 15},
+        currentJob: Job.samurai,
       );
-      expect(player.hasSkill(JobSkill.warriorCombo), true);
-      expect(player.hasSkill(JobSkill.warriorFatigueReverse), true);
-      expect(player.hasSkill(JobSkill.warriorPomodoro), true);
-      expect(player.hasSkill(JobSkill.warriorBushido), true);
+      expect(player.hasSkill(JobSkill.samuraiCombo), true);
+      expect(player.hasSkill(JobSkill.samuraiFatigueReverse), true);
+      expect(player.hasSkill(JobSkill.samuraiPomodoro), true);
+      expect(player.hasSkill(JobSkill.samuraiBushido), true);
     });
 
     test('Warrior Lv10 → adventurer転職後、equippedSkillsでpomodoro使用可（他職クロス）', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 1, Job.warrior: 10},
+        jobLevels: {Job.adventurer: 1, Job.samurai: 10},
         currentJob: Job.adventurer,
-        equippedSkills: [EquippedSkill(skill: JobSkill.warriorPomodoro)],
+        equippedSkills: [EquippedSkill(skill: JobSkill.samuraiPomodoro)],
       );
-      expect(player.hasSkill(JobSkill.warriorPomodoro), true);
+      expect(player.hasSkill(JobSkill.samuraiPomodoro), true);
       // warriorCombo は装備していないので不可
-      expect(player.hasSkill(JobSkill.warriorCombo), false);
+      expect(player.hasSkill(JobSkill.samuraiCombo), false);
     });
 
     test('Warrior Lv10 → Bushido 未到達 → equippedしてもhasSkill=false', () {
       final player = Player(
-        jobLevels: {Job.warrior: 10},
+        jobLevels: {Job.samurai: 10},
         currentJob: Job.adventurer,
-        equippedSkills: [EquippedSkill(skill: JobSkill.warriorBushido)],
+        equippedSkills: [EquippedSkill(skill: JobSkill.samuraiBushido)],
       );
       // Bushido requires Lv15, Lv10 insufficient
-      expect(player.hasSkill(JobSkill.warriorBushido), false);
+      expect(player.hasSkill(JobSkill.samuraiBushido), false);
     });
 
     test('Warrior Lv15 mastered → v3 compat activeSkills → 全スキル有効', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 1, Job.warrior: 15},
+        jobLevels: {Job.adventurer: 1, Job.samurai: 15},
         currentJob: Job.adventurer,
       );
       // ignore: deprecated_member_use
-      player.activeSkills.add(Job.warrior);
-      expect(player.hasSkill(JobSkill.warriorCombo), true);
-      expect(player.hasSkill(JobSkill.warriorFatigueReverse), true);
-      expect(player.hasSkill(JobSkill.warriorPomodoro), true);
-      expect(player.hasSkill(JobSkill.warriorBushido), true);
+      player.activeSkills.add(Job.samurai);
+      expect(player.hasSkill(JobSkill.samuraiCombo), true);
+      expect(player.hasSkill(JobSkill.samuraiFatigueReverse), true);
+      expect(player.hasSkill(JobSkill.samuraiPomodoro), true);
+      expect(player.hasSkill(JobSkill.samuraiBushido), true);
     });
   });
 
   group('hasSkill(JobSkill) — Cleric skills', () {
     test('Lv1 cleric → clericRepeatAfterのみ有効', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 1, Job.cleric: 1},
-        currentJob: Job.cleric,
+        jobLevels: {Job.adventurer: 1, Job.monk: 1},
+        currentJob: Job.monk,
       );
-      expect(player.hasSkill(JobSkill.clericRepeatAfter), true);
-      expect(player.hasSkill(JobSkill.clericSnooze), false);
-      expect(player.hasSkill(JobSkill.clericStreak), false);
-      expect(player.hasSkill(JobSkill.clericEnlightenment), false);
+      expect(player.hasSkill(JobSkill.monkRepeatAfter), true);
+      expect(player.hasSkill(JobSkill.monkSnooze), false);
+      expect(player.hasSkill(JobSkill.monkStreak), false);
+      expect(player.hasSkill(JobSkill.monkEnlightenment), false);
     });
 
     test('Lv5 cleric → repeatAfter + snooze 有効', () {
       final player = Player(
-        jobLevels: {Job.cleric: 5},
-        currentJob: Job.cleric,
+        jobLevels: {Job.monk: 5},
+        currentJob: Job.monk,
       );
-      expect(player.hasSkill(JobSkill.clericRepeatAfter), true);
-      expect(player.hasSkill(JobSkill.clericSnooze), true);
-      expect(player.hasSkill(JobSkill.clericStreak), false);
+      expect(player.hasSkill(JobSkill.monkRepeatAfter), true);
+      expect(player.hasSkill(JobSkill.monkSnooze), true);
+      expect(player.hasSkill(JobSkill.monkStreak), false);
     });
 
     test('Lv10 cleric → repeatAfter + snooze + streak 有効', () {
       final player = Player(
-        jobLevels: {Job.cleric: 10},
-        currentJob: Job.cleric,
+        jobLevels: {Job.monk: 10},
+        currentJob: Job.monk,
       );
-      expect(player.hasSkill(JobSkill.clericRepeatAfter), true);
-      expect(player.hasSkill(JobSkill.clericSnooze), true);
-      expect(player.hasSkill(JobSkill.clericStreak), true);
-      expect(player.hasSkill(JobSkill.clericEnlightenment), false);
+      expect(player.hasSkill(JobSkill.monkRepeatAfter), true);
+      expect(player.hasSkill(JobSkill.monkSnooze), true);
+      expect(player.hasSkill(JobSkill.monkStreak), true);
+      expect(player.hasSkill(JobSkill.monkEnlightenment), false);
     });
 
     test('Lv15 cleric → 全Clericスキル有効', () {
       final player = Player(
-        jobLevels: {Job.cleric: 15},
-        currentJob: Job.cleric,
+        jobLevels: {Job.monk: 15},
+        currentJob: Job.monk,
       );
-      expect(player.hasSkill(JobSkill.clericRepeatAfter), true);
-      expect(player.hasSkill(JobSkill.clericSnooze), true);
-      expect(player.hasSkill(JobSkill.clericStreak), true);
-      expect(player.hasSkill(JobSkill.clericEnlightenment), true);
+      expect(player.hasSkill(JobSkill.monkRepeatAfter), true);
+      expect(player.hasSkill(JobSkill.monkSnooze), true);
+      expect(player.hasSkill(JobSkill.monkStreak), true);
+      expect(player.hasSkill(JobSkill.monkEnlightenment), true);
     });
 
     test('Cleric Lv15 mastered → v3 compat activeSkills → 他職業からでも全スキル有効', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 1, Job.cleric: 15},
+        jobLevels: {Job.adventurer: 1, Job.monk: 15},
         currentJob: Job.adventurer,
       );
       // ignore: deprecated_member_use
-      player.activeSkills.add(Job.cleric);
-      expect(player.hasSkill(JobSkill.clericRepeatAfter), true);
-      expect(player.hasSkill(JobSkill.clericSnooze), true);
-      expect(player.hasSkill(JobSkill.clericStreak), true);
-      expect(player.hasSkill(JobSkill.clericEnlightenment), true);
+      player.activeSkills.add(Job.monk);
+      expect(player.hasSkill(JobSkill.monkRepeatAfter), true);
+      expect(player.hasSkill(JobSkill.monkSnooze), true);
+      expect(player.hasSkill(JobSkill.monkStreak), true);
+      expect(player.hasSkill(JobSkill.monkEnlightenment), true);
     });
   });
 
   group('hasSkill(JobSkill) — Wizard skills', () {
     test('Lv1 wizard → wizardSubtaskのみ有効', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 1, Job.wizard: 1},
-        currentJob: Job.wizard,
+        jobLevels: {Job.adventurer: 1, Job.mystic: 1},
+        currentJob: Job.mystic,
       );
-      expect(player.hasSkill(JobSkill.wizardSubtask), true);
-      expect(player.hasSkill(JobSkill.wizardTags), false);
-      expect(player.hasSkill(JobSkill.wizardProject), false);
-      expect(player.hasSkill(JobSkill.wizardOverview), false);
+      expect(player.hasSkill(JobSkill.mysticSubtask), true);
+      expect(player.hasSkill(JobSkill.mysticTags), false);
+      expect(player.hasSkill(JobSkill.mysticProject), false);
+      expect(player.hasSkill(JobSkill.mysticOverview), false);
     });
 
     test('Lv5 wizard → subtask + tags 有効', () {
       final player = Player(
-        jobLevels: {Job.wizard: 5},
-        currentJob: Job.wizard,
+        jobLevels: {Job.mystic: 5},
+        currentJob: Job.mystic,
       );
-      expect(player.hasSkill(JobSkill.wizardSubtask), true);
-      expect(player.hasSkill(JobSkill.wizardTags), true);
-      expect(player.hasSkill(JobSkill.wizardProject), false);
+      expect(player.hasSkill(JobSkill.mysticSubtask), true);
+      expect(player.hasSkill(JobSkill.mysticTags), true);
+      expect(player.hasSkill(JobSkill.mysticProject), false);
     });
 
     test('Lv10 wizard → subtask + tags + project 有効', () {
       final player = Player(
-        jobLevels: {Job.wizard: 10},
-        currentJob: Job.wizard,
+        jobLevels: {Job.mystic: 10},
+        currentJob: Job.mystic,
       );
-      expect(player.hasSkill(JobSkill.wizardSubtask), true);
-      expect(player.hasSkill(JobSkill.wizardTags), true);
-      expect(player.hasSkill(JobSkill.wizardProject), true);
-      expect(player.hasSkill(JobSkill.wizardOverview), false);
+      expect(player.hasSkill(JobSkill.mysticSubtask), true);
+      expect(player.hasSkill(JobSkill.mysticTags), true);
+      expect(player.hasSkill(JobSkill.mysticProject), true);
+      expect(player.hasSkill(JobSkill.mysticOverview), false);
     });
 
     test('Lv15 wizard → 全Wizardスキル有効', () {
       final player = Player(
-        jobLevels: {Job.wizard: 15},
-        currentJob: Job.wizard,
+        jobLevels: {Job.mystic: 15},
+        currentJob: Job.mystic,
       );
-      expect(player.hasSkill(JobSkill.wizardSubtask), true);
-      expect(player.hasSkill(JobSkill.wizardTags), true);
-      expect(player.hasSkill(JobSkill.wizardProject), true);
-      expect(player.hasSkill(JobSkill.wizardOverview), true);
+      expect(player.hasSkill(JobSkill.mysticSubtask), true);
+      expect(player.hasSkill(JobSkill.mysticTags), true);
+      expect(player.hasSkill(JobSkill.mysticProject), true);
+      expect(player.hasSkill(JobSkill.mysticOverview), true);
     });
 
     test('Wizard Lv15 mastered → v3 compat activeSkills → 他職業からでも全スキル有効', () {
       final player = Player(
-        jobLevels: {Job.adventurer: 1, Job.wizard: 15},
+        jobLevels: {Job.adventurer: 1, Job.mystic: 15},
         currentJob: Job.adventurer,
       );
       // ignore: deprecated_member_use
-      player.activeSkills.add(Job.wizard);
-      expect(player.hasSkill(JobSkill.wizardSubtask), true);
-      expect(player.hasSkill(JobSkill.wizardTags), true);
-      expect(player.hasSkill(JobSkill.wizardProject), true);
-      expect(player.hasSkill(JobSkill.wizardOverview), true);
+      player.activeSkills.add(Job.mystic);
+      expect(player.hasSkill(JobSkill.mysticSubtask), true);
+      expect(player.hasSkill(JobSkill.mysticTags), true);
+      expect(player.hasSkill(JobSkill.mysticProject), true);
+      expect(player.hasSkill(JobSkill.mysticOverview), true);
     });
   });
 
@@ -402,48 +402,48 @@ void main() {
   group('Cross-job skill interaction', () {
     test('Ronin mastered + Warrior equippedSkills（pomodoro）→ 両方有効', () {
       final player = Player(
-        currentJob: Job.warrior,
-        jobLevels: {Job.adventurer: 10, Job.warrior: 10},
-        equippedSkills: [EquippedSkill(skill: JobSkill.warriorPomodoro)],
+        currentJob: Job.samurai,
+        jobLevels: {Job.adventurer: 10, Job.samurai: 10},
+        equippedSkills: [EquippedSkill(skill: JobSkill.samuraiPomodoro)],
       );
       // Ronin mastered → 常時オン
       expect(player.hasSkill(JobSkill.roninSlots), true);
       expect(player.hasSkill(JobSkill.roninRepeatTask), true);
-      // Warrior current + Lv10 → pomodoro 有効
-      expect(player.hasSkill(JobSkill.warriorPomodoro), true);
+      // Samurai current + Lv10 → pomodoro 有効
+      expect(player.hasSkill(JobSkill.samuraiPomodoro), true);
     });
 
     test('Ronin mastered + Cleric equippedSkills（streak）→ 両方有効', () {
       final player = Player(
-        currentJob: Job.warrior,
-        jobLevels: {Job.adventurer: 10, Job.warrior: 1, Job.cleric: 10},
-        equippedSkills: [EquippedSkill(skill: JobSkill.clericStreak)],
+        currentJob: Job.samurai,
+        jobLevels: {Job.adventurer: 10, Job.samurai: 1, Job.monk: 10},
+        equippedSkills: [EquippedSkill(skill: JobSkill.monkStreak)],
       );
       // Ronin mastered → 常時オン
       expect(player.hasSkill(JobSkill.roninSlots), true);
       expect(player.hasSkill(JobSkill.roninRepeatTask), true);
-      // Cleric streak via equippedSkills (Lv10 → ok)
-      expect(player.hasSkill(JobSkill.clericStreak), true);
-      // Cleric snooze → NOT equipped
-      expect(player.hasSkill(JobSkill.clericSnooze), false);
+      // Monk streak via equippedSkills (Lv10 → ok)
+      expect(player.hasSkill(JobSkill.monkStreak), true);
+      // Monk snooze → NOT equipped
+      expect(player.hasSkill(JobSkill.monkSnooze), false);
     });
 
     test('Ronin mastered + Wizard equippedSkills（project + tags）→ 3スキル有効', () {
       final player = Player(
-        currentJob: Job.cleric,
-        jobLevels: {Job.adventurer: 10, Job.cleric: 1, Job.wizard: 10},
+        currentJob: Job.monk,
+        jobLevels: {Job.adventurer: 10, Job.monk: 1, Job.mystic: 10},
         equippedSkills: [
-          EquippedSkill(skill: JobSkill.wizardProject),
-          EquippedSkill(skill: JobSkill.wizardTags),
+          EquippedSkill(skill: JobSkill.mysticProject),
+          EquippedSkill(skill: JobSkill.mysticTags),
         ],
       );
       // Ronin mastered
       expect(player.hasSkill(JobSkill.roninSlots), true);
-      // Wizard project + tags via equippedSkills
-      expect(player.hasSkill(JobSkill.wizardProject), true);
-      expect(player.hasSkill(JobSkill.wizardTags), true);
-      // Wizard subtask → NOT equipped
-      expect(player.hasSkill(JobSkill.wizardSubtask), false);
+      // Mystic project + tags via equippedSkills
+      expect(player.hasSkill(JobSkill.mysticProject), true);
+      expect(player.hasSkill(JobSkill.mysticTags), true);
+      // Mystic subtask → NOT equipped
+      expect(player.hasSkill(JobSkill.mysticSubtask), false);
     });
 
     test('全職業 mastered → 全スキル activeSkills登録で使用可', () {
@@ -451,35 +451,35 @@ void main() {
         currentJob: Job.adventurer,
         jobLevels: {
           Job.adventurer: 10,
-          Job.warrior: 15,
-          Job.cleric: 15,
-          Job.wizard: 15,
+          Job.samurai: 15,
+          Job.monk: 15,
+          Job.mystic: 15,
         },
       );
       // ignore: deprecated_member_use
-      player.activeSkills.addAll([Job.warrior, Job.cleric, Job.wizard]);
+      player.activeSkills.addAll([Job.samurai, Job.monk, Job.mystic]);
 
       // Ronin always-on (mastered)
       expect(player.hasSkill(JobSkill.roninSlots), true);
       expect(player.hasSkill(JobSkill.roninRepeatTask), true);
 
       // All jobs via v3 compat
-      expect(player.hasSkill(JobSkill.warriorBushido), true);
-      expect(player.hasSkill(JobSkill.clericEnlightenment), true);
-      expect(player.hasSkill(JobSkill.wizardOverview), true);
+      expect(player.hasSkill(JobSkill.samuraiBushido), true);
+      expect(player.hasSkill(JobSkill.monkEnlightenment), true);
+      expect(player.hasSkill(JobSkill.mysticOverview), true);
     });
 
     test('未mastered職業のスキルはequippedSkillsしても使用不可', () {
       final player = Player(
         currentJob: Job.adventurer,
-        jobLevels: {Job.adventurer: 1, Job.warrior: 5},
-        equippedSkills: [EquippedSkill(skill: JobSkill.warriorPomodoro)],
+        jobLevels: {Job.adventurer: 1, Job.samurai: 5},
+        equippedSkills: [EquippedSkill(skill: JobSkill.samuraiPomodoro)],
       );
       // warrior is NOT mastered (Lv5 < 14) + NOT current → canUseSkill fails
       // → hasSkill requires canUseSkill for equippedSkills path
       // But wait: hasSkill checks equippedSkills first: yes (it IS equipped + level>=required)
       // Let's test: level 5 >= requiredLevel 10? NO. So returns false.
-      expect(player.hasSkill(JobSkill.warriorPomodoro), false);
+      expect(player.hasSkill(JobSkill.samuraiPomodoro), false);
     });
   });
 
@@ -488,17 +488,17 @@ void main() {
   // ═══════════════════════════════════════════
   group('EquippedSkill isActive', () {
     test('default isActive is true', () {
-      final eq = EquippedSkill(skill: JobSkill.warriorCombo);
+      final eq = EquippedSkill(skill: JobSkill.samuraiCombo);
       expect(eq.isActive, true);
     });
 
     test('can set isActive to false at construction', () {
-      final eq = EquippedSkill(skill: JobSkill.clericStreak, isActive: false);
+      final eq = EquippedSkill(skill: JobSkill.monkStreak, isActive: false);
       expect(eq.isActive, false);
     });
 
     test('isActive can be toggled at runtime', () {
-      final eq = EquippedSkill(skill: JobSkill.wizardSubtask);
+      final eq = EquippedSkill(skill: JobSkill.mysticSubtask);
       eq.isActive = false;
       expect(eq.isActive, false);
       eq.isActive = true;
@@ -506,26 +506,26 @@ void main() {
     });
 
     test('fromJson preserves isActive', () {
-      final json = {'skill': JobSkill.warriorCombo.index, 'isActive': false};
+      final json = {'skill': JobSkill.samuraiCombo.index, 'isActive': false};
       final eq = EquippedSkill.fromJson(json);
       expect(eq.isActive, false);
     });
 
     test('fromJson defaults isActive to true when missing', () {
-      final json = {'skill': JobSkill.warriorCombo.index};
+      final json = {'skill': JobSkill.samuraiCombo.index};
       final eq = EquippedSkill.fromJson(json);
       expect(eq.isActive, true);
     });
 
     test('toJson includes isActive', () {
-      final eq = EquippedSkill(skill: JobSkill.warriorCombo, isActive: false);
+      final eq = EquippedSkill(skill: JobSkill.samuraiCombo, isActive: false);
       final json = eq.toJson();
       expect(json['isActive'], false);
     });
 
     test('Equality ignores isActive', () {
-      final a = EquippedSkill(skill: JobSkill.warriorCombo, isActive: true);
-      final b = EquippedSkill(skill: JobSkill.warriorCombo, isActive: false);
+      final a = EquippedSkill(skill: JobSkill.samuraiCombo, isActive: true);
+      final b = EquippedSkill(skill: JobSkill.samuraiCombo, isActive: false);
       expect(a, b); // isActive は等価判定に含まれない
     });
   });
@@ -557,35 +557,35 @@ void main() {
 
     test('v4 equippedSkills: 単一スキル round-trip', () async {
       final original = Player(
-        jobLevels: {Job.adventurer: 1, Job.warrior: 10},
-        equippedSkills: [EquippedSkill(skill: JobSkill.warriorPomodoro)],
+        jobLevels: {Job.adventurer: 1, Job.samurai: 10},
+        equippedSkills: [EquippedSkill(skill: JobSkill.samuraiPomodoro)],
       );
       await box.put('p', original);
       final restored = box.get('p')!;
       expect(restored.equippedSkills.length, 1);
-      expect(restored.equippedSkills[0].skill, JobSkill.warriorPomodoro);
+      expect(restored.equippedSkills[0].skill, JobSkill.samuraiPomodoro);
     });
 
     test('v4 equippedSkills: 複数スキル round-trip', () async {
       final original = Player(
-        jobLevels: {Job.adventurer: 10, Job.warrior: 10, Job.cleric: 10},
+        jobLevels: {Job.adventurer: 10, Job.samurai: 10, Job.monk: 10},
         equippedSkills: [
-          EquippedSkill(skill: JobSkill.warriorPomodoro, isActive: true),
-          EquippedSkill(skill: JobSkill.clericStreak, isActive: false),
+          EquippedSkill(skill: JobSkill.samuraiPomodoro, isActive: true),
+          EquippedSkill(skill: JobSkill.monkStreak, isActive: false),
         ],
       );
       await box.put('p', original);
       final restored = box.get('p')!;
       expect(restored.equippedSkills.length, 2);
-      expect(restored.equippedSkills[0].skill, JobSkill.warriorPomodoro);
+      expect(restored.equippedSkills[0].skill, JobSkill.samuraiPomodoro);
       expect(restored.equippedSkills[0].isActive, true);
-      expect(restored.equippedSkills[1].skill, JobSkill.clericStreak);
+      expect(restored.equippedSkills[1].skill, JobSkill.monkStreak);
       expect(restored.equippedSkills[1].isActive, false);
     });
 
     test('v4 warriorDailyBuff round-trip', () async {
       final original = Player(
-        jobLevels: {Job.warrior: 15},
+        jobLevels: {Job.samurai: 15},
       );
       original.warriorDailyBuff = 42;
       original.lastDailyComplete = DateTime(2026, 5, 20);
@@ -600,7 +600,7 @@ void main() {
 
     test('v4 streakGrace round-trip', () async {
       final original = Player(
-        jobLevels: {Job.cleric: 15},
+        jobLevels: {Job.monk: 15},
       );
       original.streakGraceRemaining = 5;
       original.lastStreakGraceReset = DateTime(2026, 5, 15);
@@ -612,7 +612,7 @@ void main() {
 
     test('v4 pomodoroStartTime round-trip', () async {
       final original = Player(
-        jobLevels: {Job.warrior: 10},
+        jobLevels: {Job.samurai: 10},
       );
       original.pomodoroStartTime = DateTime(2026, 5, 29, 10, 30);
       await box.put('p', original);
@@ -625,13 +625,13 @@ void main() {
     test('v4 activeSkills deprecated field round-trip', () async {
       final original = Player();
       // ignore: deprecated_member_use
-      original.activeSkills.addAll([Job.warrior, Job.cleric]);
+      original.activeSkills.addAll([Job.samurai, Job.monk]);
       await box.put('p', original);
       final restored = box.get('p')!;
       // ignore: deprecated_member_use
-      expect(restored.activeSkills, contains(Job.warrior));
+      expect(restored.activeSkills, contains(Job.samurai));
       // ignore: deprecated_member_use
-      expect(restored.activeSkills, contains(Job.cleric));
+      expect(restored.activeSkills, contains(Job.monk));
     });
 
     test('v4: default Player has empty equippedSkills and v4 fields at defaults', () async {

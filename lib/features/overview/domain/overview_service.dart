@@ -1,6 +1,6 @@
 import 'package:rpg_todo/domain/models/task.dart';
 
-/// T11: Wizard Lv15 俯瞰の魔眼 — Overview view data services
+/// T11: Mystic Lv15 俯瞰の魔眼 — Overview view data services
 class OverviewService {
   /// Tasks grouped by deadline date string (YYYY-MM-DD).
   /// Tasks without a deadline go under "No deadline".

@@ -11,40 +11,40 @@ void main() {
   group('wizardSubtask - isSkillEquipped gate', () {
     test('isSkillEquipped returns true when skill is equipped and job is active', () {
       final player = Player(
-        currentJob: Job.wizard,
-        jobLevels: {Job.wizard: 1},
-        equippedSkills: [EquippedSkill(skill: JobSkill.wizardSubtask)],
+        currentJob: Job.mystic,
+        jobLevels: {Job.mystic: 1},
+        equippedSkills: [EquippedSkill(skill: JobSkill.mysticSubtask)],
       );
-      expect(player.isSkillEquipped(JobSkill.wizardSubtask), isTrue);
+      expect(player.isSkillEquipped(JobSkill.mysticSubtask), isTrue);
     });
 
     test('isSkillEquipped returns false when skill is NOT in equippedSkills', () {
       final player = Player(
-        currentJob: Job.wizard,
-        jobLevels: {Job.wizard: 1},
-        equippedSkills: [EquippedSkill(skill: JobSkill.wizardTags)],
+        currentJob: Job.mystic,
+        jobLevels: {Job.mystic: 1},
+        equippedSkills: [EquippedSkill(skill: JobSkill.mysticTags)],
       );
-      expect(player.isSkillEquipped(JobSkill.wizardSubtask), isFalse);
+      expect(player.isSkillEquipped(JobSkill.mysticSubtask), isFalse);
     });
 
     test('isSkillEquipped returns true when wizard is mastered and active', () {
       final player = Player(
         currentJob: Job.adventurer,
-        jobLevels: {Job.adventurer: 1, Job.wizard: 14},
-        equippedSkills: [EquippedSkill(skill: JobSkill.wizardSubtask)],
+        jobLevels: {Job.adventurer: 1, Job.mystic: 14},
+        equippedSkills: [EquippedSkill(skill: JobSkill.mysticSubtask)],
       );
       // ignore: deprecated_member_use
-      player.activeSkills.add(Job.wizard);
-      expect(player.isSkillEquipped(JobSkill.wizardSubtask), isTrue);
+      player.activeSkills.add(Job.mystic);
+      expect(player.isSkillEquipped(JobSkill.mysticSubtask), isTrue);
     });
 
     test('isSkillEquipped returns false when wizard is NOT active', () {
       final player = Player(
         currentJob: Job.adventurer,
-        jobLevels: {Job.adventurer: 1, Job.wizard: 1},
-        equippedSkills: [EquippedSkill(skill: JobSkill.wizardSubtask)],
+        jobLevels: {Job.adventurer: 1, Job.mystic: 1},
+        equippedSkills: [EquippedSkill(skill: JobSkill.mysticSubtask)],
       );
-      expect(player.isSkillEquipped(JobSkill.wizardSubtask), isFalse);
+      expect(player.isSkillEquipped(JobSkill.mysticSubtask), isFalse);
     });
   });
 
@@ -66,9 +66,9 @@ void main() {
         ],
       );
       final player = Player(
-        currentJob: Job.wizard,
-        jobLevels: {Job.wizard: 1},
-        equippedSkills: [EquippedSkill(skill: JobSkill.wizardSubtask)],
+        currentJob: Job.mystic,
+        jobLevels: {Job.mystic: 1},
+        equippedSkills: [EquippedSkill(skill: JobSkill.mysticSubtask)],
       );
 
       final result = service.complete(
@@ -93,9 +93,9 @@ void main() {
         ],
       );
       final player = Player(
-        currentJob: Job.wizard,
-        jobLevels: {Job.wizard: 1},
-        equippedSkills: [EquippedSkill(skill: JobSkill.wizardSubtask)],
+        currentJob: Job.mystic,
+        jobLevels: {Job.mystic: 1},
+        equippedSkills: [EquippedSkill(skill: JobSkill.mysticSubtask)],
       );
 
       final result = service.complete(
@@ -119,8 +119,8 @@ void main() {
         ],
       );
       final player = Player(
-        currentJob: Job.wizard,
-        jobLevels: {Job.wizard: 1},
+        currentJob: Job.mystic,
+        jobLevels: {Job.mystic: 1},
         equippedSkills: [],
       );
 
@@ -142,9 +142,9 @@ void main() {
         status: TaskStatus.active,
       );
       final player = Player(
-        currentJob: Job.wizard,
-        jobLevels: {Job.wizard: 1},
-        equippedSkills: [EquippedSkill(skill: JobSkill.wizardSubtask)],
+        currentJob: Job.mystic,
+        jobLevels: {Job.mystic: 1},
+        equippedSkills: [EquippedSkill(skill: JobSkill.mysticSubtask)],
       );
 
       final result = service.complete(
@@ -306,9 +306,9 @@ void main() {
       );
 
       final player = Player(
-        currentJob: Job.wizard,
-        jobLevels: {Job.wizard: 10},
-        equippedSkills: [EquippedSkill(skill: JobSkill.wizardProject)],
+        currentJob: Job.mystic,
+        jobLevels: {Job.mystic: 10},
+        equippedSkills: [EquippedSkill(skill: JobSkill.mysticProject)],
         projects: [project],
       );
       player.taskProjects['t1'] = '試練の陣';
@@ -362,9 +362,9 @@ void main() {
       );
 
       final player = Player(
-        currentJob: Job.wizard,
-        jobLevels: {Job.wizard: 10},
-        equippedSkills: [EquippedSkill(skill: JobSkill.wizardProject)],
+        currentJob: Job.mystic,
+        jobLevels: {Job.mystic: 10},
+        equippedSkills: [EquippedSkill(skill: JobSkill.mysticProject)],
         projects: [project],
       );
       player.taskProjects['t1'] = '未完の陣';
@@ -393,8 +393,8 @@ void main() {
       );
 
       final player = Player(
-        currentJob: Job.wizard,
-        jobLevels: {Job.wizard: 10},
+        currentJob: Job.mystic,
+        jobLevels: {Job.mystic: 10},
         equippedSkills: [], // wizardProject 未装備
         projects: [project],
       );

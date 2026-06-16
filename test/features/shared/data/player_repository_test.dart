@@ -60,13 +60,13 @@ void main() {
       final player = Player(
         coins: 500,
         gems: 99,
-        jobLevels: {Job.adventurer: 10, Job.warrior: 5},
-        currentJob: Job.warrior,
+        jobLevels: {Job.adventurer: 10, Job.samurai: 5},
+        currentJob: Job.samurai,
         comboCount: 3,
         streakDays: 15,
         longestStreak: 30,
         equippedSkills: [
-          EquippedSkill(skill: JobSkill.warriorBushido, isActive: true),
+          EquippedSkill(skill: JobSkill.samuraiBushido, isActive: true),
         ],
         tags: ['重要', '急ぎ'],
       );
@@ -76,12 +76,12 @@ void main() {
       expect(loaded!.coins, 500);
       expect(loaded.gems, 99);
       expect(loaded.level, 5); // currentJob=warrior → jobLevels[warrior]=5
-      expect(loaded.currentJob, Job.warrior);
+      expect(loaded.currentJob, Job.samurai);
       expect(loaded.comboCount, 3);
       expect(loaded.streakDays, 15);
       expect(loaded.longestStreak, 30);
       expect(loaded.equippedSkills.length, 1);
-      expect(loaded.equippedSkills[0].skill, JobSkill.warriorBushido);
+      expect(loaded.equippedSkills[0].skill, JobSkill.samuraiBushido);
       expect(loaded.tags, ['重要', '急ぎ']);
     });
 
@@ -181,11 +181,11 @@ void main() {
       final original = Player(
         coins: 12345,
         gems: 99,
-        jobLevels: {Job.adventurer: 20, Job.warrior: 10, Job.cleric: 3, Job.wizard: 1},
-        currentJob: Job.warrior,
+        jobLevels: {Job.adventurer: 20, Job.samurai: 10, Job.monk: 3, Job.mystic: 1},
+        currentJob: Job.samurai,
         equippedSkills: [
-          EquippedSkill(skill: JobSkill.warriorBushido, isActive: true),
-          EquippedSkill(skill: JobSkill.clericEnlightenment),
+          EquippedSkill(skill: JobSkill.samuraiBushido, isActive: true),
+          EquippedSkill(skill: JobSkill.monkEnlightenment),
         ],
         tags: ['重要', '急ぎ'],
         streakDays: 15,
@@ -198,7 +198,7 @@ void main() {
       expect(restored!.coins, 12345);
       expect(restored.gems, 99);
       expect(restored.level, 10); // currentJob=warrior→jobLevels[warrior]=10
-      expect(restored.currentJob, Job.warrior);
+      expect(restored.currentJob, Job.samurai);
       expect(restored.equippedSkills.length, 2);
       expect(restored.tags, ['重要', '急ぎ']);
       expect(restored.streakDays, 15);

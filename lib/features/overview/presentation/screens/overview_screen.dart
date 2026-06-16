@@ -7,7 +7,7 @@ import 'package:rpg_todo/features/overview/domain/overview_service.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 
-/// T11: Wizard Lv15 俯瞰の魔眼 — Overview screen with calendar and kanban views.
+/// T11: Mystic Lv15 俯瞰の魔眼 — Overview screen with calendar and kanban views.
 class OverviewScreen extends StatelessWidget {
   const OverviewScreen({super.key});
 
@@ -16,7 +16,7 @@ class OverviewScreen extends StatelessWidget {
     final playerVM = context.watch<PlayerViewModel>();
     final player = playerVM.player;
 
-    if (!player.hasSkill(JobSkill.wizardOverview)) {
+    if (!player.hasSkill(JobSkill.mysticOverview)) {
       return _buildLockedView(context);
     }
 

@@ -8,29 +8,29 @@ import 'skill_tree.dart';
 import 'job.dart';
 export 'job.dart';
 
-/// 職業スキル — 14スキル (Ronin 2, Warrior 4, Cleric 4, Wizard 4)
+/// 職業スキル — 14スキル (Ronin 2, Samurai 4, Monk 4, Mystic 4)
 enum JobSkill {
   // Ronin (冒険者) — 基本スキル
   roninSlots,
   roninRepeatTask,
 
-  // Warrior (戦士) — 討伐特化
-  warriorCombo,
-  warriorFatigueReverse,
-  warriorPomodoro,
-  warriorBushido,
+  // Samurai (侍) — 討伐特化
+  samuraiCombo,
+  samuraiFatigueReverse,
+  samuraiPomodoro,
+  samuraiBushido,
 
-  // Cleric (僧侶) — 継続支援
-  clericRepeatAfter,
-  clericSnooze,
-  clericStreak,
-  clericEnlightenment,
+  // Monk (法師) — 継続支援
+  monkRepeatAfter,
+  monkSnooze,
+  monkStreak,
+  monkEnlightenment,
 
-  // Wizard (魔法使い) — 管理強化
-  wizardSubtask,
-  wizardTags,
-  wizardProject,
-  wizardOverview,
+  // Mystic (陰陽師) — 管理強化
+  mysticSubtask,
+  mysticTags,
+  mysticProject,
+  mysticOverview,
   ;
 
   /// 装備可能な最大スキルスロット数。
@@ -38,9 +38,9 @@ enum JobSkill {
   static int maxSkillSlots(Map<Job, int> jobLevels) {
     int slots = 1;
     if ((jobLevels[Job.adventurer] ?? 1) >= 10) slots++;
-    if ((jobLevels[Job.warrior] ?? 1) >= 15) slots++;
-    if ((jobLevels[Job.cleric] ?? 1) >= 15) slots++;
-    if ((jobLevels[Job.wizard] ?? 1) >= 15) slots++;
+    if ((jobLevels[Job.samurai] ?? 1) >= 15) slots++;
+    if ((jobLevels[Job.monk] ?? 1) >= 15) slots++;
+    if ((jobLevels[Job.mystic] ?? 1) >= 15) slots++;
     return slots;
   }
 }
@@ -51,21 +51,21 @@ extension JobSkillMeta on JobSkill {
       case JobSkill.roninSlots:
       case JobSkill.roninRepeatTask:
         return Job.adventurer;
-      case JobSkill.warriorCombo:
-      case JobSkill.warriorFatigueReverse:
-      case JobSkill.warriorPomodoro:
-      case JobSkill.warriorBushido:
-        return Job.warrior;
-      case JobSkill.clericRepeatAfter:
-      case JobSkill.clericSnooze:
-      case JobSkill.clericStreak:
-      case JobSkill.clericEnlightenment:
-        return Job.cleric;
-      case JobSkill.wizardSubtask:
-      case JobSkill.wizardTags:
-      case JobSkill.wizardProject:
-      case JobSkill.wizardOverview:
-        return Job.wizard;
+      case JobSkill.samuraiCombo:
+      case JobSkill.samuraiFatigueReverse:
+      case JobSkill.samuraiPomodoro:
+      case JobSkill.samuraiBushido:
+        return Job.samurai;
+      case JobSkill.monkRepeatAfter:
+      case JobSkill.monkSnooze:
+      case JobSkill.monkStreak:
+      case JobSkill.monkEnlightenment:
+        return Job.monk;
+      case JobSkill.mysticSubtask:
+      case JobSkill.mysticTags:
+      case JobSkill.mysticProject:
+      case JobSkill.mysticOverview:
+        return Job.mystic;
     }
   }
 
@@ -77,31 +77,31 @@ extension JobSkillMeta on JobSkill {
       case JobSkill.roninRepeatTask:
         return 10;
       // Warrior
-      case JobSkill.warriorCombo:
+      case JobSkill.samuraiCombo:
         return 1;
-      case JobSkill.warriorFatigueReverse:
+      case JobSkill.samuraiFatigueReverse:
         return 5;
-      case JobSkill.warriorPomodoro:
+      case JobSkill.samuraiPomodoro:
         return 10;
-      case JobSkill.warriorBushido:
+      case JobSkill.samuraiBushido:
         return 15;
       // Cleric
-      case JobSkill.clericRepeatAfter:
+      case JobSkill.monkRepeatAfter:
         return 1;
-      case JobSkill.clericSnooze:
+      case JobSkill.monkSnooze:
         return 5;
-      case JobSkill.clericStreak:
+      case JobSkill.monkStreak:
         return 10;
-      case JobSkill.clericEnlightenment:
+      case JobSkill.monkEnlightenment:
         return 15;
       // Wizard
-      case JobSkill.wizardSubtask:
+      case JobSkill.mysticSubtask:
         return 1;
-      case JobSkill.wizardTags:
+      case JobSkill.mysticTags:
         return 5;
-      case JobSkill.wizardProject:
+      case JobSkill.mysticProject:
         return 10;
-      case JobSkill.wizardOverview:
+      case JobSkill.mysticOverview:
         return 15;
     }
   }
@@ -114,18 +114,18 @@ extension JobSkillMeta on JobSkill {
   static const _displayNames = {
     JobSkill.roninSlots: '冒険者の勘',
     JobSkill.roninRepeatTask: '果てなき挑戦',
-    JobSkill.warriorCombo: '連撃の構え',
-    JobSkill.warriorFatigueReverse: '逆転の気魄',
-    JobSkill.warriorPomodoro: '集中の型',
-    JobSkill.warriorBushido: '武士道の極意',
-    JobSkill.clericRepeatAfter: '後追いの祈り',
-    JobSkill.clericSnooze: '微睡みの加護',
-    JobSkill.clericStreak: '連続の誓い',
-    JobSkill.clericEnlightenment: '悟りの境地',
-    JobSkill.wizardSubtask: '分割の理',
-    JobSkill.wizardTags: '札の掌握',
-    JobSkill.wizardProject: '計画の陣',
-    JobSkill.wizardOverview: '俯瞰の魔眼',
+    JobSkill.samuraiCombo: '連撃の構え',
+    JobSkill.samuraiFatigueReverse: '逆転の気魄',
+    JobSkill.samuraiPomodoro: '集中の型',
+    JobSkill.samuraiBushido: '武士道の極意',
+    JobSkill.monkRepeatAfter: '後追いの祈り',
+    JobSkill.monkSnooze: '微睡みの加護',
+    JobSkill.monkStreak: '連続の誓い',
+    JobSkill.monkEnlightenment: '悟りの境地',
+    JobSkill.mysticSubtask: '分割の理',
+    JobSkill.mysticTags: '札の掌握',
+    JobSkill.mysticProject: '計画の陣',
+    JobSkill.mysticOverview: '俯瞰の魔眼',
   };
 
   String get displayName => _displayNames[this] ?? name;
@@ -133,18 +133,18 @@ extension JobSkillMeta on JobSkill {
   static const _descriptions = {
     JobSkill.roninSlots: 'クエストランクと枠数が拡大。S/A/Bランクの上限が増える',
     JobSkill.roninRepeatTask: '完了済みクエストを「繰り返し」として再発行可能に',
-    JobSkill.warriorCombo: '連続達成でEXPボーナス。コンボ数が多いほど報酬が増える',
-    JobSkill.warriorFatigueReverse: '疲労度が高いほどEXP倍率が上昇。逆境が強さに変わる',
-    JobSkill.warriorPomodoro: 'ポモドーロタイマー連動。集中時間に応じてEXPボーナス',
-    JobSkill.warriorBushido: '毎日1つクエストを完了するだけでバフが蓄積。継続が力に',
-    JobSkill.clericRepeatAfter: '完了後、指定日数で自動的にクエストを再発行',
-    JobSkill.clericSnooze: 'クエストをスヌーズ（後回し）可能。猶予を与えられる',
-    JobSkill.clericStreak: 'クエストごとの連続完了を記録。ストリークで報酬UP',
-    JobSkill.clericEnlightenment: '週1回、ストリークを守る猶予。中断しても連続記録が消えない',
-    JobSkill.wizardSubtask: 'クエストをサブクエストに分割可能に',
-    JobSkill.wizardTags: 'クエストに札（タグ）を付けて整理・検索',
-    JobSkill.wizardProject: '複数クエストをプロジェクトとしてまとめ、全達成でボーナス',
-    JobSkill.wizardOverview: 'プロジェクト全体を俯瞰し、進捗を一覧表示',
+    JobSkill.samuraiCombo: '連続達成でEXPボーナス。コンボ数が多いほど報酬が増える',
+    JobSkill.samuraiFatigueReverse: '疲労度が高いほどEXP倍率が上昇。逆境が強さに変わる',
+    JobSkill.samuraiPomodoro: 'ポモドーロタイマー連動。集中時間に応じてEXPボーナス',
+    JobSkill.samuraiBushido: '毎日1つクエストを完了するだけでバフが蓄積。継続が力に',
+    JobSkill.monkRepeatAfter: '完了後、指定日数で自動的にクエストを再発行',
+    JobSkill.monkSnooze: 'クエストをスヌーズ（後回し）可能。猶予を与えられる',
+    JobSkill.monkStreak: 'クエストごとの連続完了を記録。ストリークで報酬UP',
+    JobSkill.monkEnlightenment: '週1回、ストリークを守る猶予。中断しても連続記録が消えない',
+    JobSkill.mysticSubtask: 'クエストをサブクエストに分割可能に',
+    JobSkill.mysticTags: 'クエストに札（タグ）を付けて整理・検索',
+    JobSkill.mysticProject: '複数クエストをプロジェクトとしてまとめ、全達成でボーナス',
+    JobSkill.mysticOverview: 'プロジェクト全体を俯瞰し、進捗を一覧表示',
   };
 
   String get description => _descriptions[this] ?? '';
@@ -156,7 +156,7 @@ extension JobSkillMeta on JobSkill {
   }
 }
 
-/// Cleric Lv10: クエストごとの連続完了記録
+/// Monk Lv10: クエストごとの連続完了記録
 class TaskStreak {
   int currentStreak;
   DateTime lastCompletedDate;
@@ -253,10 +253,10 @@ class Player {
   int pomodoroShortBreakMinutes;
   int pomodoroLongBreakMinutes;
   int pomodorosBeforeLongBreak;
-  /// T9: Warrior Lv10 集中の型 — ポモドーロアクティブセッションの開始時刻
+  /// T9: Samurai Lv10 集中の型 — ポモドーロアクティブセッションの開始時刻
   DateTime? pomodoroStartTime;
 
-  /// T10: Warrior Lv15 武士道の極意 — 最終完了日
+  /// T10: Samurai Lv15 武士道の極意 — 最終完了日
   DateTime? lastDailyComplete;
   /// T10: 武士道の極意 — 蓄積バフ（0.1%単位、例: 10 = 1.0%）
   int warriorDailyBuff = 0;
@@ -338,7 +338,7 @@ class Player {
   // --- v4: wizardProject — クエストID→プロジェクト名の逆引きマップ ---
   Map<String, String> taskProjects;
 
-  // --- v4: Cleric スキル用 ---
+  // --- v4: Monk スキル用 ---
   /// Lv5: 微睡みの加護 — snooze済みクエストID → snooze実行日
   Map<String, DateTime> snoozedTasks = {};
   /// Lv10: 連続の誓い — クエストごとの連続完了記録
@@ -539,7 +539,7 @@ class Player {
   // v1.3: レベル上限（powオーバーフロー防止）
   static const int maxLevel = 99;
 
-  /// Cleric Lv5: 微睡みの加護 — クエストのdeadlineを翌日に延期
+  /// Monk Lv5: 微睡みの加護 — クエストのdeadlineを翌日に延期
   void snoozeTask(String taskId, Task task, DateTime now) {
     if (task.deadline == null) return;
     final currentDeadline = task.deadline!;
@@ -548,7 +548,7 @@ class Player {
     snoozedTasks[taskId] = now;
   }
 
-  /// Cleric Lv10: 連続の誓い — クエスト完了を記録しstreakを更新
+  /// Monk Lv10: 連続の誓い — クエスト完了を記録しstreakを更新
   void recordTaskCompletion(String taskId, DateTime completedDate) {
     final today = DateTime(completedDate.year, completedDate.month, completedDate.day);
     final existing = taskStreaks[taskId];
@@ -578,7 +578,7 @@ class Player {
     }
   }
 
-  /// Cleric Lv10: 7日以上のstreakで +20% EXPボーナス
+  /// Monk Lv10: 7日以上のstreakで +20% EXPボーナス
   double getTaskStreakBonus(String taskId) {
     final streak = taskStreaks[taskId];
     if (streak == null) return 1.0;
@@ -1092,7 +1092,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
             [];
       }
     } catch (e) { _log('projects read failed', e); }
-    // v4: Cleric snoozedTasks
+    // v4: Monk snoozedTasks
     try {
       if (reader.availableBytes > 0) {
         final snoozeRaw = reader.readMap();
@@ -1102,7 +1102,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
             {};
       }
     } catch (e) { _log('snoozedTasks read failed', e); }
-    // v4: Cleric taskStreaks
+    // v4: Monk taskStreaks
     try {
       if (reader.availableBytes > 0) {
         final streakRawList = reader.readList();
@@ -1297,9 +1297,9 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.writeList(obj.tags);
     // v4: プロジェクト
     writer.writeList(obj.projects.map((p) => p.toJson()).toList());
-    // v4: Cleric snoozedTasks
+    // v4: Monk snoozedTasks
     writer.writeMap(obj.snoozedTasks);
-    // v4: Cleric taskStreaks
+    // v4: Monk taskStreaks
     writer.writeList(obj.taskStreaks.entries
         .map((e) => {
               'taskId': e.key,

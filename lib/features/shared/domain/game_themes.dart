@@ -60,9 +60,9 @@ class GameThemes {
 
   static ThemeData forJob(Job job) {
     return switch (job) {
-      Job.warrior => warrior,
-      Job.cleric => cleric,
-      Job.wizard => wizard,
+      Job.samurai => warrior,
+      Job.monk => cleric,
+      Job.mystic => wizard,
       Job.adventurer => adventurer,
     };
   }

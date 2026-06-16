@@ -34,7 +34,7 @@ void main() {
     });
 
     testWidgets('戦士の場合Combo表示', (tester) async {
-      final player = Player(currentJob: Job.warrior, comboCount: 5);
+      final player = Player(currentJob: Job.samurai, comboCount: 5);
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -47,7 +47,7 @@ void main() {
     });
 
     testWidgets('戦士以外はCombo非表示', (tester) async {
-      final player = Player(currentJob: Job.cleric, comboCount: 5);
+      final player = Player(currentJob: Job.monk, comboCount: 5);
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(

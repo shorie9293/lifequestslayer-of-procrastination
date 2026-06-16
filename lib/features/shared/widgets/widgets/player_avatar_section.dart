@@ -51,7 +51,7 @@ class PlayerAvatarSection extends StatelessWidget {
                   ),
                 ],
               ),
-              if (player.currentJob == Job.warrior)
+              if (player.currentJob == Job.samurai)
                 Text(
                   "Combo: ${player.comboCount}",
                   style: const TextStyle(
@@ -214,11 +214,11 @@ String _legacySkinPath(String? skinId) {
 /// ジョブ名を日本語で返す
 String getJobName(Job job) {
   switch (job) {
-    case Job.warrior:
+    case Job.samurai:
       return "侍";
-    case Job.cleric:
+    case Job.monk:
       return "法師";
-    case Job.wizard:
+    case Job.mystic:
       return "陰陽師";
     case Job.adventurer:
       return "浪人";

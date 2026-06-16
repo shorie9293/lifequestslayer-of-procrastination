@@ -57,10 +57,10 @@ class SkillNode {
 /// future node is as simple as appending a new entry here — no migrations
 /// needed because [Player.unlockedSkillIds] is a `List<String>`.
 const Map<String, SkillNode> skillTreeDefinition = {
-  // ⚔️ Warrior  —  一閃 → 連撃 → 会心  (2 + 3 + 4)
+  // ⚔️ Samurai  —  一閃 → 連撃 → 会心  (2 + 3 + 4)
   'war_flash': SkillNode(
     id: 'war_flash',
-    tree: Job.warrior,
+    tree: Job.samurai,
     name: '一閃',
     description: '攻撃時、まれに先制攻撃が発動。敵の行動前に追加ダメージを与える',
     pointCost: 2,
@@ -68,7 +68,7 @@ const Map<String, SkillNode> skillTreeDefinition = {
   ),
   'war_combo': SkillNode(
     id: 'war_combo',
-    tree: Job.warrior,
+    tree: Job.samurai,
     name: '連撃',
     description: 'コンボ達成時、追加でEXPを獲得。連撃の回数に応じて報酬が増加する',
     pointCost: 3,
@@ -77,7 +77,7 @@ const Map<String, SkillNode> skillTreeDefinition = {
   ),
   'war_critical': SkillNode(
     id: 'war_critical',
-    tree: Job.warrior,
+    tree: Job.samurai,
     name: '会心',
     description: '会心率が永続的に上昇。討伐時の獲得EXPにクリティカル倍率が乗る',
     pointCost: 4,
@@ -85,10 +85,10 @@ const Map<String, SkillNode> skillTreeDefinition = {
     row: 2,
   ),
 
-  // 🛡️ Cleric  —  祈り → 治癒 → 加護  (2 + 3 + 4)
+  // 🛡️ Monk  —  祈り → 治癒 → 加護  (2 + 3 + 4)
   'cle_prayer': SkillNode(
     id: 'cle_prayer',
-    tree: Job.cleric,
+    tree: Job.monk,
     name: '祈り',
     description: 'クエスト期限の延長が可能に。祈りを捧げて猶予を1日追加する',
     pointCost: 2,
@@ -96,7 +96,7 @@ const Map<String, SkillNode> skillTreeDefinition = {
   ),
   'cle_heal': SkillNode(
     id: 'cle_heal',
-    tree: Job.cleric,
+    tree: Job.monk,
     name: '治癒',
     description: 'クエスト未完了によるペナルティを軽減。連続ログインの保護効果が上昇',
     pointCost: 3,
@@ -105,7 +105,7 @@ const Map<String, SkillNode> skillTreeDefinition = {
   ),
   'cle_ward': SkillNode(
     id: 'cle_ward',
-    tree: Job.cleric,
+    tree: Job.monk,
     name: '加護',
     description: '週1回、ストリーク中断を防ぐ加護が発動。失敗しても連続記録が維持される',
     pointCost: 4,
@@ -113,10 +113,10 @@ const Map<String, SkillNode> skillTreeDefinition = {
     row: 2,
   ),
 
-  // 🔮 Wizard  —  先見 → 分割 → 転移  (2 + 3 + 4)
+  // 🔮 Mystic  —  先見 → 分割 → 転移  (2 + 3 + 4)
   'wiz_foresight': SkillNode(
     id: 'wiz_foresight',
-    tree: Job.wizard,
+    tree: Job.mystic,
     name: '先見',
     description: '未着手クエストの可視化。期限が近いクエストを優先表示する',
     pointCost: 2,
@@ -124,7 +124,7 @@ const Map<String, SkillNode> skillTreeDefinition = {
   ),
   'wiz_split': SkillNode(
     id: 'wiz_split',
-    tree: Job.wizard,
+    tree: Job.mystic,
     name: '分割',
     description: '大クエストをサブクエストに分割可能に。分割数に応じて達成ボーナスが上昇',
     pointCost: 3,
@@ -133,7 +133,7 @@ const Map<String, SkillNode> skillTreeDefinition = {
   ),
   'wiz_transfer': SkillNode(
     id: 'wiz_transfer',
-    tree: Job.wizard,
+    tree: Job.mystic,
     name: '転移',
     description: '未完了クエストの期限を別の日に転移。計画の立て直しが容易になる',
     pointCost: 4,
