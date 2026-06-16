@@ -162,6 +162,7 @@ class _BattlePhaseWidgetState extends State<BattlePhaseWidget>
   Widget _buildEnemyArea() {
     return EnemySprite(
       rank: widget.task.rank,
+      imagePath: widget.task.enemyAssetPath,
       isAttacking: _vfx.currentPhase == BattleState.attacking,
       isDefeated: _vfx.currentPhase == BattleState.defeat,
     );

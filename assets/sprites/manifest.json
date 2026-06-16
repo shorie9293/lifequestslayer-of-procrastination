@@ -1,0 +1,1733 @@
+[
+  {
+    "id": "archer_female_blue",
+    "filename": "archer_female_blue.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "青衣の女弓手",
+    "name_en": "Blue Female Archer",
+    "tags": [
+      "archer",
+      "female"
+    ],
+    "game_usage": [
+      "rpg-task:player_skin"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "armored_figure_black",
+    "filename": "armored_figure_black.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "黒鎧の武人",
+    "name_en": "Black Armored Figure",
+    "tags": [
+      "warrior",
+      "dark"
+    ],
+    "game_usage": [
+      "rpg-task:boss"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "bard_jester_blue",
+    "filename": "bard_jester_blue.png",
+    "category": "characters",
+    "subcategory": "heroes",
+    "name_ja": "青衣の吟遊詩人",
+    "name_en": "Blue Bard Jester",
+    "tags": [
+      "bard",
+      "jester"
+    ],
+    "game_usage": [
+      "tsundoku:character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "boy_blonde_hero",
+    "filename": "boy_blonde_hero.png",
+    "category": "characters",
+    "subcategory": "heroes",
+    "name_ja": "金髪の勇者",
+    "name_en": "Blonde Hero Boy",
+    "tags": [
+      "boy",
+      "hero",
+      "link-like"
+    ],
+    "game_usage": [
+      "tsundoku:main_character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "boy_red_white",
+    "filename": "boy_red_white.png",
+    "category": "characters",
+    "subcategory": "heroes",
+    "name_ja": "紅白衣の少年",
+    "name_en": "Red-White Boy",
+    "tags": [
+      "boy",
+      "hero"
+    ],
+    "game_usage": [
+      "tsundoku:character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "boy_yellow_hair",
+    "filename": "boy_yellow_hair.png",
+    "category": "characters",
+    "subcategory": "heroes",
+    "name_ja": "金髪の少年",
+    "name_en": "Yellow-Haired Boy",
+    "tags": [
+      "boy",
+      "hero"
+    ],
+    "game_usage": [
+      "tsundoku:character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "child_sprite_green",
+    "filename": "child_sprite_green.png",
+    "category": "characters",
+    "subcategory": "villagers",
+    "name_ja": "緑衣の童子",
+    "name_en": "Green Sprite Child",
+    "tags": [
+      "child",
+      "sprite"
+    ],
+    "game_usage": [
+      "tsundoku:companion"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "female_red_clad",
+    "filename": "female_red_clad.png",
+    "category": "characters",
+    "subcategory": "heroes",
+    "name_ja": "紅衣の女傑",
+    "name_en": "Red-Clad Heroine",
+    "tags": [
+      "female",
+      "hero"
+    ],
+    "game_usage": [
+      "rpg-task:npc"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "girl_blue_hair_green_dress",
+    "filename": "girl_blue_hair_green_dress.png",
+    "category": "characters",
+    "subcategory": "heroes",
+    "name_ja": "青髪緑衣の娘",
+    "name_en": "Blue-Haired Green Dress Girl",
+    "tags": [
+      "female",
+      "hero"
+    ],
+    "game_usage": [
+      "tsundoku:character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "girl_blue_hair_red_white",
+    "filename": "girl_blue_hair_red_white.png",
+    "category": "characters",
+    "subcategory": "miko",
+    "name_ja": "青髪紅白の巫女",
+    "name_en": "Blue-Haired Red-White Miko",
+    "tags": [
+      "miko",
+      "female"
+    ],
+    "game_usage": [
+      "rpg-task:npc"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "girl_blue_hair_staff",
+    "filename": "girl_blue_hair_staff.png",
+    "category": "characters",
+    "subcategory": "mages",
+    "name_ja": "青髪の杖術士",
+    "name_en": "Blue-Haired Staff Mage",
+    "tags": [
+      "female",
+      "mage",
+      "staff"
+    ],
+    "game_usage": [
+      "rpg-task:player_class_mystic"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "girl_blue_red_hat",
+    "filename": "girl_blue_red_hat.png",
+    "category": "characters",
+    "subcategory": "heroes",
+    "name_ja": "青赤帽の少女",
+    "name_en": "Blue-Red Hat Girl",
+    "tags": [
+      "female",
+      "hero"
+    ],
+    "game_usage": [
+      "tsundoku:character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "girl_purple_hair_horns",
+    "filename": "girl_purple_hair_horns.png",
+    "category": "characters",
+    "subcategory": "mages",
+    "name_ja": "紫髪の鬼娘",
+    "name_en": "Purple-Haired Oni Girl",
+    "tags": [
+      "oni",
+      "female",
+      "mage"
+    ],
+    "game_usage": [
+      "rpg-task:npc"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "girl_purple_hair_red",
+    "filename": "girl_purple_hair_red.png",
+    "category": "characters",
+    "subcategory": "heroes",
+    "name_ja": "紫髪紅衣の娘",
+    "name_en": "Purple-Haired Red Girl",
+    "tags": [
+      "female",
+      "hero"
+    ],
+    "game_usage": [
+      "tsundoku:character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "girl_purple_hair_white",
+    "filename": "girl_purple_hair_white.png",
+    "category": "characters",
+    "subcategory": "mages",
+    "name_ja": "紫髪白衣の術士",
+    "name_en": "Purple-Haired White Mage",
+    "tags": [
+      "female",
+      "mage"
+    ],
+    "game_usage": [
+      "rpg-task:player_class_mystic"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "girl_purple_red",
+    "filename": "girl_purple_red.png",
+    "category": "characters",
+    "subcategory": "heroes",
+    "name_ja": "紫紅の少女",
+    "name_en": "Purple-Red Girl",
+    "tags": [
+      "female",
+      "hero"
+    ],
+    "game_usage": [
+      "tsundoku:character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "girl_red_hair_green",
+    "filename": "girl_red_hair_green.png",
+    "category": "characters",
+    "subcategory": "heroes",
+    "name_ja": "赤髪緑衣の少女",
+    "name_en": "Red-Haired Green Girl",
+    "tags": [
+      "female",
+      "hero"
+    ],
+    "game_usage": [
+      "tsundoku:character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "girl_red_hair_red",
+    "filename": "girl_red_hair_red.png",
+    "category": "characters",
+    "subcategory": "heroes",
+    "name_ja": "赤髪紅衣の戦姫",
+    "name_en": "Red-Haired Red Warrior",
+    "tags": [
+      "female",
+      "hero"
+    ],
+    "game_usage": [
+      "tsundoku:character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "girl_red_hair_red_dress",
+    "filename": "girl_red_hair_red_dress.png",
+    "category": "characters",
+    "subcategory": "heroes",
+    "name_ja": "赤髪紅衣の乙女",
+    "name_en": "Red-Haired Red Dress Maiden",
+    "tags": [
+      "female",
+      "hero"
+    ],
+    "game_usage": [
+      "tsundoku:character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "girl_red_hair_red_dress_1",
+    "filename": "girl_red_hair_red_dress_1.png",
+    "category": "characters",
+    "subcategory": "heroes",
+    "name_ja": "赤髪紅衣の乙女",
+    "name_en": "Red-Haired Red Dress Maiden",
+    "tags": [
+      "female",
+      "hero"
+    ],
+    "game_usage": [
+      "tsundoku:character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "girl_red_shield",
+    "filename": "girl_red_shield.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "赤盾の少女",
+    "name_en": "Red Shield Girl",
+    "tags": [
+      "female",
+      "shield"
+    ],
+    "game_usage": [
+      "rpg-task:npc"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "mage_green_scholar",
+    "filename": "mage_green_scholar.png",
+    "category": "characters",
+    "subcategory": "mages",
+    "name_ja": "緑衣の学者",
+    "name_en": "Green Scholar Mage",
+    "tags": [
+      "mage",
+      "scholar"
+    ],
+    "game_usage": [
+      "rpg-task:npc",
+      "tsundoku:character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "man_grey_hair_white",
+    "filename": "man_grey_hair_white.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "白髪の老戦士",
+    "name_en": "Grey-Haired Old Warrior",
+    "tags": [
+      "warrior",
+      "elder"
+    ],
+    "game_usage": [
+      "rpg-task:npc"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "miko_red_white",
+    "filename": "miko_red_white.png",
+    "category": "characters",
+    "subcategory": "miko",
+    "name_ja": "紅白の巫女",
+    "name_en": "Red-White Shrine Maiden",
+    "tags": [
+      "miko",
+      "shrine"
+    ],
+    "game_usage": [
+      "rpg-task:npc",
+      "tsundoku:character"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "monk_bald_npc",
+    "filename": "monk_bald_npc.png",
+    "category": "characters",
+    "subcategory": "villagers",
+    "name_ja": "丸腰の僧侶",
+    "name_en": "Bald Monk NPC",
+    "tags": [
+      "monk",
+      "npc"
+    ],
+    "game_usage": [
+      "rpg-task:npc"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "monk_small_villager",
+    "filename": "monk_small_villager.png",
+    "category": "characters",
+    "subcategory": "villagers",
+    "name_ja": "小さな修行僧",
+    "name_en": "Small Monk Villager",
+    "tags": [
+      "monk",
+      "villager"
+    ],
+    "game_usage": [
+      "rpg-task:npc"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "ninja_female_black",
+    "filename": "ninja_female_black.png",
+    "category": "characters",
+    "subcategory": "ninjas",
+    "name_ja": "黒衣の女忍者",
+    "name_en": "Black Female Ninja",
+    "tags": [
+      "ninja",
+      "female"
+    ],
+    "game_usage": [
+      "rpg-task:player_class"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "ninja_green",
+    "filename": "ninja_green.png",
+    "category": "characters",
+    "subcategory": "ninjas",
+    "name_ja": "緑の忍者",
+    "name_en": "Green Ninja",
+    "tags": [
+      "ninja",
+      "stealth"
+    ],
+    "game_usage": [
+      "rpg-task:player_class"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "npc_female_red",
+    "filename": "npc_female_red.png",
+    "category": "characters",
+    "subcategory": "villagers",
+    "name_ja": "赤衣の村娘",
+    "name_en": "Red-Clad Village Girl",
+    "tags": [
+      "female",
+      "npc",
+      "villager"
+    ],
+    "game_usage": [
+      "rpg-task:npc",
+      "tsundoku:npc"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "priest_white_mage",
+    "filename": "priest_white_mage.png",
+    "category": "characters",
+    "subcategory": "mages",
+    "name_ja": "白袍の祈祷師",
+    "name_en": "White Priest Mage",
+    "tags": [
+      "priest",
+      "mage"
+    ],
+    "game_usage": [
+      "rpg-task:player_class_monk"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "samurai_blue_cape",
+    "filename": "samurai_blue_cape.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "青マントの侍",
+    "name_en": "Blue Cape Samurai",
+    "tags": [
+      "samurai",
+      "elite"
+    ],
+    "game_usage": [
+      "rpg-task:player_class_samurai"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "samurai_female_black_yellow",
+    "filename": "samurai_female_black_yellow.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "黒黄の女侍",
+    "name_en": "Black-Yellow Female Samurai",
+    "tags": [
+      "samurai",
+      "female"
+    ],
+    "game_usage": [
+      "rpg-task:player_class_samurai"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_armored_red_cape",
+    "filename": "warrior_armored_red_cape.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "赤マントの重戦士",
+    "name_en": "Red Cape Heavy Warrior",
+    "tags": [
+      "warrior",
+      "heavy_armor"
+    ],
+    "game_usage": [
+      "rpg-task:player_skin"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_blue_hair_sword",
+    "filename": "warrior_blue_hair_sword.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "青髪の剣士",
+    "name_en": "Blue-Haired Swordsman",
+    "tags": [
+      "warrior",
+      "sword"
+    ],
+    "game_usage": [
+      "rpg-task:player_skin"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_blue_horns",
+    "filename": "warrior_blue_horns.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "青角の戦士",
+    "name_en": "Blue-Horned Warrior",
+    "tags": [
+      "warrior",
+      "horned"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_female_blue_hair",
+    "filename": "warrior_female_blue_hair.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "青髪の女戦士",
+    "name_en": "Blue-Haired Female Warrior",
+    "tags": [
+      "warrior",
+      "female"
+    ],
+    "game_usage": [
+      "rpg-task:player_skin"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_female_yellow",
+    "filename": "warrior_female_yellow.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "黄衣の女戦士",
+    "name_en": "Yellow Female Warrior",
+    "tags": [
+      "warrior",
+      "female"
+    ],
+    "game_usage": [
+      "rpg-task:player_skin"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_green_staff",
+    "filename": "warrior_green_staff.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "緑衣の戦士",
+    "name_en": "Green Staff Warrior",
+    "tags": [
+      "hero",
+      "staff"
+    ],
+    "game_usage": [
+      "rpg-task:player_skin",
+      "tsundoku:battle"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_grey_hair",
+    "filename": "warrior_grey_hair.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "灰髪の戦士",
+    "name_en": "Grey-Haired Warrior",
+    "tags": [
+      "warrior"
+    ],
+    "game_usage": [
+      "rpg-task:player_skin"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_monkey",
+    "filename": "warrior_monkey.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "猿の戦士",
+    "name_en": "Monkey Warrior",
+    "tags": [
+      "monkey",
+      "warrior"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_orange_hair",
+    "filename": "warrior_orange_hair.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "橙髪の戦士",
+    "name_en": "Orange-Haired Warrior",
+    "tags": [
+      "warrior"
+    ],
+    "game_usage": [
+      "rpg-task:player_skin"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_red_horned",
+    "filename": "warrior_red_horned.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "赤角の猛者",
+    "name_en": "Red-Horned Warrior",
+    "tags": [
+      "warrior",
+      "horned"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_red_horns",
+    "filename": "warrior_red_horns.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "赤角の戦士",
+    "name_en": "Red-Horned Warrior",
+    "tags": [
+      "warrior",
+      "horned"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_white_hair",
+    "filename": "warrior_white_hair.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "白髪の剣豪",
+    "name_en": "White-Haired Swordsman",
+    "tags": [
+      "warrior",
+      "elite"
+    ],
+    "game_usage": [
+      "rpg-task:boss"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_yellow_armor",
+    "filename": "warrior_yellow_armor.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "黄金鎧の戦士",
+    "name_en": "Golden Armor Warrior",
+    "tags": [
+      "warrior",
+      "gold"
+    ],
+    "game_usage": [
+      "rpg-task:player_skin"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "warrior_yellow_mask",
+    "filename": "warrior_yellow_mask.png",
+    "category": "characters",
+    "subcategory": "warriors",
+    "name_ja": "黄仮面の戦士",
+    "name_en": "Yellow Mask Warrior",
+    "tags": [
+      "warrior",
+      "mask"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "beast_grey_armored",
+    "filename": "beast_grey_armored.png",
+    "category": "monsters",
+    "subcategory": "beasts",
+    "name_ja": "灰色の鎧獣",
+    "name_en": "Grey Armored Beast",
+    "tags": [
+      "beast",
+      "armored"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "demon_green_black_armor",
+    "filename": "demon_green_black_armor.png",
+    "category": "monsters",
+    "subcategory": "demons",
+    "name_ja": "黒鎧の緑鬼",
+    "name_en": "Green Demon Black Armor",
+    "tags": [
+      "demon",
+      "dark"
+    ],
+    "game_usage": [
+      "rpg-task:boss"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "demon_green_multi_arm",
+    "filename": "demon_green_multi_arm.png",
+    "category": "monsters",
+    "subcategory": "demons",
+    "name_ja": "多腕の緑鬼",
+    "name_en": "Green Multi-Armed Demon",
+    "tags": [
+      "demon",
+      "multi-armed"
+    ],
+    "game_usage": [
+      "rpg-task:boss"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "demon_green_shield",
+    "filename": "demon_green_shield.png",
+    "category": "monsters",
+    "subcategory": "demons",
+    "name_ja": "盾持つ緑鬼",
+    "name_en": "Green Shield Demon",
+    "tags": [
+      "demon",
+      "shield"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "demon_head_red_floating",
+    "filename": "demon_head_red_floating.png",
+    "category": "monsters",
+    "subcategory": "yokai",
+    "name_ja": "浮遊する赤鬼面",
+    "name_en": "Floating Red Demon Head",
+    "tags": [
+      "yokai",
+      "floating",
+      "head"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "demon_orange_armored",
+    "filename": "demon_orange_armored.png",
+    "category": "monsters",
+    "subcategory": "demons",
+    "name_ja": "橙鎧の悪魔",
+    "name_en": "Orange Armored Demon",
+    "tags": [
+      "demon",
+      "armored"
+    ],
+    "game_usage": [
+      "rpg-task:boss"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "demon_red_black_armor",
+    "filename": "demon_red_black_armor.png",
+    "category": "monsters",
+    "subcategory": "demons",
+    "name_ja": "黒鎧の赤鬼",
+    "name_en": "Red Demon Black Armor",
+    "tags": [
+      "demon",
+      "dark"
+    ],
+    "game_usage": [
+      "rpg-task:boss"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "demon_red_black_winged",
+    "filename": "demon_red_black_winged.png",
+    "category": "monsters",
+    "subcategory": "demons",
+    "name_ja": "黒翼の赤鬼",
+    "name_en": "Red Black Winged Demon",
+    "tags": [
+      "demon",
+      "winged",
+      "dark"
+    ],
+    "game_usage": [
+      "rpg-task:boss"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "demon_red_green_staff",
+    "filename": "demon_red_green_staff.png",
+    "category": "monsters",
+    "subcategory": "demons",
+    "name_ja": "緑杖の赤鬼",
+    "name_en": "Red Demon Green Staff",
+    "tags": [
+      "demon",
+      "staff"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "demon_red_winged",
+    "filename": "demon_red_winged.png",
+    "category": "monsters",
+    "subcategory": "demons",
+    "name_ja": "赤翼の悪魔",
+    "name_en": "Red Winged Demon",
+    "tags": [
+      "demon",
+      "winged"
+    ],
+    "game_usage": [
+      "rpg-task:boss"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "golem_grey_armored",
+    "filename": "golem_grey_armored.png",
+    "category": "monsters",
+    "subcategory": "demons",
+    "name_ja": "灰色の鎧ゴーレム",
+    "name_en": "Grey Armored Golem",
+    "tags": [
+      "golem",
+      "armored",
+      "boss"
+    ],
+    "game_usage": [
+      "rpg-task:boss"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "ogre_green",
+    "filename": "ogre_green.png",
+    "category": "monsters",
+    "subcategory": "oni",
+    "name_ja": "緑鬼",
+    "name_en": "Green Ogre",
+    "tags": [
+      "oni",
+      "ogre"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "oni_red_horned",
+    "filename": "oni_red_horned.png",
+    "category": "monsters",
+    "subcategory": "oni",
+    "name_ja": "角付き赤鬼",
+    "name_en": "Horned Red Oni",
+    "tags": [
+      "oni",
+      "horned"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "oni_red_samurai",
+    "filename": "oni_red_samurai.png",
+    "category": "monsters",
+    "subcategory": "oni",
+    "name_ja": "赤鬼武者",
+    "name_en": "Red Oni Samurai",
+    "tags": [
+      "oni",
+      "samurai",
+      "demon"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "owl_creature_small",
+    "filename": "owl_creature_small.png",
+    "category": "monsters",
+    "subcategory": "beasts",
+    "name_ja": "小さな梟の怪",
+    "name_en": "Small Owl Creature",
+    "tags": [
+      "owl",
+      "beast",
+      "small"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "skeletal_samurai_dark",
+    "filename": "skeletal_samurai_dark.png",
+    "category": "monsters",
+    "subcategory": "undead",
+    "name_ja": "骸骨武者",
+    "name_en": "Skeletal Samurai",
+    "tags": [
+      "skeleton",
+      "samurai",
+      "undead"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "spirit_white_red_floating",
+    "filename": "spirit_white_red_floating.png",
+    "category": "monsters",
+    "subcategory": "yokai",
+    "name_ja": "浮遊する白赤の魂",
+    "name_en": "White-Red Floating Spirit",
+    "tags": [
+      "yokai",
+      "spirit",
+      "ghost"
+    ],
+    "game_usage": [
+      "rpg-task:enemy"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "axe_golden",
+    "filename": "axe_golden.png",
+    "category": "weapons",
+    "subcategory": "axes",
+    "name_ja": "黄金の斧",
+    "name_en": "Golden Axe",
+    "tags": [
+      "axe",
+      "golden"
+    ],
+    "game_usage": [
+      "rpg-task:weapon"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "axe_golden_1",
+    "filename": "axe_golden_1.png",
+    "category": "weapons",
+    "subcategory": "axes",
+    "name_ja": "黄金の斧",
+    "name_en": "Golden Axe",
+    "tags": [
+      "axe",
+      "golden"
+    ],
+    "game_usage": [
+      "rpg-task:weapon"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "axe_wooden_club",
+    "filename": "axe_wooden_club.png",
+    "category": "weapons",
+    "subcategory": "axes",
+    "name_ja": "木槌斧",
+    "name_en": "Wooden Club Axe",
+    "tags": [
+      "axe",
+      "wooden",
+      "club"
+    ],
+    "game_usage": [
+      "rpg-task:weapon"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "crossbow_gun",
+    "filename": "crossbow_gun.png",
+    "category": "weapons",
+    "subcategory": "bows",
+    "name_ja": "弩弓",
+    "name_en": "Crossbow Gun",
+    "tags": [
+      "crossbow",
+      "ranged"
+    ],
+    "game_usage": [
+      "rpg-task:weapon"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "hammer_mace_heavy",
+    "filename": "hammer_mace_heavy.png",
+    "category": "weapons",
+    "subcategory": "axes",
+    "name_ja": "重鎚メイス",
+    "name_en": "Heavy Hammer Mace",
+    "tags": [
+      "hammer",
+      "mace",
+      "heavy"
+    ],
+    "game_usage": [
+      "rpg-task:weapon"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "katana_red_glowing",
+    "filename": "katana_red_glowing.png",
+    "category": "weapons",
+    "subcategory": "swords",
+    "name_ja": "紅蓮の刀",
+    "name_en": "Red Glowing Katana",
+    "tags": [
+      "katana",
+      "glowing",
+      "fire"
+    ],
+    "game_usage": [
+      "rpg-task:weapon_samurai"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "rapier_thin",
+    "filename": "rapier_thin.png",
+    "category": "weapons",
+    "subcategory": "swords",
+    "name_ja": "細身の剣",
+    "name_en": "Thin Rapier",
+    "tags": [
+      "sword",
+      "rapier"
+    ],
+    "game_usage": [
+      "rpg-task:weapon"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "scythe",
+    "filename": "scythe.png",
+    "category": "weapons",
+    "subcategory": "axes",
+    "name_ja": "大鎌",
+    "name_en": "Scythe",
+    "tags": [
+      "scythe",
+      "dark"
+    ],
+    "game_usage": [
+      "rpg-task:weapon"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "spear_long",
+    "filename": "spear_long.png",
+    "category": "weapons",
+    "subcategory": "spears",
+    "name_ja": "長槍",
+    "name_en": "Long Spear",
+    "tags": [
+      "spear",
+      "polearm"
+    ],
+    "game_usage": [
+      "rpg-task:weapon"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "spear_ornate",
+    "filename": "spear_ornate.png",
+    "category": "weapons",
+    "subcategory": "spears",
+    "name_ja": "飾り槍",
+    "name_en": "Ornate Spear",
+    "tags": [
+      "spear",
+      "ornate"
+    ],
+    "game_usage": [
+      "rpg-task:weapon"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "staff_blue_green",
+    "filename": "staff_blue_green.png",
+    "category": "weapons",
+    "subcategory": "staves",
+    "name_ja": "青緑の杖",
+    "name_en": "Blue-Green Staff",
+    "tags": [
+      "staff",
+      "magic"
+    ],
+    "game_usage": [
+      "rpg-task:weapon_mage"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "staff_golden",
+    "filename": "staff_golden.png",
+    "category": "weapons",
+    "subcategory": "staves",
+    "name_ja": "黄金の杖",
+    "name_en": "Golden Staff",
+    "tags": [
+      "staff",
+      "gold",
+      "magic"
+    ],
+    "game_usage": [
+      "rpg-task:weapon_mage"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "sword_blue_sheathed",
+    "filename": "sword_blue_sheathed.png",
+    "category": "weapons",
+    "subcategory": "swords",
+    "name_ja": "青鞘の剣",
+    "name_en": "Blue Sheathed Sword",
+    "tags": [
+      "sword",
+      "sheathed"
+    ],
+    "game_usage": [
+      "rpg-task:weapon"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "sword_curved_blue_green",
+    "filename": "sword_curved_blue_green.png",
+    "category": "weapons",
+    "subcategory": "swords",
+    "name_ja": "青緑の曲刀",
+    "name_en": "Blue-Green Curved Sword",
+    "tags": [
+      "sword",
+      "curved"
+    ],
+    "game_usage": [
+      "rpg-task:weapon"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "sword_wooden_large",
+    "filename": "sword_wooden_large.png",
+    "category": "weapons",
+    "subcategory": "swords",
+    "name_ja": "大木刀",
+    "name_en": "Large Wooden Sword",
+    "tags": [
+      "sword",
+      "wooden",
+      "training"
+    ],
+    "game_usage": [
+      "rpg-task:weapon_training"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "fan_red_flower",
+    "filename": "fan_red_flower.png",
+    "category": "items",
+    "subcategory": "equipment",
+    "name_ja": "紅花扇",
+    "name_en": "Red Flower Fan",
+    "tags": [
+      "fan",
+      "flower"
+    ],
+    "game_usage": [
+      "rpg-task:item"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "gem_red_ui",
+    "filename": "gem_red_ui.png",
+    "category": "items",
+    "subcategory": "treasures",
+    "name_ja": "紅宝玉",
+    "name_en": "Red Gem",
+    "tags": [
+      "gem",
+      "red",
+      "currency"
+    ],
+    "game_usage": [
+      "rpg-task:currency"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "lantern_red_hanging",
+    "filename": "lantern_red_hanging.png",
+    "category": "items",
+    "subcategory": "equipment",
+    "name_ja": "赤提灯",
+    "name_en": "Red Hanging Lantern",
+    "tags": [
+      "lantern",
+      "red"
+    ],
+    "game_usage": [
+      "rpg-task:prop"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "lantern_red_round",
+    "filename": "lantern_red_round.png",
+    "category": "items",
+    "subcategory": "equipment",
+    "name_ja": "丸赤提灯",
+    "name_en": "Round Red Lantern",
+    "tags": [
+      "lantern",
+      "round"
+    ],
+    "game_usage": [
+      "rpg-task:prop"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "lantern_red_round_1",
+    "filename": "lantern_red_round_1.png",
+    "category": "items",
+    "subcategory": "equipment",
+    "name_ja": "丸赤提灯",
+    "name_en": "Round Red Lantern",
+    "tags": [
+      "lantern",
+      "round"
+    ],
+    "game_usage": [
+      "rpg-task:prop"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "map_scroll",
+    "filename": "map_scroll.png",
+    "category": "items",
+    "subcategory": "scrolls",
+    "name_ja": "地図の巻物",
+    "name_en": "Map Scroll",
+    "tags": [
+      "scroll",
+      "map"
+    ],
+    "game_usage": [
+      "rpg-task:item"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "shield_white_gold",
+    "filename": "shield_white_gold.png",
+    "category": "items",
+    "subcategory": "equipment",
+    "name_ja": "白金の盾",
+    "name_en": "White-Gold Shield",
+    "tags": [
+      "shield",
+      "gold"
+    ],
+    "game_usage": [
+      "rpg-task:equipment"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "shield_wooden_emblem",
+    "filename": "shield_wooden_emblem.png",
+    "category": "items",
+    "subcategory": "equipment",
+    "name_ja": "木盾（紋章付）",
+    "name_en": "Wooden Shield Emblem",
+    "tags": [
+      "shield",
+      "wooden"
+    ],
+    "game_usage": [
+      "rpg-task:equipment"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "staff_sun_key",
+    "filename": "staff_sun_key.png",
+    "category": "items",
+    "subcategory": "keys",
+    "name_ja": "日輪の鍵杖",
+    "name_en": "Sun Staff Key",
+    "tags": [
+      "staff",
+      "key",
+      "sun"
+    ],
+    "game_usage": [
+      "rpg-task:quest_item"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "treasure_chest",
+    "filename": "treasure_chest.png",
+    "category": "items",
+    "subcategory": "treasures",
+    "name_ja": "宝箱",
+    "name_en": "Treasure Chest",
+    "tags": [
+      "chest",
+      "treasure",
+      "loot"
+    ],
+    "game_usage": [
+      "rpg-task:loot",
+      "tsundoku:reward"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "gate_entrance_large",
+    "filename": "gate_entrance_large.png",
+    "category": "buildings",
+    "subcategory": "gates",
+    "name_ja": "大門",
+    "name_en": "Large Gate Entrance",
+    "tags": [
+      "gate",
+      "entrance"
+    ],
+    "game_usage": [
+      "rpg-task:town"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "gate_large",
+    "filename": "gate_large.png",
+    "category": "buildings",
+    "subcategory": "gates",
+    "name_ja": "大門",
+    "name_en": "Large Gate",
+    "tags": [
+      "gate",
+      "large"
+    ],
+    "game_usage": [
+      "rpg-task:town"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "house_japanese_traditional",
+    "filename": "house_japanese_traditional.png",
+    "category": "buildings",
+    "subcategory": "houses",
+    "name_ja": "日本家屋",
+    "name_en": "Traditional Japanese House",
+    "tags": [
+      "house",
+      "traditional",
+      "minka"
+    ],
+    "game_usage": [
+      "rpg-task:town"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "house_traditional",
+    "filename": "house_traditional.png",
+    "category": "buildings",
+    "subcategory": "houses",
+    "name_ja": "伝統家屋",
+    "name_en": "Traditional House",
+    "tags": [
+      "house",
+      "traditional"
+    ],
+    "game_usage": [
+      "rpg-task:town"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "lantern_stone",
+    "filename": "lantern_stone.png",
+    "category": "buildings",
+    "subcategory": "lanterns",
+    "name_ja": "石灯籠",
+    "name_en": "Stone Lantern",
+    "tags": [
+      "lantern",
+      "stone"
+    ],
+    "game_usage": [
+      "rpg-task:town"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "lantern_stone_small",
+    "filename": "lantern_stone_small.png",
+    "category": "buildings",
+    "subcategory": "lanterns",
+    "name_ja": "小さな石灯籠",
+    "name_en": "Small Stone Lantern",
+    "tags": [
+      "lantern",
+      "stone"
+    ],
+    "game_usage": [
+      "rpg-task:town"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "minka_house_small",
+    "filename": "minka_house_small.png",
+    "category": "buildings",
+    "subcategory": "houses",
+    "name_ja": "小さな民家",
+    "name_en": "Small Minka House",
+    "tags": [
+      "house",
+      "minka"
+    ],
+    "game_usage": [
+      "rpg-task:town"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "shop_house_small",
+    "filename": "shop_house_small.png",
+    "category": "buildings",
+    "subcategory": "houses",
+    "name_ja": "小さな商店",
+    "name_en": "Small Shop House",
+    "tags": [
+      "shop",
+      "house",
+      "small"
+    ],
+    "game_usage": [
+      "rpg-task:town",
+      "tsundoku:map"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "shrine_temple",
+    "filename": "shrine_temple.png",
+    "category": "buildings",
+    "subcategory": "shrines",
+    "name_ja": "社殿",
+    "name_en": "Shrine Temple",
+    "tags": [
+      "shrine",
+      "temple",
+      "large"
+    ],
+    "game_usage": [
+      "rpg-task:town"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "shrine_temple_small",
+    "filename": "shrine_temple_small.png",
+    "category": "buildings",
+    "subcategory": "shrines",
+    "name_ja": "小さな社",
+    "name_en": "Small Shrine Temple",
+    "tags": [
+      "shrine",
+      "temple"
+    ],
+    "game_usage": [
+      "rpg-task:town",
+      "tsundoku:map"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "torii_gate",
+    "filename": "torii_gate.png",
+    "category": "buildings",
+    "subcategory": "gates",
+    "name_ja": "鳥居",
+    "name_en": "Torii Gate",
+    "tags": [
+      "torii",
+      "gate",
+      "shrine"
+    ],
+    "game_usage": [
+      "rpg-task:town",
+      "tsundoku:map"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  },
+  {
+    "id": "torii_gate_red",
+    "filename": "torii_gate_red.png",
+    "category": "buildings",
+    "subcategory": "gates",
+    "name_ja": "赤い鳥居",
+    "name_en": "Red Torii Gate",
+    "tags": [
+      "torii",
+      "red",
+      "gate"
+    ],
+    "game_usage": [
+      "rpg-task:town",
+      "tsundoku:map"
+    ],
+    "size": "115x115",
+    "source": "grid_10x10"
+  }
+]

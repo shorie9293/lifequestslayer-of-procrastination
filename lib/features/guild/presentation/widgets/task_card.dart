@@ -185,10 +185,43 @@ class _TaskCardState extends State<TaskCard>
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(
-              _getRankEnemyEmoji(_task.rank),
-              style: TextStyle(fontSize: emojiSize),
-            ),
+            if (_task.enemyAssetPath != null)
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  ClipOval(
+                    child: Image.asset(
+                      _task.enemyAssetPath!,
+                      width: size * 0.7,
+                      height: size * 0.7,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => Text(
+                        _getRankEnemyEmoji(_task.rank),
+                        style: TextStyle(fontSize: emojiSize),
+                      ),
+                    ),
+                  ),
+                  if (_task.enemyXpMultiplier > 1.0)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(1),
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFFD700),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Text('⭐',
+                            style: TextStyle(fontSize: 10)),
+                      ),
+                    ),
+                ],
+              )
+            else
+              Text(
+                _getRankEnemyEmoji(_task.rank),
+                style: TextStyle(fontSize: emojiSize),
+              ),
             if (enhanceUrgent)
               const Text('🔥', style: TextStyle(fontSize: 12)),
           ],

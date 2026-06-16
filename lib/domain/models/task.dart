@@ -117,6 +117,8 @@ class Task {
   int? repeatAfterDays; // Monk Lv1 後追いの祈り: N日後に再活性化
   List<String> tags; // wizardTags: 札（タグ）
   DateTime? cancelledAt; // M12: 手動取消時刻。autoDeploy時に再配備を抑制する
+  String? enemyAssetPath; // M13: 敵グラフィックのアセットパス（ランク別ランダム割当）
+  double enemyXpMultiplier; // M14: 敵討伐時の経験値倍率（希少種=1.5, 通常=1.0）
 
   Task({
     required this.id,
@@ -134,6 +136,8 @@ class Task {
     this.repeatAfterDays,
     List<String>? tags,
     this.cancelledAt,
+    this.enemyAssetPath,
+    this.enemyXpMultiplier = 1.0,
   })  : subTasks = subTasks ?? [],
         repeatWeekdays = repeatWeekdays ?? [],
         tags = tags ?? [];
@@ -179,6 +183,8 @@ class Task {
         'repeatAfterDays': repeatAfterDays,
         'tags': tags,
         'cancelledAt': cancelledAt?.toIso8601String(),
+        'enemyAssetPath': enemyAssetPath,
+        'enemyXpMultiplier': enemyXpMultiplier,
       };
 
   factory Task.fromJson(Map<String, dynamic> json) {
@@ -210,6 +216,8 @@ class Task {
       cancelledAt: json['cancelledAt'] != null
           ? DateTime.parse(json['cancelledAt'] as String)
           : null,
+      enemyAssetPath: json['enemyAssetPath'] as String?,
+      enemyXpMultiplier: (json['enemyXpMultiplier'] as num?)?.toDouble() ?? 1.0,
     );
   }
 }
@@ -243,6 +251,16 @@ class TaskAdapter extends TypeAdapter<Task> {
       } catch (_) {
         // M12: 旧データには cancelledAt がないためフォールバック
       }
+      try {
+        task.enemyAssetPath = reader.read();
+      } catch (_) {
+        // M13: 旧データには enemyAssetPath がないためフォールバック
+      }
+      try {
+        task.enemyXpMultiplier = reader.read();
+      } catch (_) {
+        // M14: 旧データには enemyXpMultiplier がないためフォールバック
+      }
     } catch (e) {
       // 過去のデータを読み込んだ場合のフォールバック
     }
@@ -266,5 +284,7 @@ class TaskAdapter extends TypeAdapter<Task> {
     writer.write(obj.repeatAfterDays);
     writer.write(obj.tags);
     writer.write(obj.cancelledAt);
+    writer.write(obj.enemyAssetPath);
+    writer.write(obj.enemyXpMultiplier);
   }
 }

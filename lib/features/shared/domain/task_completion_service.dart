@@ -97,6 +97,16 @@ class TaskCompletionService {
       QuestRank.B => 100,
     };
 
+    // M14: 希少種討伐ボーナス（レア敵の討伐で経験値増加）
+    if (task.enemyXpMultiplier > 1.0) {
+      final prevExp = expGain;
+      expGain = (expGain * task.enemyXpMultiplier).round();
+      final bonus = expGain - prevExp;
+      if (bonus > 0) {
+        bonusMessages.add("✨ 希少種討伐ボーナス！ +$bonus EXP");
+      }
+    }
+
     // v2.1: 祈り (cle_prayer) + 先見 (wiz_foresight) passive base EXP multiplier
     if (skillEffects.hasPrayer) {
       final prev = expGain;

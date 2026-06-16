@@ -53,6 +53,7 @@ flutter:
     - assets/data/
     - assets/animations/
     - assets/audio/
+    - assets/sprites/
 
 flutter_launcher_icons:
   android: true
