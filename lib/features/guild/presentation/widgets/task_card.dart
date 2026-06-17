@@ -161,8 +161,14 @@ class _TaskCardState extends State<TaskCard>
       child: Container(
         margin: EdgeInsets.all(enhanceUrgent ? 2.0 : 3.0),
         decoration: BoxDecoration(
-          color: const Color(0xFF1A1A2E),
+          color: hasSprite ? null : const Color(0xFF1A1A2E),
           shape: BoxShape.circle,
+          image: hasSprite
+              ? DecorationImage(
+                  image: AssetImage(_task.enemyAssetPath!),
+                  fit: BoxFit.cover,
+                )
+              : null,
           boxShadow: [
             BoxShadow(
               color: glowColor.withValues(alpha: 0.3),
@@ -170,16 +176,12 @@ class _TaskCardState extends State<TaskCard>
             ),
           ],
         ),
-        child: ClipOval(
-          child: hasSprite
-              ? Image.asset(
-                  _task.enemyAssetPath!,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) =>
-                      const Icon(Icons.broken_image, color: Colors.white38, size: 24),
-                )
-              : const Icon(Icons.help_outline, color: Colors.white38, size: 24),
-        ),
+        child: hasSprite
+            ? const SizedBox.shrink()
+            : const Center(
+                child: Icon(Icons.help_outline,
+                    color: Colors.white38, size: 24),
+              ),
       ),
     );
   }
