@@ -122,8 +122,7 @@ class _TaskCardState extends State<TaskCard>
     }
   }
 
-  /// 修練場（active）の敵アバターを構築。
-  /// 緊急時は炎エフェクト＋拡大で一段階強化する。
+  /// 敵アバター — 修練場・寄合所の両方で表示。緊急時は炎エフェクト＋拡大。
   Widget _buildEnemyAvatar(Color textColor) {
     final bool enhanceUrgent = widget.isUrgent;
     final double size = enhanceUrgent ? 64.0 : 56.0;
@@ -136,6 +135,8 @@ class _TaskCardState extends State<TaskCard>
         : _getRankBorderColor(_task.rank);
     final double glowAlpha = enhanceUrgent ? 0.9 : 0.7;
     final double blurRadius = enhanceUrgent ? 20.0 : 14.0;
+
+    final bool hasSprite = _task.enemyAssetPath != null && _task.enemyAssetPath!.isNotEmpty;
 
     return Container(
       width: size,
@@ -169,37 +170,15 @@ class _TaskCardState extends State<TaskCard>
             ),
           ],
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (_task.enemyAssetPath != null && _task.enemyAssetPath!.isNotEmpty)
-              Container(
-                width: size * 0.7,
-                height: size * 0.7,
-                decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.6),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Text('🆗', style: TextStyle(fontSize: 14, color: Colors.white)),
-                ),
-              )
-            else
-              Container(
-                width: size * 0.7,
-                height: size * 0.7,
-                decoration: BoxDecoration(
-                  color: Colors.red.withValues(alpha: 0.6),
-                  shape: BoxShape.circle,
-                ),
-                child: const Center(
-                  child: Text('NG', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            if (enhanceUrgent)
-              const Text('🔥', style: TextStyle(fontSize: 12)),
-          ],
+        child: ClipOval(
+          child: hasSprite
+              ? Image.asset(
+                  _task.enemyAssetPath!,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                      const Icon(Icons.broken_image, color: Colors.white38, size: 24),
+                )
+              : const Icon(Icons.help_outline, color: Colors.white38, size: 24),
         ),
       ),
     );
@@ -244,7 +223,9 @@ class _TaskCardState extends State<TaskCard>
                 textColor: textColor,
                 tilePadding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                leading: _task.status == TaskStatus.active
+                leading: (_task.status == TaskStatus.active ||
+                        (_task.enemyAssetPath != null &&
+                            _task.enemyAssetPath!.isNotEmpty))
                     ? _buildEnemyAvatar(textColor)
                     : Container(
                         width: 48,
