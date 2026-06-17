@@ -186,44 +186,28 @@ class _TaskCardState extends State<TaskCard>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (_task.enemyAssetPath != null && _task.enemyAssetPath!.isNotEmpty)
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  ClipOval(
-                    child: Image.asset(
-                      _task.enemyAssetPath!,
-                      width: size * 0.7,
-                      height: size * 0.7,
-                      fit: BoxFit.contain,
-                      errorBuilder: (_, error, stackTrace) {
-                        debugPrint('[TaskCard] スプライト読込失敗: $_task.enemyAssetPath error=$error');
-                        return Text(
-                          '🖼️',
-                          style: TextStyle(fontSize: emojiSize),
-                        );
-                      },
-                    ),
-                  ),
-                  if (_task.enemyXpMultiplier > 1.0)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(1),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFFD700),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Text('⭐',
-                            style: TextStyle(fontSize: 10)),
-                      ),
-                    ),
-                ],
+              Container(
+                width: size * 0.7,
+                height: size * 0.7,
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.6),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Text('🆗', style: TextStyle(fontSize: 14, color: Colors.white)),
+                ),
               )
             else
-              Text(
-                '[${_getRankEnemyEmoji(_task.rank)}]',
-                style: TextStyle(fontSize: emojiSize * 0.8),
+              Container(
+                width: size * 0.7,
+                height: size * 0.7,
+                decoration: BoxDecoration(
+                  color: Colors.red.withValues(alpha: 0.6),
+                  shape: BoxShape.circle,
+                ),
+                child: const Center(
+                  child: Text('NG', style: TextStyle(fontSize: 10, color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
               ),
             if (enhanceUrgent)
               const Text('🔥', style: TextStyle(fontSize: 12)),
