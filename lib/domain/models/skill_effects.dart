@@ -154,6 +154,13 @@ const Map<String, SkillEffectConfig> skillEffectConfig = {
     critMultiplier: 2.0,
   ),
 
+  // 残心 (Zanshin) — Post-battle reflection toggle. No EXP effect; behavioural only.
+  'war_zanshin': SkillEffectConfig(
+    nodeId: 'war_zanshin',
+    tree: Job.samurai,
+    baseExpMultiplier: 1.0,
+  ),
+
   // ═══ Monk Path — Healing / Buffs ═══
   //
   // Theme: Damage mitigation. Reduces losses rather than adding gains,

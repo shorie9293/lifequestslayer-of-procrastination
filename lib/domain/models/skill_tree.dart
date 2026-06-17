@@ -84,6 +84,15 @@ const Map<String, SkillNode> skillTreeDefinition = {
     prerequisites: ['war_combo'],
     row: 2,
   ),
+  'war_zanshin': SkillNode(
+    id: 'war_zanshin',
+    tree: Job.samurai,
+    name: '残心',
+    description: '討伐後、残心の刻が発動。会心⚔️か戒め💧で振り返り、己を省みる',
+    pointCost: 4,
+    prerequisites: ['war_combo'],
+    row: 2,
+  ),
 
   // 🛡️ Monk  —  祈り → 治癒 → 加護  (2 + 3 + 4)
   'cle_prayer': SkillNode(

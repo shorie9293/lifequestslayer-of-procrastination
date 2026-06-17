@@ -51,14 +51,14 @@ void main() {
       expect(totalSpentSkillPoints(['war_flash', 'war_combo', 'war_critical']), 9);
     });
 
-    test('全ノード解放で 27 ポイント', () {
+    test('全ノード解放で 31 ポイント', () {
       expect(
         totalSpentSkillPoints([
-          'war_flash', 'war_combo', 'war_critical',
+          'war_flash', 'war_combo', 'war_critical', 'war_zanshin',
           'cle_prayer', 'cle_heal', 'cle_ward',
           'wiz_foresight', 'wiz_split', 'wiz_transfer',
         ]),
-        27,
+        31,
       );
     });
   });
@@ -76,25 +76,29 @@ void main() {
       expect(availableSkillPoints(6, ['war_flash']), 0);
     });
 
-    test('Lv6 冒険者、全解放しようとすると -25（不可能）', () {
+    test('Lv6 冒険者、全解放しようとすると -29（不可能）', () {
       final all = [
-        'war_flash', 'war_combo', 'war_critical',
+        'war_flash', 'war_combo', 'war_critical', 'war_zanshin',
         'cle_prayer', 'cle_heal', 'cle_ward',
         'wiz_foresight', 'wiz_split', 'wiz_transfer',
       ];
-      expect(availableSkillPoints(6, all), -25);
+      expect(availableSkillPoints(6, all), -29);
     });
   });
 
   // ━━━ スキルノード定義 ━━━
 
   group('skillTreeDefinition', () {
-    test('9 ノードが定義されている', () {
-      expect(skillTreeDefinition.length, 9);
+    test('10 ノードが定義されている', () {
+      expect(skillTreeDefinition.length, 10);
     });
 
-    test('各ツリーに 3 ノードずつ', () {
-      for (final tree in [Job.samurai, Job.monk, Job.mystic]) {
+    test('各ツリーのノード数が正しい', () {
+      // Samurai has 4 nodes (incl. war_zanshin), Monk/Mystic have 3 each
+      final samuraiNodes =
+          skillTreeDefinition.values.where((n) => n.tree == Job.samurai).toList();
+      expect(samuraiNodes.length, 4, reason: 'Samurai should have 4 nodes');
+      for (final tree in [Job.monk, Job.mystic]) {
         final nodes =
             skillTreeDefinition.values.where((n) => n.tree == tree).toList();
         expect(nodes.length, 3, reason: 'Tree $tree should have 3 nodes');
@@ -115,13 +119,28 @@ void main() {
       }
     });
 
-    test('各パスのコスト合計は 9', () {
-      for (final tree in [Job.samurai, Job.monk, Job.mystic]) {
+    test('各パスのコスト合計が正しい', () {
+      // Samurai: 2+3+4+4 = 13
+      final samuraiTotal = skillTreeDefinition.values
+          .where((n) => n.tree == Job.samurai)
+          .fold<int>(0, (sum, n) => sum + n.pointCost);
+      expect(samuraiTotal, 13, reason: 'Samurai path total cost mismatch');
+      // Monk/Mystic: 2+3+4 = 9
+      for (final tree in [Job.monk, Job.mystic]) {
         final total = skillTreeDefinition.values
             .where((n) => n.tree == tree)
             .fold<int>(0, (sum, n) => sum + n.pointCost);
         expect(total, 9, reason: 'Path $tree total cost mismatch');
       }
+    });
+    test('war_zanshinノードの定義が正しい', () {
+      final node = skillTreeDefinition['war_zanshin'];
+      expect(node, isNotNull, reason: 'war_zanshin should exist');
+      expect(node!.id, 'war_zanshin');
+      expect(node.tree, Job.samurai);
+      expect(node.pointCost, 4);
+      expect(node.prerequisites, ['war_combo']);
+      expect(node.row, 2);
     });
   });
 

@@ -88,8 +88,8 @@ class _BattleReportDialogState extends State<BattleReportDialog> {
 
     final isSamurai = widget.player?.isSamuraiLine ?? false;
 
-    if (isSamurai) {
-      // 侍系 → 残心【初段】ダイアログ
+    if (isSamurai && widget.player?.unlockedSkillIds.contains('war_zanshin') == true) {
+      // 侍系 + 残心解放済 → 残心【初段】ダイアログ
       ZanshinDialog.show(
         context,
         taskId: widget.taskId!,
@@ -104,6 +104,9 @@ class _BattleReportDialogState extends State<BattleReportDialog> {
         },
         player: widget.player,
       );
+    } else if (isSamurai) {
+      // 侍系だが残心未解放（浪人フロー）→ 即完了
+      widget.onReflectionSubmit?.call();
     } else {
       // 非侍系 → 既存の振り返りダイアログ
       ReflectionInputDialog.show(

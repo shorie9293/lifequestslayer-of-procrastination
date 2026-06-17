@@ -8,14 +8,14 @@ void main() {
   // ━━━ Configuration completeness ━━━
 
   group('skillEffectConfig', () {
-    test('9 nodes have effect configs defined', () {
-      expect(skillEffectConfig.length, 9);
+    test('10 nodes have effect configs defined', () {
+      expect(skillEffectConfig.length, 10);
     });
 
-    test('all 9 skill tree node IDs have matching effect configs', () {
+    test('all 10 skill tree node IDs have matching effect configs', () {
       // skillTreeDefinition keys from skill_tree.dart
       const expectedIds = {
-        'war_flash', 'war_combo', 'war_critical',
+        'war_flash', 'war_combo', 'war_critical', 'war_zanshin',
         'cle_prayer', 'cle_heal', 'cle_ward',
         'wiz_foresight', 'wiz_split', 'wiz_transfer',
       };
@@ -26,6 +26,7 @@ void main() {
       expect(skillEffectConfig['war_flash']!.tree, Job.samurai);
       expect(skillEffectConfig['war_combo']!.tree, Job.samurai);
       expect(skillEffectConfig['war_critical']!.tree, Job.samurai);
+      expect(skillEffectConfig['war_zanshin']!.tree, Job.samurai);
       expect(skillEffectConfig['cle_prayer']!.tree, Job.monk);
       expect(skillEffectConfig['cle_heal']!.tree, Job.monk);
       expect(skillEffectConfig['cle_ward']!.tree, Job.monk);
@@ -196,6 +197,25 @@ void main() {
         if (bonus > 0) break;
       }
       expect(bonus, 500); // (2.0 - 1.0) * 500 = 500 bonus
+    });
+  });
+
+  // ━━━ Warrior — 残心 (war_zanshin) ━━━
+
+  group('SkillEffectService — war_zanshin', () {
+    test('hasZanshin is true when unlocked', () {
+      final svc = SkillEffectService(['war_zanshin']);
+      expect(svc.hasZanshin, true);
+    });
+
+    test('hasZanshin is false when not unlocked', () {
+      final svc = SkillEffectService([]);
+      expect(svc.hasZanshin, false);
+    });
+
+    test('hasZanshin is false when only other warrior nodes unlocked', () {
+      final svc = SkillEffectService(['war_flash', 'war_combo', 'war_critical']);
+      expect(svc.hasZanshin, false);
     });
   });
 
@@ -390,17 +410,18 @@ void main() {
       expect(SkillEffectService([]).unlockedCount, 0);
       expect(SkillEffectService(['war_flash', 'cle_heal']).unlockedCount, 2);
       expect(SkillEffectService([
-        'war_flash', 'war_combo', 'war_critical',
+        'war_flash', 'war_combo', 'war_critical', 'war_zanshin',
         'cle_prayer', 'cle_heal', 'cle_ward',
         'wiz_foresight', 'wiz_split', 'wiz_transfer',
-      ]).unlockedCount, 9);
+      ]).unlockedCount, 10);
     });
 
-    test('full Warrior path: all 3 nodes active', () {
-      final svc = SkillEffectService(['war_flash', 'war_combo', 'war_critical']);
+    test('full Warrior path: all 4 nodes active', () {
+      final svc = SkillEffectService(['war_flash', 'war_combo', 'war_critical', 'war_zanshin']);
       expect(svc.hasFlash, true);
       expect(svc.hasCombo, true);
       expect(svc.hasCritical, true);
+      expect(svc.hasZanshin, true);
       expect(svc.comboExpPerCount, 20);
       expect(svc.comboStepBonus, 0.05);
       // Cleric/Wizard are false
@@ -463,7 +484,7 @@ void main() {
 
       // All three paths combined:
       final svc = SkillEffectService([
-        'war_flash', 'war_combo', 'war_critical',
+        'war_flash', 'war_combo', 'war_critical', 'war_zanshin',
         'cle_prayer', 'cle_heal', 'cle_ward',
         'wiz_foresight', 'wiz_split', 'wiz_transfer',
       ]);
@@ -473,8 +494,8 @@ void main() {
       // Total potential is reasonable for 27 skill points (Lv81)
     });
 
-    test('each path costs 9 points total', () {
-      // Warrior: 2+3+4 = 9
+    test('each path costs 9 points for base 3 nodes', () {
+      // Warrior base: 2+3+4 = 9, plus war_zanshin: +4 = 13
       // Cleric: 2+3+4 = 9
       // Wizard: 2+3+4 = 9
       // This is verified in skill_tree_test.dart

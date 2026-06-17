@@ -67,6 +67,9 @@ class SkillEffectService {
   /// Whether 会心 is unlocked.
   bool get hasCritical => _has('war_critical');
 
+  /// Whether 残心 is unlocked.
+  bool get hasZanshin => _has('war_zanshin');
+
   /// Apply 会心 (war_critical): [critChance]% chance for [critMultiplier]× EXP.
   /// Returns the additional EXP from the crit (0 if chance fails).
   int applyCritical(int exp, Random rng) {
