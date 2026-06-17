@@ -185,7 +185,7 @@ class _TaskCardState extends State<TaskCard>
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (_task.enemyAssetPath != null)
+            if (_task.enemyAssetPath != null && _task.enemyAssetPath!.isNotEmpty)
               Stack(
                 alignment: Alignment.center,
                 children: [
@@ -195,10 +195,13 @@ class _TaskCardState extends State<TaskCard>
                       width: size * 0.7,
                       height: size * 0.7,
                       fit: BoxFit.contain,
-                      errorBuilder: (_, __, ___) => Text(
-                        _getRankEnemyEmoji(_task.rank),
-                        style: TextStyle(fontSize: emojiSize),
-                      ),
+                      errorBuilder: (_, error, stackTrace) {
+                        debugPrint('[TaskCard] スプライト読込失敗: $_task.enemyAssetPath error=$error');
+                        return Text(
+                          '🖼️',
+                          style: TextStyle(fontSize: emojiSize),
+                        );
+                      },
                     ),
                   ),
                   if (_task.enemyXpMultiplier > 1.0)
@@ -219,8 +222,8 @@ class _TaskCardState extends State<TaskCard>
               )
             else
               Text(
-                _getRankEnemyEmoji(_task.rank),
-                style: TextStyle(fontSize: emojiSize),
+                '[${_getRankEnemyEmoji(_task.rank)}]',
+                style: TextStyle(fontSize: emojiSize * 0.8),
               ),
             if (enhanceUrgent)
               const Text('🔥', style: TextStyle(fontSize: 12)),
