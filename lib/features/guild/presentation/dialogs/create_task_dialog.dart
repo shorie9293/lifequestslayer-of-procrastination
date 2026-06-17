@@ -6,7 +6,6 @@ import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
-import 'package:rpg_todo/features/battle/domain/enemy_asset_service.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// クエスト作成/編集ダイアログ
@@ -144,11 +143,6 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
         targetTimeMinutes: targetTime,
         deadline: _deadline,
       );
-      // M14: 新規クエストにランダムな敵グラフィックを割り当て
-      final enemyEntry = EnemyAssetService.randomEntryForRank(_selectedRank);
-      final newTask = taskVM.tasks.last;
-      newTask.enemyAssetPath = enemyEntry.assetPath;
-      newTask.enemyXpMultiplier = enemyEntry.xpMultiplier;
     } else {
       taskVM.editTask(
         widget.task!.id,

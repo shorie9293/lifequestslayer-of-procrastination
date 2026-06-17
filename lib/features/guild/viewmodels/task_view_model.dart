@@ -10,6 +10,7 @@ import 'package:rpg_todo/core/utils/date_utils.dart';
 import 'package:rpg_todo/features/kozuchi/domain/kozuchi_quest_model.dart';
 import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/battle/domain/enemy_asset_service.dart';
 import 'package:injectable/injectable.dart';
 
 /// クエストのCRUDと操作を管理するViewModel
@@ -134,6 +135,7 @@ class TaskViewModel extends ChangeNotifier {
        List<SubTask>? subTasks,
        int? targetTimeMinutes,
        DateTime? deadline}) {
+    final enemyEntry = EnemyAssetService.randomEntryForRank(rank);
     _tasks.add(Task(
         id: const Uuid().v4(),
         title: title,
@@ -142,14 +144,22 @@ class TaskViewModel extends ChangeNotifier {
         repeatWeekdays: repeatWeekdays,
         subTasks: subTasks,
         targetTimeMinutes: targetTimeMinutes,
-        deadline: deadline));
+        deadline: deadline,
+        enemyAssetPath: enemyEntry.assetPath,
+        enemyXpMultiplier: enemyEntry.xpMultiplier));
     notifyListeners();
     _autoSave();
   }
 
   void addTasks(List<String> titles, QuestRank rank) {
     for (final title in titles) {
-      _tasks.add(Task(id: const Uuid().v4(), title: title, rank: rank));
+      final enemyEntry = EnemyAssetService.randomEntryForRank(rank);
+      _tasks.add(Task(
+          id: const Uuid().v4(),
+          title: title,
+          rank: rank,
+          enemyAssetPath: enemyEntry.assetPath,
+          enemyXpMultiplier: enemyEntry.xpMultiplier));
     }
     notifyListeners();
     _autoSave();
