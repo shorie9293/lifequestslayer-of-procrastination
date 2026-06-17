@@ -2,7 +2,7 @@ name: rpg_todo
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.4.25+74
+version: 1.4.25+75
 
 environment:
   sdk: ^3.5.4

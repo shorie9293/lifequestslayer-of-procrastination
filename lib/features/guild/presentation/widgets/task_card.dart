@@ -174,6 +174,8 @@ class _TaskCardState extends State<TaskCard>
         child: hasSprite
             ? Image.asset(
                 _task.enemyAssetPath!,
+                width: double.infinity,
+                height: double.infinity,
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => const Center(
                     child: Icon(Icons.help_outline,
