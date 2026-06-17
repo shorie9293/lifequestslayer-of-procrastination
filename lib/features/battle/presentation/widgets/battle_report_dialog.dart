@@ -8,6 +8,7 @@ import 'level_up_section.dart';
 import 'knowledge_quest_section.dart';
 import 'fatigue_warning_section.dart';
 import 'reflection_input_dialog.dart';
+import 'zanshin_dialog.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 class BattleReportDialog extends StatefulWidget {
@@ -85,17 +86,38 @@ class _BattleReportDialogState extends State<BattleReportDialog> {
     if (_reflectionShown || widget.taskId == null) return;
     _reflectionShown = true;
 
-    ReflectionInputDialog.show(
-      context,
-      taskId: widget.taskId!,
-      taskTitle: widget.taskTitle ?? '不明なクエスト',
-      aiDifficulty: widget.aiDifficulty ?? QuestRank.B,
-      inputBonusExp: widget.inputBonusExp,
-      onSaved: () {
-        widget.onReflectionSubmit?.call();
-      },
-      player: widget.player,
-    );
+    final isSamurai = widget.player?.isSamuraiLine ?? false;
+
+    if (isSamurai) {
+      // 侍系 → 残心【初段】ダイアログ
+      ZanshinDialog.show(
+        context,
+        taskId: widget.taskId!,
+        taskTitle: widget.taskTitle ?? '不明なクエスト',
+        aiDifficulty: widget.aiDifficulty ?? QuestRank.B,
+        inputBonusExp: widget.inputBonusExp,
+        onKaishin: () {
+          widget.onReflectionSubmit?.call();
+        },
+        onImashime: () {
+          widget.onReflectionSubmit?.call();
+        },
+        player: widget.player,
+      );
+    } else {
+      // 非侍系 → 既存の振り返りダイアログ
+      ReflectionInputDialog.show(
+        context,
+        taskId: widget.taskId!,
+        taskTitle: widget.taskTitle ?? '不明なクエスト',
+        aiDifficulty: widget.aiDifficulty ?? QuestRank.B,
+        inputBonusExp: widget.inputBonusExp,
+        onSaved: () {
+          widget.onReflectionSubmit?.call();
+        },
+        player: widget.player,
+      );
+    }
   }
 
   @override

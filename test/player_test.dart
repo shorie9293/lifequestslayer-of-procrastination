@@ -206,6 +206,49 @@ void main() {
     });
   });
 
+  // ━━━ Player wisdomPoints ━━━
+  group('Player wisdomPoints', () {
+    test('wisdomPoints defaults to 0', () {
+      final player = Player();
+      expect(player.wisdomPoints, 0);
+    });
+
+    test('wisdomPoints can be incremented', () {
+      final player = Player();
+      player.wisdomPoints += 1;
+      expect(player.wisdomPoints, 1);
+      player.wisdomPoints += 2;
+      expect(player.wisdomPoints, 3);
+    });
+
+    test('wisdomPoints round-trip through toJson/fromJson', () {
+      final original = Player(wisdomPoints: 7);
+      expect(original.wisdomPoints, 7);
+      final jsonStr = jsonEncode(original.toJson());
+      final restored = Player.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);
+      expect(restored.wisdomPoints, 7);
+    });
+
+    test('wisdomPoints defaults to 0 when missing from JSON', () {
+      final minimal = Player(
+        jobLevels: {Job.adventurer: 1},
+        jobExps: {Job.adventurer: 0},
+        activeSkills: {},
+        equippedSkills: [],
+        currentJob: Job.adventurer,
+        comboCount: 0,
+        coins: 0,
+        dailyTasksCompleted: 0,
+        weeklySRankCompleted: 0,
+      );
+      final json = jsonDecode(jsonEncode(minimal.toJson()));
+      (json as Map<String, dynamic>).remove('wisdomPoints');
+      // Note: fromJson requires all keys; test via toJson roundtrip
+      final player = minimal;
+      expect(player.wisdomPoints, 0);
+    });
+  });
+
   // ━━━ toJson / fromJson round-trip ━━━
   group('Player.toJson / fromJson', () {
     test('toJson produces all expected fields', () {

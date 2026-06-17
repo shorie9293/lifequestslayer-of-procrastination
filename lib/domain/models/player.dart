@@ -287,6 +287,9 @@ class Player {
   /// 残心【初段】: 侍系ジョブかどうか
   bool get isSamuraiLine => currentJob == Job.samurai;
 
+  /// 残心【初段】: 戒め選択時に蓄積される知恵ポイント
+  int wisdomPoints = 0;
+
   /// T9: 集中の型 — ポモドーロセッションを開始
   void startPomodoro() {
     pomodoroStartTime = DateTime.now();
@@ -394,6 +397,7 @@ class Player {
     List<String>? unlockedSkillIds,
     this.totalReflections = 0,
     List<String>? reflectionBadges,
+    this.wisdomPoints = 0,
   })  : characterSkin = characterSkin ?? const CharacterSkin(), jobLevels = jobLevels ?? {Job.adventurer: 1},
         jobExps = jobExps ?? {Job.adventurer: 0},
         activeSkills = activeSkills ?? {},
@@ -739,6 +743,8 @@ class Player {
         // v6: 内省バッジ
         'totalReflections': totalReflections,
         'reflectionBadges': reflectionBadges,
+        // 残心【初段】: 知恵ポイント
+        'wisdomPoints': wisdomPoints,
       };
 
   factory Player.fromJson(Map<String, dynamic> json) {
@@ -828,6 +834,8 @@ class Player {
       reflectionBadges: (json['reflectionBadges'] as List<dynamic>?)
               ?.cast<String>() ??
           [],
+      // 残心【初段】: 知恵ポイント
+      wisdomPoints: (json['wisdomPoints'] as int?) ?? 0,
     );
   }
 }
@@ -899,6 +907,12 @@ class PlayerAdapter extends TypeAdapter<Player> {
             (raw as List?)?.cast<String>() ?? [];
       }
     } catch (e) { _log('reflectionBadges read failed', e); }
+
+    try {
+      if (reader.availableBytes >= 4) {
+        player.wisdomPoints = reader.readInt();
+      }
+    } catch (e) { _log('wisdomPoints read failed', e); }
 
     _log('Player v6 read complete (totalReflections=${player.totalReflections}, badges=${player.reflectionBadges.length})');
     return player;
@@ -1319,5 +1333,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
     // v6: 内省バッジ
     writer.writeInt(obj.totalReflections);
     writer.writeList(obj.reflectionBadges);
+    // 残心【初段】: 知恵ポイント
+    writer.writeInt(obj.wisdomPoints);
   }
 }

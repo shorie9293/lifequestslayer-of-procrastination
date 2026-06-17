@@ -27,6 +27,10 @@ class Reflection extends HiveObject {
   @HiveField(5)
   final QuestRank aiDifficulty;
 
+  /// 残心【初段】: 会心(kaishin) または 戒め(imashime)
+  @HiveField(6)
+  final String? sentiment;
+
   Reflection({
     required this.id,
     required this.taskId,
@@ -34,6 +38,7 @@ class Reflection extends HiveObject {
     required this.content,
     required this.selfDifficulty,
     required this.aiDifficulty,
+    this.sentiment,
   });
 
   /// AI難易度を1-5の数値に変換（比較用）
@@ -80,6 +85,9 @@ class ReflectionAdapter extends TypeAdapter<Reflection> {
         case 5:
           fields[5] = QuestRank.values[reader.readByte()];
           break;
+        case 6:
+          fields[6] = reader.readString();
+          break;
         default:
           // 未知のフィールドはスキップ（前方互換性）
           reader.readByte();
@@ -92,12 +100,13 @@ class ReflectionAdapter extends TypeAdapter<Reflection> {
       content: fields[3] as String,
       selfDifficulty: fields[4] as int,
       aiDifficulty: fields[5] as QuestRank,
+      sentiment: fields[6] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, Reflection obj) {
-    writer.writeByte(6); // フィールド数
+    writer.writeByte(7); // フィールド数
     writer.writeByte(0);
     writer.writeString(obj.id);
     writer.writeByte(1);
@@ -110,5 +119,7 @@ class ReflectionAdapter extends TypeAdapter<Reflection> {
     writer.writeInt(obj.selfDifficulty);
     writer.writeByte(5);
     writer.writeByte(obj.aiDifficulty.index);
+    writer.writeByte(6);
+    writer.writeString(obj.sentiment ?? '');
   }
 }
