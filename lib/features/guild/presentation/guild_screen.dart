@@ -287,7 +287,14 @@ class _GuildScreenState extends State<GuildScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("寄合所"),
+        title: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text("寄合所"),
+            SizedBox(width: 8),
+            Text("v67", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+          ],
+        ),
         actions: [
           SemanticHelper.interactive(
             testId: SemanticHelper.createTestId(SemanticTypes.button, 'bulk_create'),
