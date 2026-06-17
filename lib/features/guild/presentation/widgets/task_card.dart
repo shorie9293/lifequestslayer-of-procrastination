@@ -122,10 +122,22 @@ class _TaskCardState extends State<TaskCard>
     }
   }
 
+  String _getRankEnemyEmoji(QuestRank rank) {
+    switch (rank) {
+      case QuestRank.S:
+        return '🐉'; // ドラゴン
+      case QuestRank.A:
+        return '👹'; // オーガ
+      case QuestRank.B:
+        return '👺'; // ゴブリン（天狗）
+    }
+  }
+
   /// 敵アバター — 修練場・寄合所の両方で表示。緊急時は炎エフェクト＋拡大。
   Widget _buildEnemyAvatar(Color textColor) {
     final bool enhanceUrgent = widget.isUrgent;
     final double size = enhanceUrgent ? 64.0 : 56.0;
+    final double emojiSize = enhanceUrgent ? 30.0 : 26.0;
     final Color borderColor = enhanceUrgent
         ? Colors.deepOrange
         : _getRankBorderColor(_task.rank);
@@ -170,22 +182,12 @@ class _TaskCardState extends State<TaskCard>
             ),
           ],
         ),
-        clipBehavior: Clip.antiAlias,
-        child: hasSprite
-            ? Image.asset(
-                _task.enemyAssetPath!,
-                width: double.infinity,
-                height: double.infinity,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const Center(
-                    child: Icon(Icons.help_outline,
-                        color: Colors.white38, size: 24),
-                ),
-              )
-            : const Center(
-                child: Icon(Icons.help_outline,
-                    color: Colors.white38, size: 24),
-              ),
+        child: Center(
+          child: Text(
+            _getRankEnemyEmoji(_task.rank),
+            style: TextStyle(fontSize: emojiSize),
+          ),
+        ),
       ),
     );
   }
