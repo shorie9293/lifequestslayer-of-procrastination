@@ -111,17 +111,6 @@ class _TaskCardState extends State<TaskCard>
 
   Task get _task => widget.task;
 
-  String _getRankEnemyEmoji(QuestRank rank) {
-    switch (rank) {
-      case QuestRank.S:
-        return '🐉'; // ドラゴン
-      case QuestRank.A:
-        return '👹'; // オーガ
-      case QuestRank.B:
-        return '👺'; // ゴブリン（天狗）
-    }
-  }
-
   Color _getRankBorderColor(QuestRank rank) {
     switch (rank) {
       case QuestRank.S:
@@ -138,7 +127,6 @@ class _TaskCardState extends State<TaskCard>
   Widget _buildEnemyAvatar(Color textColor) {
     final bool enhanceUrgent = widget.isUrgent;
     final double size = enhanceUrgent ? 64.0 : 56.0;
-    final double emojiSize = enhanceUrgent ? 30.0 : 26.0;
     final Color borderColor = enhanceUrgent
         ? Colors.deepOrange
         : _getRankBorderColor(_task.rank);
