@@ -161,14 +161,8 @@ class _TaskCardState extends State<TaskCard>
       child: Container(
         margin: EdgeInsets.all(enhanceUrgent ? 2.0 : 3.0),
         decoration: BoxDecoration(
-          color: hasSprite ? null : const Color(0xFF1A1A2E),
           shape: BoxShape.circle,
-          image: hasSprite
-              ? DecorationImage(
-                  image: AssetImage(_task.enemyAssetPath!),
-                  fit: BoxFit.cover,
-                )
-              : null,
+          color: const Color(0xFF1A1A2E),
           boxShadow: [
             BoxShadow(
               color: glowColor.withValues(alpha: 0.3),
@@ -176,8 +170,16 @@ class _TaskCardState extends State<TaskCard>
             ),
           ],
         ),
+        clipBehavior: Clip.antiAlias,
         child: hasSprite
-            ? const SizedBox.shrink()
+            ? Image.asset(
+                _task.enemyAssetPath!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const Center(
+                    child: Icon(Icons.help_outline,
+                        color: Colors.white38, size: 24),
+                ),
+              )
             : const Center(
                 child: Icon(Icons.help_outline,
                     color: Colors.white38, size: 24),

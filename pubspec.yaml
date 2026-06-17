@@ -2,7 +2,7 @@ name: rpg_todo
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.4.25+72
+version: 1.4.25+73
 
 environment:
   sdk: ^3.5.4
@@ -54,6 +54,12 @@ flutter:
     - assets/animations/
     - assets/audio/
     - assets/sprites/
+    - assets/sprites/monsters/beasts/
+    - assets/sprites/monsters/demons/
+    - assets/sprites/monsters/dragons/
+    - assets/sprites/monsters/oni/
+    - assets/sprites/monsters/undead/
+    - assets/sprites/monsters/yokai/
 
 flutter_launcher_icons:
   android: true
