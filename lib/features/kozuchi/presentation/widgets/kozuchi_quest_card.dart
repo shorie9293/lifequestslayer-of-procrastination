@@ -101,7 +101,7 @@ class KozuchiQuestCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // 守護神情報
+                // アドバイザー情報
                 Row(
                   children: [
                     Container(
@@ -117,7 +117,7 @@ class KozuchiQuestCard extends StatelessWidget {
                       ),
                       child: Center(
                         child: Text(
-                          quest.guardianDeityEmoji,
+                          quest.advisorEmoji,
                           style: const TextStyle(fontSize: 24),
                         ),
                       ),
@@ -127,15 +127,15 @@ class KozuchiQuestCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Text(
-                          '守護神',
+                          'アドバイザー',
                           style: TextStyle(
                             color: Colors.grey,
                             fontSize: 11,
                           ),
                         ),
                         Text(
-                          quest.guardianDeityLabel,
-                          key: AppKeys.kozuchiGuardianDeity,
+                          quest.advisorLabel,
+                          key: AppKeys.kozuchiAdvisor,
                           style: GoogleFonts.vt323(
                             fontSize: 22,
                             color: Colors.amberAccent,
@@ -169,7 +169,7 @@ class KozuchiQuestCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // 喜捨目安額
+                // 支出目安額
                 Container(
                   key: AppKeys.kozuchiOffering,
                   padding: const EdgeInsets.symmetric(
@@ -192,7 +192,7 @@ class KozuchiQuestCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        '喜捨目安: ${quest.suggestedOffering}コイン',
+                        '支出目安: ${quest.suggestedOffering}コイン',
                         style: const TextStyle(
                           color: Colors.amber,
                           fontSize: 14,

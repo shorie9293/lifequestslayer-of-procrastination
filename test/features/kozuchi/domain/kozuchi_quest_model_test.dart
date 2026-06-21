@@ -8,7 +8,7 @@ void main() {
         'title': 'コンビニ誘惑を断て',
         'description': '3日間コンビニで無駄遣いせず、必要なものだけ買う',
         'suggestedOffering': 500,
-        'guardianDeity': 'bishamonten',
+        'advisor': 'investmentMentor',
         'isCompleted': false,
       };
 
@@ -17,8 +17,8 @@ void main() {
       expect(quest.title, 'コンビニ誘惑を断て');
       expect(quest.description, '3日間コンビニで無駄遣いせず、必要なものだけ買う');
       expect(quest.suggestedOffering, 500);
-      expect(quest.guardianDeityEmoji, '⚔️');
-      expect(quest.guardianDeityLabel, '毘沙門天');
+      expect(quest.advisorEmoji, '⚔️');
+      expect(quest.advisorLabel, '投資メンター');
       expect(quest.isCompleted, false);
     });
 
@@ -27,53 +27,53 @@ void main() {
         'title': '感謝の手紙を書く',
         'description': '家族に感謝の手紙を書いて渡す',
         'suggestedOffering': 300,
-        'guardianDeity': 'kisshoten',
+        'advisor': 'wellnessAdvisor',
         'isCompleted': true,
       };
 
       final quest = KozuchiQuest.fromJson(json);
 
       expect(quest.title, '感謝の手紙を書く');
-      expect(quest.guardianDeityEmoji, '🌸');
-      expect(quest.guardianDeityLabel, '吉祥天');
+      expect(quest.advisorEmoji, '🌸');
+      expect(quest.advisorLabel, 'ウェルネスアドバイザー');
       expect(quest.isCompleted, true);
     });
 
-    test('daikokuten の守護神が正しくマッピングされる', () {
+    test('lifePlanner のアドバイザーが正しくマッピングされる', () {
       final json = <String, dynamic>{
         'title': '食品ロスを減らせ',
         'description': '1週間、食材を無駄にしない',
         'suggestedOffering': 1000,
-        'guardianDeity': 'daikokuten',
+        'advisor': 'lifePlanner',
         'isCompleted': false,
       };
 
       final quest = KozuchiQuest.fromJson(json);
 
-      expect(quest.guardianDeityEmoji, '🪘');
-      expect(quest.guardianDeityLabel, '大黒天');
+      expect(quest.advisorEmoji, '🪘');
+      expect(quest.advisorLabel, 'ライフプランナー');
     });
 
-    test('benzaiten の守護神が正しくマッピングされる', () {
+    test('careerCoach のアドバイザーが正しくマッピングされる', () {
       final json = <String, dynamic>{
         'title': '新しい曲を覚える',
         'description': '今週中に新しい楽器の曲を1曲練習する',
         'suggestedOffering': 200,
-        'guardianDeity': 'benzaiten',
+        'advisor': 'careerCoach',
         'isCompleted': false,
       };
 
       final quest = KozuchiQuest.fromJson(json);
 
-      expect(quest.guardianDeityEmoji, '🎵');
-      expect(quest.guardianDeityLabel, '弁財天');
+      expect(quest.advisorEmoji, '🎵');
+      expect(quest.advisorLabel, 'キャリアコーチ');
     });
 
     test('必須フィールドが欠落していると ArgumentError を投げる（title 欠落）', () {
       final json = <String, dynamic>{
         'description': '説明だけ',
         'suggestedOffering': 100,
-        'guardianDeity': 'daikokuten',
+        'advisor': 'lifePlanner',
         'isCompleted': false,
       };
 
@@ -83,7 +83,7 @@ void main() {
       );
     });
 
-    test('必須フィールドが欠落していると ArgumentError を投げる（guardianDeity 欠落）', () {
+    test('必須フィールドが欠落していると ArgumentError を投げる（advisor 欠落）', () {
       final json = <String, dynamic>{
         'title': 'タイトル',
         'description': '説明',
@@ -97,20 +97,20 @@ void main() {
       );
     });
 
-    test('無効な guardianDeity 文字列はデフォルト値で代替される', () {
+    test('無効な advisor 文字列はデフォルト値で代替される', () {
       final json = <String, dynamic>{
         'title': 'テスト',
         'description': '説明',
         'suggestedOffering': 100,
-        'guardianDeity': 'unknown_god',
+        'advisor': 'unknown_god',
         'isCompleted': false,
       };
 
       // デフォルトの絵文字とラベルになること
       final quest = KozuchiQuest.fromJson(json);
 
-      expect(quest.guardianDeityEmoji, isNotEmpty);
-      expect(quest.guardianDeityLabel, isNotEmpty);
+      expect(quest.advisorEmoji, isNotEmpty);
+      expect(quest.advisorLabel, isNotEmpty);
     });
 
     test('suggestedOffering が null の場合でもエラーにならない', () {
@@ -118,7 +118,7 @@ void main() {
         'title': 'テスト',
         'description': '説明',
         'suggestedOffering': null,
-        'guardianDeity': 'daikokuten',
+        'advisor': 'lifePlanner',
         'isCompleted': false,
       };
 
@@ -132,7 +132,7 @@ void main() {
         'title': 'テスト',
         'description': '説明',
         'suggestedOffering': 100,
-        'guardianDeity': 'daikokuten',
+        'advisor': 'lifePlanner',
       };
 
       final quest = KozuchiQuest.fromJson(json);

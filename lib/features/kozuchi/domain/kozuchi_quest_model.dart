@@ -1,19 +1,19 @@
-/// 四天守護神の文字列表現 → 絵文字・ラベル マッピング
+/// 四天アドバイザーの文字列表現 → 絵文字・ラベル マッピング
 ///
-/// Kozuchi アプリの guardianDeity 文字列表現と、
+/// Kozuchi アプリの advisor 文字列表現と、
 /// rpg-task で表示に使う絵文字・ラベルを対応付ける。
-const Map<String, _GuardianDeityInfo> _guardianDeityMap = {
-  'daikokuten': _GuardianDeityInfo(emoji: '🪘', label: '大黒天'),
-  'benzaiten': _GuardianDeityInfo(emoji: '🎵', label: '弁財天'),
-  'bishamonten': _GuardianDeityInfo(emoji: '⚔️', label: '毘沙門天'),
-  'kisshoten': _GuardianDeityInfo(emoji: '🌸', label: '吉祥天'),
+const Map<String, _AdvisorInfo> _advisorMap = {
+  'lifePlanner': _AdvisorInfo(emoji: '🪘', label: 'ライフプランナー'),
+  'careerCoach': _AdvisorInfo(emoji: '🎵', label: 'キャリアコーチ'),
+  'investmentMentor': _AdvisorInfo(emoji: '⚔️', label: '投資メンター'),
+  'wellnessAdvisor': _AdvisorInfo(emoji: '🌸', label: 'ウェルネスアドバイザー'),
 };
 
-class _GuardianDeityInfo {
+class _AdvisorInfo {
   final String emoji;
   final String label;
 
-  const _GuardianDeityInfo({
+  const _AdvisorInfo({
     required this.emoji,
     required this.label,
   });
@@ -22,7 +22,7 @@ class _GuardianDeityInfo {
 /// Kozuchi（打ち出の小槌）アプリから共有されるアクティブな試練クエスト
 ///
 /// 不変クラス。共有ストレージの JSON をパースして生成する。
-/// guardianDeityEmoji と guardianDeityLabel は
+/// advisorEmoji と advisorLabel は
 /// 文字列表現からマッピングされる（画面表示用）。
 class KozuchiQuest {
   /// 試練のタイトル
@@ -31,14 +31,14 @@ class KozuchiQuest {
   /// 試練の説明
   final String description;
 
-  /// 喜捨金額の目安（円）
+  /// 支出金額の目安（円）
   final int suggestedOffering;
 
-  /// 守護神の絵文字（表示用）
-  final String guardianDeityEmoji;
+  /// アドバイザーの絵文字（表示用）
+  final String advisorEmoji;
 
-  /// 守護神のラベル（表示用）
-  final String guardianDeityLabel;
+  /// アドバイザーのラベル（表示用）
+  final String advisorLabel;
 
   /// クエスト完了状態
   final bool isCompleted;
@@ -47,23 +47,23 @@ class KozuchiQuest {
     required this.title,
     required this.description,
     required this.suggestedOffering,
-    required this.guardianDeityEmoji,
-    required this.guardianDeityLabel,
+    required this.advisorEmoji,
+    required this.advisorLabel,
     this.isCompleted = false,
   });
 
   /// JSON マップから KozuchiQuest を生成する。
   ///
-  /// 必須フィールド（title, description, guardianDeity）が欠落している場合は
+  /// 必須フィールド（title, description, advisor）が欠落している場合は
   /// [ArgumentError] を投げる。
-  /// guardianDeity の値が未知の文字列の場合はデフォルトで
-  /// 大黒天（🪘）の情報を使用する。
+  /// advisor の値が未知の文字列の場合はデフォルトで
+  /// ライフプランナー（🪘）の情報を使用する。
   /// suggestedOffering が null の場合は 0、
   /// isCompleted が null の場合は false として扱う。
   factory KozuchiQuest.fromJson(Map<String, dynamic> json) {
     final title = json['title'];
     final description = json['description'];
-    final guardianDeity = json['guardianDeity'] as String?;
+    final advisor = json['advisor'] as String?;
 
     if (title == null || title is! String || title.isEmpty) {
       throw ArgumentError('title is required and must be a non-empty string');
@@ -73,19 +73,19 @@ class KozuchiQuest {
         'description is required and must be a non-empty string',
       );
     }
-    if (guardianDeity == null || guardianDeity.isEmpty) {
-      throw ArgumentError('guardianDeity is required');
+    if (advisor == null || advisor.isEmpty) {
+      throw ArgumentError('advisor is required');
     }
 
-    final deityInfo = _guardianDeityMap[guardianDeity] ??
-        const _GuardianDeityInfo(emoji: '🪘', label: '大黒天');
+    final deityInfo = _advisorMap[advisor] ??
+        const _AdvisorInfo(emoji: '🪘', label: 'ライフプランナー');
 
     return KozuchiQuest(
       title: title,
       description: description,
       suggestedOffering: (json['suggestedOffering'] as num?)?.toInt() ?? 0,
-      guardianDeityEmoji: deityInfo.emoji,
-      guardianDeityLabel: deityInfo.label,
+      advisorEmoji: deityInfo.emoji,
+      advisorLabel: deityInfo.label,
       isCompleted: json['isCompleted'] as bool? ?? false,
     );
   }
@@ -94,7 +94,7 @@ class KozuchiQuest {
   String toString() {
     return 'KozuchiQuest('
         'title: $title, '
-        'guardianDeity: $guardianDeityLabel, '
+        'advisor: $advisorLabel, '
         'isCompleted: $isCompleted'
         ')';
   }
@@ -106,8 +106,8 @@ class KozuchiQuest {
         other.title == title &&
         other.description == description &&
         other.suggestedOffering == suggestedOffering &&
-        other.guardianDeityEmoji == guardianDeityEmoji &&
-        other.guardianDeityLabel == guardianDeityLabel &&
+        other.advisorEmoji == advisorEmoji &&
+        other.advisorLabel == advisorLabel &&
         other.isCompleted == isCompleted;
   }
 
@@ -117,8 +117,8 @@ class KozuchiQuest {
       title,
       description,
       suggestedOffering,
-      guardianDeityEmoji,
-      guardianDeityLabel,
+      advisorEmoji,
+      advisorLabel,
       isCompleted,
     );
   }

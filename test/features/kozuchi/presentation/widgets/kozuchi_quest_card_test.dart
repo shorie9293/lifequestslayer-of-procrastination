@@ -10,16 +10,16 @@ void main() {
       title: '朝の祈り',
       description: '新しい一日への感謝と祈りを捧げよ',
       suggestedOffering: 100,
-      guardianDeityEmoji: '🦊',
-      guardianDeityLabel: '稲荷神',
+      advisorEmoji: '🦊',
+      advisorLabel: '稲荷神',
     );
 
     const completedQuest = KozuchiQuest(
       title: '朝の祈り',
       description: '新しい一日への感謝と祈りを捧げよ',
       suggestedOffering: 100,
-      guardianDeityEmoji: '🦊',
-      guardianDeityLabel: '稲荷神',
+      advisorEmoji: '🦊',
+      advisorLabel: '稲荷神',
       isCompleted: true,
     );
 
@@ -64,7 +64,7 @@ void main() {
       expect(find.byKey(AppKeys.kozuchiQuestDescription), findsOneWidget);
     });
 
-    testWidgets('守護神の絵文字と名前が表示される', (tester) async {
+    testWidgets('アドバイザーの絵文字と名前が表示される', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -75,10 +75,10 @@ void main() {
 
       expect(find.text('🦊'), findsOneWidget);
       expect(find.text('稲荷神'), findsOneWidget);
-      expect(find.byKey(AppKeys.kozuchiGuardianDeity), findsOneWidget);
+      expect(find.byKey(AppKeys.kozuchiAdvisor), findsOneWidget);
     });
 
-    testWidgets('喜捨目安額が表示される', (tester) async {
+    testWidgets('支出目安額が表示される', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
@@ -87,7 +87,7 @@ void main() {
         ),
       );
 
-      expect(find.text('喜捨目安: 100コイン'), findsOneWidget);
+      expect(find.text('支出目安: 100コイン'), findsOneWidget);
       expect(find.byKey(AppKeys.kozuchiOffering), findsOneWidget);
     });
 
