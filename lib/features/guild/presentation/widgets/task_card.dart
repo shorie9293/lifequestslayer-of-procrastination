@@ -148,7 +148,6 @@ class _TaskCardState extends State<TaskCard>
     final double glowAlpha = enhanceUrgent ? 0.9 : 0.7;
     final double blurRadius = enhanceUrgent ? 20.0 : 14.0;
 
-    final bool hasSprite = _task.enemyAssetPath != null && _task.enemyAssetPath!.isNotEmpty;
 
     return Container(
       width: size,
