@@ -125,7 +125,7 @@ class AppKeys {
   static const Key kozuchiSection = Key('sec_kozuchi');
   static const Key kozuchiQuestTitle = Key('txt_kozuchi_quest_title');
   static const Key kozuchiQuestDescription = Key('txt_kozuchi_quest_description');
-  static const Key kozuchiGuardianDeity = Key('txt_kozuchi_guardian_deity');
+  static const Key kozuchiAdvisor = Key('txt_kozuchi_advisor');
   static const Key kozuchiOffering = Key('txt_kozuchi_offering');
   static const Key kozuchiStatus = Key('txt_kozuchi_status');
 

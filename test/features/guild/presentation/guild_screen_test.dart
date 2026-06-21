@@ -272,8 +272,8 @@ void main() {
             title: '朝の祈り',
             description: '新しい一日への感謝と祈りを捧げよ',
             suggestedOffering: 100,
-            guardianDeityEmoji: '🦊',
-            guardianDeityLabel: '稲荷神',
+            advisorEmoji: '🦊',
+            advisorLabel: '稲荷神',
           ),
         );
         await vms.task.refreshKozuchiQuest();
@@ -298,8 +298,8 @@ void main() {
             title: '完了した試練',
             description: '完了テスト',
             suggestedOffering: 50,
-            guardianDeityEmoji: '🐉',
-            guardianDeityLabel: '龍神',
+            advisorEmoji: '🐉',
+            advisorLabel: '龍神',
             isCompleted: true,
           ),
         );
