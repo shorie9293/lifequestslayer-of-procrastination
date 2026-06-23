@@ -42,5 +42,11 @@ jobs:
       - name: Run static analysis (flutter analyze)
         run: flutter analyze --no-fatal-infos
 
-      - name: Run tests
-        run: flutter test --no-pub
+      - name: Run tests (shard 1/3)
+        run: flutter test --no-pub -j 2 test/domain/ test/features/guild/ test/features/kozuchi/ test/features/player/ test/features/shared/
+
+      - name: Run tests (shard 2/3)
+        run: flutter test --no-pub -j 2 test/features/battle/domain/ test/features/battle/data/ test/features/battle/presentation/ test/features/battle/battle_report_dialog_samurai_test.dart test/features/temple/ test/features/character_customization/ test/features/crossapp/
+
+      - name: Run tests (shard 3/3)
+        run: flutter test --no-pub -j 2 test/game_view_model_test.dart test/player_test.dart test/task_test.dart test/reflection_test.dart test/di_injection_test.dart test/settings_repository_test.dart test/rank_colors_test.dart test/help_dialog_test.dart test/debug_overdue_test.dart test/fatigue_service_test.dart test/difficulty_estimator_test.dart test/quiz_service_test.dart test/streak_service_test.dart test/m12_cancel_persistence_test.dart test/return_mission_service_test.dart
