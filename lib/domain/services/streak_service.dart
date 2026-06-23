@@ -1,24 +1,55 @@
 import 'dart:math';
 import 'package:rpg_todo/domain/models/player.dart';
 
+/// ストリーク更新の結果。
+class StreakResult {
+  /// 付与されたコイン報酬（0の場合は報酬なし）
+  final int reward;
+
+  /// ストリークが切断されたかどうか
+  final bool wasBroken;
+
+  /// 切断前のストリーク日数（切断されなかった場合は0）
+  final int previousStreak;
+
+  /// 新しいストリーク日数
+  final int newStreak;
+
+  const StreakResult({
+    required this.reward,
+    this.wasBroken = false,
+    this.previousStreak = 0,
+    required this.newStreak,
+  });
+
+  /// 切断なし・報酬なしのデフォルト結果
+  static const noChange = StreakResult(reward: 0, newStreak: 0);
+}
+
 /// ストリーク（連続ログインボーナス）の計算と報酬付与を担当するサービス。
 class StreakService {
   /// ストリークを更新し、報酬を付与する。
-  /// 戻り値: 付与された文の量（0の場合は報酬なし）
-  static int checkAndUpdateStreak(Player player, DateTime now) {
+  /// 戻り値: [StreakResult] — 報酬額・切断情報・新しいストリーク日数
+  static StreakResult checkAndUpdateStreak(Player player, DateTime now) {
     final last = player.lastLoginDate;
+    final previousStreak = player.streakDays;
+    bool wasBroken = false;
 
     if (last == null) {
       // 初回ログイン
       player.streakDays = 1;
     } else if (_isSameDay(last, now)) {
       // 同日の再起動は何もしない
-      return 0;
+      return StreakResult(reward: 0, newStreak: player.streakDays);
     } else if (_isYesterday(last, now)) {
       // 昨日ログイン済み → ストリーク継続
       player.streakDays++;
     } else {
-      // 2日以上空白 → リセット
+      // 2日以上空白 → ストリーク切断
+      // 1日以上ストリークがあった場合のみ「切断」とみなす
+      if (previousStreak > 1) {
+        wasBroken = true;
+      }
       player.streakDays = 1;
     }
 
@@ -30,7 +61,13 @@ class StreakService {
     if (reward > 0) {
       player.coins += reward;
     }
-    return reward;
+
+    return StreakResult(
+      reward: reward,
+      wasBroken: wasBroken,
+      previousStreak: wasBroken ? previousStreak : 0,
+      newStreak: player.streakDays,
+    );
   }
 
   /// ストリーク日数に応じた報酬を計算
@@ -44,6 +81,14 @@ class StreakService {
     if (days == 3) return 200;
     if (days == 2) return 100;
     return 0;
+  }
+
+  /// ストリーク日数に応じたEXP倍率を計算する純粋関数。
+  static double calcExpMultiplier(int streakDays) {
+    if (streakDays >= 30) return 2.0;
+    if (streakDays >= 14) return 1.5;
+    if (streakDays >= 7) return 1.2;
+    return 1.0;
   }
 
   static bool _isSameDay(DateTime a, DateTime b) =>

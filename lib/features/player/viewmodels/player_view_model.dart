@@ -6,6 +6,7 @@ import 'package:rpg_todo/domain/models/title_definition.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/services/fatigue_service.dart';
 import 'package:rpg_todo/domain/services/streak_service.dart';
+import 'package:rpg_todo/domain/services/return_mission_service.dart';
 import 'package:rpg_todo/domain/services/title_service.dart';
 import 'package:rpg_todo/domain/services/reflection_badge_service.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
@@ -13,6 +14,7 @@ import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
 import 'package:rpg_todo/core/utils/date_utils.dart';
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
+import 'package:rpg_todo/features/temple/domain/enlightenment_stage.dart';
 import 'package:injectable/injectable.dart';
 
 /// プレイヤーの状態と操作を管理するViewModel
@@ -110,9 +112,17 @@ class PlayerViewModel extends ChangeNotifier {
       _player.weeklySRankCompleted = 0;
     }
     if (!login) return;
-    final streakReward = StreakService.checkAndUpdateStreak(_player, now);
-    if (streakReward > 0) {
-      pendingStreakReward = streakReward;
+    final streakResult = StreakService.checkAndUpdateStreak(_player, now);
+    if (streakResult.reward > 0) {
+      pendingStreakReward = streakResult.reward;
+    }
+    // ストリーク切断時に帰還ミッションを発行
+    if (streakResult.wasBroken && streakResult.previousStreak > 0) {
+      ReturnMissionService.generateReturnMission(
+        _player,
+        previousStreak: streakResult.previousStreak,
+        now: now,
+      );
     }
 
     // ★ 毎日ログインボーナス（同日を除き毎日 +50文）
@@ -279,6 +289,49 @@ class PlayerViewModel extends ChangeNotifier {
     _player.gems = amount.clamp(0, 99999);
     notifyListeners();
     _autoSave();
+  }
+
+  // ── 修行段階（悟りの境地）─  ─
+
+  /// 知恵ポイントを加算し、修行段階の昇格をチェックする。
+  ///
+  /// 戻り値: 初回昇格時に再生すべきアニメーション種別。
+  /// - [EnlightenmentTransitionType.mandala]: 初転法輪→縁起
+  /// - [EnlightenmentTransitionType.reversal]: 縁起→空
+  /// - null: 昇格なし、または既に視聴済み。
+  EnlightenmentTransitionType? addWisdomPoint() {
+    final oldStage = _player.enlightenmentStage;
+    _player.wisdomPoints++;
+    final newStage = EnlightenmentStage.forWisdom(_player.wisdomPoints);
+
+    if (newStage.stageIndex <= oldStage.stageIndex) {
+      // 昇格なし
+      _player.enlightenmentStage = newStage;
+      notifyListeners();
+      _autoSave();
+      return null;
+    }
+
+    // 昇格発生
+    _player.enlightenmentStage = newStage;
+
+    // 初回のみアニメーション再生
+    EnlightenmentTransitionType? transitionType;
+    if (oldStage == EnlightenmentStage.shohorin &&
+        newStage == EnlightenmentStage.engi &&
+        !_player.hasSeenMandalaAnimation) {
+      _player.hasSeenMandalaAnimation = true;
+      transitionType = EnlightenmentTransitionType.mandala;
+    } else if (oldStage == EnlightenmentStage.engi &&
+        newStage == EnlightenmentStage.ku &&
+        !_player.hasSeenReversalAnimation) {
+      _player.hasSeenReversalAnimation = true;
+      transitionType = EnlightenmentTransitionType.reversal;
+    }
+
+    notifyListeners();
+    _autoSave();
+    return transitionType;
   }
 
   void clearPendingLoginBonus() { pendingLoginBonusAmount = null; notifyListeners(); }

@@ -3,7 +3,9 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'task.dart';
 import 'skill_slot.dart';
+import 'return_mission.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
+import 'package:rpg_todo/features/temple/domain/enlightenment_stage.dart';
 import 'skill_tree.dart';
 import 'job.dart';
 export 'job.dart';
@@ -290,6 +292,22 @@ class Player {
   /// 残心【初段】: 戒め選択時に蓄積される知恵ポイント
   int wisdomPoints = 0;
 
+  /// 修行段階（悟りの境地）。知恵ポイントに応じて自動昇格。
+  EnlightenmentStage enlightenmentStage = EnlightenmentStage.shohorin;
+
+  /// 曼荼羅展開アニメーション（初転法輪→縁起）を視聴済みか。
+  bool hasSeenMandalaAnimation = false;
+
+  /// 世界反転アニメーション（縁起→空）を視聴済みか。
+  bool hasSeenReversalAnimation = false;
+
+  // --- v8: 帰還ミッション（ストリーク切断時の再エンゲージメント） ---
+  /// 現在アクティブな帰還ミッション。なければnull。
+  ReturnMission? activeReturnMission;
+
+  /// 最後に帰還ミッションを発行した日時（重複防止用）。
+  DateTime? lastReturnMissionIssuedAt;
+
   /// T9: 集中の型 — ポモドーロセッションを開始
   void startPomodoro() {
     pomodoroStartTime = DateTime.now();
@@ -398,6 +416,11 @@ class Player {
     this.totalReflections = 0,
     List<String>? reflectionBadges,
     this.wisdomPoints = 0,
+    this.enlightenmentStage = EnlightenmentStage.shohorin,
+    this.hasSeenMandalaAnimation = false,
+    this.hasSeenReversalAnimation = false,
+    this.activeReturnMission,
+    this.lastReturnMissionIssuedAt,
   })  : characterSkin = characterSkin ?? const CharacterSkin(), jobLevels = jobLevels ?? {Job.adventurer: 1},
         jobExps = jobExps ?? {Job.adventurer: 0},
         activeSkills = activeSkills ?? {},
@@ -745,6 +768,14 @@ class Player {
         'reflectionBadges': reflectionBadges,
         // 残心【初段】: 知恵ポイント
         'wisdomPoints': wisdomPoints,
+        // 修行段階
+        'enlightenmentStage': enlightenmentStage.stageIndex,
+        'hasSeenMandalaAnimation': hasSeenMandalaAnimation,
+        'hasSeenReversalAnimation': hasSeenReversalAnimation,
+        // v8: 帰還ミッション
+        'activeReturnMission': activeReturnMission?.toJson(),
+        'lastReturnMissionIssuedAt':
+            lastReturnMissionIssuedAt?.toIso8601String(),
       };
 
   factory Player.fromJson(Map<String, dynamic> json) {
@@ -836,6 +867,23 @@ class Player {
           [],
       // 残心【初段】: 知恵ポイント
       wisdomPoints: (json['wisdomPoints'] as int?) ?? 0,
+      // 修行段階
+      enlightenmentStage: json['enlightenmentStage'] != null
+          ? EnlightenmentStage.values[json['enlightenmentStage'] as int]
+          : EnlightenmentStage.shohorin,
+      hasSeenMandalaAnimation:
+          (json['hasSeenMandalaAnimation'] as bool?) ?? false,
+      hasSeenReversalAnimation:
+          (json['hasSeenReversalAnimation'] as bool?) ?? false,
+      // v8: 帰還ミッション
+      activeReturnMission: json['activeReturnMission'] != null
+          ? ReturnMission.fromJson(
+              json['activeReturnMission'] as Map<String, dynamic>)
+          : null,
+      lastReturnMissionIssuedAt:
+          json['lastReturnMissionIssuedAt'] != null
+              ? DateTime.parse(json['lastReturnMissionIssuedAt'] as String)
+              : null,
     );
   }
 }
@@ -844,7 +892,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
   @override
   final int typeId = 3;
 
-  static const int _formatVersion = 6;
+  static const int _formatVersion = 8;
 
   /// Release でも logcat に出力する簡易ロガー
   void _log(String msg, [Object? error]) {
@@ -858,6 +906,12 @@ class PlayerAdapter extends TypeAdapter<Player> {
     _log('Reading Player data (formatVersion=$version, currentVersion=$_formatVersion)');
 
     try {
+      if (version == 8) {
+        return _readV8(reader);
+      }
+      if (version == 7) {
+        return _readV7(reader);
+      }
       if (version == 6) {
         return _readV6(reader);
       }
@@ -890,6 +944,55 @@ class PlayerAdapter extends TypeAdapter<Player> {
       debugPrint('[PlayerAdapter] Stack: $s');
       return Player();
     }
+  }
+
+  Player _readV8(BinaryReader reader) {
+    final player = _readV7(reader);
+
+    try {
+      if (reader.availableBytes > 0) {
+        final missionRaw = reader.readMap();
+        if (missionRaw != null) {
+          player.activeReturnMission = ReturnMission.fromJson(
+            (missionRaw).cast<String, dynamic>(),
+          );
+        }
+      }
+    } catch (e) { _log('activeReturnMission read failed', e); }
+    try {
+      if (reader.availableBytes > 0) {
+        player.lastReturnMissionIssuedAt = reader.read();
+      }
+    } catch (e) { _log('lastReturnMissionIssuedAt read failed', e); }
+
+    _log('Player v8 read complete (returnMission=${player.activeReturnMission != null ? "active" : "none"})');
+    return player;
+  }
+
+  Player _readV7(BinaryReader reader) {
+    final player = _readV6(reader);
+
+    try {
+      if (reader.availableBytes >= 4) {
+        final stageIndex = reader.readInt();
+        if (stageIndex >= 0 && stageIndex < EnlightenmentStage.values.length) {
+          player.enlightenmentStage = EnlightenmentStage.values[stageIndex];
+        }
+      }
+    } catch (e) { _log('enlightenmentStage read failed', e); }
+    try {
+      if (reader.availableBytes >= 1) {
+        player.hasSeenMandalaAnimation = reader.readBool();
+      }
+    } catch (e) { _log('hasSeenMandalaAnimation read failed', e); }
+    try {
+      if (reader.availableBytes >= 1) {
+        player.hasSeenReversalAnimation = reader.readBool();
+      }
+    } catch (e) { _log('hasSeenReversalAnimation read failed', e); }
+
+    _log('Player v7 read complete (stage=${player.enlightenmentStage.displayName}, mandalaSeen=${player.hasSeenMandalaAnimation}, reversalSeen=${player.hasSeenReversalAnimation})');
+    return player;
   }
 
   Player _readV6(BinaryReader reader) {
@@ -1335,5 +1438,16 @@ class PlayerAdapter extends TypeAdapter<Player> {
     writer.writeList(obj.reflectionBadges);
     // 残心【初段】: 知恵ポイント
     writer.writeInt(obj.wisdomPoints);
+    // v7: 修行段階アニメーション管理
+    writer.writeInt(obj.enlightenmentStage.stageIndex);
+    writer.writeBool(obj.hasSeenMandalaAnimation);
+    writer.writeBool(obj.hasSeenReversalAnimation);
+    // v8: 帰還ミッション
+    if (obj.activeReturnMission != null) {
+      writer.writeMap(obj.activeReturnMission!.toJson());
+    } else {
+      writer.writeMap(<String, dynamic>{});
+    }
+    writer.write(obj.lastReturnMissionIssuedAt);
   }
 }
