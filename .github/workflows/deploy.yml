@@ -56,11 +56,11 @@ jobs:
 
       - name: 🔐 Decode Keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | tr -d '\n\r\t %' | base64 -d > android/upload-keystore.jks
+          echo "${{ secrets.KEYSTORE_BASE64_RPGTASK }}" | tr -d '\n\r\t %' | base64 -d > android/upload-keystore.jks
 
       - name: 📝 Create key.properties
         run: |
-          echo "${{ secrets.KEY_PROPERTIES }}" > android/key.properties
+          echo "${{ secrets.KEY_PROPERTIES_RPGTASK }}" > android/key.properties
 
       - name: 🔨 Build App Bundle
         run: flutter build appbundle --release
@@ -91,3 +91,5 @@ jobs:
         with:
           name: app-release-aab
           path: build/app/outputs/bundle/release/app-release.aab
+/usr/bin/bash: 行 5: /home/horie/tmp_flutter/hermes-snap-62bb9b0cb427.sh: そのようなファイルやディレクトリはありません
+/usr/bin/bash: 行 6: /home/horie/tmp_flutter/hermes-cwd-62bb9b0cb427.txt: そのようなファイルやディレクトリはありません
