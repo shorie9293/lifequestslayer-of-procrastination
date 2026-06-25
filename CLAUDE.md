@@ -13,7 +13,8 @@
 - **Local Storage**: Hive (`hive: ^2.2.3`, `hive_flutter: ^1.1.0`)
 - **Fonts**: Google Fonts (`google_fonts: ^6.3.0`)
 - **ID Generation**: UUID (`uuid: ^4.5.2`)
-- **Current Version**: 1.0.4+5
+- **Monorepo Packages**: takamagahara_core, takamagahara_ui, takamagahara_ai (`../../packages/`)
+- **Current Version**: 1.4.25+79
 
 ## Project Structure
 
@@ -68,4 +69,22 @@ flutter pub get
 - Warnings (not just errors) cause exit code 1 = push REJECTED.
 - This mirrors the CI check exactly — no more 4-consecutive CI failures from missed warnings.
 - Info-level issues (deprecated API, unused print, etc.) are suppressed by `--no-fatal-infos` and won't block.
-- Always run tests (`flutter test`) before pushing, even though the hook doesn't enforce it.
+
+## 🚀 Pre-Deploy Check
+
+Before deploying, run the full CI simulation:
+```bash
+bash scripts/pre-deploy-check.sh
+```
+This runs: `flutter pub get` → `flutter analyze --no-fatal-infos` → 3-shard `flutter test` (mirrors CI exactly).
+All must pass before deployment. Shard 3 uses `-j 1` (serial) to avoid Hive state contamination flakes.
+
+## CI/CD
+
+- **CI**: `.github/workflows/flutter-ci.yml` — runs on push/PR to main
+  - Setup monorepo packages → flutter pub get → analyze → 3-shard test
+  - Shard 1: domain, guild, kozuchi, player, shared (`-j 2`)
+  - Shard 2: battle, temple, character_customization, crossapp, overview, town (`-j 1`)
+  - Shard 3: root-level tests, individual files (`-j 1`, `continue-on-error: true` for flakes)
+- **Deploy**: `.github/workflows/deploy.yml` — triggers on `pubspec.yaml` change on main
+  - Builds AAB → deploys to Google Play via fastlane
