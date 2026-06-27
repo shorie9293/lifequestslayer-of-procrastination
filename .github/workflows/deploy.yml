@@ -91,5 +91,3 @@ jobs:
         with:
           name: app-release-aab
           path: build/app/outputs/bundle/release/app-release.aab
-/usr/bin/bash: 行 5: /home/horie/tmp_flutter/hermes-snap-62bb9b0cb427.sh: そのようなファイルやディレクトリはありません
-/usr/bin/bash: 行 6: /home/horie/tmp_flutter/hermes-cwd-62bb9b0cb427.txt: そのようなファイルやディレクトリはありません
