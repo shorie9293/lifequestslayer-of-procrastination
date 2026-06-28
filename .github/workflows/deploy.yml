@@ -11,7 +11,7 @@ on:
       track:
         description: '配信トラック'
         required: true
-        default: 'alpha'
+        default: 'internal'
         type: choice
         options:
           - internal
@@ -82,7 +82,7 @@ jobs:
         env:
           GOOGLE_PLAY_JSON_KEY: ${{ secrets.GOOGLE_PLAY_JSON_KEY }}
         run: |
-          TRACK="${{ github.event.inputs.track || 'alpha' }}"
+          TRACK="${{ github.event.inputs.track || 'internal' }}"
           set -x
           bundle exec fastlane deploy track:${TRACK} --verbose
 
