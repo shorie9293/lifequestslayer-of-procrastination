@@ -42,6 +42,34 @@ class TaskCompletionService {
 
   TaskCompletionService({Random? rng}) : _rng = rng ?? Random();
 
+  /// 繰り返しクエストの deadline を次の発生時期に進める。
+  /// 期限切れ防止：完了時に deadline を更新しないと次回表示時に「期限切れ」になる。
+  void _advanceRecurringDeadline(Task task) {
+    if (task.deadline == null) return;
+
+    switch (task.repeatInterval) {
+      case RepeatInterval.daily:
+        task.deadline = task.deadline!.add(const Duration(days: 1));
+      case RepeatInterval.weekly:
+        if (task.repeatWeekdays.isNotEmpty) {
+          // 次に選択された曜日まで進める
+          var nextDeadline = task.deadline!.add(const Duration(days: 1));
+          var maxIter = 14; // safety guard: at most 2 weeks ahead
+          while (maxIter > 0 &&
+              !task.repeatWeekdays.contains(nextDeadline.weekday)) {
+            nextDeadline = nextDeadline.add(const Duration(days: 1));
+            maxIter--;
+          }
+          task.deadline = nextDeadline;
+        } else {
+          task.deadline = task.deadline!.add(const Duration(days: 7));
+        }
+      case RepeatInterval.none:
+        // 非繰り返しクエストは何もしない
+        break;
+    }
+  }
+
   /// クエストを完了し、結果を返す。PlayerとTaskは呼び出し元で更新する。
   /// 戻り値がnullの場合は完了不可（サブクエスト未完了など）。
   /// [allTasks] は wizardProject ボーナス判定用の全クエストリスト（任意）。
@@ -69,6 +97,8 @@ class TaskCompletionService {
         (player.hasSkill(JobSkill.roninRepeatTask) ||
          player.canUseSkill(Job.monk))) {
       task.lastCompletedAt = DateTime.now();
+      // 繰り返しクエストの deadline を次回発生時に進める（期限切れ防止）
+      _advanceRecurringDeadline(task);
     } else {
       task.isCompleted = true;
       task.status = TaskStatus.inGuild;
