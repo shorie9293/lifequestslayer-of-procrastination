@@ -95,14 +95,15 @@ class PlayerViewModel extends ChangeNotifier {
 
   // ── ミッションリセット ──
   void checkAndResetMissions(DateTime now, {bool login = false}) {
-    bool changed = false;
+    // ★ 月次判定のために oldResetDate を mutation 前に保存
+    final oldResetDate = _player.lastMissionResetDate;
+
     if (_player.lastMissionResetDate == null ||
         !DateUtils.isSameDay(_player.lastMissionResetDate!, now)) {
       _player.dailyTasksCompleted = 0;
       _player.todayTaskLimitOffset = _player.nextDayTaskLimitOffset;
       _player.nextDayTaskLimitOffset = 0;
       _player.lastMissionResetDate = now;
-      changed = true;
     }
     if (_player.lastMissionResetDate != null &&
         DateUtils.isDifferentWeek(_player.lastMissionResetDate!, now)) {
@@ -113,7 +114,12 @@ class PlayerViewModel extends ChangeNotifier {
     if (streakReward > 0) {
       pendingStreakReward = streakReward;
     }
-    if (changed) {
+    // ログインボーナスは月1回のみ: oldResetDate が null（初回）
+    // または月が変わった場合のみ付与
+    final monthChanged = oldResetDate == null ||
+        oldResetDate.year != now.year ||
+        oldResetDate.month != now.month;
+    if (monthChanged) {
       _player.coins += 50;
       pendingLoginBonusAmount = 50;
     }
