@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 
-Widget buildTestApp() {
-  return const MaterialApp(
+Widget buildTestApp({HelpScreen screen = HelpScreen.overview}) {
+  return MaterialApp(
     home: Scaffold(
-      body: HelpDialog(),
+      body: HelpDialog(screen: screen),
     ),
   );
 }
@@ -27,6 +27,15 @@ void main() {
     testWidgets('「拝承した！」ボタンが表示される', (tester) async {
       await tester.pumpWidget(buildTestApp());
       expect(find.text('拝承した！'), findsOneWidget);
+    });
+  });
+
+  group('HelpDialog TownScreen', () {
+    testWidgets('町画面ヘルプに町XPの獲得方法が表示される', (tester) async {
+      await tester.pumpWidget(buildTestApp(screen: HelpScreen.town));
+      // 町XP獲得に関するセクション（タイトル＋本文）が表示される
+      expect(find.text('町の発展と町XP'), findsOneWidget);
+      expect(find.textContaining('クエストを討伐すると町XP'), findsOneWidget);
     });
   });
 }

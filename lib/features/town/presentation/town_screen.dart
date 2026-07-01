@@ -134,6 +134,8 @@ class _TownTab extends StatelessWidget {
             xp: townVM.townLevel.xp,
             xpToNext: townVM.townLevel.xpToNext,
           ),
+          // 町XP獲得方法の説明
+          _TownXpHint(),
           _TownScaleBar(scale: scale, nextScale: nextScale, nextLevel: nextLevel),
           Expanded(
             child: SingleChildScrollView(
@@ -199,6 +201,35 @@ class _TownTab extends StatelessWidget {
       case TownScale.skyCity:
         return const Color(0xFF1A237E); // 深青（天空）
     }
+  }
+}
+
+/// 町XP獲得方法のヒント — クエスト討伐で町XPが貯まることを説明
+class _TownXpHint extends StatelessWidget {
+  const _TownXpHint();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      color: Colors.blueGrey.withValues(alpha: 0.2),
+      child: const Row(
+        children: [
+          Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 14),
+          SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              'クエスト討伐で町XPを獲得できます',
+              style: TextStyle(
+                color: Color(0xFFFFD700),
+                fontSize: 12,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

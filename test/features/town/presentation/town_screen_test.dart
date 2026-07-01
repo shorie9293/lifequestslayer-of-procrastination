@@ -262,4 +262,32 @@ void main() {
       expect(find.textContaining('次の発展'), findsNothing);
     });
   });
+
+  group('TownScreen 町XP説明表示', () {
+    Future<(PlayerViewModel, TownViewModel)> createViewModels(int townLevel) async {
+      final playerVM = PlayerViewModel(_MockPlayerRepository(Player(jobLevels: {Job.adventurer: 5})));
+      await playerVM.load();
+      final townVM = TownViewModel();
+      townVM.initialize();
+      townVM.setTownLevelForTest(townLevel);
+      return (playerVM, townVM);
+    }
+
+    testWidgets('町XPの獲得方法が説明テキストで表示される', (tester) async {
+      late GameViewModel vm;
+      late PlayerViewModel playerVM;
+      late TownViewModel townVM;
+      await tester.runAsync(() async {
+        final vms = await createViewModels(5);
+        playerVM = vms.$1;
+        townVM = vms.$2;
+        vm = await _createViewModelWithLevel(5, townVM);
+      });
+      await pumpTownScreen(tester, vm, playerVM, townVM);
+
+      // 町レベルバーの下に「クエスト討伐で町XPを獲得」の説明があることを確認
+      expect(find.textContaining('クエスト討伐'), findsOneWidget);
+      expect(find.textContaining('町XP'), findsOneWidget);
+    });
+  });
 }
