@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 /// 戦術行動 — RPG戦闘における冒険者の選択肢
 enum BattleAction {
-  /// ⚔️ 攻撃 — 正面から討伐。標準的なダメージと成功率。
+  /// ⚔️ 攻撃 — 正面から討伐。標準的なダメージ。
   attack,
 
-  /// 🛡️ 防御 — 守りを固めて安全に討伐。成功率UP、EXP減少。
+  /// 🛡️ 防御 — 守りを固めて討伐。討伐成功率UP、経験値減少。
   defend,
 
   /// ✨ スキル — 特殊能力を発動。装備スキルに応じたボーナス効果。
@@ -44,7 +44,7 @@ extension BattleActionMeta on BattleAction {
       case BattleAction.attack:
         return '正面から討伐。\n標準ダメージ';
       case BattleAction.defend:
-        return '守りを固める。\n成功率↑ EXP↓';
+        return '守りを固める。\n討伐成功率↑ 経験値↓';
       case BattleAction.skill:
         return '特殊能力を発動。\n装備スキルで効果変化';
     }

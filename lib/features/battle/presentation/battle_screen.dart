@@ -110,9 +110,9 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
       _taskInCombat = null;
     });
 
-    // TODO(v2.1): actionに応じたEXP/成功率補正をTaskViewModelに反映する。
+    // TODO(v2.1): actionに応じたEXP/討伐成功率補正をTaskViewModelに反映する。
     // 現時点ではアクション選択UIのみ実装。討伐フローは既存のまま。
-    // 例: attack → 標準, defend → EXP * 0.7 + 成功率UP, skill → 装備スキル効果発動
+    // 例: attack → 標準, defend → EXP * 0.7 + 討伐成功率UP, skill → 装備スキル効果発動
 
     _completeTask(context, taskId);
   }
