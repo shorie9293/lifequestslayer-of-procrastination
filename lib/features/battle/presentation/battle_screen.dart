@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/shared/widgets/player_status_header.dart';
 import 'package:rpg_todo/features/guild/presentation/widgets/task_card.dart';
@@ -41,6 +42,18 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
   String? _taskInCombat;
 
   Color _getRankColor(QuestRank rank) => RankColors.forRank(rank);
+
+  /// クエストランクから町XPを計算する。
+  int _townXpForRank(QuestRank rank) {
+    switch (rank) {
+      case QuestRank.S:
+        return 50;
+      case QuestRank.A:
+        return 30;
+      case QuestRank.B:
+        return 10;
+    }
+  }
 
   @override
   void initState() {
@@ -191,8 +204,16 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
       settingsVM.markJobTutorialSeen();
       playerVM.addExp(50);
     }
+
+    // 町にXPを付与（クエストランクに応じた量）
+    final townVM = context.read<TownViewModel>();
+    final completedTask = taskVM.tasks.firstWhere((t) => t.id == taskId);
+    final townXp = _townXpForRank(completedTask.rank);
+    townVM.addTownXp(townXp);
+
     playerVM.save();
     taskVM.save();
+    townVM.save();
 
     final leveledUp = result['leveledUp'] as bool;
     final coinsGained = result['coinsGained'] as int;
