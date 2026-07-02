@@ -26,6 +26,7 @@ class _MainScreenState extends State<MainScreen> {
   bool _isHelpDialogShowing = false;
   bool _isTutorialChoiceShowing = false;
   bool _didJumpToGuildForTutorial = false;
+  int _previousTutorialStep = -1;
   final PageController _pageController = PageController(initialPage: 0);
   final MainTutorialController _tutorialController = MainTutorialController();
 
@@ -85,6 +86,25 @@ class _MainScreenState extends State<MainScreen> {
     if (!isLoaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     _tutorialController.currentIndex = _currentIndex;
+
+    // チュートリアルステップが変わったら renderedTutorialStep をリセットし再計算
+    final tutorialStepChanged = settingsVM.tutorialStep != _previousTutorialStep;
+    if (tutorialStepChanged && settingsVM.tutorialStep <= 2 && !settingsVM.tutorialSkipped) {
+      _previousTutorialStep = settingsVM.tutorialStep;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _tutorialController.renderedTutorialStep = -1;
+          _tutorialController.updateTutorialRect(
+            step: settingsVM.tutorialStep, context: context,
+            pageController: _pageController, setState: () => setState(() {}), mounted: mounted,
+          );
+        }
+      });
+    } else if (!tutorialStepChanged) {
+      // do nothing — already up to date
+    } else {
+      _previousTutorialStep = settingsVM.tutorialStep;
+    }
 
     if (!_didJumpToGuildForTutorial) {
       _didJumpToGuildForTutorial = true;
