@@ -4,6 +4,7 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/domain/difficulty_estimator.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
@@ -143,6 +144,11 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
         targetTimeMinutes: targetTime,
         deadline: _deadline,
       );
+      // チュートリアル進行: step 0（クエスト登録）を完了
+      final settingsVM = Provider.of<SettingsViewModel>(context, listen: false);
+      if (settingsVM.tutorialStep == 0) {
+        settingsVM.completeTutorialStep(0);
+      }
     } else {
       taskVM.editTask(
         widget.task!.id,
