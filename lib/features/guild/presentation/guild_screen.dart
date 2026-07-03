@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
-import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/core/testing/tutorial_keys.dart';
@@ -51,13 +51,8 @@ class _GuildScreenState extends State<GuildScreen> {
   }
 
   void _acceptTask(BuildContext context, String taskId) {
-    final taskVM = context.read<TaskViewModel>();
-    final settingsVM = context.read<SettingsViewModel>();
-    final error = taskVM.acceptTask(taskId);
-    if (error == null) {
-      settingsVM.completeTutorialStep(1);
-      taskVM.save();
-    }
+    final gameVM = context.read<GameViewModel>();
+    final error = gameVM.acceptTask(taskId);
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
