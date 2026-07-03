@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'create_task_dialog.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
@@ -99,8 +100,7 @@ class RecurringTasksDialog extends StatelessWidget {
                                       TextButton(
                                         onPressed: () {
                                           Navigator.pop(ctx);
-                                          taskVM.deleteTask(task.id);
-                                          context.read<TaskViewModel>().save();
+                                          context.read<GameViewModel>().deleteTask(task.id);
                                         },
                                         child: const Text("削除する",
                                             style: TextStyle(color: Colors.red)),
