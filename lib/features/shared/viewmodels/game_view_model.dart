@@ -139,11 +139,17 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
 
       if (_settingsVM.tutorialStep == 2) completeTutorialStep(2);
       _playerVM.checkAndResetMissions(DateTime.now());
+      // ジョブチュートリアル発火: 冒険者Lv10到達時
       if (result['leveledUp'] == true &&
           _playerVM.player.currentJob == Job.adventurer &&
           (_playerVM.player.jobLevels[Job.adventurer] ?? 1) >= 10 &&
           !_settingsVM.jobTutorialCompleted) {
         _settingsVM.setShowJobTutorial(true);
+      }
+      // ジョブチュートリアル報酬: 次回討伐時にEXP+50（battle_screenから移行）
+      if (_settingsVM.showJobTutorial && !_settingsVM.jobTutorialCompleted) {
+        _settingsVM.markJobTutorialSeen();
+        _playerVM.addExp(50);
       }
       _save();
     }
