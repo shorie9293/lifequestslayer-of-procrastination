@@ -129,9 +129,11 @@ class _MainScreenState extends State<MainScreen> {
     } else if (settingsVM.hasSeenConcept && settingsVM.tutorialStep <= 2 && !settingsVM.tutorialChoiceMade && !_isTutorialChoiceShowing) {
       _isTutorialChoiceShowing = true;
       WidgetsBinding.instance.addPostFrameCallback((_) { if (mounted) _showTutorialChoiceDialog(settingsVM); });
-    } else if (playerVM.pendingLoginBonusAmount != null) {
+    }
+    if (playerVM.pendingLoginBonusAmount != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) { final a = playerVM.pendingLoginBonusAmount!; playerVM.clearPendingLoginBonus(); _showLoginBonusDialog(a); });
-    } else if (playerVM.pendingStreakReward != null) {
+    }
+    if (playerVM.pendingStreakReward != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) { final r = playerVM.pendingStreakReward!; playerVM.clearPendingStreakReward(); _showStreakRewardDialog(r, playerVM.streakDays); });
     } else if (settingsVM.showJobTutorial) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
