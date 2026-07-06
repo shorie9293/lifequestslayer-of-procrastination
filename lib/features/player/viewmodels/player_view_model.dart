@@ -114,14 +114,22 @@ class PlayerViewModel extends ChangeNotifier {
     if (streakReward > 0) {
       pendingStreakReward = streakReward;
     }
-    // ログインボーナスは月1回のみ: oldResetDate が null（初回）
-    // または月が変わった場合のみ付与
+
+    // ★ 毎日ログインボーナス（同日を除き毎日 +50文）
+    final isNewDay = oldResetDate == null ||
+        !DateUtils.isSameDay(oldResetDate, now);
+    if (isNewDay) {
+      _player.coins += 50;
+      pendingLoginBonusAmount = 50;
+    }
+
+    // ★ 月次ボーナス（月初のみ追加 +5000文）
     final monthChanged = oldResetDate == null ||
         oldResetDate.year != now.year ||
         oldResetDate.month != now.month;
     if (monthChanged) {
-      _player.coins += 50;
-      pendingLoginBonusAmount = 50;
+      _player.coins += 5000;
+      pendingLoginBonusAmount = (pendingLoginBonusAmount ?? 0) + 5000;
     }
   }
 
