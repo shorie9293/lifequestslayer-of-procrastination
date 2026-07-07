@@ -4,7 +4,7 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/domain/difficulty_estimator.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
-import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
@@ -133,9 +133,9 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
 
     int? targetTime = int.tryParse(_targetTimeController.text);
 
-    final taskVM = Provider.of<TaskViewModel>(context, listen: false);
+    final gameVM = Provider.of<GameViewModel>(context, listen: false);
     if (widget.task == null) {
-      taskVM.addTask(
+      gameVM.addTask(
         _titleController.text,
         rank: _selectedRank,
         repeatInterval: _selectedRepeat,
@@ -144,13 +144,8 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
         targetTimeMinutes: targetTime,
         deadline: _deadline,
       );
-      // チュートリアル進行: step 0（クエスト登録）を完了
-      final settingsVM = Provider.of<SettingsViewModel>(context, listen: false);
-      if (settingsVM.tutorialStep == 0) {
-        settingsVM.completeTutorialStep(0);
-      }
     } else {
-      taskVM.editTask(
+      gameVM.editTask(
         widget.task!.id,
         _titleController.text,
         rank: _selectedRank,
@@ -161,7 +156,6 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
         deadline: _deadline,
       );
     }
-    taskVM.save();
     Navigator.pop(context);
   }
 

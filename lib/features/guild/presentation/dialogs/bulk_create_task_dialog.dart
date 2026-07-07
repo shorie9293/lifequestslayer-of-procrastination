@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
-import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
-import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 /// 一括クエスト作成ダイアログ
@@ -53,11 +52,8 @@ class _BulkCreateTaskDialogState extends State<BulkCreateTaskDialog> {
       return;
     }
 
-    final taskVM = Provider.of<TaskViewModel>(context, listen: false);
-    final settingsVM = context.read<SettingsViewModel>();
-    taskVM.addTasks(titles, _selectedRank);
-    settingsVM.completeTutorialStep(0);
-    taskVM.save();
+    final gameVM = Provider.of<GameViewModel>(context, listen: false);
+    gameVM.addTasks(titles, _selectedRank);
 
     Navigator.pop(context);
 
