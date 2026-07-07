@@ -233,6 +233,7 @@ class _GuildScreenState extends State<GuildScreen> {
                     testId: SemanticHelper.createTestId(SemanticTypes.button, 'urgent_deploy'),
                     label: '緊急出撃：戦場へ即投入',
                     child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () => _acceptTask(context, task.id),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
@@ -287,7 +288,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.4.26+86", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.4.26+87", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [

@@ -6,6 +6,7 @@ import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
 
 import 'package:rpg_todo/features/battle/domain/battle_audio_service.dart';
@@ -29,6 +30,9 @@ void configureDependencies() {
 
   // 町開発 ViewModel（Hive box に依存するため手動登録）
   getIt.registerLazySingleton<TownViewModel>(() => TownViewModel());
+
+  // 全VM統括 GameViewModel（手動登録）
+  getIt.registerLazySingleton<GameViewModel>(() => GameViewModel(tv: getIt<TownViewModel>()));
 }
 
 /// 全VMのデータロードとアプリライフサイクル監視を統括する。

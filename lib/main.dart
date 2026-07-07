@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rpg_todo/features/shared/viewmodels/theme_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
@@ -139,6 +140,9 @@ class RPGTodoApp extends StatelessWidget {
         // IAPサービス — DI管理
         ChangeNotifierProvider<IAPService>.value(
             value: getIt<IAPService>()),
+        // 全VM統括
+        ChangeNotifierProvider<GameViewModel>.value(
+            value: getIt<GameViewModel>()),
       ],
       child: Consumer2<ThemeViewModel, SettingsViewModel>(
         builder: (context, themeVM, settingsVM, child) {

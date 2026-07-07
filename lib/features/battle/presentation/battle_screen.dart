@@ -145,12 +145,6 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
     final navigator = Navigator.of(context, rootNavigator: true);
     final scaffoldMessenger = ScaffoldMessenger.of(context);
 
-    final wasActive = taskVM.activeTasks.any((t) => t.id == taskId);
-    if (!wasActive) {
-      _completingTaskIds.remove(taskId);
-      return;
-    }
-
     // レベルアップ前のレベルを記録（completeTask 後に比較するため）
     final previousLevel = playerVM.player.level;
 
