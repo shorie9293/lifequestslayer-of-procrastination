@@ -7,7 +7,9 @@ import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/theme_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
+import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 
 import 'package:rpg_todo/features/battle/domain/battle_audio_service.dart';
 import 'package:rpg_todo/features/battle/viewmodels/battle_view_model.dart';
@@ -31,8 +33,16 @@ void configureDependencies() {
   // 町開発 ViewModel（Hive box に依存するため手動登録）
   getIt.registerLazySingleton<TownViewModel>(() => TownViewModel());
 
-  // 全VM統括 GameViewModel（手動登録）
-  getIt.registerLazySingleton<GameViewModel>(() => GameViewModel(tv: getIt<TownViewModel>()));
+  // 全VM統括 GameViewModel（getItのVMを注入、二重構造解消）
+  getIt.registerLazySingleton<GameViewModel>(() => GameViewModel(
+    playerVM: getIt<PlayerViewModel>(),
+    taskVM: getIt<TaskViewModel>(),
+    shopVM: getIt<ShopViewModel>(),
+    settingsVM: getIt<SettingsViewModel>(),
+    themeVM: getIt<ThemeViewModel>(),
+    tv: getIt<TownViewModel>(),
+    autoLoad: false,  // initializeViewModels() でロード済みのため
+  ));
 }
 
 /// 全VMのデータロードとアプリライフサイクル監視を統括する。

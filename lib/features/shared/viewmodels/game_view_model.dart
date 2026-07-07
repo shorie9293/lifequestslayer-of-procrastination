@@ -21,6 +21,10 @@ import 'package:rpg_todo/features/town/domain/town_scale.dart';
 
 /// 後方互換用のファサードViewModel。
 /// 新VM（PlayerVM/TaskVM/ShopVM/SettingsVM/ThemeVM）に委譲する。
+/// 
+/// 【VM注入モード】: playerVM/taskVM/shopVM/settingsVM/themeVM を渡すと
+///   そのインスタンスを共有し、getIt との二重構造を解消できる。
+/// 【後方互換モード】: pr/tr/sr のみを渡すと内部で新規VMを作成する（テスト用）。
 class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   late final PlayerViewModel _playerVM;
   late final TaskViewModel _taskVM;
@@ -32,17 +36,28 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   final ITaskRepository _taskRepo;
   final SettingsRepository _settingsRepo;
 
-  GameViewModel({IPlayerRepository? pr, ITaskRepository? tr, SettingsRepository? sr, TownViewModel? tv})
-    : _playerRepo = pr ?? PlayerRepository(),
-      _taskRepo = tr ?? TaskRepository(),
-      _settingsRepo = sr ?? SettingsRepository() {
-    _playerVM = PlayerViewModel(_playerRepo);
-    _taskVM = TaskViewModel(_taskRepo, _playerVM);
-    _shopVM = ShopViewModel(_playerVM);
+  GameViewModel({
+    IPlayerRepository? pr,
+    ITaskRepository? tr,
+    SettingsRepository? sr,
+    TownViewModel? tv,
+    // VM注入パラメータ（本番用：getItから共有インスタンスを注入）
+    PlayerViewModel? playerVM,
+    TaskViewModel? taskVM,
+    ShopViewModel? shopVM,
+    SettingsViewModel? settingsVM,
+    ThemeViewModel? themeVM,
+    this.autoLoad = true,
+  })  : _playerRepo = pr ?? PlayerRepository(),
+        _taskRepo = tr ?? TaskRepository(),
+        _settingsRepo = sr ?? SettingsRepository() {
+    _playerVM = playerVM ?? PlayerViewModel(_playerRepo);
+    _taskVM = taskVM ?? TaskViewModel(_taskRepo, _playerVM);
+    _shopVM = shopVM ?? ShopViewModel(_playerVM);
     _townVM = tv;
-    _settingsVM = SettingsViewModel(_settingsRepo);
-    _themeVM = ThemeViewModel(_playerVM);
-    loadData();
+    _settingsVM = settingsVM ?? SettingsViewModel(_settingsRepo);
+    _themeVM = themeVM ?? ThemeViewModel(_playerVM);
+    if (autoLoad) loadData();
   }
 
   // ── 委譲プロパティ ──
@@ -84,6 +99,7 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   static const int weeklyMissionGoal = 1;
   int? pendingLoginBonusAmount;
   int? pendingStreakReward;
+  final bool autoLoad;
 
   /// 町開発 ViewModel へのアクセサ（null可）。
   TownViewModel? get townVM => _townVM;
