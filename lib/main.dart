@@ -12,17 +12,44 @@ import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
 import 'package:rpg_todo/core/di/injection.dart';
 import 'screens/main_screen.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/core/infrastructure/notification_service.dart';
 import 'package:rpg_todo/core/infrastructure/iap_service.dart';
+import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
 import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
+
+  // ━━━ Supabase 初期化 ━━━
+  const supabaseUrl = SupabaseConfig.url;
+  const supabaseKey = SupabaseConfig.anonKey;
+
+  if (supabaseUrl.isNotEmpty && supabaseKey.isNotEmpty) {
+    try {
+      await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
+      debugPrint('[main] ✅ Supabase 初期化完了');
+
+      try {
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session == null) {
+          await Supabase.instance.client.auth.signInAnonymously();
+          debugPrint('[main] ✅ 匿名サインイン完了');
+        }
+      } catch (e) {
+        debugPrint('[main] ⚠️ 匿名サインイン失敗（オフラインモード継続）: $e');
+      }
+    } catch (e) {
+      debugPrint('[main] ⚠️ Supabase初期化失敗（オフラインモード）: $e');
+    }
+  } else {
+    debugPrint('[main] ⚠️ SUPABASE_URL/SUPABASE_ANON_KEY 未設定（オフラインモード）');
+  }
 
   Hive.registerAdapter(TaskAdapter()); // TypeId: 0
   Hive.registerAdapter(TaskStatusAdapter()); // TypeId: 1

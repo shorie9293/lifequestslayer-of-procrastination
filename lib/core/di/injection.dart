@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
@@ -14,6 +16,14 @@ import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/features/battle/domain/battle_audio_service.dart';
 import 'package:rpg_todo/features/battle/viewmodels/battle_view_model.dart';
 
+import 'package:rpg_todo/features/guild/data/task_repository.dart';
+import 'package:rpg_todo/features/shared/data/player_repository.dart';
+import 'package:rpg_todo/features/guild/data/supabase_task_repository.dart';
+import 'package:rpg_todo/features/shared/data/supabase_player_repository.dart';
+import 'package:rpg_todo/features/guild/data/hybrid_task_repository.dart';
+import 'package:rpg_todo/features/shared/data/hybrid_player_repository.dart';
+import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
+
 import 'injection.config.dart';
 
 final getIt = GetIt.instance;
@@ -25,6 +35,29 @@ final getIt = GetIt.instance;
 )
 void configureDependencies() {
   initGetIt(getIt);
+
+  // ━━━ Supabase ハイブリッドリポジトリ切替 ━━━
+  if (SupabaseConfig.url.isNotEmpty && SupabaseConfig.anonKey.isNotEmpty) {
+    try {
+      getIt.allowReassignment = true;
+
+      getIt.registerLazySingleton<ITaskRepository>(() => HybridTaskRepository(
+            hiveRepo: TaskRepository(),
+            supabaseRepo:
+                SupabaseTaskRepository(Supabase.instance.client),
+          ));
+
+      getIt.registerLazySingleton<IPlayerRepository>(() => HybridPlayerRepository(
+            hiveRepo: PlayerRepository(),
+            supabaseRepo:
+                SupabasePlayerRepository(Supabase.instance.client),
+          ));
+
+      debugPrint('[DI] ✅ Supabaseハイブリッドリポジトリに切替完了');
+    } catch (e) {
+      debugPrint('[DI] ⚠️ ハイブリッド切替失敗（Hiveのみ継続）: $e');
+    }
+  }
 
   // 戦闘系サービス（injectable未対応のため手動登録）
   getIt.registerLazySingleton<BattleAudioService>(() => BattleAudioService());
