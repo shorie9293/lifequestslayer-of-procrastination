@@ -10,15 +10,21 @@ class SupabaseTaskRepository implements ITaskRepository {
 
   SupabaseTaskRepository(this._client);
 
-  String get _userId => _client.auth.currentUser!.id;
+  /// 未ログイン時は null。null 安全化により currentUser! の NPE を排除。
+  String? get _userId => _client.auth.currentUser?.id;
 
   @override
   Future<List<Task>> loadTasks() async {
+    final userId = _userId;
+    if (userId == null) {
+      debugPrint('[SupabaseTaskRepo] loadTasks skipped: not signed in');
+      return [];
+    }
     try {
       final response = await _client
           .from('rpg_tasks')
           .select('data')
-          .eq('user_id', _userId);
+          .eq('user_id', userId);
 
       return response.map<Task>((row) {
         return Task.fromJson(row['data'] as Map<String, dynamic>);
@@ -31,10 +37,15 @@ class SupabaseTaskRepository implements ITaskRepository {
 
   @override
   Future<void> saveTasks(List<Task> tasks) async {
+    final userId = _userId;
+    if (userId == null) {
+      debugPrint('[SupabaseTaskRepo] saveTasks skipped: not signed in');
+      return;
+    }
     try {
       final rows = tasks.map((task) => {
             'id': task.id,
-            'user_id': _userId,
+            'user_id': userId,
             'data': task.toJson(),
             'updated_at': DateTime.now().toIso8601String(),
           }).toList();
