@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
@@ -39,6 +42,72 @@ class _GuildScreenState extends State<GuildScreen> {
       context: context,
       builder: (context) => const CreateTaskDialog(),
     ).then((_) => _isDialogOpen = false);
+  }
+
+  Future<void> _showOracleLinkDialog(BuildContext context) async {
+    final userId = SupabaseConfig.url.isNotEmpty
+        ? Supabase.instance.client.auth.currentUser?.id ?? '連携準備中...'
+        : 'Supabase未設定';
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.link, color: Colors.amber),
+            SizedBox(width: 8),
+            Text('神託連携'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('このコードをHermes（天照）に伝えると、\nAIから直接タスクを追加できるようになります。'),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      userId,
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.copy, size: 18),
+                    tooltip: 'コピー',
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: userId));
+                      ScaffoldMessenger.of(ctx).showSnackBar(
+                        const SnackBar(
+                          content: Text('連携コードをコピーしました'),
+                          duration: Duration(seconds: 1),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('閉じる'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showEditTaskDialog(BuildContext context, Task task) {
@@ -288,7 +357,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.4.26+90", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.4.26+91", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -356,6 +425,10 @@ class _GuildScreenState extends State<GuildScreen> {
                     context: context,
                     builder: (context) => const TutorialResetDialog(),
                   ).then((_) => _isDialogOpen = false);
+                case 'oracle_link':
+                  if (_isDialogOpen) return;
+                  _isDialogOpen = true;
+                  _showOracleLinkDialog(context).then((_) => _isDialogOpen = false);
               }
             },
             itemBuilder: (context) => [
@@ -399,6 +472,17 @@ class _GuildScreenState extends State<GuildScreen> {
                   ],
                 ),
               ),
+              if (SupabaseConfig.url.isNotEmpty)
+                const PopupMenuItem(
+                  value: 'oracle_link',
+                  child: Row(
+                    children: [
+                      Icon(Icons.link, color: Colors.black54),
+                      SizedBox(width: 8),
+                      Text('神託連携')
+                    ],
+                  ),
+                ),
             ],
           ),
         ],
