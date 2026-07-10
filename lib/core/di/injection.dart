@@ -125,6 +125,13 @@ Future<void> initializeViewModels() async {
         await _safeSave(taskVM, 'task');
         await townVM.save().catchError((e) => debugPrint('[DI] town save failed: $e'));
       },
+      onResume: () async {
+        // フォアグラウンド復帰時にSupabaseから最新データを同期
+        await taskVM.load();
+        await playerVM.load();
+        townVM.initialize();
+        debugPrint('[DI] 🔄 Supabase同期完了 (onResume)');
+      },
     ));
   } catch (_) {}
 
@@ -151,14 +158,20 @@ Future<void> _safeSave(ChangeNotifier vm, String label) async {
 
 class _AppLifecycleObserver extends WidgetsBindingObserver {
   final Future<void> Function() _onPause;
-  _AppLifecycleObserver({required Future<void> Function() onPause})
-      : _onPause = onPause;
+  final Future<void> Function() _onResume;
+  _AppLifecycleObserver({
+    required Future<void> Function() onPause,
+    required Future<void> Function() onResume,
+  })  : _onPause = onPause,
+        _onResume = onResume;
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
       _onPause();
+    } else if (state == AppLifecycleState.resumed) {
+      _onResume();
     }
   }
 }
