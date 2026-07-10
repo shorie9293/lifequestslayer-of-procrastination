@@ -51,3 +51,4 @@ app.*.map.json
 /android/app/release
 flutter/coverage/
 test/hive_testing_path/
+supabase/.temp/
