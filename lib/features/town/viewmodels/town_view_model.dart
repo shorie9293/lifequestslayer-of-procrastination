@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rpg_todo/features/town/domain/town_level.dart';
 import 'package:rpg_todo/features/town/domain/building.dart';
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
@@ -11,6 +12,10 @@ import 'package:injectable/injectable.dart';
 ///
 /// 町のレベル・XP、建物の状態を保持し、永続化する。
 /// クエスト完了時に町XPが加算され、町が成長していく。
+///
+/// データは Hive（ローカル）と Supabase（クラウド）の二重保存。
+/// [supabaseClient] が注入されている場合は、Playerデータ内の
+/// `townData` キーに町データを自動同期する。
 @lazySingleton
 class TownViewModel extends ChangeNotifier {
   static const String _boxName = 'townBox';
@@ -22,7 +27,11 @@ class TownViewModel extends ChangeNotifier {
   /// Hive box。テストでは外部から注入可能。
   Box<dynamic>? _box;
 
-  TownViewModel();
+  /// Supabase クライアント（null可：Hiveのみ動作）。
+  final SupabaseClient? _supabaseClient;
+
+  TownViewModel({SupabaseClient? supabaseClient})
+      : _supabaseClient = supabaseClient;
 
   /// 町のレベルと経験値。
   TownLevel get townLevel => _townLevel;
@@ -145,6 +154,41 @@ class TownViewModel extends ChangeNotifier {
     };
     await box.put(_key, data);
     await box.flush();
+
+    // ── Supabase 同期：Player JSONB 内の townData キーに保存 ──
+    await _syncTownToSupabase(data);
+  }
+
+  /// 町データを Supabase の rpg_players.data->'townData' に同期する。
+  /// 既存のPlayerデータを保持したまま townData キーのみ更新する。
+  Future<void> _syncTownToSupabase(Map<String, dynamic> townData) async {
+    final client = _supabaseClient;
+    if (client == null) return;
+    final userId = client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      // 現在のPlayerデータを取得してマージ
+      final response = await client
+          .from('rpg_players')
+          .select('data')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      final resp = response;
+      final existingData = (resp is Map<String, dynamic>)
+          ? Map<String, dynamic>.from(resp['data'] as Map? ?? {})
+          : <String, dynamic>{};
+      existingData['townData'] = townData;
+
+      await client.from('rpg_players').upsert({
+        'user_id': userId,
+        'data': existingData,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('[TownVM] Supabase sync failed: $e');
+    }
   }
 
   /// 町データを Hive から読み込む。
@@ -191,6 +235,59 @@ class TownViewModel extends ChangeNotifier {
         () => BuildingState(building: building),
       );
     }
+
+    // ── Supabase 同期：クラウドの街データで上書き（あれば） ──
+    await _loadFromSupabase();
+
     notifyListeners();
+  }
+
+  /// Supabase の rpg_players.data->'townData' から街データを読み込む。
+  Future<void> _loadFromSupabase() async {
+    final client = _supabaseClient;
+    if (client == null) return;
+    final userId = client.auth.currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      final response = await client
+          .from('rpg_players')
+          .select('data')
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      final resp = response;
+      if (resp is! Map<String, dynamic>) return;
+      final playerData = resp['data'];
+      if (playerData == null || playerData is! Map) return;
+
+      final townData = playerData['townData'];
+      if (townData == null || townData is! Map) return;
+
+      // 町レベルをリストア
+      final tLevel = townData['townLevel'];
+      if (tLevel != null && tLevel is Map) {
+        _townLevel = TownLevel.fromJson(Map<String, dynamic>.from(tLevel));
+      }
+
+      // 建物レベルをリストア
+      final bData = townData['buildings'];
+      if (bData != null && bData is Map) {
+        for (final entry in Map<String, dynamic>.from(bData).entries) {
+          try {
+            final building = Building.fromString(entry.key);
+            final state = BuildingState.fromJson(
+              Map<String, dynamic>.from(entry.value as Map),
+            );
+            _buildings[building] = state;
+          } catch (e) {
+            debugPrint('[TownVM] Supabase building entry skipped: $e');
+          }
+        }
+      }
+      debugPrint('[TownVM] Restored town data from Supabase (Lv.${_townLevel.level})');
+    } catch (e) {
+      debugPrint('[TownVM] Supabase load failed (offline): $e');
+    }
   }
 }

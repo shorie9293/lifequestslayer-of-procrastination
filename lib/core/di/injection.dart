@@ -74,7 +74,11 @@ void configureDependencies() {
   getIt.registerLazySingleton<BattleViewModel>(() => BattleViewModel());
 
   // 町開発 ViewModel（Hive box に依存するため手動登録）
-  getIt.registerLazySingleton<TownViewModel>(() => TownViewModel());
+  getIt.registerLazySingleton<TownViewModel>(() => TownViewModel(
+        supabaseClient: SupabaseConfig.url.isNotEmpty
+            ? Supabase.instance.client
+            : null,
+      ));
 
   // 全VM統括 GameViewModel（getItのVMを注入、二重構造解消）
   getIt.registerLazySingleton<GameViewModel>(() => GameViewModel(
