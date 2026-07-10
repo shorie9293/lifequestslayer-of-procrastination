@@ -43,6 +43,24 @@ class SupabaseTaskRepository implements ITaskRepository {
       return;
     }
     try {
+      // ── 削除同期：Supabaseにあって新しいリストにないタスクをDELETE ──
+      final existingResponse = await _client
+          .from('rpg_tasks')
+          .select('id')
+          .eq('user_id', userId);
+      final existingIds =
+          existingResponse.map<String>((r) => r['id'] as String).toSet();
+      final newIds = tasks.map((t) => t.id).toSet();
+      final deletedIds = existingIds.difference(newIds);
+      for (final id in deletedIds) {
+        await _client.from('rpg_tasks').delete().eq('id', id);
+      }
+      if (deletedIds.isNotEmpty) {
+        debugPrint(
+            '[SupabaseTaskRepo] Deleted ${deletedIds.length} removed tasks');
+      }
+
+      // ── upsert残タスク ──
       final rows = tasks.map((task) => {
             'id': task.id,
             'user_id': userId,
@@ -50,7 +68,9 @@ class SupabaseTaskRepository implements ITaskRepository {
             'updated_at': DateTime.now().toIso8601String(),
           }).toList();
 
-      await _client.from('rpg_tasks').upsert(rows);
+      if (rows.isNotEmpty) {
+        await _client.from('rpg_tasks').upsert(rows);
+      }
     } catch (e) {
       debugPrint('[SupabaseTaskRepo] saveTasks failed: $e');
     }
