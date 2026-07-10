@@ -23,6 +23,7 @@ import 'package:rpg_todo/features/shared/data/supabase_player_repository.dart';
 import 'package:rpg_todo/features/guild/data/hybrid_task_repository.dart';
 import 'package:rpg_todo/features/shared/data/hybrid_player_repository.dart';
 import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
+import 'package:rpg_todo/core/infrastructure/auth_service.dart';
 
 import 'injection.config.dart';
 
@@ -56,6 +57,15 @@ void configureDependencies() {
       debugPrint('[DI] ✅ Supabaseハイブリッドリポジトリに切替完了');
     } catch (e) {
       debugPrint('[DI] ⚠️ ハイブリッド切替失敗（Hiveのみ継続）: $e');
+    }
+
+    // Google認証サービス（Supabaseクライアント注入）
+    try {
+      getIt.registerLazySingleton<AuthService>(
+          () => AuthService(Supabase.instance.client));
+      debugPrint('[DI] ✅ AuthService登録完了');
+    } catch (e) {
+      debugPrint('[DI] ⚠️ AuthService登録失敗: $e');
     }
   }
 

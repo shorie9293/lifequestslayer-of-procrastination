@@ -45,9 +45,11 @@ class _GuildScreenState extends State<GuildScreen> {
   }
 
   Future<void> _showOracleLinkDialog(BuildContext context) async {
-    final userId = SupabaseConfig.url.isNotEmpty
-        ? Supabase.instance.client.auth.currentUser?.id ?? '連携準備中...'
-        : 'Supabase未設定';
+    final user = SupabaseConfig.url.isNotEmpty
+        ? Supabase.instance.client.auth.currentUser
+        : null;
+    final userId = user?.id ?? (SupabaseConfig.url.isNotEmpty ? '連携準備中...' : 'Supabase未設定');
+    final email = user?.email ?? user?.userMetadata?['email'] as String?;
 
     await showDialog(
       context: context,
@@ -64,6 +66,11 @@ class _GuildScreenState extends State<GuildScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('このコードをHermes（天照）に伝えると、\nAIから直接タスクを追加できるようになります。'),
+            if (email != null) ...[
+              const SizedBox(height: 8),
+              Text('ログイン中: $email',
+                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            ],
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
@@ -357,7 +364,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.4.26+92", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.0+93", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [

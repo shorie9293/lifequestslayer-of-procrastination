@@ -10,18 +10,24 @@ class SupabasePlayerRepository implements IPlayerRepository {
 
   SupabasePlayerRepository(this._client);
 
-  String get _userId => _client.auth.currentUser!.id;
+  /// 未ログイン時は null。null 安全化により currentUser! の NPE を排除。
+  String? get _userId => _client.auth.currentUser?.id;
 
   @override
   bool loadFailedDueToCorruption = false;
 
   @override
   Future<Player?> loadPlayer() async {
+    final userId = _userId;
+    if (userId == null) {
+      debugPrint('[SupabasePlayerRepo] loadPlayer skipped: not signed in');
+      return null;
+    }
     try {
       final response = await _client
           .from('rpg_players')
           .select('data')
-          .eq('user_id', _userId)
+          .eq('user_id', userId)
           .maybeSingle();
 
       if (response == null) return null;
@@ -35,9 +41,14 @@ class SupabasePlayerRepository implements IPlayerRepository {
 
   @override
   Future<void> savePlayer(Player player) async {
+    final userId = _userId;
+    if (userId == null) {
+      debugPrint('[SupabasePlayerRepo] savePlayer skipped: not signed in');
+      return;
+    }
     try {
       await _client.from('rpg_players').upsert({
-        'user_id': _userId,
+        'user_id': userId,
         'data': player.toJson(),
         'updated_at': DateTime.now().toIso8601String(),
       });

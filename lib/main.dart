@@ -10,7 +10,7 @@ import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
 import 'package:rpg_todo/core/di/injection.dart';
-import 'screens/main_screen.dart';
+import 'package:rpg_todo/features/auth/presentation/auth_gate.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rpg_todo/domain/models/task.dart';
@@ -34,16 +34,7 @@ void main() async {
     try {
       await Supabase.initialize(url: supabaseUrl, anonKey: supabaseKey);
       debugPrint('[main] ✅ Supabase 初期化完了');
-
-      try {
-        final session = Supabase.instance.client.auth.currentSession;
-        if (session == null) {
-          await Supabase.instance.client.auth.signInAnonymously();
-          debugPrint('[main] ✅ 匿名サインイン完了');
-        }
-      } catch (e) {
-        debugPrint('[main] ⚠️ 匿名サインイン失敗（オフラインモード継続）: $e');
-      }
+      // 匿名サインインは廃止。認証は AuthGate → LoginScreen（Google）で行う。
     } catch (e) {
       debugPrint('[main] ⚠️ Supabase初期化失敗（オフラインモード）: $e');
     }
@@ -64,8 +55,9 @@ void main() async {
   // Boxes are opened in Repositories on demand/init.
 
   // ━━━ DI 初期化 ━━━
+  // configureDependencies() はVMシングルトン登録のみ（データロードはしない）。
+  // 実データのロード（initializeViewModels）はGoogleログイン後にAuthGateが行う。
   configureDependencies();
-  await initializeViewModels();
 
   // IAPサービスの初期化（DI経由）
   try {
@@ -192,7 +184,7 @@ class RPGTodoApp extends StatelessWidget {
                 displayColor: Colors.white,
               ),
             ),
-            home: const MainScreen(),
+            home: const AuthGate(),
             builder: (context, child) {
               return MediaQuery(
                 data: MediaQuery.of(context).copyWith(

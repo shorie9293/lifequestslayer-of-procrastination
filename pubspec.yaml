@@ -2,7 +2,7 @@ name: rpg_todo
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.4.26+92
+version: 1.5.0+93
 
 environment:
   sdk: ^3.5.4
@@ -33,6 +33,7 @@ dependencies:
   lottie: ^3.3.1
   audioplayers: ^6.4.0
   supabase_flutter: ^2.8.4
+  google_sign_in: ^7.1.1
 
 dev_dependencies:
   flutter_test:
