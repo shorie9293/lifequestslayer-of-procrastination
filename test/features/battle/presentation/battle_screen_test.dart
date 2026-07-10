@@ -5,6 +5,7 @@ import 'package:rpg_todo/features/battle/presentation/battle_screen.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/features/battle/viewmodels/battle_view_model.dart';
 import 'package:rpg_todo/features/battle/domain/battle_audio_service.dart';
 import 'package:rpg_todo/domain/models/battle_state.dart';
@@ -152,6 +153,16 @@ Future<void> pumpBattleScreen(
         ChangeNotifierProvider<TaskViewModel>.value(value: taskVM),
         ChangeNotifierProvider<PlayerViewModel>.value(value: playerVM),
         ChangeNotifierProvider<SettingsViewModel>.value(value: settingsVM),
+        // BattleScreen._completeTask は GameViewModel を参照する。
+        // 同一の VM インスタンスを注入して状態を共有させる。
+        ChangeNotifierProvider<GameViewModel>.value(
+          value: GameViewModel(
+            playerVM: playerVM,
+            taskVM: taskVM,
+            settingsVM: settingsVM,
+            autoLoad: false,
+          ),
+        ),
       ],
       child: const MaterialApp(
         home: BattleScreen(),

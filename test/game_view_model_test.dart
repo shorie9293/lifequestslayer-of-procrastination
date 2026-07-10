@@ -212,6 +212,7 @@ void main() {
       await _waitForLoad(vm1);
 
       vm1.addTask('テストクエスト', rank: QuestRank.B);
+      vm1.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化: 希少種抽選を無効化
 
       // クエストを受け入れて完了（Bランク=100EXP → Lv1→Lv2）
       final taskId = vm1.tasks.first.id;
@@ -473,6 +474,7 @@ void main() {
       await _waitForLoad(vm);
 
       vm.addTask('クエストB', rank: QuestRank.B);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化: 希少種抽選を無効化
       vm.acceptTask(vm.tasks[0].id);
 
       final result = vm.completeTask(vm.tasks[0].id);
@@ -494,6 +496,7 @@ void main() {
       vm.player.jobLevels[vm.player.currentJob] = 5;
 
       vm.addTask('クエストA', rank: QuestRank.A);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化: 希少種抽選を無効化
       vm.acceptTask(vm.tasks[0].id);
 
       final result = vm.completeTask(vm.tasks[0].id);
@@ -515,6 +518,7 @@ void main() {
       vm.player.jobLevels[vm.player.currentJob] = 10;
 
       vm.addTask('クエストS', rank: QuestRank.S);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化: 希少種抽選を無効化
       vm.acceptTask(vm.tasks[0].id);
 
       final result = vm.completeTask(vm.tasks[0].id);
@@ -536,6 +540,7 @@ void main() {
       vm.player.jobLevels[Job.adventurer] = 10; // 転職制限
       vm.changeJob(Job.samurai);
       vm.addTask('クエスト', rank: QuestRank.B);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化
       vm.acceptTask(vm.tasks[0].id);
 
       final result = vm.completeTask(vm.tasks[0].id);
@@ -565,6 +570,7 @@ void main() {
 
       // 2回目
       vm.addTask('クエスト2', rank: QuestRank.B);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化
       vm.acceptTask(vm.tasks[1].id);
       final result2 = vm.completeTask(vm.tasks[1].id);
       expect(vm.player.comboCount, 2);
@@ -606,6 +612,7 @@ void main() {
       vm.equipTitle('テスト称号');
 
       vm.addTask('クエスト', rank: QuestRank.B);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化
       vm.acceptTask(vm.tasks[0].id);
 
       final result = vm.completeTask(vm.tasks[0].id);
@@ -625,6 +632,7 @@ void main() {
       expect(vm.player.equippedTitle, isNull);
 
       vm.addTask('クエスト', rank: QuestRank.B);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化
       vm.acceptTask(vm.tasks[0].id);
 
       final result = vm.completeTask(vm.tasks[0].id);
@@ -649,6 +657,7 @@ void main() {
       expect(vm.player.equippedTitle, isNull);
 
       vm.addTask('クエスト', rank: QuestRank.B);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化
       vm.acceptTask(vm.tasks[0].id);
 
       final result = vm.completeTask(vm.tasks[0].id);
@@ -669,6 +678,7 @@ void main() {
       vm.player.dailyTasksCompleted = 0;
 
       vm.addTask('クエスト', rank: QuestRank.B);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化
       vm.acceptTask(vm.tasks[0].id);
 
       final result = vm.completeTask(vm.tasks[0].id);
@@ -689,6 +699,7 @@ void main() {
       vm.player.dailyTasksCompleted = 5; // warnThreshold=5+0=5
 
       vm.addTask('クエスト', rank: QuestRank.B);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化
       vm.acceptTask(vm.tasks[0].id);
 
       final result = vm.completeTask(vm.tasks[0].id);
@@ -711,6 +722,7 @@ void main() {
       vm.player.dailyTasksCompleted = 10; // severeThreshold=10+0=10
 
       vm.addTask('クエスト', rank: QuestRank.B);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化
       vm.acceptTask(vm.tasks[0].id);
 
       final result = vm.completeTask(vm.tasks[0].id);
@@ -876,6 +888,7 @@ void main() {
         SubTask(title: 'ステップ1', isCompleted: true),
         SubTask(title: 'ステップ2', isCompleted: true),
       ]);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化
       vm.acceptTask(vm.tasks[0].id);
 
       final result = vm.completeTask(vm.tasks[0].id);
@@ -1427,6 +1440,7 @@ void main() {
 
       // Lv1→Lv2
       vm.addTask('修行', rank: QuestRank.B);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化: 希少種抽選を無効化
       final taskId = vm.tasks.first.id;
       vm.acceptTask(taskId);
       final result = vm.completeTask(taskId);
@@ -1577,6 +1591,7 @@ void main() {
 
       final pastDeadline = DateTime.now().subtract(const Duration(days: 1));
       vm.addTask('期限切れクエスト', rank: QuestRank.B, deadline: pastDeadline);
+      vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化
       vm.acceptTask(vm.tasks[0].id);
 
       final result = vm.completeTask(vm.tasks[0].id);
