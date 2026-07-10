@@ -22,10 +22,15 @@ class HybridPlayerRepository implements IPlayerRepository {
     // プライマリ: Hiveから読み込み
     final player = await _hiveRepo.loadPlayer();
 
-    // セカンダリ: Supabaseから非同期で読み込み → マージ
-    _syncFromSupabase(player);
+    // セカンダリ: Supabaseと同期（awaitで確実に完了を待つ）
+    try {
+      await _syncFromSupabase(player).timeout(const Duration(seconds: 5));
+    } catch (e) {
+      debugPrint('[HybridPlayerRepo] Sync timeout, using local data: $e');
+    }
 
-    return player;
+    // マージ後の最新データをHiveから再読み込み
+    return await _hiveRepo.loadPlayer();
   }
 
   Future<void> _syncFromSupabase(Player? localPlayer) async {

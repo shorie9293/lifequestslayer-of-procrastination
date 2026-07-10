@@ -21,10 +21,15 @@ class HybridTaskRepository implements ITaskRepository {
     // プライマリ: Hiveから読み込み
     final tasks = await _hiveRepo.loadTasks();
 
-    // セカンダリ: Supabaseから非同期で読み込み → マージ
-    _syncFromSupabase(tasks);
+    // セカンダリ: Supabaseと同期（awaitで確実に完了を待つ）
+    try {
+      await _syncFromSupabase(tasks).timeout(const Duration(seconds: 5));
+    } catch (e) {
+      debugPrint('[HybridTaskRepo] Sync timeout, using local data: $e');
+    }
 
-    return tasks;
+    // マージ後の最新データをHiveから再読み込み
+    return await _hiveRepo.loadTasks();
   }
 
   /// Supabaseからデータを読み込み、Hiveのデータとマージする。
