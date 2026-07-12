@@ -51,4 +51,36 @@ void main() {
       expect(StreakService.calcStreakReward(101), 10000);
     });
   });
+
+  group('StreakService.calcExpMultiplier', () {
+    test('7日ストリークで1.2x', () {
+      expect(StreakService.calcExpMultiplier(7), 1.2);
+    });
+
+    test('14日ストリークで1.5x', () {
+      expect(StreakService.calcExpMultiplier(14), 1.5);
+    });
+
+    test('30日ストリークで2.0x', () {
+      expect(StreakService.calcExpMultiplier(30), 2.0);
+    });
+
+    test('マイルストーン超過日数はそのマイルストーンの倍率', () {
+      expect(StreakService.calcExpMultiplier(8), 1.2);
+      expect(StreakService.calcExpMultiplier(13), 1.2);
+      expect(StreakService.calcExpMultiplier(15), 1.5);
+      expect(StreakService.calcExpMultiplier(29), 1.5);
+      expect(StreakService.calcExpMultiplier(31), 2.0);
+      expect(StreakService.calcExpMultiplier(100), 2.0);
+    });
+
+    test('マイルストーン未満の日数は1.0x', () {
+      expect(StreakService.calcExpMultiplier(0), 1.0);
+      expect(StreakService.calcExpMultiplier(1), 1.0);
+      expect(StreakService.calcExpMultiplier(2), 1.0);
+      expect(StreakService.calcExpMultiplier(3), 1.0);
+      expect(StreakService.calcExpMultiplier(5), 1.0);
+      expect(StreakService.calcExpMultiplier(6), 1.0);
+    });
+  });
 }
