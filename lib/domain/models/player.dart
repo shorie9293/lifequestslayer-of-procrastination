@@ -952,11 +952,9 @@ class PlayerAdapter extends TypeAdapter<Player> {
     try {
       if (reader.availableBytes > 0) {
         final missionRaw = reader.readMap();
-        if (missionRaw != null) {
-          player.activeReturnMission = ReturnMission.fromJson(
-            (missionRaw).cast<String, dynamic>(),
-          );
-        }
+        player.activeReturnMission = ReturnMission.fromJson(
+          missionRaw.cast<String, dynamic>(),
+        );
       }
     } catch (e) { _log('activeReturnMission read failed', e); }
     try {
