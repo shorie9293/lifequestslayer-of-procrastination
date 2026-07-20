@@ -38,8 +38,10 @@ class TaskCard extends StatefulWidget {
     this.hideCountdown = false,
     this.expandedDetails,
     this.titleOverride,
-  }) : isUrgent = task.deadline != null &&
-           task.deadline!.isBefore(DateTime.now().add(const Duration(days: 1)));
+    bool? isUrgent,
+  }) : isUrgent = isUrgent ??
+           (task.deadline != null &&
+            task.deadline!.isBefore(DateTime.now().add(const Duration(days: 1))));
 
   /// 期限に基づく緊急度カラー
   /// - 期限なしまたは24時間超：null（通常表示）

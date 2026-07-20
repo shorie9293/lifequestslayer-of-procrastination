@@ -273,15 +273,35 @@ class _GuildScreenState extends State<GuildScreen> {
                       size: 16, color: Colors.orangeAccent),
                   const SizedBox(width: 6),
                   Expanded(
-                    child: Text(
-                      task.title,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            task.title,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text('緊急',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white)),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -354,8 +374,7 @@ class _GuildScreenState extends State<GuildScreen> {
     final now = DateTime.now();
     final urgentTasks = tasks.where((t) =>
         t.deadline != null &&
-        t.deadline!.isAfter(now) &&
-        t.deadline!.difference(now).inHours < 24).toList();
+        t.deadline!.isBefore(now.add(const Duration(days: 1)))).toList();
 
     return Scaffold(
       appBar: AppBar(
@@ -364,7 +383,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.0+93", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.3+96", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -598,12 +617,15 @@ class _GuildScreenState extends State<GuildScreen> {
 
                       // Task card (非緊急: コンパクト表示)
                       final task = remainingTasks[adjustedIndex];
+                      final isUrgent = task.deadline != null &&
+                          task.deadline!.isBefore(DateTime.now().add(const Duration(days: 1)));
                       return SemanticHelper.listItem(
                         testId: SemanticHelper.createTestId(
                             SemanticTypes.listItem, 'task_$adjustedIndex'),
                         index: adjustedIndex,
                         child: TaskCard(
                           task: task,
+                          isUrgent: isUrgent,
                           color: _getRankColor(task.rank),
                           titleOverride: _getCompactTitle(task),
                           hideCountdown: true,

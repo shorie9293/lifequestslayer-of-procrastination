@@ -379,5 +379,47 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('通常依頼'), findsOneWidget);
     });
+
+    // ━━━ 禍津A: 期限切れタスクが緊急セクションに表示されること ━━━
+    testWidgets('期限切れ（過去）の guild タスクが緊急セクションに表示される',
+        (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+        // 期限が2時間前（過去）= 期限切れ。TaskCard.isUrgent 基準では緊急扱い。
+        final deadline =
+            DateTime.now().subtract(const Duration(hours: 2));
+        vms.task.addTask('期限切れ緊急クエスト',
+            rank: QuestRank.S, deadline: deadline);
+      });
+
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // 緊急セクションが表示される（期限切れタスクも緊急扱い）
+      expect(find.byKey(AppKeys.guildUrgentSection), findsOneWidget);
+      // 期限切れタスクのタイトルが緊急セクション内に表示されている
+      expect(find.textContaining('期限切れ緊急クエスト'), findsOneWidget);
+    });
+
+    // ━━━ 禍津B: 一般リスト TaskCard の isUrgent 表示 ━━━
+    testWidgets('isUrgent=true のタスクで「緊急」バッジが表示される',
+        (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+        // 期限が12時間後 = 緊急扱い。緊急セクションに表示される。
+        final deadline =
+            DateTime.now().add(const Duration(hours: 12));
+        vms.task.addTask('緊急表示確認クエスト',
+            rank: QuestRank.A, deadline: deadline);
+      });
+
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // isUrgent=true のタスクがレンダリングされ、「緊急」テキストが表示される
+      expect(find.text('緊急'), findsOneWidget);
+    });
   });
 }
