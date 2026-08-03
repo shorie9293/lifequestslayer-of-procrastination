@@ -356,6 +356,29 @@ class _GuildScreenState extends State<GuildScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(width: 8),
+                  // 🗑 破棄ボタン — 期限切れ等の緊急タスクも削除できる（禍津C討伐）
+                  SemanticHelper.interactive(
+                    testId: SemanticHelper.createTestId(SemanticTypes.button, 'urgent_delete'),
+                    label: 'クエストを破棄',
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => _deleteTask(context, task.id),
+                      child: Container(
+                        key: AppKeys.urgentDelete,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade900,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: const Text(
+                          '🗑',
+                          style: TextStyle(fontSize: 13),
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -383,7 +406,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.3+96", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.3+97", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [

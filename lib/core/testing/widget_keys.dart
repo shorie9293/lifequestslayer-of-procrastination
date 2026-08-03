@@ -22,6 +22,7 @@ class AppKeys {
   static const Key guildSettingsMenu = Key('menu_settings');
   static const Key guildKnowledgeQuestToggle = Key('tgl_knowledge_quest');
   static const Key guildUrgentSection = Key('sec_urgent_quests');
+  static const Key urgentDelete = Key('btn_urgent_delete_task');
 
   // ━━━ クエストカード ━━━
   static const Key taskCard = Key('card_task');

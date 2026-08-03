@@ -421,5 +421,40 @@ void main() {
       // isUrgent=true のタスクがレンダリングされ、「緊急」テキストが表示される
       expect(find.text('緊急'), findsOneWidget);
     });
+
+    // ━━━ 禍津C: 期限切れタスクが緊急セクションから破棄できること ━━━
+    testWidgets('期限切れタスクが緊急セクションから破棄できる',
+        (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+        // 期限が2時間前（過去）= 期限切れ。緊急セクションに表示される。
+        final deadline =
+            DateTime.now().subtract(const Duration(hours: 2));
+        vms.task.addTask('期限切れ破棄対象クエスト',
+            rank: QuestRank.S, deadline: deadline);
+      });
+
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // 期限切れタスクが緊急セクションに表示される
+      expect(find.byKey(AppKeys.guildUrgentSection), findsOneWidget);
+      expect(find.textContaining('期限切れ破棄対象クエスト'), findsOneWidget);
+
+      // 破棄ボタンが存在する（一般リスト TaskCard の破棄ボタンとは別物）
+      expect(find.byKey(AppKeys.urgentDelete), findsOneWidget);
+
+      // 破棄ボタンをタップ → 確認ダイアログ → 破棄する
+      await tester.tap(find.byKey(AppKeys.urgentDelete));
+      await tester.pumpAndSettle();
+      expect(find.text('クエストを破棄'), findsOneWidget);
+      await tester.tap(find.text('破棄する'));
+      await tester.pumpAndSettle();
+
+      // タスクが消え、緊急セクションも非表示になる
+      expect(find.textContaining('期限切れ破棄対象クエスト'), findsNothing);
+      expect(find.byKey(AppKeys.guildUrgentSection), findsNothing);
+    });
   });
 }
