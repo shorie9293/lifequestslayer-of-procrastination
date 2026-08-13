@@ -22,6 +22,7 @@ class AuthGate extends StatefulWidget {
 class _AuthGateState extends State<AuthGate> {
   bool _vmInitialized = false;
   bool _initializing = false;
+  bool _offlineMode = false;
 
   Future<void> _initVMsOnce() async {
     if (_vmInitialized || _initializing) return;
@@ -29,9 +30,33 @@ class _AuthGateState extends State<AuthGate> {
     try {
       await initializeViewModels();
       if (mounted) setState(() => _vmInitialized = true);
+    } catch (e, s) {
+      // オフライン経路で VM 初期化が失敗しても無限スピナーにしない。
+      debugPrint('[AuthGate] initializeViewModels failed: $e\n$s');
+      if (mounted) {
+        setState(() {
+          _offlineMode = false;
+          _vmInitialized = false;
+        });
+      }
     } finally {
       _initializing = false;
     }
+  }
+
+  /// オフラインモードで続行。Supabase セッションが無くても
+  /// ローカル Hive データでアプリを利用できるようにする。
+  Future<void> _continueOffline() async {
+    setState(() => _offlineMode = true);
+    await _initVMsOnce();
+  }
+
+  /// オフラインモードを解除し、ログイン画面へ戻る（オンライン同期へ復帰）。
+  void _exitOffline() {
+    setState(() {
+      _offlineMode = false;
+      _vmInitialized = false;
+    });
   }
 
   @override
@@ -44,10 +69,29 @@ class _AuthGateState extends State<AuthGate> {
       builder: (context, snapshot) {
         final session = client.auth.currentSession;
 
+        // オフラインモード中にセッションが確立されたら、オンライン優先で復帰。
+        if (_offlineMode && session != null) {
+          _offlineMode = false;
+        }
+
+        // オフラインモード: セッションが無くてもローカルデータでMainScreenへ。
+        if (_offlineMode) {
+          if (!_vmInitialized) {
+            WidgetsBinding.instance.addPostFrameCallback((_) => _initVMsOnce());
+            return const Scaffold(
+              backgroundColor: Color(0xFF1A1A2E),
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          return ErrorBoundary(
+            child: MainScreen(offline: true, onExitOffline: _exitOffline),
+          );
+        }
+
         if (session == null) {
           // 未ログイン: VM初期化フラグをリセットしてログイン画面へ。
           _vmInitialized = false;
-          return const LoginScreen();
+          return LoginScreen(onContinueOffline: _continueOffline);
         }
 
         // ログイン済み: 初回のみVMロード。

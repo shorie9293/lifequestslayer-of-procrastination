@@ -119,6 +119,7 @@ class Task {
   DateTime? cancelledAt; // M12: 手動取消時刻。autoDeploy時に再配備を抑制する
   String? enemyAssetPath; // M13: 敵グラフィックのアセットパス（ランク別ランダム割当）
   double enemyXpMultiplier; // M14: 敵討伐時の経験値倍率（希少種=1.5, 通常=1.0）
+  DateTime? updatedAt; // オフライン同期: 最後に変更された日時（last-write-wins判定用）
 
   Task({
     required this.id,
@@ -138,6 +139,7 @@ class Task {
     this.cancelledAt,
     this.enemyAssetPath,
     this.enemyXpMultiplier = 1.0,
+    this.updatedAt,
   })  : subTasks = subTasks ?? [],
         repeatWeekdays = repeatWeekdays ?? [],
         tags = tags ?? [];
@@ -185,6 +187,7 @@ class Task {
         'cancelledAt': cancelledAt?.toIso8601String(),
         'enemyAssetPath': enemyAssetPath,
         'enemyXpMultiplier': enemyXpMultiplier,
+        'updatedAt': updatedAt?.toIso8601String(),
       };
 
   factory Task.fromJson(Map<String, dynamic> json) {
@@ -218,6 +221,9 @@ class Task {
           : null,
       enemyAssetPath: json['enemyAssetPath'] as String?,
       enemyXpMultiplier: (json['enemyXpMultiplier'] as num?)?.toDouble() ?? 1.0,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : null,
     );
   }
 }
@@ -261,6 +267,11 @@ class TaskAdapter extends TypeAdapter<Task> {
       } catch (_) {
         // M14: 旧データには enemyXpMultiplier がないためフォールバック
       }
+      try {
+        task.updatedAt = reader.read();
+      } catch (_) {
+        // オフライン同期: 旧データには updatedAt がないためフォールバック
+      }
     } catch (e) {
       // 過去のデータを読み込んだ場合のフォールバック
     }
@@ -286,5 +297,6 @@ class TaskAdapter extends TypeAdapter<Task> {
     writer.write(obj.cancelledAt);
     writer.write(obj.enemyAssetPath);
     writer.write(obj.enemyXpMultiplier);
+    writer.write(obj.updatedAt);
   }
 }

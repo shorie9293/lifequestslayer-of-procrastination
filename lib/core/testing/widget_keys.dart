@@ -24,6 +24,10 @@ class AppKeys {
   static const Key guildUrgentSection = Key('sec_urgent_quests');
   static const Key urgentDelete = Key('btn_urgent_delete_task');
 
+  // ━━━ 認証 ━━━
+  static const Key continueOffline = Key('btn_continue_offline');
+  static const Key offlineBanner = Key('banner_offline');
+
   // ━━━ クエストカード ━━━
   static const Key taskCard = Key('card_task');
   static const Key taskCardCheck = Key('btn_complete_task');

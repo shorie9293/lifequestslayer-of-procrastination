@@ -32,35 +32,70 @@ class HybridTaskRepository implements ITaskRepository {
     return await _hiveRepo.loadTasks();
   }
 
-  /// Supabaseからデータを読み込み、Hiveのデータとマージする。
-  /// 新しい方を優先（updated_at比較はTaskにないので、Supabaseのデータで上書き方針）。
+  /// last-write-wins で Supabase とローカルを統合する。
+  /// - ローカルにのみ存在 → ローカルを保持し、クラウドへ push
+  /// - クラウドにのみ存在 → クラウドを採用しローカルへ追加
+  /// - 両方に存在 → updatedAt が新しい方を採用（同時ならローカル優先）。
+  ///   ローカルが新しければクラウドへ push、クラウドが新しければローカルへ書き込み
   Future<void> _syncFromSupabase(List<Task> localTasks) async {
     try {
       final remoteTasks = await _supabaseRepo.loadTasks();
-      if (remoteTasks.isEmpty) return;
 
-      // リモートのタスクをローカルにマージ
-      final merged = Map<String, Task>.fromEntries(
-        localTasks.map((t) => MapEntry(t.id, t)),
-      );
+      final merged = <String, Task>{};
+      final localWins = <String, Task>{};
+
+      // ローカルのタスクをマップに投入
+      for (final t in localTasks) {
+        merged[t.id] = t;
+      }
 
       for (final remote in remoteTasks) {
-        // リモートにあってローカルにない → 追加
-        // 両方にある → リモートを優先
-        merged[remote.id] = remote;
+        final local = merged[remote.id];
+        if (local == null) {
+          // クラウドのみ → クラウドを採用（ローカルへ追加）
+          merged[remote.id] = remote;
+        } else {
+          // 両方 → last-write-wins。同時はローカル優先。
+          final localTs = local.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          final remoteTs =
+              remote.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+          if (remoteTs.isAfter(localTs)) {
+            merged[remote.id] = remote; // クラウドが新しい → クラウド採用
+          } else {
+            localWins[remote.id] = local; // ローカルが新しい/同時 → ローカル保持
+          }
+        }
       }
 
       final mergedList = merged.values.toList();
       await _hiveRepo.saveTasks(mergedList);
+
+      // ローカル優先タスク or ローカルのみタスクをクラウドへ push
+      // （saveTasks は削除同期 + upsert を行うため、マージ済みリスト全体を渡してよい）
+      if (localWins.isNotEmpty || _hasLocalOnly(localTasks, remoteTasks)) {
+        await _supabaseRepo.saveTasks(mergedList);
+      }
       debugPrint(
-          '[HybridTaskRepo] Synced: local=${localTasks.length} → merged=${mergedList.length}');
+          '[HybridTaskRepo] Synced: local=${localTasks.length} → merged=${mergedList.length}, localWins=${localWins.length}');
     } catch (e) {
       debugPrint('[HybridTaskRepo] Sync failed (offline): $e');
     }
   }
 
+  /// ローカルにのみ存在する（クラウドにない）タスクがあるか
+  bool _hasLocalOnly(List<Task> localTasks, List<Task> remoteTasks) {
+    final remoteIds = remoteTasks.map((t) => t.id).toSet();
+    return localTasks.any((t) => !remoteIds.contains(t.id));
+  }
+
   @override
   Future<void> saveTasks(List<Task> tasks) async {
+    // ローカル保存のタイムスタンプを付与（last-write-wins 判定用）
+    final now = DateTime.now();
+    for (final t in tasks) {
+      t.updatedAt = now;
+    }
+
     // プライマリ: Hiveに即時保存
     await _hiveRepo.saveTasks(tasks);
 

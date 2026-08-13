@@ -16,7 +16,14 @@ import 'package:rpg_todo/features/temple/presentation/dialogs/job_tutorial_dialo
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  const MainScreen({super.key, this.offline = false, this.onExitOffline});
+
+  /// オフラインモード（Supabaseセッションなしでローカルデータ利用中）。
+  final bool offline;
+
+  /// オフラインモード解除時のコールバック（ログイン画面へ戻る）。
+  final VoidCallback? onExitOffline;
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -59,8 +66,36 @@ class _MainScreenState extends State<MainScreen> {
     if (animate) _pageController.animateToPage(index, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
   }
 
-  Widget _skipTutorialBtn(SettingsViewModel settingsVM) => Positioned(
-    top: MediaQuery.of(context).padding.top + 8, right: 16,
+  /// オフラインバナータップ時: ログイン画面へ戻るか確認する。
+  void _confirmExitOffline() {
+    if (widget.onExitOffline == null) return;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [Text('📶', style: TextStyle(fontSize: 24)), SizedBox(width: 8), Text('オンライン同期に戻る')],
+        ),
+        content: const Text('ログイン画面に戻ります。\nオンライン時に Google ログインすると\nオフライン中に記録したデータが同期されます。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            style: TextButton.styleFrom(foregroundColor: Colors.grey),
+            child: const Text('キャンセル'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              widget.onExitOffline?.call();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], foregroundColor: Colors.white),
+            child: const Text('戻る'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _skipTutorialBtn(SettingsViewModel settingsVM) => Positioned(    top: MediaQuery.of(context).padding.top + 8, right: 16,
     child: SafeArea(child: Material(color: Colors.transparent, child: SemanticHelper.interactive(
       testId: SemanticHelper.createTestId(SemanticTypes.button, 'skip_tutorial'),
       label: '導きの書を略する',
@@ -159,6 +194,39 @@ class _MainScreenState extends State<MainScreen> {
         body: PageView(controller: _pageController, onPageChanged: _onPageChanged, children: _screens),
         bottomNavigationBar: MainBottomNav(currentIndex: _currentIndex, onTabChanged: (i) => _onPageChanged(i, animate: true)),
       ),
+      if (widget.offline)
+        Positioned(
+          top: MediaQuery.of(context).padding.top + 4,
+          left: 8,
+          child: SafeArea(
+            child: SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(
+                  SemanticTypes.button, 'offline_banner_exit'),
+              label: 'オンライン同期に戻る',
+              child: GestureDetector(
+                key: AppKeys.offlineBanner,
+                onTap: _confirmExitOffline,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.7),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.amber.withValues(alpha: 0.6)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.cloud_off, color: Colors.amber, size: 14),
+                      SizedBox(width: 4),
+                      Text('オフライン', style: TextStyle(color: Colors.amber, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       // デバッグモード起動ボタン（右上ギアアイコン）
       Positioned(
         top: MediaQuery.of(context).padding.top + 4,

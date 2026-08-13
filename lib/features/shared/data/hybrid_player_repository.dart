@@ -36,11 +36,29 @@ class HybridPlayerRepository implements IPlayerRepository {
   Future<void> _syncFromSupabase(Player? localPlayer) async {
     try {
       final remotePlayer = await _supabaseRepo.loadPlayer();
-      if (remotePlayer == null) return;
 
-      // リモートのPlayerでローカルを上書き（クラウド最新を信頼）
-      await _hiveRepo.savePlayer(remotePlayer);
-      debugPrint('[HybridPlayerRepo] Synced from Supabase (Lv.${remotePlayer.level})');
+      // ローカルにもクラウドにも無い → 何もしない
+      if (localPlayer == null && remotePlayer == null) return;
+
+      // last-write-wins。両方ある場合は updatedAt が新しい方を採用（同時はローカル優先）。
+      Player? winner;
+      if (localPlayer != null && remotePlayer == null) {
+        winner = localPlayer; // ローカルのみ → ローカルをクラウドへ push
+      } else if (localPlayer == null) {
+        winner = remotePlayer; // クラウドのみ → ローカルへ取得
+      } else {
+        final localTs = localPlayer.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final remoteTs = remotePlayer!.updatedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        winner = remoteTs.isAfter(localTs) ? remotePlayer : localPlayer;
+      }
+
+      if (winner == null) return;
+
+      // 採用した方を Hive と Supabase の両方に書き込む（整合を保つ）
+      await _hiveRepo.savePlayer(winner);
+      await _supabaseRepo.savePlayer(winner);
+      debugPrint(
+          '[HybridPlayerRepo] Synced (Lv.${winner.level}, coins=${winner.coins})');
     } catch (e) {
       debugPrint('[HybridPlayerRepo] Sync failed (offline): $e');
     }
@@ -48,6 +66,9 @@ class HybridPlayerRepository implements IPlayerRepository {
 
   @override
   Future<void> savePlayer(Player player) async {
+    // ローカル保存のタイムスタンプを付与（last-write-wins 判定用）
+    player.updatedAt = DateTime.now();
+
     // プライマリ: Hiveに即時保存
     await _hiveRepo.savePlayer(player);
 

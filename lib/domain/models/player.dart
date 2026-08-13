@@ -308,6 +308,9 @@ class Player {
   /// 最後に帰還ミッションを発行した日時（重複防止用）。
   DateTime? lastReturnMissionIssuedAt;
 
+  /// オフライン同期: 最後に変更された日時（last-write-wins判定用）。
+  DateTime? updatedAt;
+
   /// T9: 集中の型 — ポモドーロセッションを開始
   void startPomodoro() {
     pomodoroStartTime = DateTime.now();
@@ -421,6 +424,7 @@ class Player {
     this.hasSeenReversalAnimation = false,
     this.activeReturnMission,
     this.lastReturnMissionIssuedAt,
+    this.updatedAt,
   })  : characterSkin = characterSkin ?? const CharacterSkin(), jobLevels = jobLevels ?? {Job.adventurer: 1},
         jobExps = jobExps ?? {Job.adventurer: 0},
         activeSkills = activeSkills ?? {},
@@ -776,6 +780,7 @@ class Player {
         'activeReturnMission': activeReturnMission?.toJson(),
         'lastReturnMissionIssuedAt':
             lastReturnMissionIssuedAt?.toIso8601String(),
+        'updatedAt': updatedAt?.toIso8601String(),
       };
 
   factory Player.fromJson(Map<String, dynamic> json) {
@@ -884,6 +889,9 @@ class Player {
           json['lastReturnMissionIssuedAt'] != null
               ? DateTime.parse(json['lastReturnMissionIssuedAt'] as String)
               : null,
+      updatedAt: json['updatedAt'] != null
+          ? DateTime.parse(json['updatedAt'] as String)
+          : null,
     );
   }
 }
@@ -962,6 +970,11 @@ class PlayerAdapter extends TypeAdapter<Player> {
         player.lastReturnMissionIssuedAt = reader.read();
       }
     } catch (e) { _log('lastReturnMissionIssuedAt read failed', e); }
+    try {
+      if (reader.availableBytes > 0) {
+        player.updatedAt = reader.read();
+      }
+    } catch (e) { _log('updatedAt read failed', e); }
 
     _log('Player v8 read complete (returnMission=${player.activeReturnMission != null ? "active" : "none"})');
     return player;
@@ -1447,5 +1460,6 @@ class PlayerAdapter extends TypeAdapter<Player> {
       writer.writeMap(<String, dynamic>{});
     }
     writer.write(obj.lastReturnMissionIssuedAt);
+    writer.write(obj.updatedAt);
   }
 }

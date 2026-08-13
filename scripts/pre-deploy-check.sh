@@ -28,6 +28,7 @@ echo ""
 echo "[3/5] 🧪 test shard 1/3..."
 flutter test --no-pub -j 2 \
   test/domain/ \
+  test/features/auth/ \
   test/features/guild/ \
   test/features/kozuchi/ \
   test/features/player/ \

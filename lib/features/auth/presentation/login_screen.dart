@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:rpg_todo/core/di/injection.dart';
 import 'package:rpg_todo/core/infrastructure/auth_service.dart';
+import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// Googleログイン画面。
@@ -10,7 +11,11 @@ import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 /// 認証成功後は [AuthService] の onAuthStateChange を監視する AuthGate が
 /// 自動的に MainScreen へ遷移させる。
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  const LoginScreen({super.key, this.onContinueOffline});
+
+  /// オフラインモードで続行する際のコールバック。
+  /// 未指定時はボタンが無効化される（後方互換）。
+  final VoidCallback? onContinueOffline;
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -106,6 +111,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         _loading ? 'ログイン中...' : 'Googleでログイン',
                         style: const TextStyle(
                             fontSize: 16, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SemanticHelper.interactive(
+                    testId: SemanticHelper.createTestId(
+                        SemanticTypes.button, 'continue_offline'),
+                    label: 'オフラインモードで続行',
+                    child: TextButton.icon(
+                      key: AppKeys.continueOffline,
+                      onPressed: widget.onContinueOffline,
+                      icon: const Icon(Icons.cloud_off, size: 18),
+                      label: const Text('オフラインモードで続行'),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white70,
                       ),
                     ),
                   ),
