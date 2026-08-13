@@ -52,3 +52,4 @@ app.*.map.json
 flutter/coverage/
 test/hive_testing_path/
 supabase/.temp/
+.hermes/
