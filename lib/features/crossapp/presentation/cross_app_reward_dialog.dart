@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// tsundoku-quest 連携報酬の通知ダイアログ
 ///
@@ -70,9 +71,14 @@ class CrossAppRewardDialog extends StatelessWidget {
         ],
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('受け取る'),
+        SemanticHelper.interactive(
+          testId:
+              SemanticHelper.createTestId(SemanticTypes.button, 'accept_reward'),
+          label: '報酬を受け取る',
+          child: TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('受け取る'),
+          ),
         ),
       ],
     );

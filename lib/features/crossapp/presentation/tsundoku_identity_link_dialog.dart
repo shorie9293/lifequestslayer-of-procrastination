@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/features/crossapp/data/cross_app_settings_repository.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// tsundoku-quest 連携設定ダイアログ
 ///
@@ -52,16 +53,21 @@ class _TsundokuIdentityLinkDialogState
             style: TextStyle(fontSize: 13, color: Colors.white70),
           ),
           const SizedBox(height: 16),
-          TextField(
-            controller: _controller,
-            maxLength: 8,
-            decoration: const InputDecoration(
-              labelText: 'tsundoku user_id (先頭8桁)',
-              hintText: '例: a1b2c3d4',
-              border: OutlineInputBorder(),
-              prefixIcon: Icon(Icons.person_search),
+          SemanticHelper.textField(
+            testId: SemanticHelper.createTestId(
+                SemanticTypes.textField, 'tsundoku_user_id'),
+            label: 'tsundoku user_id（先頭8桁）',
+            child: TextField(
+              controller: _controller,
+              maxLength: 8,
+              decoration: const InputDecoration(
+                labelText: 'tsundoku user_id (先頭8桁)',
+                hintText: '例: a1b2c3d4',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.person_search),
+              ),
+              onChanged: (_) => setState(() {}),
             ),
-            onChanged: (_) => setState(() {}),
           ),
           if (widget.currentUserId != null && widget.currentUserId!.isNotEmpty) ...[
             const SizedBox(height: 8),
@@ -74,42 +80,56 @@ class _TsundokuIdentityLinkDialogState
       ),
       actions: [
         if (widget.currentUserId != null && widget.currentUserId!.isNotEmpty)
-          TextButton(
-            onPressed: _isSaving
+          SemanticHelper.interactive(
+            testId:
+                SemanticHelper.createTestId(SemanticTypes.button, 'unlink'),
+            label: '連携解除',
+            child: TextButton(
+              onPressed: _isSaving
+                  ? null
+                  : () async {
+                      setState(() => _isSaving = true);
+                      await _repository.setTsundokuLinkedUserId(null);
+                      setState(() => _isSaving = false);
+                      if (mounted) {
+                        Navigator.of(context).pop(null);
+                      }
+                    },
+              child: const Text('連携解除', style: TextStyle(color: Colors.red)),
+            ),
+          ),
+        SemanticHelper.interactive(
+          testId:
+              SemanticHelper.createTestId(SemanticTypes.button, 'cancel_link'),
+          label: 'キャンセル',
+          child: TextButton(
+            onPressed: () => Navigator.of(context).pop(null),
+            child: const Text('キャンセル'),
+          ),
+        ),
+        SemanticHelper.interactive(
+          testId: SemanticHelper.createTestId(SemanticTypes.button, 'link'),
+          label: '連携する',
+          child: ElevatedButton(
+            onPressed: _isSaving || _controller.text.trim().isEmpty
                 ? null
                 : () async {
+                    final userId = _controller.text.trim();
+                    if (userId.length < 8) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('8文字で入力してください')),
+                      );
+                      return;
+                    }
                     setState(() => _isSaving = true);
-                    await _repository.setTsundokuLinkedUserId(null);
+                    await _repository.setTsundokuLinkedUserId(userId);
                     setState(() => _isSaving = false);
                     if (mounted) {
-                      Navigator.of(context).pop(null);
+                      Navigator.of(context).pop(userId);
                     }
                   },
-            child: const Text('連携解除', style: TextStyle(color: Colors.red)),
+            child: const Text('連携する'),
           ),
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(null),
-          child: const Text('キャンセル'),
-        ),
-        ElevatedButton(
-          onPressed: _isSaving || _controller.text.trim().isEmpty
-              ? null
-              : () async {
-                  final userId = _controller.text.trim();
-                  if (userId.length < 8) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('8文字で入力してください')),
-                    );
-                    return;
-                  }
-                  setState(() => _isSaving = true);
-                  await _repository.setTsundokuLinkedUserId(userId);
-                  setState(() => _isSaving = false);
-                  if (mounted) {
-                    Navigator.of(context).pop(userId);
-                  }
-                },
-          child: const Text('連携する'),
         ),
       ],
     );

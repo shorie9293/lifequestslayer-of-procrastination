@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 振り返りの杜 — 学びログと成長の可視化ダッシュボード。
 ///
@@ -145,9 +146,14 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
       appBar: AppBar(
         title: const Text('🌳 振り返りの杜'),
         leading: widget.onBack != null
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: widget.onBack,
+            ? SemanticHelper.interactive(
+                testId: SemanticHelper.createTestId(
+                    SemanticTypes.button, 'back'),
+                label: '戻る',
+                child: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: widget.onBack,
+                ),
               )
             : null,
       ),

@@ -4,6 +4,7 @@ import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
 import 'package:rpg_todo/features/town/domain/building.dart';
 import 'package:rpg_todo/features/character_customization/presentation/equipment_tab.dart';
@@ -43,11 +44,16 @@ class TownScreen extends StatelessWidget {
         appBar: AppBar(
           title: Text("${scale.displayName} — ${hd['name']}"),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.help_outline),
-              tooltip: '神託補佐（ヘルプ）',
-              onPressed: () =>
-                  showHelpDialog(context, screen: HelpScreen.town),
+            SemanticHelper.interactive(
+              testId:
+                  SemanticHelper.createTestId(SemanticTypes.button, 'help'),
+              label: '神託補佐（ヘルプ）',
+              child: IconButton(
+                icon: const Icon(Icons.help_outline),
+                tooltip: '神託補佐（ヘルプ）',
+                onPressed: () =>
+                    showHelpDialog(context, screen: HelpScreen.town),
+              ),
             ),
           ],
           bottom: const TabBar(
@@ -513,21 +519,28 @@ class _BuildingTile extends StatelessWidget {
           if (!unlocked)
             Icon(Icons.lock, color: Colors.grey[600], size: 18)
           else if (state.canUpgrade)
-            GestureDetector(
-              onTap: canUpgrade ? onUpgrade : null,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: canAfford
-                      ? const Color(0xFF4CAF50)
-                      : Colors.grey[700],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'UP ${state.upgradeCoinCost}文',
-                  style: TextStyle(
-                    color: canAfford ? Colors.white : Colors.grey,
-                    fontSize: 11,
+            SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(
+                  SemanticTypes.button, 'upgrade_${building.name}'),
+              label: '${building.displayName}を強化',
+              hint: '${building.displayName}をアップグレードします',
+              child: GestureDetector(
+                onTap: canUpgrade ? onUpgrade : null,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: canAfford
+                        ? const Color(0xFF4CAF50)
+                        : Colors.grey[700],
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    'UP ${state.upgradeCoinCost}文',
+                    style: TextStyle(
+                      color: canAfford ? Colors.white : Colors.grey,
+                      fontSize: 11,
+                    ),
                   ),
                 ),
               ),

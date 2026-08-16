@@ -6,6 +6,7 @@ import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/overview/domain/overview_service.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// T11: Mystic Lv15 俯瞰の魔眼 — Overview screen with calendar and kanban views.
 class OverviewScreen extends StatelessWidget {
@@ -26,11 +27,16 @@ class OverviewScreen extends StatelessWidget {
         appBar: AppBar(
           title: const Text('俯瞰の魔眼'),
           actions: [
-            IconButton(
-              icon: const Icon(Icons.help_outline),
-              tooltip: '神託補佐（ヘルプ）',
-              onPressed: () => showHelpDialog(context,
-                  screen: HelpScreen.overview),
+            SemanticHelper.interactive(
+              testId:
+                  SemanticHelper.createTestId(SemanticTypes.button, 'help'),
+              label: '神託補佐（ヘルプ）',
+              child: IconButton(
+                icon: const Icon(Icons.help_outline),
+                tooltip: '神託補佐（ヘルプ）',
+                onPressed: () => showHelpDialog(context,
+                    screen: HelpScreen.overview),
+              ),
             ),
           ],
           bottom: const TabBar(
