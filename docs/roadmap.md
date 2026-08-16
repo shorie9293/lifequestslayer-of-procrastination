@@ -215,7 +215,7 @@ m1 (print→debugPrint), m2 (移行チェック最適化), m3 (計算式重複�
 | **キャラクターカスタマイズ** | Playerモデルに `characterSkin` 追加（5部位: 顔/髪/鎧/武器/盾）。称号・ストリーク等で解放。TownScreenに「装備」タブ追加 | ✅ 皐月十八日 昼前（`64bbbd6`） |
 | **自動難易度推定 + 魔導書解析AI（神託⑤）** | Phase 1: ローカルルールベース ✅ / Phase 2: GriffonEstimator抽象 + FakeGriffonEstimator + RealGriffonEstimator（DeepSeek API）+ DifficultyEstimator.estimateWithAI() + SettingsRepository.griffonEnabledフラグ + 27件テスト追加（全403→429試験通過）+ dart analyze警告ゼロ。オフラインフォールバックとしてPhase 1を常時保持 | ✅ 皐月十八日 夜刻（`de0e448`） |
 | **iOS対応** | iOSビルド設定＋TestFlight配信準備 | ⏸️ 創造主様神託により一旦除外 |
-| **技術リファクタリング** | GameViewModel分割（TaskVM/PlayerVM/ShopVM/SettingsVM/ThemeVM）、DI導入（get_it+injectable）、Hive→Isar移行評価 | 🔴 未着手（v2.0完了後） |
+| **技術リファクタリング** | GameViewModel分割（TaskVM/PlayerVM/ShopVM/SettingsVM/ThemeVM）、DI導入（get_it+injectable）、Hive→Isar移行評価 | ✅ 分割・DI完了（`e85afb9`/`6f5689f`）。Hive→Isarは**移行非推奨**と評価（Isarメンテ停止、代替としてHive→Hive CEを推奨。詳細は `docs/hive_to_isar_evaluation.md`）。残: Feature Flag・イベントバス |
 
 ---
 
@@ -407,8 +407,8 @@ v2.1では以下の5機能でこの課題を克服する。
 | **高天原ユニバーサルID** | 全現世横断の共通ID体系 | ✅ 実装済 | `packages/takamagahara_identity/` (v0.1.0): UniversalId/UUID v4生成・検証、UniversalProfile（immutable）、HiveProfileStorage（Box `universal_profile` 永続化＋バックアップ復元）、UuidBridge（SharedPreferences経由のクロスアプリUUID共有）。rpg-task・tsundoku-questにpath dependencyとして配線済。46試験（Flutter SDKキャッシュ要修復にて現在再検証待ち） |
 | **クロス報酬（設計）** | 報酬イベント定義＋スキーマ | ✅ 設計完了 | 7イベントタイプ定義（book_completed, reading_streak, level_up, xp_milestone, trophy_written, daily_mission_complete, pages_milestone）。11クロスアプリ称号定義。JSONLデータコントラクト＋JSON Schema検証。Supabase auth.users(id)によるID紐付け。Zettelkasten: `03_現世カタログ/08_クロスサービス報酬設計.md` |
 | **クロス報酬（rpg-task側）** | CrossAppRewardService＋称号 | ✅ 実装・試験通過 | `lib/features/crossapp/` (6ファイル): FileCrossAppRewardService（JSONL読取→Hive Box `cross_app_rewards`による冪等性→称号/コイン/EXP報酬付与）。CrossAppTitleDefinition（11称号＋閾値マッチング）。TsundokuIdentityLinkDialog（ID紐付けUI）。CrossAppRewardDialog（報酬通知UI）。**30/30試験全通過（flutter test）** ✅ |
-| **クロス報酬（tsundoku側）** | TsundokuRewardEventExporter | ⚠️ コード有・試験再建要 | `tsundoku_reward_event_exporter.dart` (161行) 実装済。AdventurerProvider/DailyMissionProvider/WarTrophyProvider/BookDataProviderにトリガーフック配線済。試験ファイルは旧scratch workspace消失により再建必要（→ t_1ea5f744） |
-| **神々の通路** | FastAPI連携サーバー | ❌ 再建要 | 旧実装（39試験・11エンドポイント・SQLite永続化）はscratch workspace消失。仕様・エンドポイント定義はZettelkastenに残存。再建タスク t_648c9ef3 にて再具現化予定 |
+| **クロス報酬（tsundoku側）** | TsundokuRewardEventExporter | ✅ 実装・試験通過 | `tsundoku_reward_event_exporter.dart` (161行) 実装済。AdventurerProvider/DailyMissionProvider/WarTrophyProvider/BookDataProviderにトリガーフック配線済。試験 `test/features/shared/data/tsundoku_reward_event_exporter_test.dart`（366行・22試験全通過、`flutter test` で検証済） |
+| **神々の通路** | FastAPI連携サーバー | ✅ 再建済・試験通過 | `~/Takamagahara/path_of_the_gods/` に再建済（49試験・11エンドポイント・SQLite永続化、`pytest` 49 passed）。認証（Bearer＋X-Admin-Token）・UUID v4検証・イベントソーシング・リーダーボード・adminトークンCRUD。`GET /health`→200、`POST /auth/register`→201 を実機確認済 |
 | **学びの循環** | tsundoku→rpg-task→kozuchi | ⏸️ 延期 | kozuchi β開顕後に策定 |
 
 ---
@@ -457,6 +457,8 @@ v2.1では以下の5機能でこの課題を克服する。
 | Feature Flag システム | v1.4着手時 | v1.4完了時 | 未完成機能の安全な混在・A/Bテスト基盤 |
 | イベントバス導入 | v2.0着手時 | v2.0完了時 | ViewModel間の疎結合化 |
 | モデルのイミュータブル化 | v2.0着手時 | v2.0完了時 | 副作用防止・変更追跡 |
+
+> **葉月十六日 評価追補（天目一箇神）**: 分割・DI は完了済み。Hive→Isar は **移行非推奨** と評価（Isar は2026年時点でメンテ停止・v4未達。代替として Hive→Hive CE を推奨）。詳細は `docs/hive_to_isar_evaluation.md` 参照。残債は Feature Flag・イベントバス・モデルイミュータブル化の3件。
 
 ---
 
