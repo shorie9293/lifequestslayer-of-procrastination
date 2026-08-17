@@ -171,7 +171,7 @@ rpg-task は v1.4.10+51 まで具現化が進み、全Kanbanタスク（v2.0町�
 | ID | 改善 | 分類 |
 |----|------|------|
 | UX-1 | アクセシビリティ基盤（全ボタンにSemantics追加・主要画像に代替テキスト） | 基盤 | ✅ Semantics部分完了（文月十六日）：全操作要素に `SemanticHelper.interactive()` を付与（未対応5画面＋クロスアプリ2ダイアログ）。`find.bySemanticsIdentifier` でADB/content-desc検証するTDD試練6件追加。主要画像の代替テキストは未着手 |
-| UX-3 | 討伐失敗時のサブタスク残数表示＋未完了リスト | フィードバック |
+| UX-3 | 討伐失敗時のサブタスク残数表示＋未完了リスト | フィードバック | ✅ 令和八年葉月十七日 完了：battle_phase.dart に `DefeatSubTaskPanel` を追加。討伐失敗時に「残りサブタスク数」＋スクロール可能な未完了リストを表示（`dragUntilVisible` で試練検証）。各サブタスクはタップで再挑戦導線（`onSubTaskTap` 注入・Mock可能）。集計は `features/battle/domain/defeat_summary.dart` に分離し単体試練実施。Semantics/AppKeys/ErrorBoundary原則準拠 |
 | UX-4 | クエスト取消に確認ダイアログ追加 | 安全 |
 | UX-6 | 討伐後ダイアログ統合（最大4連→1枚の戦果報告書） | 没入 |
 | UX-7 | サブタスク完了時フィードバック（Haptic＋✓アニメーション） | フィードバック |
