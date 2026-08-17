@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/battle_state.dart';
+import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/battle/domain/defeat_summary.dart';
 import 'package:rpg_todo/features/battle/presentation/widgets/enemy_sprite.dart';
 import 'package:rpg_todo/features/battle/presentation/widgets/combat_animations.dart';
 import 'package:rpg_todo/features/battle/presentation/widgets/combat_vfx_controller.dart';
 import 'package:rpg_todo/features/battle/presentation/widgets/particle_effect.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// The combat phase orchestration widget — per roadmap v2.1 ①.
 ///
@@ -36,12 +39,17 @@ class BattlePhaseWidget extends StatefulWidget {
   /// Whether to auto-play the attack sequence on mount.
   final bool autoPlay;
 
+  /// UX-3: 討伐失敗時に未完了サブタスクをタップした時の再挑戦導線。
+  /// ナビゲーションは注入（依存性注入・Mock可能）。null の場合は導線なし。
+  final ValueChanged<SubTask>? onSubTaskTap;
+
   const BattlePhaseWidget({
     super.key,
     required this.task,
     this.playerAvatarPath,
     required this.onComplete,
     this.autoPlay = true,
+    this.onSubTaskTap,
   });
 
   @override
@@ -154,6 +162,16 @@ class _BattlePhaseWidgetState extends State<BattlePhaseWidget>
           // Victory celebration
           if (_vfx.currentPhase == BattleState.victory)
             const _VictoryCelebration(),
+
+          // UX-3: 討伐失敗時の残サブタスク表示パネル
+          if (_vfx.currentPhase == BattleState.defeat)
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: DefeatSubTaskPanel(
+                task: widget.task,
+                onSubTaskTap: widget.onSubTaskTap ?? (_) {},
+              ),
+            ),
         ],
       ),
     );
@@ -327,6 +345,111 @@ class _VictoryCelebration extends StatelessWidget {
         child: ParticleBurst(
           text: 'クエスト完了\n💥',
           duration: Duration(milliseconds: 1200),
+        ),
+      ),
+    );
+  }
+}
+
+/// UX-3: 討伐失敗時に表示する残サブタスク集計パネル。
+///
+/// 残りのサブタスク数と未完了サブタスクの一覧を表示する。
+/// 未完了サブタスクはスクロール可能（試練では `dragUntilVisible` で検証）。
+/// 各サブタスクはタップで [onSubTaskTap] に接続し、再挑戦の導線を提供する。
+/// 未完了サブタスクが無い場合は何も表示しない。
+///
+/// 操作可能要素は `SemanticHelper.interactive()` で包み、試練可能にしている。
+class DefeatSubTaskPanel extends StatelessWidget {
+  /// 討伐対象のクエスト。
+  final Task task;
+
+  /// 未完了サブタスクがタップされた時の再挑戦導線（ナビゲーションは注入）。
+  final ValueChanged<SubTask> onSubTaskTap;
+
+  const DefeatSubTaskPanel({
+    super.key,
+    required this.task,
+    required this.onSubTaskTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final incomplete = DefeatSummary.incompleteSubTasks(task);
+    if (incomplete.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final remaining = incomplete.length;
+    return Material(
+      color: Colors.black.withAlpha(210),
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      elevation: 12,
+      child: Container(
+        key: AppKeys.defeatSubTaskPanel,
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+        constraints: const BoxConstraints(maxHeight: 260),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Text(
+                  '⚔️ 討伐失敗',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '残りサブタスク: $remaining',
+                  key: AppKeys.defeatSubTaskCount,
+                  style: const TextStyle(
+                    color: Colors.amberAccent,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              '残りのサブクエストを仕留めよう',
+              style: TextStyle(color: Colors.white70, fontSize: 12),
+            ),
+            const SizedBox(height: 8),
+            Flexible(
+              child: ListView.builder(
+                key: AppKeys.defeatSubTaskList,
+                shrinkWrap: true,
+                itemCount: incomplete.length,
+                itemBuilder: (context, index) {
+                  final sub = incomplete[index];
+                  return SemanticHelper.interactive(
+                    testId: SemanticHelper.createTestId(
+                        SemanticTypes.listItem, 'defeat_subtask_$index'),
+                    label: '再挑戦: ${sub.title}',
+                    child: ListTile(
+                      dense: true,
+                      contentPadding: EdgeInsets.zero,
+                      leading: const Icon(
+                        Icons.redo,
+                        color: Colors.orangeAccent,
+                        size: 20,
+                      ),
+                      title: Text(
+                        '・${sub.title}',
+                        style: const TextStyle(color: Colors.white),
+                      ),
+                      onTap: () => onSubTaskTap(sub),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );

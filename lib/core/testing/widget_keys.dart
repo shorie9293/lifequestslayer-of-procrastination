@@ -69,6 +69,11 @@ class AppKeys {
   static const Key battleReportDialog = Key('dlg_battle_report');
   static const Key battleReportClose = Key('btn_battle_report_close');
 
+  // ━━━ UX-3: 討伐失敗パネル（残サブタスク表示） ━━━
+  static const Key defeatSubTaskPanel = Key('panel_defeat_subtasks');
+  static const Key defeatSubTaskList = Key('list_defeat_subtasks');
+  static const Key defeatSubTaskCount = Key('txt_defeat_remaining_count');
+
   // ━━━ 戦術選択バー ━━━
   static const Key combatSelectionBar = Key('bar_combat_selection');
   static const Key combatAttackButton = Key('btn_combat_attack');
