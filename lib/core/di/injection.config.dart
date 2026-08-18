@@ -23,6 +23,7 @@ import '../../features/shared/viewmodels/settings_view_model.dart' as _i474;
 import '../../features/shared/viewmodels/theme_view_model.dart' as _i417;
 import '../../features/town/viewmodels/shop_view_model.dart' as _i494;
 import '../infrastructure/iap_service.dart' as _i960;
+import '../utils/feature_flag_service.dart' as _i1012;
 
 // initializes the registration of main-scope dependencies inside of GetIt
 _i174.GetIt initGetIt(
@@ -35,6 +36,8 @@ _i174.GetIt initGetIt(
     environment,
     environmentFilter,
   );
+  gh.lazySingleton<_i1012.FeatureFlagService>(
+      () => _i1012.FeatureFlagService());
   gh.lazySingleton<_i102.SettingsRepository>(() => _i102.SettingsRepository());
   gh.lazySingleton<_i960.IAPService>(() => _i960.IAPService());
   gh.lazySingleton<_i1020.IPlayerRepository>(() => _i664.PlayerRepository());
