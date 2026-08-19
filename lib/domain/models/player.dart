@@ -160,13 +160,21 @@ extension JobSkillMeta on JobSkill {
 
 /// Monk Lv10: クエストごとの連続完了記録
 class TaskStreak {
-  int currentStreak;
-  DateTime lastCompletedDate;
+  final int currentStreak;
+  final DateTime lastCompletedDate;
 
-  TaskStreak({
+  const TaskStreak({
     this.currentStreak = 1,
     required this.lastCompletedDate,
   });
+
+  /// イミュータブル: 指定フィールドのみ変更した新インスタンスを返す。
+  TaskStreak copyWith({int? currentStreak, DateTime? lastCompletedDate}) {
+    return TaskStreak(
+      currentStreak: currentStreak ?? this.currentStreak,
+      lastCompletedDate: lastCompletedDate ?? this.lastCompletedDate,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
         'currentStreak': currentStreak,
@@ -440,6 +448,155 @@ class Player {
         unlockedSkillIds = unlockedSkillIds ?? [],
         reflectionBadges = reflectionBadges ?? [];
 
+  /// null を「未指定（元の値を保持）」と区別するためのセンチネル。
+  static const Object _unset = Object();
+
+  /// イミュータブル化のための copyWith。
+  /// 指定したフィールドのみ変更した新インスタンスを返し、元インスタンスは不変。
+  /// null を渡すことで nullable フィールドをクリアできる。
+  Player copyWith({
+    Map<Job, int>? jobLevels,
+    Map<Job, int>? jobExps,
+    Set<Job>? activeSkills,
+    List<EquippedSkill>? equippedSkills,
+    Job? currentJob,
+    int? comboCount,
+    int? coins,
+    List<String>? homeItems,
+    int? dailyTasksCompleted,
+    int? weeklySRankCompleted,
+    Object? lastMissionResetDate = _unset,
+    int? nextDayTaskLimitOffset,
+    int? todayTaskLimitOffset,
+    Object? lastRestDate = _unset,
+    int? totalTasksCompleted,
+    int? totalSRankCompleted,
+    int? totalARankCompleted,
+    int? totalBRankCompleted,
+    int? timesWardenDefeated,
+    List<String>? titles,
+    Object? equippedTitle = _unset,
+    Object? equippedSkin = _unset,
+    CharacterSkin? characterSkin,
+    int? gems,
+    int? streakDays,
+    int? longestStreak,
+    Object? lastLoginDate = _unset,
+    int? pomodoroMinutes,
+    int? pomodoroShortBreakMinutes,
+    int? pomodoroLongBreakMinutes,
+    int? pomodorosBeforeLongBreak,
+    Object? pomodoroStartTime = _unset,
+    Object? lastDailyComplete = _unset,
+    int? warriorDailyBuff,
+    int? streakGraceRemaining,
+    Object? lastStreakGraceReset = _unset,
+    List<String>? tags,
+    List<ProjectGroup>? projects,
+    Map<String, List<String>>? taskTags,
+    Map<String, String>? taskProjects,
+    Map<String, DateTime>? snoozedTasks,
+    Map<String, TaskStreak>? taskStreaks,
+    int? skillPoints,
+    List<String>? unlockedSkillIds,
+    int? totalReflections,
+    List<String>? reflectionBadges,
+    int? wisdomPoints,
+    EnlightenmentStage? enlightenmentStage,
+    bool? hasSeenMandalaAnimation,
+    bool? hasSeenReversalAnimation,
+    Object? activeReturnMission = _unset,
+    Object? lastReturnMissionIssuedAt = _unset,
+    Object? updatedAt = _unset,
+  }) {
+    return Player(
+      jobLevels: jobLevels ?? this.jobLevels,
+      jobExps: jobExps ?? this.jobExps,
+      activeSkills: activeSkills ?? this.activeSkills,
+      equippedSkills: equippedSkills ?? this.equippedSkills,
+      currentJob: currentJob ?? this.currentJob,
+      comboCount: comboCount ?? this.comboCount,
+      coins: coins ?? this.coins,
+      homeItems: homeItems ?? this.homeItems,
+      dailyTasksCompleted: dailyTasksCompleted ?? this.dailyTasksCompleted,
+      weeklySRankCompleted:
+          weeklySRankCompleted ?? this.weeklySRankCompleted,
+      lastMissionResetDate: identical(lastMissionResetDate, _unset)
+          ? this.lastMissionResetDate
+          : lastMissionResetDate as DateTime?,
+      nextDayTaskLimitOffset:
+          nextDayTaskLimitOffset ?? this.nextDayTaskLimitOffset,
+      todayTaskLimitOffset: todayTaskLimitOffset ?? this.todayTaskLimitOffset,
+      lastRestDate: identical(lastRestDate, _unset)
+          ? this.lastRestDate
+          : lastRestDate as DateTime?,
+      totalTasksCompleted: totalTasksCompleted ?? this.totalTasksCompleted,
+      totalSRankCompleted: totalSRankCompleted ?? this.totalSRankCompleted,
+      totalARankCompleted: totalARankCompleted ?? this.totalARankCompleted,
+      totalBRankCompleted: totalBRankCompleted ?? this.totalBRankCompleted,
+      timesWardenDefeated: timesWardenDefeated ?? this.timesWardenDefeated,
+      titles: titles ?? this.titles,
+      equippedTitle: identical(equippedTitle, _unset)
+          ? this.equippedTitle
+          : equippedTitle as String?,
+      equippedSkin: identical(equippedSkin, _unset)
+          ? this.equippedSkin
+          : equippedSkin as String?,
+      characterSkin: characterSkin ?? this.characterSkin,
+      gems: gems ?? this.gems,
+      streakDays: streakDays ?? this.streakDays,
+      longestStreak: longestStreak ?? this.longestStreak,
+      lastLoginDate: identical(lastLoginDate, _unset)
+          ? this.lastLoginDate
+          : lastLoginDate as DateTime?,
+      pomodoroMinutes: pomodoroMinutes ?? this.pomodoroMinutes,
+      pomodoroShortBreakMinutes:
+          pomodoroShortBreakMinutes ?? this.pomodoroShortBreakMinutes,
+      pomodoroLongBreakMinutes:
+          pomodoroLongBreakMinutes ?? this.pomodoroLongBreakMinutes,
+      pomodorosBeforeLongBreak:
+          pomodorosBeforeLongBreak ?? this.pomodorosBeforeLongBreak,
+      pomodoroStartTime: identical(pomodoroStartTime, _unset)
+          ? this.pomodoroStartTime
+          : pomodoroStartTime as DateTime?,
+      lastDailyComplete: identical(lastDailyComplete, _unset)
+          ? this.lastDailyComplete
+          : lastDailyComplete as DateTime?,
+      warriorDailyBuff: warriorDailyBuff ?? this.warriorDailyBuff,
+      streakGraceRemaining:
+          streakGraceRemaining ?? this.streakGraceRemaining,
+      lastStreakGraceReset: identical(lastStreakGraceReset, _unset)
+          ? this.lastStreakGraceReset
+          : lastStreakGraceReset as DateTime?,
+      tags: tags ?? this.tags,
+      projects: projects ?? this.projects,
+      taskTags: taskTags ?? this.taskTags,
+      taskProjects: taskProjects ?? this.taskProjects,
+      snoozedTasks: snoozedTasks ?? this.snoozedTasks,
+      taskStreaks: taskStreaks ?? this.taskStreaks,
+      skillPoints: skillPoints ?? this.skillPoints,
+      unlockedSkillIds: unlockedSkillIds ?? this.unlockedSkillIds,
+      totalReflections: totalReflections ?? this.totalReflections,
+      reflectionBadges: reflectionBadges ?? this.reflectionBadges,
+      wisdomPoints: wisdomPoints ?? this.wisdomPoints,
+      enlightenmentStage: enlightenmentStage ?? this.enlightenmentStage,
+      hasSeenMandalaAnimation:
+          hasSeenMandalaAnimation ?? this.hasSeenMandalaAnimation,
+      hasSeenReversalAnimation:
+          hasSeenReversalAnimation ?? this.hasSeenReversalAnimation,
+      activeReturnMission: identical(activeReturnMission, _unset)
+          ? this.activeReturnMission
+          : activeReturnMission as ReturnMission?,
+      lastReturnMissionIssuedAt:
+          identical(lastReturnMissionIssuedAt, _unset)
+              ? this.lastReturnMissionIssuedAt
+              : lastReturnMissionIssuedAt as DateTime?,
+      updatedAt: identical(updatedAt, _unset)
+          ? this.updatedAt
+          : updatedAt as DateTime?,
+    );
+  }
+
   // Getters for current job (Compatibility)
   int get level => jobLevels[currentJob] ?? 1;
   int get currentExp => jobExps[currentJob] ?? 0;
@@ -603,12 +760,16 @@ class Player {
       return;
     } else if (diffDays == 1) {
       // 連続日 → streak増加
-      existing.currentStreak++;
-      existing.lastCompletedDate = today;
+      taskStreaks[taskId] = existing.copyWith(
+        currentStreak: existing.currentStreak + 1,
+        lastCompletedDate: today,
+      );
     } else {
       // 1日以上空いた → streakリセット
-      existing.currentStreak = 1;
-      existing.lastCompletedDate = today;
+      taskStreaks[taskId] = existing.copyWith(
+        currentStreak: 1,
+        lastCompletedDate: today,
+      );
     }
   }
 
