@@ -46,8 +46,8 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
-        // Google Play 要件（2026年8月31日期限）: target API 35 以上を明示固定
-        targetSdk = 35
+        // Google Play 要件（2026年8月31日期限）: target API 36 以上を明示固定
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

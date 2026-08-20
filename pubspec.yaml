@@ -2,7 +2,7 @@ name: rpg_todo
 description: "A new Flutter project."
 publish_to: 'none'
 
-version: 1.5.6+100
+version: 1.5.7+101
 
 environment:
   sdk: ^3.5.4
@@ -17,13 +17,13 @@ dependencies:
 
   cupertino_icons: ^1.0.8
   provider: ^6.1.5+1
-  google_fonts: ^6.3.0
+  google_fonts: ^8.2.1
   uuid: ^4.5.2
   hive: ^2.2.3
   hive_flutter: ^1.1.0
   flutter_local_notifications: ^18.0.1
   timezone: ^0.9.4
-  in_app_purchase: ^3.2.3
+  in_app_purchase: ^3.3.0
   http: ^1.2.0
   get_it: ^7.6.0
   injectable: ^2.5.0

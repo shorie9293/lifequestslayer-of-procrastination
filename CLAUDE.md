@@ -11,10 +11,10 @@
 - **Framework**: Flutter (Dart SDK ^3.5.4)
 - **State Management**: Provider (`provider: ^6.1.5+1`)
 - **Local Storage**: Hive (`hive: ^2.2.3`, `hive_flutter: ^1.1.0`)
-- **Fonts**: Google Fonts (`google_fonts: ^6.3.0`)
+- **Fonts**: Google Fonts (`google_fonts: ^8.2.1`)
 - **ID Generation**: UUID (`uuid: ^4.5.2`)
 - **Monorepo Packages**: takamagahara_core, takamagahara_ui, takamagahara_ai (`../../packages/`)
-- **Current Version**: 1.5.6+100
+- **Current Version**: 1.5.7+101
 
 ## Project Structure
 
