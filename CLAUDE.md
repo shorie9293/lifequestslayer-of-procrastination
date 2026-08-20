@@ -14,7 +14,7 @@
 - **Fonts**: Google Fonts (`google_fonts: ^6.3.0`)
 - **ID Generation**: UUID (`uuid: ^4.5.2`)
 - **Monorepo Packages**: takamagahara_core, takamagahara_ui, takamagahara_ai (`../../packages/`)
-- **Current Version**: 1.5.4+98
+- **Current Version**: 1.5.6+100
 
 ## Project Structure
 
