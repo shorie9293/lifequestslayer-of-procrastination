@@ -1,0 +1,67 @@
+{
+  "project_info": {
+    "project_number": "581507070467",
+    "project_id": "takamagahara-utsushiyo",
+    "storage_bucket": "takamagahara-utsushiyo.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581507070467:android:92cafac4710937bca9ec36",
+        "android_client_info": {
+          "package_name": "com.shorie.kozuchi"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVGlT-FurVCmQ9Ihq5jhrwK1YYpS4jMwE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581507070467:android:8b5606f2418fc363a9ec36",
+        "android_client_info": {
+          "package_name": "com.shorie.lifequest"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVGlT-FurVCmQ9Ihq5jhrwK1YYpS4jMwE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581507070467:android:b7d0ec9855210ba7a9ec36",
+        "android_client_info": {
+          "package_name": "com.shorie.tsundoku"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVGlT-FurVCmQ9Ihq5jhrwK1YYpS4jMwE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

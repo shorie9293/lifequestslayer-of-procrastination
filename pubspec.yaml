@@ -34,6 +34,9 @@ dependencies:
   audioplayers: ^6.4.0
   supabase_flutter: ^2.8.4
   google_sign_in: ^7.1.1
+  firebase_core: ^3.4.0
+  firebase_crashlytics: ^4.1.0
+  firebase_analytics: ^11.3.0
 
 dev_dependencies:
   flutter_test:
