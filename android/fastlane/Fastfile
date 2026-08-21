@@ -5,11 +5,11 @@ platform :android do
   lane :deploy do |options|
     track = options[:track] || "internal"
 
-    if track == "production"
-      # internal トラックの既存リリースを production に昇格（AABアップロード不要）
+    if track == "production" || track == "alpha"
+      # internal トラックの既存リリースを production / alpha（クローズドテスト）に昇格（AABアップロード不要）
       upload_to_play_store(
         track: "internal",
-        track_promote_to: "production",
+        track_promote_to: track,
         package_name: "com.shorie.lifequest",
         json_key_data: ENV["GOOGLE_PLAY_JSON_KEY"],
         skip_upload_apk: true,
