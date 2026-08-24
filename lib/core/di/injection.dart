@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
@@ -15,6 +17,8 @@ import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 
 import 'package:rpg_todo/features/battle/domain/battle_audio_service.dart';
 import 'package:rpg_todo/features/battle/viewmodels/battle_view_model.dart';
+import 'package:rpg_todo/features/crossapp/data/cross_app_reward_service.dart';
+import 'package:rpg_todo/features/crossapp/data/cross_app_settings_repository.dart';
 
 import 'package:rpg_todo/features/guild/data/task_repository.dart';
 import 'package:rpg_todo/features/shared/data/player_repository.dart';
@@ -73,6 +77,12 @@ void configureDependencies() {
   getIt.registerLazySingleton<BattleAudioService>(() => BattleAudioService());
   getIt.registerLazySingleton<BattleViewModel>(() => BattleViewModel());
 
+  // クロスアプリ連携サービス（injectable未対応のため手動登録）
+  getIt.registerLazySingleton<ICrossAppRewardService>(
+      () => FileCrossAppRewardService());
+  getIt.registerLazySingleton<CrossAppSettingsRepository>(
+      () => CrossAppSettingsRepository());
+
   // 町開発 ViewModel（Hive box に依存するため手動登録）
   getIt.registerLazySingleton<TownViewModel>(() => TownViewModel(
         supabaseClient: SupabaseConfig.url.isNotEmpty
@@ -90,6 +100,11 @@ void configureDependencies() {
     tv: getIt<TownViewModel>(),
     autoLoad: false,  // initializeViewModels() でロード済みのため
   ));
+
+  // クロスアプリ報酬サービスを GameViewModel（経由で TaskViewModel）に配線
+  final gvm = getIt<GameViewModel>();
+  gvm.crossAppRewardService = getIt<ICrossAppRewardService>();
+  gvm.crossAppSettingsRepository = getIt<CrossAppSettingsRepository>();
 }
 
 /// 全VMのデータロードとアプリライフサイクル監視を統括する。
@@ -154,6 +169,9 @@ Future<void> initializeViewModels() async {
   } catch (e, s) {
     debugPrint('[DI] autoDeploy error: $e\n$s');
   }
+
+  // クロスアプリ報酬の処理（起動時に一度だけ・ベストエフォート）
+  unawaited(taskVM.processCrossAppRewards());
 }
 
 Future<void> _safeSave(ChangeNotifier vm, String label) async {

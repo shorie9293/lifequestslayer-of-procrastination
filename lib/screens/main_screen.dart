@@ -10,6 +10,7 @@ import 'package:rpg_todo/features/battle/presentation/battle_screen.dart';
 import 'package:rpg_todo/features/temple/presentation/temple_screen.dart';
 import 'package:rpg_todo/features/town/presentation/town_screen.dart';
 import 'package:rpg_todo/features/shared/widgets/debug_panel.dart';
+import 'package:rpg_todo/features/crossapp/presentation/cross_app_reward_dialog.dart';
 import 'widgets/main_bottom_nav.dart';
 import 'widgets/main_tutorial_controller.dart';
 import 'package:rpg_todo/features/temple/presentation/dialogs/job_tutorial_dialog.dart';
@@ -186,6 +187,21 @@ class _MainScreenState extends State<MainScreen> {
             },
           );
         }
+      });
+    }
+
+    // クロスアプリ報酬（tsundoku-quest）が pending なら通知ダイアログを表示
+    final taskVM = context.read<TaskViewModel>();
+    if (taskVM.pendingCrossAppReward != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final p = taskVM.pendingCrossAppReward!;
+        taskVM.clearPendingCrossAppReward();
+        CrossAppRewardDialog.showIfHasRewards(
+          context,
+          totalCoins: p.coins,
+          totalExp: p.exp,
+          newTitles: p.titles,
+        );
       });
     }
 

@@ -17,6 +17,9 @@ import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/theme_view_model.dart';
 import 'package:rpg_todo/features/kozuchi/domain/kozuchi_quest_model.dart';
 import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
+import 'package:rpg_todo/features/crossapp/data/cross_app_reward_service.dart';
+import 'package:rpg_todo/features/crossapp/data/cross_app_settings_repository.dart';
+import 'package:rpg_todo/features/crossapp/domain/cross_app_reward_event.dart';
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
 
 /// 後方互換用のファサードViewModel。
@@ -81,6 +84,13 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   IKozuchiQuestService? get kozuchiQuestService => _taskVM.kozuchiQuestService;
   set kozuchiQuestService(IKozuchiQuestService? service) => _taskVM.kozuchiQuestService = service;
   KozuchiQuest? get kozuchiQuest => _taskVM.kozuchiQuest;
+  ICrossAppRewardService? get crossAppRewardService => _taskVM.crossAppRewardService;
+  set crossAppRewardService(ICrossAppRewardService? service) => _taskVM.crossAppRewardService = service;
+  CrossAppSettingsRepository? get crossAppSettingsRepository => _taskVM.crossAppSettingsRepository;
+  set crossAppSettingsRepository(CrossAppSettingsRepository? repo) => _taskVM.crossAppSettingsRepository = repo;
+  CrossAppReward? get pendingCrossAppReward => _taskVM.pendingCrossAppReward;
+  void clearPendingCrossAppReward() => _taskVM.clearPendingCrossAppReward();
+  Future<void> processCrossAppRewards() => _taskVM.processCrossAppRewards();
   int get dailyMissionProgress => _playerVM.dailyMissionProgress;
   bool get isDailyMissionComplete => _playerVM.isDailyMissionComplete;
   int get weeklyMissionProgress => _playerVM.weeklyMissionProgress;

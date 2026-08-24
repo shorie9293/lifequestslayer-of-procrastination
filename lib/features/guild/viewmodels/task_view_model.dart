@@ -10,6 +10,9 @@ import 'package:rpg_todo/core/utils/date_utils.dart';
 import 'package:rpg_todo/features/kozuchi/domain/kozuchi_quest_model.dart';
 import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
 import 'package:rpg_todo/features/crossapp/data/rpg_enemy_defeat_exporter.dart';
+import 'package:rpg_todo/features/crossapp/data/cross_app_reward_service.dart';
+import 'package:rpg_todo/features/crossapp/data/cross_app_settings_repository.dart';
+import 'package:rpg_todo/features/crossapp/domain/cross_app_reward_event.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/battle/domain/enemy_asset_service.dart';
 import 'package:injectable/injectable.dart';
@@ -27,6 +30,9 @@ class TaskViewModel extends ChangeNotifier {
   IKozuchiQuestService? _kozuchiQuestService;
   KozuchiQuest? _kozuchiQuest;
   IRpgEnemyDefeatExporter? _enemyDefeatExporter;
+  ICrossAppRewardService? _crossAppRewardService;
+  CrossAppSettingsRepository? _crossAppSettingsRepository;
+  CrossAppReward? _pendingCrossAppReward;
 
   TaskViewModel(this._taskRepository, this._playerVM);
 
@@ -65,6 +71,26 @@ class TaskViewModel extends ChangeNotifier {
   IRpgEnemyDefeatExporter? get enemyDefeatExporter => _enemyDefeatExporter;
   set enemyDefeatExporter(IRpgEnemyDefeatExporter? exporter) =>
       _enemyDefeatExporter = exporter;
+
+  /// クロスアプリ報酬サービス（DIから注入・省略時は無効）
+  ICrossAppRewardService? get crossAppRewardService => _crossAppRewardService;
+  set crossAppRewardService(ICrossAppRewardService? service) =>
+      _crossAppRewardService = service;
+
+  /// クロスアプリ連携設定リポジトリ（DIから注入・省略時はリンクなし扱い）
+  CrossAppSettingsRepository? get crossAppSettingsRepository =>
+      _crossAppSettingsRepository;
+  set crossAppSettingsRepository(CrossAppSettingsRepository? repo) =>
+      _crossAppSettingsRepository = repo;
+
+  /// 処理済みで通知待ちのクロスアプリ報酬（UIがダイアログ表示後にクリア）
+  CrossAppReward? get pendingCrossAppReward => _pendingCrossAppReward;
+
+  /// 通知済みとして pending 報酬をクリアする。
+  void clearPendingCrossAppReward() {
+    _pendingCrossAppReward = null;
+    notifyListeners();
+  }
 
   // ── クエストフィルタ ──
   List<Task> get activeTasks => _tasks.where((t) =>
@@ -333,6 +359,50 @@ class TaskViewModel extends ChangeNotifier {
       _kozuchiQuest = null;
     }
     notifyListeners();
+  }
+
+  // ── クロスアプリ報酬 ──
+  /// tsundoku-quest から送られた報酬イベントを処理し、Player に付与する。
+  ///
+  /// 起動時（アプリ初期化後）に呼ばれる。ベストエフォートで、失敗時は
+  /// ログを残して黙って無視する。
+  Future<void> processCrossAppRewards() async {
+    if (_crossAppRewardService == null) return;
+    try {
+      final linkedUserId =
+          await _crossAppSettingsRepository?.getTsundokuLinkedUserId();
+      final rewards =
+          await _crossAppRewardService!.processPendingEvents(
+            linkedUserId: linkedUserId,
+          );
+
+      final merged = rewards.fold(
+        const CrossAppReward(),
+        (CrossAppReward acc, CrossAppReward r) => acc.merge(r),
+      );
+
+      if (merged.coins > 0) _playerVM.addCoins(merged.coins);
+      if (merged.exp > 0) _playerVM.addExp(merged.exp);
+
+      final newTitles = <String>[];
+      for (final t in merged.titles) {
+        if (_playerVM.player.titles.contains(t)) continue;
+        _playerVM.player.titles.add(t);
+        newTitles.add(t);
+      }
+      if (newTitles.isNotEmpty) _playerVM.save();
+
+      if (merged.coins > 0 || merged.exp > 0 || newTitles.isNotEmpty) {
+        _pendingCrossAppReward = CrossAppReward(
+          coins: merged.coins,
+          exp: merged.exp,
+          titles: newTitles,
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('[CrossApp] processCrossAppRewards error: $e');
+    }
   }
 
   // ── デバッグ ──

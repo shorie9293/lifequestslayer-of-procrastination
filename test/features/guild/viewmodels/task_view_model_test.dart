@@ -4,8 +4,39 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/features/crossapp/data/rpg_enemy_defeat_exporter.dart';
+import 'package:rpg_todo/features/crossapp/data/cross_app_reward_service.dart';
+import 'package:rpg_todo/features/crossapp/data/cross_app_settings_repository.dart';
+import 'package:rpg_todo/features/crossapp/domain/cross_app_reward_event.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+
+class _MockCrossAppRewardService implements ICrossAppRewardService {
+  final List<CrossAppReward> rewards;
+  String? lastLinkedUserId;
+
+  _MockCrossAppRewardService(this.rewards);
+
+  @override
+  Future<List<CrossAppReward>> processPendingEvents({
+    required String? linkedUserId,
+  }) async {
+    lastLinkedUserId = linkedUserId;
+    // リンクされていない場合は報酬を発生させない（実装側と同様の挙動）
+    if (linkedUserId == null || linkedUserId.isEmpty) return const [];
+    return rewards;
+  }
+}
+
+class _MockCrossAppSettingsRepository extends CrossAppSettingsRepository {
+  final String? linkedUserId;
+  _MockCrossAppSettingsRepository(this.linkedUserId);
+
+  @override
+  Future<String?> getTsundokuLinkedUserId() async => linkedUserId;
+
+  @override
+  Future<void> setTsundokuLinkedUserId(String? userId) async {}
+}
 
 class _MockEnemyDefeatExporter implements IRpgEnemyDefeatExporter {
   final calls = <Map<String, dynamic>>[];
@@ -187,6 +218,102 @@ void main() {
       final result = taskVm.completeTask('no-such-task-id');
       expect(result, isNull);
       expect(exporter.calls, isEmpty);
+    });
+  });
+
+  group('TaskViewModel - クロスアプリ報酬処理 (processCrossAppRewards)', () {
+    late PlayerViewModel playerVm;
+    late _MockTaskRepo taskRepo;
+    late TaskViewModel taskVm;
+
+    setUp(() async {
+      final playerRepo = _MockPlayerRepo();
+      playerVm = PlayerViewModel(playerRepo);
+      await playerVm.load();
+      taskRepo = _MockTaskRepo();
+      taskVm = TaskViewModel(taskRepo, playerVm);
+      await taskVm.load();
+    });
+
+    test('service 未注入（null）の場合は何もせず安全に完了する', () async {
+      await taskVm.processCrossAppRewards();
+
+      expect(taskVm.pendingCrossAppReward, isNull);
+      expect(playerVm.player.coins, 0);
+      expect(playerVm.player.titles, isEmpty);
+    });
+
+    test('リンクなし（linkedUserId null）の場合はサービスに null を渡し報酬は発生しない', () async {
+      final settings = _MockCrossAppSettingsRepository(null);
+      final service = _MockCrossAppRewardService(const [
+        CrossAppReward(coins: 100, exp: 50, titles: ['称号A']),
+      ]);
+      taskVm.crossAppSettingsRepository = settings;
+      taskVm.crossAppRewardService = service;
+
+      await taskVm.processCrossAppRewards();
+
+      expect(service.lastLinkedUserId, isNull);
+      expect(taskVm.pendingCrossAppReward, isNull);
+      expect(playerVm.player.coins, 0);
+      expect(playerVm.player.titles, isEmpty);
+    });
+
+    test('リンクありの場合、コイン・EXP・称号が Player に反映される', () async {
+      final settings = _MockCrossAppSettingsRepository('test1234');
+      final service = _MockCrossAppRewardService(const [
+        CrossAppReward(coins: 100, exp: 0, titles: ['称号A']),
+        CrossAppReward(coins: 0, exp: 10, titles: ['称号B']),
+      ]);
+      taskVm.crossAppSettingsRepository = settings;
+      taskVm.crossAppRewardService = service;
+
+      await taskVm.processCrossAppRewards();
+
+      expect(service.lastLinkedUserId, 'test1234');
+      expect(playerVm.player.coins, 100);
+      expect(playerVm.player.currentExp, 10);
+      expect(playerVm.player.titles, containsAll(['称号A', '称号B']));
+    });
+
+    test('pendingCrossAppReward に合算結果がセットされ、既所有の称号は newTitles から除外される', () async {
+      // 事前に「称号A」を所持している状態を再現
+      playerVm.player.titles.add('称号A');
+
+      final settings = _MockCrossAppSettingsRepository('test1234');
+      final service = _MockCrossAppRewardService(const [
+        CrossAppReward(coins: 50, exp: 10, titles: ['称号A']),
+        CrossAppReward(coins: 30, exp: 0, titles: ['称号A', '称号B']),
+      ]);
+      taskVm.crossAppSettingsRepository = settings;
+      taskVm.crossAppRewardService = service;
+
+      await taskVm.processCrossAppRewards();
+
+      final pending = taskVm.pendingCrossAppReward;
+      expect(pending, isNotNull);
+      // 合算: coins 50+30=80, exp 10+0=10
+      expect(pending!.coins, 80);
+      expect(pending.exp, 10);
+      // newTitles: 既所有「称号A」を除いた新規称号のみ
+      expect(pending.titles, ['称号B']);
+      // Player 側には「称号B」のみ新規追加される
+      expect(playerVm.player.titles, containsAll(['称号A', '称号B']));
+    });
+
+    test('clearPendingCrossAppReward で pending がクリアされる', () async {
+      final settings = _MockCrossAppSettingsRepository('test1234');
+      final service = _MockCrossAppRewardService(const [
+        CrossAppReward(coins: 10, exp: 0, titles: ['称号A']),
+      ]);
+      taskVm.crossAppSettingsRepository = settings;
+      taskVm.crossAppRewardService = service;
+
+      await taskVm.processCrossAppRewards();
+      expect(taskVm.pendingCrossAppReward, isNotNull);
+
+      taskVm.clearPendingCrossAppReward();
+      expect(taskVm.pendingCrossAppReward, isNull);
     });
   });
 }
