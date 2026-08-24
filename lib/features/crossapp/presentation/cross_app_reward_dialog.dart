@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
+import 'package:url_launcher/url_launcher.dart';
 
 /// tsundoku-quest 連携報酬の通知ダイアログ
 ///
@@ -9,11 +10,15 @@ class CrossAppRewardDialog extends StatelessWidget {
   final int totalExp;
   final List<String> newTitles;
 
+  /// 送客導線で tsundoku-quest を起動する際のランチャー（試練で Mock 可能に注入）。
+  final Future<bool> Function(Uri uri)? launchUri;
+
   const CrossAppRewardDialog({
     super.key,
     required this.totalCoins,
     required this.totalExp,
     required this.newTitles,
+    this.launchUri,
   });
 
   @override
@@ -73,6 +78,15 @@ class CrossAppRewardDialog extends StatelessWidget {
       actions: [
         SemanticHelper.interactive(
           testId:
+              SemanticHelper.createTestId(SemanticTypes.button, 'open_tsundoku'),
+          label: 'tsundoku-quest を開く',
+          child: TextButton(
+            onPressed: _openTsundoku,
+            child: const Text('tsundoku-quest を開く'),
+          ),
+        ),
+        SemanticHelper.interactive(
+          testId:
               SemanticHelper.createTestId(SemanticTypes.button, 'accept_reward'),
           label: '報酬を受け取る',
           child: TextButton(
@@ -82,6 +96,19 @@ class CrossAppRewardDialog extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  /// 送客元アプリ（tsundoku-quest）を起動する導線。
+  ///
+  /// 起動失敗してもクラッシュしないよう try-catch で握る。
+  Future<void> _openTsundoku() async {
+    final uri = Uri.parse('app://open');
+    try {
+      final launcher = launchUri ?? launchUrl;
+      await launcher(uri);
+    } catch (e) {
+      debugPrint('⚠️ tsundoku-quest 起動失敗: $e');
+    }
   }
 
   /// 報酬がある場合のみダイアログを表示
