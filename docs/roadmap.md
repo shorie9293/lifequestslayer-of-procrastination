@@ -429,7 +429,7 @@ v2.1では以下の5機能でこの課題を克服する。
 |----|------|------|------|------|
 | **tsundoku→rpg-task 書き出し** | 読了イベント JSONL | `TsundokuRewardEventExporter`（`tsundoku_reward_events.jsonl`） | Adventurer/DailyMission/WarTrophy/BookData 各Providerにフック済み | ✅ 完成 |
 | **tsundoku→kozuchi 書き出し** | 読了単一JSON | `TsundokuBookCompletionExporter`（`tsundoku_book_completed.json`） | BookDataProvider L338に注入済み | ✅ 完成 |
-| **rpg-task 報酬受信** | `tsundoku_reward_events.jsonl` 読取 | `FileCrossAppRewardService`（user_id先頭8文字照合・Hive冪等性・コイン/EXP/称号） | **⚠️ `processPendingEvents` が lib/ 内で一切呼ばれていない（デッドコード）** | 🔶 サービス完成・アプリ配線欠損 |
+| **rpg-task 報酬受信** | `tsundoku_reward_events.jsonl` 読取 | `FileCrossAppRewardService`（user_id先頭8文字照合・Hive冪等性・コイン/EXP/称号） | ✅ `TaskViewModel.processCrossAppRewards()` を `initializeViewModels()`（起動時）＋`main_screen` postFrameCallback で CrossAppRewardDialog 表示に配線（コミット84acbe8・rpg-task 5試験＋30/30通過） | ✅ 完成 |
 | **rpg-task→kozuchi 書き出し** | 討伐イベント JSON | **不在** — `rpg_enemy_defeat_events.json` を書くexporterが rpg-task に無い | kozuchi `RpgTaskBonusService`(L24)/`CrossAppAchievementAggregator`(L18) が読取期待するが供給ゼロ | 🔴 **最も欠損した脚**（本設計で具現化） |
 | **kozuchi 討伐ボーナス受信** | `rpg_enemy_defeat_events.json` 読取 | `RpgTaskBonusService`（S/A/B→50/30/15EXP、1日3回、消費削除） | main_screen L228 `checkAndConsume()` で起動時スナックバー＋EXP付与 | ✅ 配線済 |
 | **kozuchi 金運バフ受信** | `tsundoku_book_completed.json` 読取 | `TsundokuGoldLuckBuffService`（60分 収入2倍） | main_screen L245 で発動確認 | ✅ 配線済 |
@@ -438,7 +438,7 @@ v2.1では以下の5機能でこの課題を克服する。
 
 **閉じるべきループ（具現化方針）**
 - **🔴 rpg-task→kozuchi 書き出し（本タスクで具現化）**: `lib/features/crossapp/data/rpg_enemy_defeat_exporter.dart` に `RpgEnemyDefeatExporter` を新設し、`TaskViewModel.completeTask()` 成功時に `rpg_enemy_defeat_events.json`（`{event:'enemy_defeated', taskTitle, questRank, baseExp, timestamp}`）を書く。スキーマは kozuchi `RpgTaskBonusService` の消費契約に合わせる。これで kozuchi の討伐ボーナスEXPと協力ダッシュボード（支出可視化）が実データを得る。
-- **🔶 rpg-task 報酬受信のアプリ配線**: `FileCrossAppRewardService.processPendingEvents` を起動時/ギルド読込時に呼び、報酬をPlayerへ付与し `CrossAppRewardDialog` を表示する。DI（injection.config.dart 手編集）＋GameViewModel 経由の配線が要る（kozuchiQuestService と同パターン）。
+- **✅ rpg-task 報酬受信のアプリ配線（本タスクで具現化・t_15837f3c）**: `TaskViewModel.processCrossAppRewards()`（`processPendingEvents` を起動時に呼び、コイン/EXP/称号をPlayerへ付与し `CrossAppRewardDialog` で通知）を追加。DI（injection.dart 手動登録）＋GameViewModel プロキシ＋main_screen postFrameCallback で配線（kozuchiQuestService と同パターン）。コミット84acbe8。
 - **🔶 kozuchi 三現世制覇のUI接続**: `CrossAppAchievementAggregator` を協力ダッシュボードへ統合し、進捗（敵討伐/読了/金）を表示。加えて集約側のファイル契約（`.json` 単一 vs `.jsonl`）を統一する申し送り有り。
 - **🔗 深層リンク送客**: クロス報酬獲得時に他アプリを開く導線（道標§五#13）は本ループ外の別タスク。
 
