@@ -9,6 +9,7 @@ import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
 import 'package:rpg_todo/core/utils/date_utils.dart';
 import 'package:rpg_todo/features/kozuchi/domain/kozuchi_quest_model.dart';
 import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
+import 'package:rpg_todo/features/crossapp/data/rpg_enemy_defeat_exporter.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/battle/domain/enemy_asset_service.dart';
 import 'package:injectable/injectable.dart';
@@ -25,6 +26,7 @@ class TaskViewModel extends ChangeNotifier {
   bool _isLoaded = false;
   IKozuchiQuestService? _kozuchiQuestService;
   KozuchiQuest? _kozuchiQuest;
+  IRpgEnemyDefeatExporter? _enemyDefeatExporter;
 
   TaskViewModel(this._taskRepository, this._playerVM);
 
@@ -58,6 +60,11 @@ class TaskViewModel extends ChangeNotifier {
     _kozuchiQuestService = service;
   }
   KozuchiQuest? get kozuchiQuest => _kozuchiQuest;
+
+  /// kozuchi 連携用の敵討伐エクスポーター（DIから注入・省略時は無効）
+  IRpgEnemyDefeatExporter? get enemyDefeatExporter => _enemyDefeatExporter;
+  set enemyDefeatExporter(IRpgEnemyDefeatExporter? exporter) =>
+      _enemyDefeatExporter = exporter;
 
   // ── クエストフィルタ ──
   List<Task> get activeTasks => _tasks.where((t) =>
@@ -253,6 +260,12 @@ class TaskViewModel extends ChangeNotifier {
     notifyListeners();
     _playerVM.save(); // player の変更も永続化
     _autoSave();
+    // kozuchi 連携: 討伐イベントを共有ストレージへ書き出し（ベストエフォート）
+    _enemyDefeatExporter?.exportEnemyDefeat(
+      taskTitle: _tasks[i].title,
+      questRank: _tasks[i].rank.name,
+      baseExp: r.expGain,
+    );
     _completing.remove(id);
     return {
       'leveledUp': r.leveledUp,

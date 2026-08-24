@@ -3,8 +3,27 @@ import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
+import 'package:rpg_todo/features/crossapp/data/rpg_enemy_defeat_exporter.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+
+class _MockEnemyDefeatExporter implements IRpgEnemyDefeatExporter {
+  final calls = <Map<String, dynamic>>[];
+
+  @override
+  Future<void> exportEnemyDefeat({
+    required String taskTitle,
+    required String questRank,
+    required int baseExp,
+    String? timestamp,
+  }) async {
+    calls.add({
+      'taskTitle': taskTitle,
+      'questRank': questRank,
+      'baseExp': baseExp,
+    });
+  }
+}
 
 class _MockPlayerRepo implements IPlayerRepository {
   @override
@@ -125,6 +144,49 @@ void main() {
 
       // repeatInterval=none は常に表示
       expect(taskVm.activeTasks.length, 1);
+    });
+  });
+
+  group('TaskViewModel - kozuchi敵討伐エクスポート', () {
+    late PlayerViewModel playerVm;
+    late _MockTaskRepo taskRepo;
+    late TaskViewModel taskVm;
+    late _MockEnemyDefeatExporter exporter;
+
+    setUp(() async {
+      final playerRepo = _MockPlayerRepo();
+      playerVm = PlayerViewModel(playerRepo);
+      await playerVm.load();
+      taskRepo = _MockTaskRepo();
+      taskVm = TaskViewModel(taskRepo, playerVm);
+      exporter = _MockEnemyDefeatExporter();
+      taskVm.enemyDefeatExporter = exporter;
+      await taskVm.load();
+    });
+
+    test('completeTask()成功時に敵討伐イベントをエクスポートする', () {
+      playerVm.player.jobLevels[playerVm.player.currentJob] = 5;
+      taskVm.addTask('スライム討伐', rank: QuestRank.B);
+      taskVm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化: 希少種抽選を無効化
+      taskVm.acceptTask(taskVm.tasks[0].id);
+
+      final result = taskVm.completeTask(taskVm.tasks[0].id);
+
+      expect(result, isNotNull);
+      expect(exporter.calls, hasLength(1));
+      expect(exporter.calls.single['taskTitle'], 'スライム討伐');
+      // QuestRank.name は既に大文字（'B'）。exporter 側でも大文字化される
+      expect(exporter.calls.single['questRank'], 'B');
+      // Bランク ベースEXP = 100
+      expect(exporter.calls.single['baseExp'], 100);
+    });
+
+    test('完了失敗時はエクスポートしない', () {
+      taskVm.enemyDefeatExporter = exporter;
+      // 存在しないIDで完了 → null
+      final result = taskVm.completeTask('no-such-task-id');
+      expect(result, isNull);
+      expect(exporter.calls, isEmpty);
     });
   });
 }

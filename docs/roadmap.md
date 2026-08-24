@@ -409,7 +409,40 @@ v2.1では以下の5機能でこの課題を克服する。
 | **クロス報酬（rpg-task側）** | CrossAppRewardService＋称号 | ✅ 実装・試験通過 | `lib/features/crossapp/` (6ファイル): FileCrossAppRewardService（JSONL読取→Hive Box `cross_app_rewards`による冪等性→称号/コイン/EXP報酬付与）。CrossAppTitleDefinition（11称号＋閾値マッチング）。TsundokuIdentityLinkDialog（ID紐付けUI）。CrossAppRewardDialog（報酬通知UI）。**30/30試験全通過（flutter test）** ✅ |
 | **クロス報酬（tsundoku側）** | TsundokuRewardEventExporter | ✅ 実装・試験通過 | `tsundoku_reward_event_exporter.dart` (161行) 実装済。AdventurerProvider/DailyMissionProvider/WarTrophyProvider/BookDataProviderにトリガーフック配線済。試験 `test/features/shared/data/tsundoku_reward_event_exporter_test.dart`（366行・22試験全通過、`flutter test` で検証済） |
 | **神々の通路** | FastAPI連携サーバー | ✅ 再建済・試験通過 | `~/Takamagahara/path_of_the_gods/` に再建済（49試験・11エンドポイント・SQLite永続化、`pytest` 49 passed）。認証（Bearer＋X-Admin-Token）・UUID v4検証・イベントソーシング・リーダーボード・adminトークンCRUD。`GET /health`→200、`POST /auth/register`→201 を実機確認済 |
-| **学びの循環** | tsundoku→rpg-task→kozuchi | ⏸️ 延期 | kozuchi β開顕後に策定 |
+| **学びの循環** | tsundoku読了→rpg-task報酬→kozuchi支出可視化 | 🔵 設計完了＋部分実装 | 下記「学びの循環 完全ループ設計」参照。rpg-task→kozuchi脚の欠損（enemy defeat export未実装）を本設計にて特定・具現化 |
+
+#### 学びの循環 完全ループ設計（令和八年葉月二十四日 思兼神策定）
+
+**大願との接続**: 大願「現世と地続きに——神遊びの気づきが明日の人の世を変える」を3現世で体現する横断ループ。**学ぶ（tsundoku）→稼ぐ（rpg-task）→遣う/見る（kozuchi）** の循環で、アプリをまたいだモチベーションの継続を生む。
+
+```
+ ┌──────────┐ 読了 event  ┌──────────┐ 討伐 event  ┌──────────┐
+ │ tsundoku │ ─────────▶ │ rpg-task │ ─────────▶ │  kozuchi │
+ │ (積読RPG) │   JSONL/JSON │ (タスクRPG)│   JSON      │ (家計RPG) │
+ └──────────┘             └──────────┘             └──────────┘
+   読了する                  報酬を払う                支出を見える化する
+```
+
+**ループ脚別の完成/欠損一覧（実コード調査・`grep`/`find` 検証済）**
+
+| 脚 | 方向 | 実装 | 配線 | 状態 |
+|----|------|------|------|------|
+| **tsundoku→rpg-task 書き出し** | 読了イベント JSONL | `TsundokuRewardEventExporter`（`tsundoku_reward_events.jsonl`） | Adventurer/DailyMission/WarTrophy/BookData 各Providerにフック済み | ✅ 完成 |
+| **tsundoku→kozuchi 書き出し** | 読了単一JSON | `TsundokuBookCompletionExporter`（`tsundoku_book_completed.json`） | BookDataProvider L338に注入済み | ✅ 完成 |
+| **rpg-task 報酬受信** | `tsundoku_reward_events.jsonl` 読取 | `FileCrossAppRewardService`（user_id先頭8文字照合・Hive冪等性・コイン/EXP/称号） | **⚠️ `processPendingEvents` が lib/ 内で一切呼ばれていない（デッドコード）** | 🔶 サービス完成・アプリ配線欠損 |
+| **rpg-task→kozuchi 書き出し** | 討伐イベント JSON | **不在** — `rpg_enemy_defeat_events.json` を書くexporterが rpg-task に無い | kozuchi `RpgTaskBonusService`(L24)/`CrossAppAchievementAggregator`(L18) が読取期待するが供給ゼロ | 🔴 **最も欠損した脚**（本設計で具現化） |
+| **kozuchi 討伐ボーナス受信** | `rpg_enemy_defeat_events.json` 読取 | `RpgTaskBonusService`（S/A/B→50/30/15EXP、1日3回、消費削除） | main_screen L228 `checkAndConsume()` で起動時スナックバー＋EXP付与 | ✅ 配線済 |
+| **kozuchi 金運バフ受信** | `tsundoku_book_completed.json` 読取 | `TsundokuGoldLuckBuffService`（60分 収入2倍） | main_screen L245 で発動確認 | ✅ 配線済 |
+| **kozuchi 支出可視化（連携DB）** | 討伐EXP＋金運バフ＋シナジー統計 | `CollaborationDashboardScreen`＋`CollaborationStatsService` | main_screen「🔗アプリ連携」クイックリンク L504 で表示 | ✅ 配線済 |
+| **kozuchi 三現世制覇** | 敵討伐/読了/金獲得の複合判定 | `CrossAppAchievementAggregator.checkThreeWorldsConquest` | **⚠️ UI未接続（lib/内で未使用）＋ `rpg_enemy_defeat_events.jsonl`(L18) はrpg-taskが書かない** | 🔶 サービス完成・UI接続/契約欠損 |
+
+**閉じるべきループ（具現化方針）**
+- **🔴 rpg-task→kozuchi 書き出し（本タスクで具現化）**: `lib/features/crossapp/data/rpg_enemy_defeat_exporter.dart` に `RpgEnemyDefeatExporter` を新設し、`TaskViewModel.completeTask()` 成功時に `rpg_enemy_defeat_events.json`（`{event:'enemy_defeated', taskTitle, questRank, baseExp, timestamp}`）を書く。スキーマは kozuchi `RpgTaskBonusService` の消費契約に合わせる。これで kozuchi の討伐ボーナスEXPと協力ダッシュボード（支出可視化）が実データを得る。
+- **🔶 rpg-task 報酬受信のアプリ配線**: `FileCrossAppRewardService.processPendingEvents` を起動時/ギルド読込時に呼び、報酬をPlayerへ付与し `CrossAppRewardDialog` を表示する。DI（injection.config.dart 手編集）＋GameViewModel 経由の配線が要る（kozuchiQuestService と同パターン）。
+- **🔶 kozuchi 三現世制覇のUI接続**: `CrossAppAchievementAggregator` を協力ダッシュボードへ統合し、進捗（敵討伐/読了/金）を表示。加えて集約側のファイル契約（`.json` 単一 vs `.jsonl`）を統一する申し送り有り。
+- **🔗 深層リンク送客**: クロス報酬獲得時に他アプリを開く導線（道標§五#13）は本ループ外の別タスク。
+
+> 本節は `shinsho/takamagahara-roadmap.md` セクション五#11 と連動する（横断道標に同設計を反映済み）。
 
 ---
 
