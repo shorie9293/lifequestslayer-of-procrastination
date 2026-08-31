@@ -84,6 +84,10 @@ class _TestSettingsRepo extends SettingsRepository {
   Future<bool> getBattleSceneEnabled() async => true;
   @override
   Future<void> setBattleSceneEnabled(bool enabled) async {}
+  @override
+  Future<DateTime?> getLastBackupTime() async => null;
+  @override
+  Future<void> setLastBackupTime(DateTime time) async {}
 }
 
 Future<void> _waitForLoad(GameViewModel vm) async {

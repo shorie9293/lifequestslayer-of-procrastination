@@ -20,6 +20,7 @@ class SettingsViewModel extends ChangeNotifier {
   bool _debugMode = false;
   bool _sfxEnabled = true;
   bool _battleSceneEnabled = true;
+  DateTime? _lastBackupTime;
 
   SettingsViewModel(this._settingsRepository)
       : _tutorial = TutorialService(_settingsRepository);
@@ -35,6 +36,7 @@ class SettingsViewModel extends ChangeNotifier {
   bool get isDebugMode => _debugMode;
   bool get isSfxEnabled => _sfxEnabled;
   bool get isBattleSceneEnabled => _battleSceneEnabled;
+  DateTime? get lastBackupTime => _lastBackupTime;
 
   // ── 設定操作 ──
   Future<void> setKnowledgeQuestEnabled(bool v) async {
@@ -125,6 +127,14 @@ class SettingsViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ── バックアップ（道標§五#17: 最終バックアップ日時） ──
+  Future<void> recordBackupNow() async {
+    final now = DateTime.now();
+    await _settingsRepository.setLastBackupTime(now);
+    _lastBackupTime = now;
+    notifyListeners();
+  }
+
   void setShowJobTutorial(bool v) {
     _showJobTutorial = v;
     notifyListeners();
@@ -142,6 +152,7 @@ class SettingsViewModel extends ChangeNotifier {
     await _load<bool>(_settingsRepository.getDebugModeEnabled, (v) => _debugMode = v, label: 'debugMode');
     await _load<bool>(_settingsRepository.getSfxEnabled, (v) => _sfxEnabled = v, label: 'sfxEnabled');
     await _load<bool>(_settingsRepository.getBattleSceneEnabled, (v) => _battleSceneEnabled = v, label: 'battleSceneEnabled');
+    await _load<DateTime?>(_settingsRepository.getLastBackupTime, (v) => _lastBackupTime = v, label: 'lastBackupTime');
 
     if (await _tutorial.repairSeenConcept(_tutorialStep, _sawConcept)) {
       _sawConcept = true;

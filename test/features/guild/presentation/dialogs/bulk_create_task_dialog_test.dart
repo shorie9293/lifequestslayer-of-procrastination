@@ -88,6 +88,10 @@ class _MockSettingsRepo extends SettingsRepository {
   Future<bool> getBattleSceneEnabled() async => true;
   @override
   Future<void> setBattleSceneEnabled(bool enabled) async {}
+  @override
+  Future<DateTime?> getLastBackupTime() async => null;
+  @override
+  Future<void> setLastBackupTime(DateTime time) async {}
 }
 
 /// テスト用 TaskViewModel モック — GameViewModel に委譲する

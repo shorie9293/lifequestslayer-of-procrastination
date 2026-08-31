@@ -225,4 +225,26 @@ class SettingsRepository {
       await box.put('battleSceneEnabled', enabled);
     } catch (_) {}
   }
+
+  // ── バックアップ（道標§五#17: 最終バックアップ日時） ──────────────
+
+  /// 保存された最終バックアップ日時を取得。未実行なら null。
+  Future<DateTime?> getLastBackupTime() async {
+    try {
+      final box = await _openSettingsBox();
+      final raw = box.get('lastBackupTime') as String?;
+      if (raw == null) return null;
+      return DateTime.tryParse(raw);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// 最終バックアップ日時を記録する。
+  Future<void> setLastBackupTime(DateTime time) async {
+    try {
+      final box = await _openSettingsBox();
+      await box.put('lastBackupTime', time.toIso8601String());
+    } catch (_) {}
+  }
 }
