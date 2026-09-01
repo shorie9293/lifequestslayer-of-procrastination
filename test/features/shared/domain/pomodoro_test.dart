@@ -24,8 +24,7 @@ void main() {
     });
 
     test('isPomodoroActive returns false after duration expires', () {
-      final player = Player();
-      player.pomodoroMinutes = 25;
+      final player = Player(pomodoroMinutes: 25);
       // Simulate starting 26 minutes ago
       player.pomodoroStartTime =
           DateTime.now().subtract(const Duration(minutes: 26));
@@ -33,8 +32,7 @@ void main() {
     });
 
     test('isPomodoroActive returns true within duration', () {
-      final player = Player();
-      player.pomodoroMinutes = 25;
+      final player = Player(pomodoroMinutes: 25);
       // Simulate starting 5 minutes ago
       player.pomodoroStartTime =
           DateTime.now().subtract(const Duration(minutes: 5));

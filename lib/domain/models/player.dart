@@ -259,10 +259,10 @@ class Player {
   DateTime? lastLoginDate;
 
   // --- v4: ポモドーロ設定 ---
-  int pomodoroMinutes;
-  int pomodoroShortBreakMinutes;
-  int pomodoroLongBreakMinutes;
-  int pomodorosBeforeLongBreak;
+  final int pomodoroMinutes;
+  final int pomodoroShortBreakMinutes;
+  final int pomodoroLongBreakMinutes;
+  final int pomodorosBeforeLongBreak;
   /// T9: Samurai Lv10 集中の型 — ポモドーロアクティブセッションの開始時刻
   DateTime? pomodoroStartTime;
 
@@ -1214,7 +1214,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
   }
 
   Player _readV4(BinaryReader reader) {
-    final player = Player();
+    var player = Player();
 
     try {
       if (reader.availableBytes > 0) {
@@ -1336,16 +1336,24 @@ class PlayerAdapter extends TypeAdapter<Player> {
     } catch (e) { _log('timesWardenDefeated read failed', e); }
     // v4: ポモドーロ設定
     try {
-      if (reader.availableBytes >= 4) { player.pomodoroMinutes = reader.readInt(); }
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(pomodoroMinutes: reader.readInt());
+      }
     } catch (e) { _log('pomodoroMinutes read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.pomodoroShortBreakMinutes = reader.readInt(); }
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(pomodoroShortBreakMinutes: reader.readInt());
+      }
     } catch (e) { _log('pomodoroShortBreakMinutes read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.pomodoroLongBreakMinutes = reader.readInt(); }
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(pomodoroLongBreakMinutes: reader.readInt());
+      }
     } catch (e) { _log('pomodoroLongBreakMinutes read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.pomodorosBeforeLongBreak = reader.readInt(); }
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(pomodorosBeforeLongBreak: reader.readInt());
+      }
     } catch (e) { _log('pomodorosBeforeLongBreak read failed', e); }
     try {
       if (reader.availableBytes > 0) { player.pomodoroStartTime = reader.read(); }
