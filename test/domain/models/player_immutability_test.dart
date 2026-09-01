@@ -85,4 +85,47 @@ void main() {
       expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
     });
   });
+
+  group('装備称号・装備スキン final（段階返済第三段）', () {
+    test('equippedTitle は copyWith でのみ変更可能で元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(equippedTitle: '勇者');
+
+      expect(identical(p, p2), isFalse);
+      expect(p.equippedTitle, isNull, reason: '元は不変');
+      expect(p2.equippedTitle, '勇者');
+    });
+
+    test('equippedTitle は null でクリア可能', () {
+      final p = Player().copyWith(equippedTitle: '勇者');
+      final cleared = p.copyWith(equippedTitle: null);
+
+      expect(cleared.equippedTitle, isNull, reason: 'nullでクリア可能');
+      expect(p.equippedTitle, '勇者', reason: '元は不変');
+    });
+
+    test('equippedSkin は copyWith でのみ変更可能で元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(equippedSkin: 'skin_warrior_01');
+
+      expect(identical(p, p2), isFalse);
+      expect(p.equippedSkin, isNull, reason: '元は不変');
+      expect(p2.equippedSkin, 'skin_warrior_01');
+    });
+
+    test('equippedSkin は null でクリア可能', () {
+      final p = Player().copyWith(equippedSkin: 'skin_warrior_01');
+      final cleared = p.copyWith(equippedSkin: null);
+
+      expect(cleared.equippedSkin, isNull, reason: 'nullでクリア可能');
+      expect(p.equippedSkin, 'skin_warrior_01', reason: '元は不変');
+    });
+
+    test('copyWith後も元インスタンスの装備称号・装備スキンは不変のまま', () {
+      final p = Player().copyWith(equippedTitle: '英雄', equippedSkin: 'skin_1');
+      final before = p.toJson();
+      final _ = p.copyWith(equippedTitle: '勇者', equippedSkin: 'skin_2');
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+    });
+  });
 }

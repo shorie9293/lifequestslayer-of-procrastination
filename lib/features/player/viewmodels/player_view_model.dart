@@ -247,7 +247,7 @@ class PlayerViewModel extends ChangeNotifier {
 
   void equipTitle(String t) {
     if (_player.titles.contains(t) || t.isEmpty) {
-      _player.equippedTitle = t.isEmpty ? null : t;
+      _player = _player.copyWith(equippedTitle: t.isEmpty ? null : t);
       notifyListeners();
       _autoSave();
     }
@@ -255,7 +255,7 @@ class PlayerViewModel extends ChangeNotifier {
 
   void equipSkin(String s) {
     if (_player.homeItems.contains(s) || s.isEmpty) {
-      _player.equippedSkin = s.isEmpty ? null : s;
+      _player = _player.copyWith(equippedSkin: s.isEmpty ? null : s);
       notifyListeners();
       _autoSave();
     }

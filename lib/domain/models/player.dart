@@ -248,8 +248,8 @@ class Player {
   int totalBRankCompleted;
   int timesWardenDefeated; // 刻の番人討伐回数
   List<String> titles;
-  String? equippedTitle;
-  String? equippedSkin; // 追加: 装備中のスキンID（旧ショップスキン）
+  final String? equippedTitle;
+  final String? equippedSkin; // 追加: 装備中のスキンID（旧ショップスキン）
   CharacterSkin characterSkin; // 追加: 5部位カスタマイズ
   int gems; // プレミアム通貨（課金で取得）
 
@@ -1308,10 +1308,10 @@ class PlayerAdapter extends TypeAdapter<Player> {
       }
     } catch (e) { _log('titles read failed', e); }
     try {
-      if (reader.availableBytes > 0) { player.equippedTitle = reader.read(); }
+      if (reader.availableBytes > 0) { player = player.copyWith(equippedTitle: reader.read() as String?); }
     } catch (e) { _log('equippedTitle read failed', e); }
     try {
-      if (reader.availableBytes > 0) { player.equippedSkin = reader.read(); }
+      if (reader.availableBytes > 0) { player = player.copyWith(equippedSkin: reader.read() as String?); }
     } catch (e) { _log('equippedSkin read failed', e); }
     try {
       if (reader.availableBytes >= 4) {
@@ -1448,7 +1448,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
   }
 
   Player _readV3(BinaryReader reader) {
-    final player = Player();
+    var player = Player();
 
     void safeRead(String field, void Function() readFn) {
       try {
@@ -1520,10 +1520,10 @@ class PlayerAdapter extends TypeAdapter<Player> {
           (reader.readList() as List?)?.cast<String>() ?? [];
     });
     safeRead('equippedTitle', () {
-      player.equippedTitle = reader.read();
+      player = player.copyWith(equippedTitle: reader.read() as String?);
     });
     safeRead('equippedSkin', () {
-      player.equippedSkin = reader.read();
+      player = player.copyWith(equippedSkin: reader.read() as String?);
     });
     safeRead('characterSkin', () {
       player.characterSkin = CharacterSkin.fromMap(
