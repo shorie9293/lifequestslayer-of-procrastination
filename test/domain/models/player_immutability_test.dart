@@ -57,4 +57,32 @@ void main() {
           reason: '未指定フィールドは保持');
     });
   });
+
+  group('アニメーション視聴フラグ final（段階返済第二段）', () {
+    test('hasSeenMandalaAnimation は copyWith でのみ変更可能で元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(hasSeenMandalaAnimation: true);
+
+      expect(identical(p, p2), isFalse);
+      expect(p.hasSeenMandalaAnimation, isFalse, reason: '元は不変');
+      expect(p2.hasSeenMandalaAnimation, isTrue);
+    });
+
+    test('hasSeenReversalAnimation は copyWith でのみ変更可能で元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(hasSeenReversalAnimation: true);
+
+      expect(identical(p, p2), isFalse);
+      expect(p.hasSeenReversalAnimation, isFalse, reason: '元は不変');
+      expect(p2.hasSeenReversalAnimation, isTrue);
+    });
+
+    test('copyWith後も元インスタンスの視聴フラグは不変のまま', () {
+      final p = Player();
+      final before = p.toJson();
+      final _ = p.copyWith(
+          hasSeenMandalaAnimation: true, hasSeenReversalAnimation: true);
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+    });
+  });
 }

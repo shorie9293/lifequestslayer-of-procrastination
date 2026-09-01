@@ -320,12 +320,12 @@ class PlayerViewModel extends ChangeNotifier {
     if (oldStage == EnlightenmentStage.shohorin &&
         newStage == EnlightenmentStage.engi &&
         !_player.hasSeenMandalaAnimation) {
-      _player.hasSeenMandalaAnimation = true;
+      _player = _player.copyWith(hasSeenMandalaAnimation: true);
       transitionType = EnlightenmentTransitionType.mandala;
     } else if (oldStage == EnlightenmentStage.engi &&
         newStage == EnlightenmentStage.ku &&
         !_player.hasSeenReversalAnimation) {
-      _player.hasSeenReversalAnimation = true;
+      _player = _player.copyWith(hasSeenReversalAnimation: true);
       transitionType = EnlightenmentTransitionType.reversal;
     }
 

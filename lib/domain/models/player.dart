@@ -304,10 +304,10 @@ class Player {
   EnlightenmentStage enlightenmentStage = EnlightenmentStage.shohorin;
 
   /// 曼荼羅展開アニメーション（初転法輪→縁起）を視聴済みか。
-  bool hasSeenMandalaAnimation = false;
+  final bool hasSeenMandalaAnimation;
 
   /// 世界反転アニメーション（縁起→空）を視聴済みか。
-  bool hasSeenReversalAnimation = false;
+  final bool hasSeenReversalAnimation;
 
   // --- v8: 帰還ミッション（ストリーク切断時の再エンゲージメント） ---
   /// 現在アクティブな帰還ミッション。なければnull。
@@ -1142,24 +1142,25 @@ class PlayerAdapter extends TypeAdapter<Player> {
   }
 
   Player _readV7(BinaryReader reader) {
-    final player = _readV6(reader);
+    var player = _readV6(reader);
 
     try {
       if (reader.availableBytes >= 4) {
         final stageIndex = reader.readInt();
         if (stageIndex >= 0 && stageIndex < EnlightenmentStage.values.length) {
-          player.enlightenmentStage = EnlightenmentStage.values[stageIndex];
+          player = player.copyWith(
+              enlightenmentStage: EnlightenmentStage.values[stageIndex]);
         }
       }
     } catch (e) { _log('enlightenmentStage read failed', e); }
     try {
       if (reader.availableBytes >= 1) {
-        player.hasSeenMandalaAnimation = reader.readBool();
+        player = player.copyWith(hasSeenMandalaAnimation: reader.readBool());
       }
     } catch (e) { _log('hasSeenMandalaAnimation read failed', e); }
     try {
       if (reader.availableBytes >= 1) {
-        player.hasSeenReversalAnimation = reader.readBool();
+        player = player.copyWith(hasSeenReversalAnimation: reader.readBool());
       }
     } catch (e) { _log('hasSeenReversalAnimation read failed', e); }
 
