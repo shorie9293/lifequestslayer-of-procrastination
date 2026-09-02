@@ -153,9 +153,9 @@ void main() {
         streakDays: 7,
         longestStreak: 14,
         lastLoginDate: DateTime(2026, 4, 28),
+        todayTaskLimitOffset: 1,
       );
       original.nextDayTaskLimitOffset = 2;
-      original.todayTaskLimitOffset = 1;
       original.lastRestDate = DateTime(2026, 4, 27);
       original.lastMissionResetDate = DateTime(2026, 4, 28);
 
@@ -307,9 +307,9 @@ void main() {
         streakDays: 7,
         longestStreak: 21,
         pomodoroMinutes: 30,
+        todayTaskLimitOffset: 1,
       );
       original.nextDayTaskLimitOffset = 2;
-      original.todayTaskLimitOffset = 1;
       original.lastMissionResetDate = DateTime(2026, 5, 30);
       original.lastRestDate = DateTime(2026, 5, 29);
       original.lastLoginDate = DateTime(2026, 5, 30, 10, 30, 0);

@@ -8,11 +8,12 @@ Player createPlayer({
   int coins = 1000,
   DateTime? lastRestDate,
 }) {
-  return Player()
-    ..todayTaskLimitOffset = todayTaskLimitOffset
+  final p = Player().copyWith(todayTaskLimitOffset: todayTaskLimitOffset);
+  p
     ..dailyTasksCompleted = dailyTasksCompleted
     ..coins = coins
     ..lastRestDate = lastRestDate;
+  return p;
 }
 
 void main() {

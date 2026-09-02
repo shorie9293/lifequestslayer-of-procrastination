@@ -10,7 +10,7 @@ void main() {
     });
 
     test('warnThreshold - todayTaskLimitOffsetが反映される', () {
-      final player = Player()..todayTaskLimitOffset = 3;
+      final player = Player().copyWith(todayTaskLimitOffset: 3);
       expect(FatigueService.warnThreshold(player), 8);
     });
 
@@ -20,7 +20,7 @@ void main() {
     });
 
     test('severeThreshold - todayTaskLimitOffsetが反映される', () {
-      final player = Player()..todayTaskLimitOffset = 5;
+      final player = Player().copyWith(todayTaskLimitOffset: 5);
       expect(FatigueService.severeThreshold(player), 15);
     });
 

@@ -69,9 +69,9 @@ void main() {
         titles: ['見習い冒険者', '英雄'],
         equippedTitle: '英雄',
         equippedSkin: 'skin_warrior_01',
+        todayTaskLimitOffset: 1,
       );
       originalPlayer.nextDayTaskLimitOffset = 2;
-      originalPlayer.todayTaskLimitOffset = 1;
 
       final jsonStr = service.exportToJson(originalPlayer, []);
       final result = service.importFromJson(jsonStr);

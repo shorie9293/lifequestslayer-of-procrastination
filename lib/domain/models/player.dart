@@ -238,7 +238,7 @@ class Player {
 
   // Inn / Sleep System (Plan 1)
   int nextDayTaskLimitOffset;
-  int todayTaskLimitOffset;
+  final int todayTaskLimitOffset; // イミュータブル化第六段でfinal化
   DateTime? lastRestDate;
 
   // Title / Achievement System (Plan 3)
@@ -1284,7 +1284,9 @@ class PlayerAdapter extends TypeAdapter<Player> {
       if (reader.availableBytes >= 4) { player.nextDayTaskLimitOffset = reader.readInt(); }
     } catch (e) { _log('nextDayTaskLimitOffset read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.todayTaskLimitOffset = reader.readInt(); }
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(todayTaskLimitOffset: reader.readInt());
+      }
     } catch (e) { _log('todayTaskLimitOffset read failed', e); }
     try {
       if (reader.availableBytes > 0) { player.lastRestDate = reader.read(); }
@@ -1502,7 +1504,9 @@ class PlayerAdapter extends TypeAdapter<Player> {
       if (reader.availableBytes >= 4) player.nextDayTaskLimitOffset = reader.readInt();
     });
     safeRead('todayTaskLimitOffset', () {
-      if (reader.availableBytes >= 4) player.todayTaskLimitOffset = reader.readInt();
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(todayTaskLimitOffset: reader.readInt());
+      }
     });
     safeRead('lastRestDate', () {
       player.lastRestDate = reader.read();

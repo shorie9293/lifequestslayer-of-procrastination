@@ -189,4 +189,34 @@ void main() {
       expect(p.timesWardenDefeated, 5);
     });
   });
+
+  group('todayTaskLimitOffset final（段階返済第六段）', () {
+    test('todayTaskLimitOffset は copyWith でのみ変更可能で元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(todayTaskLimitOffset: 4);
+
+      expect(identical(p, p2), isFalse);
+      expect(p.todayTaskLimitOffset, 0, reason: '元は不変');
+      expect(p2.todayTaskLimitOffset, 4);
+    });
+
+    test('checkAndResetMissions相当の nextDay→today 引継は元を不変に保つ', () {
+      // player_view_model.checkAndResetMissions の `_player.todayTaskLimitOffset = _player.nextDayTaskLimitOffset` 相当
+      final p = Player().copyWith(nextDayTaskLimitOffset: 3);
+      final p2 = p.copyWith(todayTaskLimitOffset: p.nextDayTaskLimitOffset);
+
+      expect(p.todayTaskLimitOffset, 0, reason: '元は不変');
+      expect(p.nextDayTaskLimitOffset, 3, reason: '元の nextDay も不変');
+      expect(p2.todayTaskLimitOffset, 3);
+      expect(p2.nextDayTaskLimitOffset, 3);
+    });
+
+    test('copyWith後も元インスタンスの todayTaskLimitOffset は不変のまま', () {
+      final p = Player().copyWith(todayTaskLimitOffset: 7);
+      final before = p.toJson();
+      final _ = p.copyWith(todayTaskLimitOffset: 2);
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+      expect(p.todayTaskLimitOffset, 7);
+    });
+  });
 }

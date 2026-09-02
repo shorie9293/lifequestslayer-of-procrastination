@@ -103,7 +103,7 @@ class PlayerViewModel extends ChangeNotifier {
     if (_player.lastMissionResetDate == null ||
         !DateUtils.isSameDay(_player.lastMissionResetDate!, now)) {
       _player.dailyTasksCompleted = 0;
-      _player.todayTaskLimitOffset = _player.nextDayTaskLimitOffset;
+      _player = _player.copyWith(todayTaskLimitOffset: _player.nextDayTaskLimitOffset);
       _player.nextDayTaskLimitOffset = 0;
       _player.lastMissionResetDate = now;
     }
