@@ -262,7 +262,8 @@ class PlayerViewModel extends ChangeNotifier {
   }
 
   void equipCharacterSkin(SkinSlot slot, String skinId) {
-    _player.characterSkin = _player.characterSkin.withSlot(slot, skinId);
+    _player = _player.copyWith(
+        characterSkin: _player.characterSkin.withSlot(slot, skinId));
     notifyListeners();
     _autoSave();
   }

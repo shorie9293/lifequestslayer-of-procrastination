@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/features/character_customization/domain/character_skin.dart'
+    show CharacterSkin, SkinSlot;
 
 /// 道標§五#7: Player モデルイミュータブル化の試練（第一段階）。
 ///
@@ -126,6 +128,38 @@ void main() {
       final before = p.toJson();
       final _ = p.copyWith(equippedTitle: '勇者', equippedSkin: 'skin_2');
       expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+    });
+  });
+
+  group('characterSkin final（段階返済第四段）', () {
+    test('characterSkin は copyWith でのみ変更可能で元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(
+          characterSkin: const CharacterSkin(hairId: 'hair_red'));
+
+      expect(identical(p, p2), isFalse);
+      expect(p.characterSkin.hairId, 'default', reason: '元は不変');
+      expect(p2.characterSkin.hairId, 'hair_red');
+    });
+
+    test('copyWithでwithSlot結果を設定でき元は不変', () {
+      final p = Player();
+      final updated = p.characterSkin.withSlot(SkinSlot.hair, 'hair_blue');
+      final p2 = p.copyWith(characterSkin: updated);
+
+      expect(p.characterSkin.hairId, 'default', reason: '元は不変');
+      expect(p2.characterSkin.hairId, 'hair_blue');
+      expect(identical(p.characterSkin, p2.characterSkin), isFalse);
+    });
+
+    test('copyWith後も元インスタンスの characterSkin は不変のまま', () {
+      final p = Player()
+          .copyWith(characterSkin: const CharacterSkin(hairId: 'hair_black'));
+      final before = p.toJson();
+      final _ = p.copyWith(
+          characterSkin: const CharacterSkin(hairId: 'hair_green'));
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+      expect(p.characterSkin.hairId, 'hair_black');
     });
   });
 }

@@ -250,7 +250,7 @@ class Player {
   List<String> titles;
   final String? equippedTitle;
   final String? equippedSkin; // 追加: 装備中のスキンID（旧ショップスキン）
-  CharacterSkin characterSkin; // 追加: 5部位カスタマイズ
+  final CharacterSkin characterSkin; // 追加: 5部位カスタマイズ（イミュータブル化第四段でfinal化）
   int gems; // プレミアム通貨（課金で取得）
 
   // --- ストリーク（連続ログイン） ---
@@ -1315,8 +1315,10 @@ class PlayerAdapter extends TypeAdapter<Player> {
     } catch (e) { _log('equippedSkin read failed', e); }
     try {
       if (reader.availableBytes >= 4) {
-        player.characterSkin = CharacterSkin.fromMap(
-          (reader.readMap() as Map?)?.cast<String, dynamic>() ?? {},
+        player = player.copyWith(
+          characterSkin: CharacterSkin.fromMap(
+            (reader.readMap() as Map?)?.cast<String, dynamic>() ?? {},
+          ),
         );
       }
     } catch (e) { _log('characterSkin read failed', e); }
@@ -1526,8 +1528,10 @@ class PlayerAdapter extends TypeAdapter<Player> {
       player = player.copyWith(equippedSkin: reader.read() as String?);
     });
     safeRead('characterSkin', () {
-      player.characterSkin = CharacterSkin.fromMap(
-        (reader.readMap() as Map?)?.cast<String, dynamic>() ?? {},
+      player = player.copyWith(
+        characterSkin: CharacterSkin.fromMap(
+          (reader.readMap() as Map?)?.cast<String, dynamic>() ?? {},
+        ),
       );
     });
     safeRead('gems', () {
