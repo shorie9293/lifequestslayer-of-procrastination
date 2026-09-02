@@ -68,7 +68,7 @@ void main() {
     });
 
     test('「刻の番人を討ちし者」は timesWardenDefeated を参照する', () {
-      final player = Player()..timesWardenDefeated = 1;
+      final player = Player().copyWith(timesWardenDefeated: 1);
       final def = kAllTitles.firstWhere((d) => d.id == '刻の番人を討ちし者');
       expect(def.getProgress(player), 1);
       expect(def.requiredCount, 1);

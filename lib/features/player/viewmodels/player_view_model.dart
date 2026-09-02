@@ -347,7 +347,7 @@ class PlayerViewModel extends ChangeNotifier {
 
   /// 刻の番人討伐時の称号チェック（GameViewModelから移行）
   void defeatTimeWarden() {
-    _player.timesWardenDefeated++;
+    _player = _player.copyWith(timesWardenDefeated: _player.timesWardenDefeated + 1);
     TitleService.checkTitles(_player, []);
     notifyListeners();
   }

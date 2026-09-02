@@ -2,7 +2,6 @@ import 'package:flutter/material.dart' hide DateUtils;
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/title_definition.dart';
-import 'package:rpg_todo/domain/services/title_service.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
 import 'package:rpg_todo/features/shared/data/player_repository.dart';
 import 'package:rpg_todo/features/guild/data/task_repository.dart';
@@ -198,9 +197,8 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
 
   /// 刻の番人（期限切れボス）討伐成功。討伐回数を増やし称号をチェックする。
   void defeatTimeWarden() {
-    _playerVM.player.timesWardenDefeated++;
-    final messages = <String>[];
-    TitleService.checkTitles(_playerVM.player, messages);
+    // PlayerViewModel.defeatTimeWarden へ委譲（イミュータブル化 #14・Player は copyWith でのみ更新可能）
+    _playerVM.defeatTimeWarden();
     _save();
   }
 

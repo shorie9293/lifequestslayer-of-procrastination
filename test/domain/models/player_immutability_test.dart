@@ -162,4 +162,31 @@ void main() {
       expect(p.characterSkin.hairId, 'hair_black');
     });
   });
+
+  group('timesWardenDefeated final（段階返済第五段）', () {
+    test('timesWardenDefeated は copyWith でのみ変更可能で元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(timesWardenDefeated: 3);
+
+      expect(identical(p, p2), isFalse);
+      expect(p.timesWardenDefeated, 0, reason: '元は不変');
+      expect(p2.timesWardenDefeated, 3);
+    });
+
+    test('defeatTimeWarden 相当のcopyWith増分は元を不変に保つ', () {
+      final p = Player();
+      final p2 = p.copyWith(timesWardenDefeated: p.timesWardenDefeated + 1);
+
+      expect(p.timesWardenDefeated, 0, reason: '元は不変');
+      expect(p2.timesWardenDefeated, 1);
+    });
+
+    test('copyWith後も元インスタンスの timesWardenDefeated は不変のまま', () {
+      final p = Player().copyWith(timesWardenDefeated: 5);
+      final before = p.toJson();
+      final _ = p.copyWith(timesWardenDefeated: 9);
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+      expect(p.timesWardenDefeated, 5);
+    });
+  });
 }

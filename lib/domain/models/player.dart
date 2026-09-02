@@ -246,7 +246,7 @@ class Player {
   int totalSRankCompleted;
   int totalARankCompleted;
   int totalBRankCompleted;
-  int timesWardenDefeated; // 刻の番人討伐回数
+  final int timesWardenDefeated; // 刻の番人討伐回数（イミュータブル化第五段でfinal化）
   List<String> titles;
   final String? equippedTitle;
   final String? equippedSkin; // 追加: 装備中のスキンID（旧ショップスキン）
@@ -1335,7 +1335,9 @@ class PlayerAdapter extends TypeAdapter<Player> {
       if (reader.availableBytes > 0) { player.lastLoginDate = reader.read(); }
     } catch (e) { _log('lastLoginDate read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.timesWardenDefeated = reader.readInt(); }
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(timesWardenDefeated: reader.readInt());
+      }
     } catch (e) { _log('timesWardenDefeated read failed', e); }
     // v4: ポモドーロ設定
     try {
@@ -1547,7 +1549,9 @@ class PlayerAdapter extends TypeAdapter<Player> {
       player.lastLoginDate = reader.read();
     });
     safeRead('timesWardenDefeated', () {
-      if (reader.availableBytes >= 4) player.timesWardenDefeated = reader.readInt();
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(timesWardenDefeated: reader.readInt());
+      }
     });
 
     return player;
