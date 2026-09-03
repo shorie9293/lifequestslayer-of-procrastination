@@ -251,7 +251,7 @@ class Player {
   final String? equippedTitle;
   final String? equippedSkin; // 追加: 装備中のスキンID（旧ショップスキン）
   final CharacterSkin characterSkin; // 追加: 5部位カスタマイズ（イミュータブル化第四段でfinal化）
-  int gems; // プレミアム通貨（課金で取得）
+  final int gems; // プレミアム通貨（課金で取得・イミュータブル化第七段でfinal化）
 
   // --- ストリーク（連続ログイン） ---
   int streakDays;
@@ -1325,7 +1325,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
       }
     } catch (e) { _log('characterSkin read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.gems = reader.readInt(); }
+      if (reader.availableBytes >= 4) { player = player.copyWith(gems: reader.readInt()); }
     } catch (e) { _log('gems read failed', e); }
     try {
       if (reader.availableBytes >= 4) { player.streakDays = reader.readInt(); }
@@ -1541,7 +1541,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
       );
     });
     safeRead('gems', () {
-      if (reader.availableBytes >= 4) player.gems = reader.readInt();
+      if (reader.availableBytes >= 4) player = player.copyWith(gems: reader.readInt());
     });
     safeRead('streakDays', () {
       if (reader.availableBytes >= 4) player.streakDays = reader.readInt();

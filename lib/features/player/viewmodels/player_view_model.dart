@@ -164,11 +164,11 @@ class PlayerViewModel extends ChangeNotifier {
   }
 
   void addExp(int amount) { _player.addExp(amount); notifyListeners(); _autoSave(); }
-  void addGems(int amount) { _player.gems += amount; notifyListeners(); _autoSave(); }
+  void addGems(int amount) { _player = _player.copyWith(gems: _player.gems + amount); notifyListeners(); _autoSave(); }
   bool spendGems(int amount, {bool debugMode = false}) {
     if (debugMode) return true;
     if (_player.gems < amount) return false;
-    _player.gems -= amount;
+    _player = _player.copyWith(gems: _player.gems - amount);
     notifyListeners();
     _autoSave();
     return true;
@@ -287,7 +287,7 @@ class PlayerViewModel extends ChangeNotifier {
   }
 
   void debugSetGems(int amount) {
-    _player.gems = amount.clamp(0, 99999);
+    _player = _player.copyWith(gems: amount.clamp(0, 99999));
     notifyListeners();
     _autoSave();
   }

@@ -219,4 +219,33 @@ void main() {
       expect(p.todayTaskLimitOffset, 7);
     });
   });
+
+  group('gems final（段階返済第七段）', () {
+    test('gems は copyWith でのみ変更可能で元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(gems: 120);
+
+      expect(identical(p, p2), isFalse);
+      expect(p.gems, 0, reason: '元は不変');
+      expect(p2.gems, 120);
+    });
+
+    test('addGems/spendGems 相当の copyWith 増減は元を不変に保つ', () {
+      final p = Player().copyWith(gems: 50);
+      final added = p.copyWith(gems: p.gems + 10);
+      final spent = added.copyWith(gems: added.gems - 30);
+
+      expect(p.gems, 50, reason: '元は不変');
+      expect(added.gems, 60);
+      expect(spent.gems, 30);
+    });
+
+    test('copyWith後も元インスタンスの gems は不変のまま', () {
+      final p = Player().copyWith(gems: 99);
+      final before = p.toJson();
+      final _ = p.copyWith(gems: 1);
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+      expect(p.gems, 99);
+    });
+  });
 }
