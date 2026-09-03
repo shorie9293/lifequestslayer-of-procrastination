@@ -678,7 +678,6 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.player.lastMissionResetDate = DateTime.now();
       vm.player.dailyTasksCompleted = 0;
 
       vm.addTask('クエスト', rank: QuestRank.B);
@@ -699,7 +698,6 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.player.lastMissionResetDate = DateTime.now();
       vm.player.dailyTasksCompleted = 5; // warnThreshold=5+0=5
 
       vm.addTask('クエスト', rank: QuestRank.B);
@@ -722,7 +720,6 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.player.lastMissionResetDate = DateTime.now();
       vm.player.dailyTasksCompleted = 10; // severeThreshold=10+0=10
 
       vm.addTask('クエスト', rank: QuestRank.B);
@@ -794,7 +791,6 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.player.lastMissionResetDate = DateTime.now();
       vm.player.dailyTasksCompleted = 2;
 
       vm.addTask('クエスト', rank: QuestRank.B);
@@ -817,7 +813,6 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.player.lastMissionResetDate = DateTime.now();
       vm.player.dailyTasksCompleted = 0;
 
       vm.addTask('クエスト', rank: QuestRank.B);
@@ -838,7 +833,6 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.player.lastMissionResetDate = DateTime.now();
       vm.player.jobLevels[vm.player.currentJob] = 10;
       vm.player.weeklySRankCompleted = 0;
 

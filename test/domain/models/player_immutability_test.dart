@@ -335,4 +335,41 @@ void main() {
       expect(p.lastReturnMissionIssuedAt, isNotNull, reason: '元は不変');
     });
   });
+
+  group('lastMissionResetDate final（段階返済第十段）', () {
+    test('lastMissionResetDate は copyWith でのみ設定され元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(lastMissionResetDate: DateTime(2026, 1, 1));
+
+      expect(identical(p, p2), isFalse, reason: 'copyWithは新インスタンスを返す');
+      expect(p.lastMissionResetDate, isNull, reason: '元は不変');
+      expect(p2.lastMissionResetDate, DateTime(2026, 1, 1));
+    });
+
+    test('copyWith(lastMissionResetDate: null) でクリア可能', () {
+      final p = Player().copyWith(lastMissionResetDate: DateTime(2026, 1, 1));
+      final cleared = p.copyWith(lastMissionResetDate: null);
+
+      expect(cleared.lastMissionResetDate, isNull, reason: 'nullでクリア可');
+      expect(p.lastMissionResetDate, isNotNull, reason: '元は不変');
+    });
+
+    test('日次リセット相当のcopyWith（dailyTasksCompleted: 0 + 日付更新）は元を不変に保つ', () {
+      final p = Player();
+      final p2 = p.copyWith(
+        lastMissionResetDate: DateTime(2026, 1, 2),
+      );
+
+      expect(p.lastMissionResetDate, isNull, reason: '元は不変');
+      expect(p2.lastMissionResetDate, DateTime(2026, 1, 2));
+    });
+
+    test('copyWith後も元インスタンスの lastMissionResetDate は不変のまま', () {
+      final p = Player().copyWith(lastMissionResetDate: DateTime(2026, 1, 1));
+      final before = p.toJson();
+      final _ = p.copyWith(lastMissionResetDate: DateTime(2026, 2, 1));
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+      expect(p.lastMissionResetDate, DateTime(2026, 1, 1));
+    });
+  });
 }

@@ -234,7 +234,9 @@ class Player {
   List<String> homeItems;
   int dailyTasksCompleted;
   int weeklySRankCompleted;
-  DateTime? lastMissionResetDate;
+  /// 最終ミッションリセット日時（日次/週次リセット判定用）。
+  /// イミュータブル化第十段でfinal化（copyWithのみで変更可能）。
+  final DateTime? lastMissionResetDate;
 
   // Inn / Sleep System (Plan 1)
   int nextDayTaskLimitOffset;
@@ -1285,7 +1287,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
       if (reader.availableBytes >= 4) { player.weeklySRankCompleted = reader.readInt(); }
     } catch (e) { _log('weeklySRankCompleted read failed', e); }
     try {
-      if (reader.availableBytes > 0) { player.lastMissionResetDate = reader.read(); }
+      if (reader.availableBytes > 0) { player = player.copyWith(lastMissionResetDate: reader.read() as DateTime?); }
     } catch (e) { _log('lastMissionResetDate read failed', e); }
     try {
       if (reader.availableBytes >= 4) { player.nextDayTaskLimitOffset = reader.readInt(); }
@@ -1505,7 +1507,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
       if (reader.availableBytes >= 4) player.weeklySRankCompleted = reader.readInt();
     });
     safeRead('lastMissionResetDate', () {
-      player.lastMissionResetDate = reader.read();
+      player = player.copyWith(lastMissionResetDate: reader.read() as DateTime?);
     });
     safeRead('nextDayTaskLimitOffset', () {
       if (reader.availableBytes >= 4) player.nextDayTaskLimitOffset = reader.readInt();

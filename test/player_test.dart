@@ -154,10 +154,10 @@ void main() {
         longestStreak: 14,
         lastLoginDate: DateTime(2026, 4, 28),
         todayTaskLimitOffset: 1,
+        lastMissionResetDate: DateTime(2026, 4, 28),
       );
       original.nextDayTaskLimitOffset = 2;
       original.lastRestDate = DateTime(2026, 4, 27);
-      original.lastMissionResetDate = DateTime(2026, 4, 28);
 
       await box.put('p2', original);
       final restored = box.get('p2')!;
@@ -308,9 +308,9 @@ void main() {
         longestStreak: 21,
         pomodoroMinutes: 30,
         todayTaskLimitOffset: 1,
+        lastMissionResetDate: DateTime(2026, 5, 30),
       );
       original.nextDayTaskLimitOffset = 2;
-      original.lastMissionResetDate = DateTime(2026, 5, 30);
       original.lastRestDate = DateTime(2026, 5, 29);
       original.lastLoginDate = DateTime(2026, 5, 30, 10, 30, 0);
       original.pomodoroStartTime = DateTime(2026, 5, 30, 9, 0);
