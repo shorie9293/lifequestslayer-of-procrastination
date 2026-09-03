@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart'
     show CharacterSkin, SkinSlot;
+import 'package:rpg_todo/features/temple/domain/enlightenment_stage.dart';
 
 /// 道標§五#7: Player モデルイミュータブル化の試練（第一段階）。
 ///
@@ -246,6 +247,38 @@ void main() {
       final _ = p.copyWith(gems: 1);
       expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
       expect(p.gems, 99);
+    });
+  });
+
+  group('enlightenmentStage final（段階返済第八段）', () {
+    test('enlightenmentStage は copyWith でのみ変更可能で元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(enlightenmentStage: EnlightenmentStage.engi);
+
+      expect(identical(p, p2), isFalse, reason: 'copyWithは新インスタンスを返す');
+      expect(p.enlightenmentStage, EnlightenmentStage.shohorin,
+          reason: '元は不変（デフォルト初転法輪）');
+      expect(p2.enlightenmentStage, EnlightenmentStage.engi);
+    });
+
+    test('昇格相当のcopyWith（初転法輪→縁起）は元を不変に保つ', () {
+      final p = Player();
+      final promoted = p.copyWith(
+          wisdomPoints: 10, enlightenmentStage: EnlightenmentStage.engi);
+
+      expect(p.enlightenmentStage, EnlightenmentStage.shohorin,
+          reason: '元は不変');
+      expect(promoted.enlightenmentStage, EnlightenmentStage.engi);
+      expect(promoted.wisdomPoints, 10);
+    });
+
+    test('copyWith後も元インスタンスの enlightenmentStage は不変のまま', () {
+      final p = Player().copyWith(enlightenmentStage: EnlightenmentStage.engi);
+      final before = p.toJson();
+      final _ =
+          p.copyWith(enlightenmentStage: EnlightenmentStage.ku);
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+      expect(p.enlightenmentStage, EnlightenmentStage.engi);
     });
   });
 }

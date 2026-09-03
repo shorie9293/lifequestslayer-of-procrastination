@@ -307,14 +307,14 @@ class PlayerViewModel extends ChangeNotifier {
 
     if (newStage.stageIndex <= oldStage.stageIndex) {
       // 昇格なし
-      _player.enlightenmentStage = newStage;
+      _player = _player.copyWith(enlightenmentStage: newStage);
       notifyListeners();
       _autoSave();
       return null;
     }
 
     // 昇格発生
-    _player.enlightenmentStage = newStage;
+    _player = _player.copyWith(enlightenmentStage: newStage);
 
     // 初回のみアニメーション再生
     EnlightenmentTransitionType? transitionType;

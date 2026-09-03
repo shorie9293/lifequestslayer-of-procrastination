@@ -301,7 +301,8 @@ class Player {
   int wisdomPoints = 0;
 
   /// 修行段階（悟りの境地）。知恵ポイントに応じて自動昇格。
-  EnlightenmentStage enlightenmentStage = EnlightenmentStage.shohorin;
+  /// イミュータブル化第八段でfinal化（copyWithのみで変更可能）。
+  final EnlightenmentStage enlightenmentStage;
 
   /// 曼荼羅展開アニメーション（初転法輪→縁起）を視聴済みか。
   final bool hasSeenMandalaAnimation;
