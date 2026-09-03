@@ -3,6 +3,7 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart'
     show CharacterSkin, SkinSlot;
 import 'package:rpg_todo/features/temple/domain/enlightenment_stage.dart';
+import 'package:rpg_todo/domain/models/return_mission.dart';
 
 /// 道標§五#7: Player モデルイミュータブル化の試練（第一段階）。
 ///
@@ -279,6 +280,59 @@ void main() {
           p.copyWith(enlightenmentStage: EnlightenmentStage.ku);
       expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
       expect(p.enlightenmentStage, EnlightenmentStage.engi);
+    });
+  });
+
+  group('activeReturnMission final（段階返済第九段）', () {
+    test('activeReturnMission は copyWith でのみ設定され元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(
+          activeReturnMission:
+              ReturnMission(previousStreak: 5, issuedAt: DateTime(2026, 1, 1)));
+
+      expect(identical(p, p2), isFalse, reason: 'copyWithは新インスタンスを返す');
+      expect(p.activeReturnMission, isNull, reason: '元は不変');
+      expect(p2.activeReturnMission, isNotNull);
+      expect(p2.activeReturnMission!.previousStreak, 5);
+    });
+
+    test('copyWith(activeReturnMission: null) でクリア可能（_unsetと区別）', () {
+      final p = Player().copyWith(
+          activeReturnMission:
+              ReturnMission(previousStreak: 3, issuedAt: DateTime(2026, 1, 1)));
+      final cleared = p.copyWith(activeReturnMission: null);
+
+      expect(cleared.activeReturnMission, isNull, reason: 'nullでクリア可');
+      expect(p.activeReturnMission, isNotNull, reason: '元は不変');
+    });
+
+    test('copyWith後も元インスタンスの activeReturnMission は不変のまま', () {
+      final p = Player().copyWith(
+          activeReturnMission:
+              ReturnMission(previousStreak: 9, issuedAt: DateTime(2026, 1, 1)));
+      final before = p.toJson();
+      final _ = p.copyWith(activeReturnMission: null);
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+    });
+  });
+
+  group('lastReturnMissionIssuedAt final（段階返済第九段）', () {
+    test('lastReturnMissionIssuedAt は copyWith で設定され元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(lastReturnMissionIssuedAt: DateTime(2026, 1, 1));
+
+      expect(identical(p, p2), isFalse);
+      expect(p.lastReturnMissionIssuedAt, isNull, reason: '元は不変');
+      expect(p2.lastReturnMissionIssuedAt, DateTime(2026, 1, 1));
+    });
+
+    test('copyWith(lastReturnMissionIssuedAt: null) でクリア可能', () {
+      final p =
+          Player().copyWith(lastReturnMissionIssuedAt: DateTime(2026, 1, 1));
+      final cleared = p.copyWith(lastReturnMissionIssuedAt: null);
+
+      expect(cleared.lastReturnMissionIssuedAt, isNull, reason: 'nullでクリア可');
+      expect(p.lastReturnMissionIssuedAt, isNotNull, reason: '元は不変');
     });
   });
 }

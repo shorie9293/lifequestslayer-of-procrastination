@@ -118,7 +118,7 @@ class PlayerViewModel extends ChangeNotifier {
     }
     // ストリーク切断時に帰還ミッションを発行
     if (streakResult.wasBroken && streakResult.previousStreak > 0) {
-      ReturnMissionService.generateReturnMission(
+      _player = ReturnMissionService.generateReturnMission(
         _player,
         previousStreak: streakResult.previousStreak,
         now: now,

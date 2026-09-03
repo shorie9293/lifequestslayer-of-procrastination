@@ -312,10 +312,12 @@ class Player {
 
   // --- v8: 帰還ミッション（ストリーク切断時の再エンゲージメント） ---
   /// 現在アクティブな帰還ミッション。なければnull。
-  ReturnMission? activeReturnMission;
+  /// イミュータブル化第九段でfinal化（copyWithのみで変更可能）。
+  final ReturnMission? activeReturnMission;
 
   /// 最後に帰還ミッションを発行した日時（重複防止用）。
-  DateTime? lastReturnMissionIssuedAt;
+  /// イミュータブル化第九段でfinal化（copyWithのみで変更可能）。
+  final DateTime? lastReturnMissionIssuedAt;
 
   /// オフライン同期: 最後に変更された日時（last-write-wins判定用）。
   DateTime? updatedAt;
@@ -1117,19 +1119,23 @@ class PlayerAdapter extends TypeAdapter<Player> {
   }
 
   Player _readV8(BinaryReader reader) {
-    final player = _readV7(reader);
+    var player = _readV7(reader);
 
     try {
       if (reader.availableBytes > 0) {
         final missionRaw = reader.readMap();
-        player.activeReturnMission = ReturnMission.fromJson(
-          missionRaw.cast<String, dynamic>(),
+        player = player.copyWith(
+          activeReturnMission: ReturnMission.fromJson(
+            missionRaw.cast<String, dynamic>(),
+          ),
         );
       }
     } catch (e) { _log('activeReturnMission read failed', e); }
     try {
       if (reader.availableBytes > 0) {
-        player.lastReturnMissionIssuedAt = reader.read();
+        player = player.copyWith(
+          lastReturnMissionIssuedAt: reader.read() as DateTime?,
+        );
       }
     } catch (e) { _log('lastReturnMissionIssuedAt read failed', e); }
     try {
