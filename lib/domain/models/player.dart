@@ -258,9 +258,12 @@ class Player {
   final int gems; // プレミアム通貨（課金で取得・イミュータブル化第七段でfinal化）
 
   // --- ストリーク（連続ログイン） ---
-  int streakDays;
-  int longestStreak;
-  DateTime? lastLoginDate;
+  /// イミュータブル化第十三段でfinal化（StreakService.checkAndUpdateStreakがcopyWith返却）。
+  final int streakDays;
+  /// イミュータブル化第十三段でfinal化（copyWithのみで変更可能）。
+  final int longestStreak;
+  /// イミュータブル化第十三段でfinal化（copyWithのみで変更可能）。
+  final DateTime? lastLoginDate;
 
   // --- v4: ポモドーロ設定 ---
   final int pomodoroMinutes;
@@ -1341,13 +1344,19 @@ class PlayerAdapter extends TypeAdapter<Player> {
       if (reader.availableBytes >= 4) { player = player.copyWith(gems: reader.readInt()); }
     } catch (e) { _log('gems read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.streakDays = reader.readInt(); }
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(streakDays: reader.readInt());
+      }
     } catch (e) { _log('streakDays read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.longestStreak = reader.readInt(); }
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(longestStreak: reader.readInt());
+      }
     } catch (e) { _log('longestStreak read failed', e); }
     try {
-      if (reader.availableBytes > 0) { player.lastLoginDate = reader.read(); }
+      if (reader.availableBytes > 0) {
+        player = player.copyWith(lastLoginDate: reader.read() as DateTime?);
+      }
     } catch (e) { _log('lastLoginDate read failed', e); }
     try {
       if (reader.availableBytes >= 4) {
@@ -1558,13 +1567,20 @@ class PlayerAdapter extends TypeAdapter<Player> {
       if (reader.availableBytes >= 4) player = player.copyWith(gems: reader.readInt());
     });
     safeRead('streakDays', () {
-      if (reader.availableBytes >= 4) player.streakDays = reader.readInt();
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(streakDays: reader.readInt());
+      }
     });
     safeRead('longestStreak', () {
-      if (reader.availableBytes >= 4) player.longestStreak = reader.readInt();
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(longestStreak: reader.readInt());
+      }
     });
     safeRead('lastLoginDate', () {
-      player.lastLoginDate = reader.read();
+      final v = reader.read();
+      if (v != null) {
+        player = player.copyWith(lastLoginDate: v as DateTime);
+      }
     });
     safeRead('timesWardenDefeated', () {
       if (reader.availableBytes >= 4) {

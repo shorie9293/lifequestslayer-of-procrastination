@@ -114,7 +114,9 @@ class PlayerViewModel extends ChangeNotifier {
       _player = _player.copyWith(weeklySRankCompleted: 0);
     }
     if (!login) return;
-    final streakResult = StreakService.checkAndUpdateStreak(_player, now);
+    final (streakPlayer, streakResult) =
+        StreakService.checkAndUpdateStreak(_player, now);
+    _player = streakPlayer;
     if (streakResult.reward > 0) {
       pendingStreakReward = streakResult.reward;
     }

@@ -29,44 +29,54 @@ class StreakResult {
 /// ストリーク（連続ログインボーナス）の計算と報酬付与を担当するサービス。
 class StreakService {
   /// ストリークを更新し、報酬を付与する。
-  /// 戻り値: [StreakResult] — 報酬額・切断情報・新しいストリーク日数
-  static StreakResult checkAndUpdateStreak(Player player, DateTime now) {
+  ///
+  /// Player イミュータブル化第十三段より、引数の [player] を破壊的変更せず、
+  /// streakDays/longestStreak/lastLoginDate/coins を反映した新インスタンスを返す。
+  /// 戻り値: ([Player] 更新後, [StreakResult] — 報酬額・切断情報・新しいストリーク日数)
+  static (Player, StreakResult) checkAndUpdateStreak(
+      Player player, DateTime now) {
     final last = player.lastLoginDate;
     final previousStreak = player.streakDays;
     bool wasBroken = false;
 
+    int newStreak;
     if (last == null) {
       // 初回ログイン
-      player.streakDays = 1;
+      newStreak = 1;
     } else if (_isSameDay(last, now)) {
       // 同日の再起動は何もしない
-      return StreakResult(reward: 0, newStreak: player.streakDays);
+      return (player, StreakResult(reward: 0, newStreak: player.streakDays));
     } else if (_isYesterday(last, now)) {
       // 昨日ログイン済み → ストリーク継続
-      player.streakDays++;
+      newStreak = player.streakDays + 1;
     } else {
       // 2日以上空白 → ストリーク切断
       // 1日以上ストリークがあった場合のみ「切断」とみなす
       if (previousStreak > 1) {
         wasBroken = true;
       }
-      player.streakDays = 1;
+      newStreak = 1;
     }
 
-    player.longestStreak = max(player.longestStreak, player.streakDays);
-    player.lastLoginDate = now;
-
+    final newLongest = max(player.longestStreak, newStreak);
     // ストリーク報酬
-    final reward = calcStreakReward(player.streakDays);
-    if (reward > 0) {
-      player.coins += reward;
-    }
+    final reward = calcStreakReward(newStreak);
 
-    return StreakResult(
-      reward: reward,
-      wasBroken: wasBroken,
-      previousStreak: wasBroken ? previousStreak : 0,
-      newStreak: player.streakDays,
+    final updated = player.copyWith(
+      streakDays: newStreak,
+      longestStreak: newLongest,
+      lastLoginDate: now,
+      coins: player.coins + reward,
+    );
+
+    return (
+      updated,
+      StreakResult(
+        reward: reward,
+        wasBroken: wasBroken,
+        previousStreak: wasBroken ? previousStreak : 0,
+        newStreak: newStreak,
+      ),
     );
   }
 

@@ -173,8 +173,9 @@ void main() {
     });
 
     test('round-trip: DateTime fields (null and non-null) survive', () {
-      final player = Player().copyWith(lastMissionResetDate: DateTime(2026, 5, 28))
-        ..lastLoginDate = DateTime(2026, 5, 30, 10, 30)
+      final player = Player().copyWith(
+          lastMissionResetDate: DateTime(2026, 5, 28),
+          lastLoginDate: DateTime(2026, 5, 30, 10, 30))
         ..lastRestDate = DateTime(2026, 5, 29)
         ..lastDailyComplete = DateTime(2026, 5, 30)
         ..lastStreakGraceReset = DateTime(2026, 5, 23)
@@ -273,11 +274,11 @@ void main() {
         pomodoroLongBreakMinutes: 20,
         pomodorosBeforeLongBreak: 3,
         lastMissionResetDate: DateTime(2026, 5, 30),
+        lastLoginDate: DateTime(2026, 5, 30, 8, 0),
       );
       player.warriorDailyBuff = 15;
       player.streakGraceRemaining = 1;
       player.lastRestDate = DateTime(2026, 5, 29);
-      player.lastLoginDate = DateTime(2026, 5, 30, 8, 0);
       player.pomodoroStartTime = DateTime(2026, 5, 30, 9, 0);
       player.lastDailyComplete = DateTime(2026, 5, 30);
       player.lastStreakGraceReset = DateTime(2026, 5, 23);

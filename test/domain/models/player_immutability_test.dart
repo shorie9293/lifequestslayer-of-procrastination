@@ -429,4 +429,61 @@ void main() {
       expect(p.currentJob, Job.samurai);
     });
   });
+
+  group('streakDays/longestStreak/lastLoginDate final（段階返済第十三段）', () {
+    test('streakDays は copyWith でのみ変更可能で元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(streakDays: 7);
+
+      expect(identical(p, p2), isFalse, reason: 'copyWithは新インスタンスを返す');
+      expect(p.streakDays, 0, reason: '元は不変（デフォルト0）');
+      expect(p2.streakDays, 7);
+    });
+
+    test('longestStreak は copyWith でのみ変更可能で元は不変', () {
+      final p = Player().copyWith(streakDays: 5);
+      final p2 = p.copyWith(longestStreak: 30);
+
+      expect(p.longestStreak, 0, reason: '元は不変（デフォルト0）');
+      expect(p2.longestStreak, 30);
+      expect(p.streakDays, 5, reason: '元の他フィールドも不変');
+    });
+
+    test('lastLoginDate は copyWith でのみ設定され元は不変', () {
+      final p = Player();
+      final now = DateTime(2026, 1, 1, 10, 0);
+      final p2 = p.copyWith(lastLoginDate: now);
+
+      expect(p.lastLoginDate, isNull, reason: '元は不変');
+      expect(p2.lastLoginDate, now);
+    });
+
+    test('StreakService相当のストリーク継続copyWith（streakDays+1・longest更新）は元を不変に保つ', () {
+      final p = Player()
+          .copyWith(streakDays: 3, longestStreak: 3, lastLoginDate: DateTime(2026, 1, 1));
+      final p2 = p.copyWith(
+        streakDays: p.streakDays + 1,
+        longestStreak: p.longestStreak > p.streakDays + 1 ? p.longestStreak : p.streakDays + 1,
+        lastLoginDate: DateTime(2026, 1, 2),
+      );
+
+      expect(p.streakDays, 3, reason: '元は不変');
+      expect(p.longestStreak, 3, reason: '元は不変');
+      expect(p.lastLoginDate, DateTime(2026, 1, 1), reason: '元は不変');
+      expect(p2.streakDays, 4);
+      expect(p2.longestStreak, 4);
+      expect(p2.lastLoginDate, DateTime(2026, 1, 2));
+    });
+
+    test('copyWith後も元インスタンスの streak3字段は不変のまま', () {
+      final p = Player().copyWith(
+          streakDays: 3, longestStreak: 3, lastLoginDate: DateTime(2026, 1, 1));
+      final before = p.toJson();
+      final _ = p.copyWith(
+          streakDays: 9, longestStreak: 9, lastLoginDate: DateTime(2026, 1, 9));
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+      expect(p.streakDays, 3);
+      expect(p.longestStreak, 3);
+    });
+  });
 }

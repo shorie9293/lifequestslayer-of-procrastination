@@ -309,10 +309,10 @@ void main() {
         pomodoroMinutes: 30,
         todayTaskLimitOffset: 1,
         lastMissionResetDate: DateTime(2026, 5, 30),
+        lastLoginDate: DateTime(2026, 5, 30, 10, 30, 0),
       );
       original.nextDayTaskLimitOffset = 2;
       original.lastRestDate = DateTime(2026, 5, 29);
-      original.lastLoginDate = DateTime(2026, 5, 30, 10, 30, 0);
       original.pomodoroStartTime = DateTime(2026, 5, 30, 9, 0);
       original.lastDailyComplete = DateTime(2026, 5, 30);
       original.lastStreakGraceReset = DateTime(2026, 5, 23);

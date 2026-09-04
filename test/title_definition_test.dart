@@ -76,21 +76,21 @@ void main() {
 
     group('ストリーク称号（UX-10）', () {
       test('「月を跨ぎし者」は streakDays を参照する（30日で達成）', () {
-        final player = Player()..streakDays = 30;
+        final player = Player(streakDays: 30);
         final def = kAllTitles.firstWhere((d) => d.id == '月を跨ぎし者');
         expect(def.getProgress(player), 30);
         expect(def.requiredCount, 30);
       });
 
       test('「継続の達人」は streakDays を参照する（60日で達成）', () {
-        final player = Player()..streakDays = 60;
+        final player = Player(streakDays: 60);
         final def = kAllTitles.firstWhere((d) => d.id == '継続の達人');
         expect(def.getProgress(player), 60);
         expect(def.requiredCount, 60);
       });
 
       test('「時の支配者」は streakDays を参照する（100日で達成）', () {
-        final player = Player()..streakDays = 100;
+        final player = Player(streakDays: 100);
         final def = kAllTitles.firstWhere((d) => d.id == '時の支配者');
         expect(def.getProgress(player), 100);
         expect(def.requiredCount, 100);
