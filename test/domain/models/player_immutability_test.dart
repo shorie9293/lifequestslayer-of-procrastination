@@ -372,4 +372,34 @@ void main() {
       expect(p.lastMissionResetDate, DateTime(2026, 1, 1));
     });
   });
+
+  group('homeItems/unlockedSkillIds final（段階返済第十一段）', () {
+    test('homeItems は copyWith でのみ設定され元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(homeItems: ['home_2']);
+
+      expect(identical(p, p2), isFalse, reason: 'copyWithは新インスタンスを返す');
+      expect(p.homeItems, isEmpty, reason: '元は不変');
+      expect(p2.homeItems, ['home_2']);
+    });
+
+    test('unlockedSkillIds は copyWith でのみ設定され元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(unlockedSkillIds: ['node_a']);
+
+      expect(identical(p, p2), isFalse, reason: 'copyWithは新インスタンスを返す');
+      expect(p.unlockedSkillIds, isEmpty, reason: '元は不変');
+      expect(p2.unlockedSkillIds, ['node_a']);
+    });
+
+    test('copyWith後も元インスタンスのhomeItems/unlockedSkillIdsは不変のまま', () {
+      final p = Player().copyWith(homeItems: ['home_1'], unlockedSkillIds: ['n1']);
+      final before = p.toJson();
+      final _ = p.copyWith(homeItems: ['home_9'], unlockedSkillIds: ['n9']);
+
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+      expect(p.homeItems, ['home_1']);
+      expect(p.unlockedSkillIds, ['n1']);
+    });
+  });
 }

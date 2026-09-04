@@ -231,7 +231,8 @@ class Player {
   Job currentJob;
   int comboCount;
   int coins;
-  List<String> homeItems;
+  /// イミュータブル化第十一段でfinal化（copyWithのみで変更可能）。
+  final List<String> homeItems;
   int dailyTasksCompleted;
   int weeklySRankCompleted;
   /// 最終ミッションリセット日時（日次/週次リセット判定用）。
@@ -282,7 +283,8 @@ class Player {
   /// 未使用のスキルポイント。冒険者Lv上昇時に獲得。
   int skillPoints = 0;
   /// 解放済みのスキルノードID一覧。
-  List<String> unlockedSkillIds = [];
+  /// イミュータブル化第十一段でfinal化（copyWithのみで変更可能）。
+  final List<String> unlockedSkillIds;
 
   // --- v6: 内省バッジシステム ---
   /// 累計振り返り回数。
@@ -1204,7 +1206,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
   }
 
   Player _readV5(BinaryReader reader) {
-    final player = _readV4(reader);
+    var player = _readV4(reader);
 
     try {
       if (reader.availableBytes >= 4) {
@@ -1214,8 +1216,8 @@ class PlayerAdapter extends TypeAdapter<Player> {
     try {
       if (reader.availableBytes > 0) {
         final raw = reader.readList();
-        player.unlockedSkillIds =
-            (raw as List?)?.cast<String>() ?? [];
+        player = player.copyWith(
+            unlockedSkillIds: (raw as List?)?.cast<String>() ?? []);
       }
     } catch (e) { _log('unlockedSkillIds read failed', e); }
 
@@ -1276,15 +1278,15 @@ class PlayerAdapter extends TypeAdapter<Player> {
     } catch (e) { _log('coins read failed', e); }
     try {
       if (reader.availableBytes > 0) {
-        player.homeItems =
-            (reader.readList() as List?)?.cast<String>() ?? [];
+        player = player.copyWith(
+            homeItems: (reader.readList() as List?)?.cast<String>() ?? []);
       }
     } catch (e) { _log('homeItems read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.dailyTasksCompleted = reader.readInt(); }
+      if (reader.availableBytes >= 4) { player = player.copyWith(dailyTasksCompleted: reader.readInt()); }
     } catch (e) { _log('dailyTasksCompleted read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.weeklySRankCompleted = reader.readInt(); }
+      if (reader.availableBytes >= 4) { player = player.copyWith(weeklySRankCompleted: reader.readInt()); }
     } catch (e) { _log('weeklySRankCompleted read failed', e); }
     try {
       if (reader.availableBytes > 0) { player = player.copyWith(lastMissionResetDate: reader.read() as DateTime?); }
@@ -1497,14 +1499,14 @@ class PlayerAdapter extends TypeAdapter<Player> {
       if (reader.availableBytes >= 4) player.coins = reader.readInt();
     });
     safeRead('homeItems', () {
-      player.homeItems =
-          (reader.readList() as List?)?.cast<String>() ?? [];
+      player = player.copyWith(
+          homeItems: (reader.readList() as List?)?.cast<String>() ?? []);
     });
     safeRead('dailyTasksCompleted', () {
-      if (reader.availableBytes >= 4) player.dailyTasksCompleted = reader.readInt();
+      if (reader.availableBytes >= 4) player = player.copyWith(dailyTasksCompleted: reader.readInt());
     });
     safeRead('weeklySRankCompleted', () {
-      if (reader.availableBytes >= 4) player.weeklySRankCompleted = reader.readInt();
+      if (reader.availableBytes >= 4) player = player.copyWith(weeklySRankCompleted: reader.readInt());
     });
     safeRead('lastMissionResetDate', () {
       player = player.copyWith(lastMissionResetDate: reader.read() as DateTime?);

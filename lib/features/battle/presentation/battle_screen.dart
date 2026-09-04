@@ -497,8 +497,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
                                                       Navigator.pop(ctx);
                                                       // 体力消費：1クエスト完了分
                                                       playerVM
-                                                              .player
-                                                              .dailyTasksCompleted++;
+                                                          .incrementDailyTasksCompleted();
                                                       playerVM.save();
                                                       taskVM.cancelTask(
                                                           task.id);

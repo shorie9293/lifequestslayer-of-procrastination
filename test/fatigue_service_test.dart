@@ -25,47 +25,47 @@ void main() {
     });
 
     test('status - dailyTasksCompleted=0で元気', () {
-      final player = Player()..dailyTasksCompleted = 0;
+      final player = Player().copyWith(dailyTasksCompleted: 0);
       expect(FatigueService.status(player), '😊 快調');
     });
 
     test('status - dailyTasksCompleted=5でwarn', () {
-      final player = Player()..dailyTasksCompleted = 5;
+      final player = Player().copyWith(dailyTasksCompleted: 5);
       expect(FatigueService.status(player), '😐 やや疲れ');
     });
 
     test('status - dailyTasksCompleted=10でsevere', () {
-      final player = Player()..dailyTasksCompleted = 10;
+      final player = Player().copyWith(dailyTasksCompleted: 10);
       expect(FatigueService.status(player), '😵 限界');
     });
 
     test('progress - dailyTasksCompleted=5で0.5', () {
-      final player = Player()..dailyTasksCompleted = 5;
+      final player = Player().copyWith(dailyTasksCompleted: 5);
       expect(FatigueService.progress(player), 0.5);
     });
 
     test('progress - dailyTasksCompleted=0で0.0', () {
-      final player = Player()..dailyTasksCompleted = 0;
+      final player = Player().copyWith(dailyTasksCompleted: 0);
       expect(FatigueService.progress(player), 0.0);
     });
 
     test('progress - dailyTasksCompleted=10で1.0', () {
-      final player = Player()..dailyTasksCompleted = 10;
+      final player = Player().copyWith(dailyTasksCompleted: 10);
       expect(FatigueService.progress(player), 1.0);
     });
 
     test('fatigueMultiplier - dailyTasksCompleted=0で1.0', () {
-      final player = Player()..dailyTasksCompleted = 0;
+      final player = Player().copyWith(dailyTasksCompleted: 0);
       expect(FatigueService.fatigueMultiplier(player), 1.0);
     });
 
     test('fatigueMultiplier - dailyTasksCompleted=5で0.5', () {
-      final player = Player()..dailyTasksCompleted = 5;
+      final player = Player().copyWith(dailyTasksCompleted: 5);
       expect(FatigueService.fatigueMultiplier(player), 0.5);
     });
 
     test('fatigueMultiplier - dailyTasksCompleted=10で0.1', () {
-      final player = Player()..dailyTasksCompleted = 10;
+      final player = Player().copyWith(dailyTasksCompleted: 10);
       expect(FatigueService.fatigueMultiplier(player), 0.1);
     });
 

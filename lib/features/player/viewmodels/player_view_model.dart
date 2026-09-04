@@ -102,8 +102,8 @@ class PlayerViewModel extends ChangeNotifier {
 
     if (_player.lastMissionResetDate == null ||
         !DateUtils.isSameDay(_player.lastMissionResetDate!, now)) {
-      _player.dailyTasksCompleted = 0;
       _player = _player.copyWith(
+        dailyTasksCompleted: 0,
         todayTaskLimitOffset: _player.nextDayTaskLimitOffset,
         lastMissionResetDate: now,
       );
@@ -111,7 +111,7 @@ class PlayerViewModel extends ChangeNotifier {
     }
     if (_player.lastMissionResetDate != null &&
         DateUtils.isDifferentWeek(_player.lastMissionResetDate!, now)) {
-      _player.weeklySRankCompleted = 0;
+      _player = _player.copyWith(weeklySRankCompleted: 0);
     }
     if (!login) return;
     final streakResult = StreakService.checkAndUpdateStreak(_player, now);
@@ -177,9 +177,9 @@ class PlayerViewModel extends ChangeNotifier {
   }
   void addCoins(int amount) { _player.coins += amount; notifyListeners(); _autoSave(); }
   void spendCoins(int amount) { _player.coins -= amount; notifyListeners(); _autoSave(); }
-  void setDailyTasksCompleted(int v) { _player.dailyTasksCompleted = v; notifyListeners(); _autoSave(); }
-  void incrementDailyTasksCompleted() { _player.dailyTasksCompleted++; notifyListeners(); _autoSave(); }
-  void incrementWeeklySRank() { _player.weeklySRankCompleted++; notifyListeners(); _autoSave(); }
+  void setDailyTasksCompleted(int v) { _player = _player.copyWith(dailyTasksCompleted: v); notifyListeners(); _autoSave(); }
+  void incrementDailyTasksCompleted() { _player = _player.copyWith(dailyTasksCompleted: _player.dailyTasksCompleted + 1); notifyListeners(); _autoSave(); }
+  void incrementWeeklySRank() { _player = _player.copyWith(weeklySRankCompleted: _player.weeklySRankCompleted + 1); notifyListeners(); _autoSave(); }
   void setNextDayTaskLimitOffset(int v) { _player.nextDayTaskLimitOffset = v; notifyListeners(); _autoSave(); }
 
   void changeJob(Job j, {bool debugMode = false}) {
@@ -273,7 +273,7 @@ class PlayerViewModel extends ChangeNotifier {
   bool buyHomeItem(String id, int price, {bool debugMode = false}) {
     if (debugMode || (_player.coins >= price && !_player.homeItems.contains(id))) {
       if (!debugMode) _player.coins -= price;
-      _player.homeItems.add(id);
+      _player = _player.copyWith(homeItems: [..._player.homeItems, id]);
       notifyListeners();
       _autoSave();
       return true;
