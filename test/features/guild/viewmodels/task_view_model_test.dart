@@ -119,7 +119,6 @@ void main() {
     test('RoninRepeatTask有効時:今日完了済みの繰り返しクエストはactiveTasksに非表示', () {
       // Set up: Ronin Lv10 (mastered → roninRepeatTask available)
       playerVm.player.jobLevels[Job.adventurer] = 10;
-      playerVm.player.currentJob = Job.adventurer;
 
       final today = DateTime.now();
       taskVm.addTask('毎日の修行',
@@ -134,7 +133,6 @@ void main() {
 
     test('RoninRepeatTask有効時:昨日完了の繰り返しクエストはactiveTasksに表示', () {
       playerVm.player.jobLevels[Job.adventurer] = 10;
-      playerVm.player.currentJob = Job.adventurer;
 
       final yesterday = DateTime.now().subtract(const Duration(days: 1));
       taskVm.addTask('毎日の修行',
@@ -150,7 +148,6 @@ void main() {
     test('RoninRepeatTask未開放時:今日完了済みでもactiveTasksに表示', () {
       // Lv1 → RoninRepeatTask 未開放
       playerVm.player.jobLevels[Job.adventurer] = 1;
-      playerVm.player.currentJob = Job.adventurer;
 
       final today = DateTime.now();
       taskVm.addTask('毎日の修行',

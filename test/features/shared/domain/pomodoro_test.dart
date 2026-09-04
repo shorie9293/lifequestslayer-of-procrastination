@@ -70,10 +70,9 @@ void main() {
     test('+50% EXP bonus when pomodoro active and warriorPomodoro equipped',
         () {
       final task = makeTask(id: 'pomo-1');
-      final player = Player();
       // Give player Warrior Lv10 to have warriorPomodoro
+      final player = Player(currentJob: Job.samurai);
       player.jobLevels[Job.samurai] = 10;
-      player.currentJob = Job.samurai;
       // Start pomodoro session
       player.startPomodoro();
 
@@ -99,9 +98,8 @@ void main() {
     test('no pomodoro bonus when active pomodoro but warriorPomodoro not available',
         () {
       final task = makeTask(id: 'pomo-2');
+      // No warrior job, no warriorPomodoro skill (default adventurer)
       final player = Player();
-      // No warrior job, no warriorPomodoro skill
-      player.currentJob = Job.adventurer;
       player.startPomodoro();
 
       final result = service.complete(
@@ -122,9 +120,8 @@ void main() {
     test('no pomodoro bonus when warriorPomodoro but pomodoro inactive',
         () {
       final task = makeTask(id: 'pomo-3');
-      final player = Player();
+      final player = Player(currentJob: Job.samurai);
       player.jobLevels[Job.samurai] = 10;
-      player.currentJob = Job.samurai;
       // Do NOT start pomodoro
 
       final result = service.complete(

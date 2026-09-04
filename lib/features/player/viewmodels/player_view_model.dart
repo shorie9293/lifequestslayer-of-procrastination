@@ -184,13 +184,13 @@ class PlayerViewModel extends ChangeNotifier {
 
   void changeJob(Job j, {bool debugMode = false}) {
     if (debugMode) {
-      _player.currentJob = j;
+      _player = _player.copyWith(currentJob: j);
       notifyListeners();
       _autoSave();
       return;
     }
     if (j == Job.adventurer) {
-      _player.currentJob = j;
+      _player = _player.copyWith(currentJob: j);
       notifyListeners();
       _autoSave();
       return;
@@ -202,7 +202,7 @@ class PlayerViewModel extends ChangeNotifier {
       final currentLv = _player.jobLevels[_player.currentJob] ?? 1;
       if (currentLv < 10) return;
     }
-    _player.currentJob = j;
+    _player = _player.copyWith(currentJob: j);
     notifyListeners();
     _autoSave();
   }

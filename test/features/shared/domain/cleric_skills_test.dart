@@ -44,9 +44,8 @@ void main() {
 
     test('repeatAfterDays設定クエスト完了時はisCompleted=false、lastCompletedAtが設定される', () {
       final task = makeTask(id: 'r1', repeatAfterDays: 3);
-      final player = Player();
+      final player = Player(currentJob: Job.monk);
       player.jobLevels[Job.monk] = 1;
-      player.currentJob = Job.monk;
 
       final result = service.complete(
         task: task,
@@ -66,9 +65,8 @@ void main() {
 
     test('repeatAfterDays=nullの通常クエストは完了時にisCompleted=trueになる', () {
       final task = makeTask(id: 'r2');
-      final player = Player();
+      final player = Player(currentJob: Job.monk);
       player.jobLevels[Job.monk] = 1;
-      player.currentJob = Job.monk;
 
       final result = service.complete(
         task: task,
@@ -148,9 +146,8 @@ void main() {
 
   group('Cleric Lv5: 微睡みの加護 (snooze)', () {
     test('snoozeTask: クエストのdeadlineが翌日に延期される', () {
-      final player = Player();
+      final player = Player(currentJob: Job.monk);
       player.jobLevels[Job.monk] = 5;
-      player.currentJob = Job.monk;
 
       final now = DateTime(2026, 5, 28, 15, 0);
       final task = Task(
@@ -171,9 +168,8 @@ void main() {
     });
 
     test('snoozeTask: snoozedTasksに記録される', () {
-      final player = Player();
+      final player = Player(currentJob: Job.monk);
       player.jobLevels[Job.monk] = 5;
-      player.currentJob = Job.monk;
 
       final now = DateTime(2026, 5, 28, 10, 0);
       final task = Task(
@@ -190,9 +186,8 @@ void main() {
     });
 
     test('snoozeTask: deadlineがnullのクエストはsnoozeされない', () {
-      final player = Player();
+      final player = Player(currentJob: Job.monk);
       player.jobLevels[Job.monk] = 5;
-      player.currentJob = Job.monk;
 
       final now = DateTime(2026, 5, 28, 10, 0);
       final task = Task(
@@ -211,9 +206,8 @@ void main() {
     });
 
     test('snoozeTask: 同一クエストを2回snoozeすると2日延期', () {
-      final player = Player();
+      final player = Player(currentJob: Job.monk);
       player.jobLevels[Job.monk] = 5;
-      player.currentJob = Job.monk;
 
       final now = DateTime(2026, 5, 28, 10, 0);
       final task = Task(
@@ -231,9 +225,8 @@ void main() {
     });
 
     test('snooze: deadlineがすでに過ぎている場合でも翌日へ延期', () {
-      final player = Player();
+      final player = Player(currentJob: Job.monk);
       player.jobLevels[Job.monk] = 5;
-      player.currentJob = Job.monk;
 
       final now = DateTime(2026, 5, 30, 10, 0);
       final task = Task(
@@ -356,9 +349,8 @@ void main() {
       ]);
       QuizService.probability = 0.0;
 
-      final player = Player();
+      final player = Player(currentJob: Job.monk);
       player.jobLevels[Job.monk] = 10;
-      player.currentJob = Job.monk;
 
       final task = Task(
         id: 'st7',

@@ -228,7 +228,8 @@ class Player {
   @Deprecated('v4: equippedSkills に移行。互換性のため維持')
   Set<Job> activeSkills; // Mastery skills equipped (v3互換、削除予定)
   List<EquippedSkill> equippedSkills; // v4: 装備スキル
-  Job currentJob;
+  /// 現在の職業。イミュータブル化第十二段でfinal化（copyWithのみで変更可能）。
+  final Job currentJob;
   int comboCount;
   int coins;
   /// イミュータブル化第十一段でfinal化（copyWithのみで変更可能）。
@@ -1267,7 +1268,8 @@ class PlayerAdapter extends TypeAdapter<Player> {
     } catch (e) { _log('activeSkills read failed', e); }
     try {
       if (reader.availableBytes > 0) {
-        player.currentJob = (reader.read() as Job?) ?? Job.adventurer;
+        player = player.copyWith(
+            currentJob: (reader.read() as Job?) ?? Job.adventurer);
       }
     } catch (e) { _log('currentJob read failed', e); }
     try {
@@ -1490,7 +1492,8 @@ class PlayerAdapter extends TypeAdapter<Player> {
           (reader.readList() as List?)?.cast<Job>().toSet() ?? {};
     });
     safeRead('currentJob', () {
-      player.currentJob = (reader.read() as Job?) ?? Job.adventurer;
+      player = player.copyWith(
+          currentJob: (reader.read() as Job?) ?? Job.adventurer);
     });
     safeRead('comboCount', () {
       if (reader.availableBytes >= 4) player.comboCount = reader.readInt();

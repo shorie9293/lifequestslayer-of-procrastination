@@ -8,9 +8,7 @@ import 'package:rpg_todo/features/battle/data/quiz_data.dart';
 /// Helper: create a Player that can use recurring task skills.
 /// Uses Monk job which grants canUseSkill(Job.monk) -> enters recurring completion path.
 Player _recurringCapablePlayer() {
-  return Player()
-    ..currentJob = Job.monk
-    ..jobLevels[Job.monk] = 1;
+  return Player(currentJob: Job.monk)..jobLevels[Job.monk] = 1;
 }
 
 void main() {

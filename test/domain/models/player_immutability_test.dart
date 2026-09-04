@@ -402,4 +402,31 @@ void main() {
       expect(p.unlockedSkillIds, ['n1']);
     });
   });
+
+  group('currentJob final（段階返済第十二段）', () {
+    test('currentJob は copyWith でのみ変更可能で元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(currentJob: Job.samurai);
+
+      expect(identical(p, p2), isFalse, reason: 'copyWithは新インスタンスを返す');
+      expect(p.currentJob, Job.adventurer, reason: '元は不変（デフォルト冒険者）');
+      expect(p2.currentJob, Job.samurai);
+    });
+
+    test('changeJob相当のcopyWith（冒険者→侍）は元を不変に保つ', () {
+      final p = Player().copyWith(currentJob: Job.samurai);
+      final p2 = p.copyWith(currentJob: Job.monk);
+
+      expect(p.currentJob, Job.samurai, reason: '元は不変');
+      expect(p2.currentJob, Job.monk);
+    });
+
+    test('copyWith後も元インスタンスの currentJob は不変のまま', () {
+      final p = Player().copyWith(currentJob: Job.samurai);
+      final before = p.toJson();
+      final _ = p.copyWith(currentJob: Job.mystic);
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+      expect(p.currentJob, Job.samurai);
+    });
+  });
 }
