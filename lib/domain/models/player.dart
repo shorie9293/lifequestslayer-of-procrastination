@@ -241,9 +241,11 @@ class Player {
   final DateTime? lastMissionResetDate;
 
   // Inn / Sleep System (Plan 1)
-  int nextDayTaskLimitOffset;
+  /// イミュータブル化第十四段でfinal化（FatigueService.restAtInnがcopyWith返却）。
+  final int nextDayTaskLimitOffset;
   final int todayTaskLimitOffset; // イミュータブル化第六段でfinal化
-  DateTime? lastRestDate;
+  /// イミュータブル化第十四段でfinal化（copyWithのみで変更可能）。
+  final DateTime? lastRestDate;
 
   // Title / Achievement System (Plan 3)
   int totalTasksCompleted;
@@ -1297,7 +1299,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
       if (reader.availableBytes > 0) { player = player.copyWith(lastMissionResetDate: reader.read() as DateTime?); }
     } catch (e) { _log('lastMissionResetDate read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.nextDayTaskLimitOffset = reader.readInt(); }
+      if (reader.availableBytes >= 4) { player = player.copyWith(nextDayTaskLimitOffset: reader.readInt()); }
     } catch (e) { _log('nextDayTaskLimitOffset read failed', e); }
     try {
       if (reader.availableBytes >= 4) {
@@ -1305,7 +1307,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
       }
     } catch (e) { _log('todayTaskLimitOffset read failed', e); }
     try {
-      if (reader.availableBytes > 0) { player.lastRestDate = reader.read(); }
+      if (reader.availableBytes > 0) { player = player.copyWith(lastRestDate: reader.read() as DateTime?); }
     } catch (e) { _log('lastRestDate read failed', e); }
     try {
       if (reader.availableBytes >= 4) { player.totalTasksCompleted = reader.readInt(); }
@@ -1524,7 +1526,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
       player = player.copyWith(lastMissionResetDate: reader.read() as DateTime?);
     });
     safeRead('nextDayTaskLimitOffset', () {
-      if (reader.availableBytes >= 4) player.nextDayTaskLimitOffset = reader.readInt();
+      if (reader.availableBytes >= 4) player = player.copyWith(nextDayTaskLimitOffset: reader.readInt());
     });
     safeRead('todayTaskLimitOffset', () {
       if (reader.availableBytes >= 4) {
@@ -1532,7 +1534,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
       }
     });
     safeRead('lastRestDate', () {
-      player.lastRestDate = reader.read();
+      player = player.copyWith(lastRestDate: reader.read() as DateTime?);
     });
     safeRead('totalTasksCompleted', () {
       if (reader.availableBytes >= 4) player.totalTasksCompleted = reader.readInt();

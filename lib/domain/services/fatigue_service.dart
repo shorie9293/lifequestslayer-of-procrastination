@@ -48,10 +48,11 @@ class FatigueService {
   }
 
   /// 宿屋に泊まる
-  /// 戻り値: null=成功, String=エラーメッセージ
-  static String? restAtInn(Player player, int innType, DateTime now) {
+  /// 戻り値: (error=nullなら成功, player=更新後Player) — Playerはイミュータブル（第十四段でfinal化）のためcopyWithで新インスタンス返却。
+  static ({String? error, Player player}) restAtInn(
+      Player player, int innType, DateTime now) {
     if (player.lastRestDate != null && _isSameDay(player.lastRestDate!, now)) {
-      return '今日はもう十分休んだ。また明日来な！';
+      return (error: '今日はもう十分休んだ。また明日来な！', player: player);
     }
 
     int cost = 0;
@@ -71,15 +72,17 @@ class FatigueService {
         limitBonus = 12;
         break;
       default:
-        return 'そんなメニューはないぜ';
+        return (error: 'そんなメニューはないぜ', player: player);
     }
 
-    if (player.coins < cost) return '文が足りないぜ';
+    if (player.coins < cost) return (error: '文が足りないぜ', player: player);
 
-    player.coins -= cost;
-    player.nextDayTaskLimitOffset = limitBonus;
-    player.lastRestDate = now;
-    return null;
+    final updated = player.copyWith(
+      coins: player.coins - cost,
+      nextDayTaskLimitOffset: limitBonus,
+      lastRestDate: now,
+    );
+    return (error: null, player: updated);
   }
 
   static bool _isSameDay(DateTime a, DateTime b) =>

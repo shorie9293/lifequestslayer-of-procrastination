@@ -155,9 +155,9 @@ void main() {
         lastLoginDate: DateTime(2026, 4, 28),
         todayTaskLimitOffset: 1,
         lastMissionResetDate: DateTime(2026, 4, 28),
+        nextDayTaskLimitOffset: 2,
+        lastRestDate: DateTime(2026, 4, 27),
       );
-      original.nextDayTaskLimitOffset = 2;
-      original.lastRestDate = DateTime(2026, 4, 27);
 
       await box.put('p2', original);
       final restored = box.get('p2')!;
@@ -310,9 +310,9 @@ void main() {
         todayTaskLimitOffset: 1,
         lastMissionResetDate: DateTime(2026, 5, 30),
         lastLoginDate: DateTime(2026, 5, 30, 10, 30, 0),
+        nextDayTaskLimitOffset: 2,
+        lastRestDate: DateTime(2026, 5, 29),
       );
-      original.nextDayTaskLimitOffset = 2;
-      original.lastRestDate = DateTime(2026, 5, 29);
       original.pomodoroStartTime = DateTime(2026, 5, 30, 9, 0);
       original.lastDailyComplete = DateTime(2026, 5, 30);
       original.lastStreakGraceReset = DateTime(2026, 5, 23);

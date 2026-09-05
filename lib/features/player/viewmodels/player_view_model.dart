@@ -35,6 +35,11 @@ class PlayerViewModel extends ChangeNotifier {
   bool _savePending = false;
 
   Player get player => _player;
+  /// 外部サービス（FatigueService.restAtInn等）が返す新インスタンスで丸ごと置換するためのsetter。
+  set player(Player value) {
+    _player = value;
+    notifyListeners();
+  }
   bool get isLoaded => _isLoaded;
   bool get loadFailed => _loadFailed;
   /// v1.6: データは存在するが読めない（バージョンアップ等による破損）
@@ -105,9 +110,9 @@ class PlayerViewModel extends ChangeNotifier {
       _player = _player.copyWith(
         dailyTasksCompleted: 0,
         todayTaskLimitOffset: _player.nextDayTaskLimitOffset,
+        nextDayTaskLimitOffset: 0,
         lastMissionResetDate: now,
       );
-      _player.nextDayTaskLimitOffset = 0;
     }
     if (_player.lastMissionResetDate != null &&
         DateUtils.isDifferentWeek(_player.lastMissionResetDate!, now)) {
@@ -182,7 +187,7 @@ class PlayerViewModel extends ChangeNotifier {
   void setDailyTasksCompleted(int v) { _player = _player.copyWith(dailyTasksCompleted: v); notifyListeners(); _autoSave(); }
   void incrementDailyTasksCompleted() { _player = _player.copyWith(dailyTasksCompleted: _player.dailyTasksCompleted + 1); notifyListeners(); _autoSave(); }
   void incrementWeeklySRank() { _player = _player.copyWith(weeklySRankCompleted: _player.weeklySRankCompleted + 1); notifyListeners(); _autoSave(); }
-  void setNextDayTaskLimitOffset(int v) { _player.nextDayTaskLimitOffset = v; notifyListeners(); _autoSave(); }
+  void setNextDayTaskLimitOffset(int v) { _player = _player.copyWith(nextDayTaskLimitOffset: v); notifyListeners(); _autoSave(); }
 
   void changeJob(Job j, {bool debugMode = false}) {
     if (debugMode) {

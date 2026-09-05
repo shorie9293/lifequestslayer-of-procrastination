@@ -70,8 +70,8 @@ void main() {
         equippedTitle: '英雄',
         equippedSkin: 'skin_warrior_01',
         todayTaskLimitOffset: 1,
+        nextDayTaskLimitOffset: 2,
       );
-      originalPlayer.nextDayTaskLimitOffset = 2;
 
       final jsonStr = service.exportToJson(originalPlayer, []);
       final result = service.importFromJson(jsonStr);
@@ -175,8 +175,8 @@ void main() {
     test('round-trip: DateTime fields (null and non-null) survive', () {
       final player = Player().copyWith(
           lastMissionResetDate: DateTime(2026, 5, 28),
-          lastLoginDate: DateTime(2026, 5, 30, 10, 30))
-        ..lastRestDate = DateTime(2026, 5, 29)
+          lastLoginDate: DateTime(2026, 5, 30, 10, 30),
+          lastRestDate: DateTime(2026, 5, 29))
         ..lastDailyComplete = DateTime(2026, 5, 30)
         ..lastStreakGraceReset = DateTime(2026, 5, 23)
         ..pomodoroStartTime = DateTime(2026, 5, 30, 9, 0);
@@ -275,10 +275,10 @@ void main() {
         pomodorosBeforeLongBreak: 3,
         lastMissionResetDate: DateTime(2026, 5, 30),
         lastLoginDate: DateTime(2026, 5, 30, 8, 0),
+        lastRestDate: DateTime(2026, 5, 29),
       );
       player.warriorDailyBuff = 15;
       player.streakGraceRemaining = 1;
-      player.lastRestDate = DateTime(2026, 5, 29);
       player.pomodoroStartTime = DateTime(2026, 5, 30, 9, 0);
       player.lastDailyComplete = DateTime(2026, 5, 30);
       player.lastStreakGraceReset = DateTime(2026, 5, 23);

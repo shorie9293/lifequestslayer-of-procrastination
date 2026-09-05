@@ -486,4 +486,56 @@ void main() {
       expect(p.longestStreak, 3);
     });
   });
+
+  group('nextDayTaskLimitOffset/lastRestDate final（段階返済第十四段・宿屋）', () {
+    test('nextDayTaskLimitOffset は copyWith でのみ変更可能で元は不変', () {
+      final p = Player();
+      final p2 = p.copyWith(nextDayTaskLimitOffset: 2);
+
+      expect(identical(p, p2), isFalse, reason: 'copyWithは新インスタンスを返す');
+      expect(p.nextDayTaskLimitOffset, 0, reason: '元は不変（デフォルト0）');
+      expect(p2.nextDayTaskLimitOffset, 2);
+    });
+
+    test('lastRestDate は copyWith でのみ設定され元は不変（nullクリア可）', () {
+      final now = DateTime(2026, 5, 22, 9, 0);
+      final p = Player();
+      final rested = p.copyWith(lastRestDate: now);
+
+      expect(p.lastRestDate, isNull, reason: '元は不変');
+      expect(rested.lastRestDate, now);
+      final cleared = rested.copyWith(lastRestDate: null);
+      expect(cleared.lastRestDate, isNull, reason: 'nullでクリア可能');
+      expect(rested.lastRestDate, now, reason: '元は不変');
+    });
+
+    test('FatigueService.restAtInn相当の宿泊copyWith（コイン減・limitBonus付与・lastRest更新）は元を不変に保つ', () {
+      final now = DateTime(2026, 5, 22, 9, 0);
+      final p = Player().copyWith(coins: 100);
+      final updated = p.copyWith(
+        coins: p.coins - 50,
+        nextDayTaskLimitOffset: 2,
+        lastRestDate: now,
+      );
+
+      expect(p.coins, 100, reason: '元は不変');
+      expect(p.nextDayTaskLimitOffset, 0, reason: '元は不変');
+      expect(p.lastRestDate, isNull, reason: '元は不変');
+      expect(updated.coins, 50);
+      expect(updated.nextDayTaskLimitOffset, 2);
+      expect(updated.lastRestDate, now);
+    });
+
+    test('copyWith後も元インスタンスの宿屋フィールドは不変のまま', () {
+      final now = DateTime(2026, 5, 22, 9, 0);
+      final p =
+          Player().copyWith(nextDayTaskLimitOffset: 5, lastRestDate: now);
+      final before = p.toJson();
+      final _ = p.copyWith(
+          nextDayTaskLimitOffset: 0, lastRestDate: DateTime(2026, 5, 23));
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+      expect(p.nextDayTaskLimitOffset, 5);
+      expect(p.lastRestDate, now);
+    });
+  });
 }

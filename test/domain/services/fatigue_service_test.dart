@@ -8,12 +8,12 @@ Player createPlayer({
   int coins = 1000,
   DateTime? lastRestDate,
 }) {
-  final p = Player().copyWith(todayTaskLimitOffset: todayTaskLimitOffset);
-  p
-    ..dailyTasksCompleted = dailyTasksCompleted
-    ..coins = coins
-    ..lastRestDate = lastRestDate;
-  return p;
+  return Player().copyWith(
+    todayTaskLimitOffset: todayTaskLimitOffset,
+    dailyTasksCompleted: dailyTasksCompleted,
+    coins: coins,
+    lastRestDate: lastRestDate,
+  );
 }
 
 void main() {
@@ -200,7 +200,7 @@ void main() {
         lastRestDate: DateTime(2026, 5, 22, 8, 30),
       );
       final result = FatigueService.restAtInn(player, 0, now);
-      expect(result, '今日はもう十分休んだ。また明日来な！');
+      expect(result.error, '今日はもう十分休んだ。また明日来な！');
     });
 
     test('異なる日なら再度休める', () {
@@ -210,73 +210,73 @@ void main() {
         coins: 1000,
       );
       final result = FatigueService.restAtInn(player, 0, now);
-      expect(result, isNull);
+      expect(result.error, isNull);
     });
 
     test('lastRestDateがnullなら休める', () {
       final now = DateTime(2026, 5, 22, 10, 0);
       final player = createPlayer(coins: 1000);
       final result = FatigueService.restAtInn(player, 0, now);
-      expect(result, isNull);
+      expect(result.error, isNull);
     });
 
     test('コインが足りない場合はエラーを返す', () {
       final now = DateTime(2026, 5, 22, 10, 0);
       final player = createPlayer(coins: 10);
       final result = FatigueService.restAtInn(player, 0, now);
-      expect(result, '文が足りないぜ');
+      expect(result.error, '文が足りないぜ');
     });
 
     test('無効なinnTypeでエラーを返す', () {
       final now = DateTime(2026, 5, 22, 10, 0);
       final player = createPlayer(coins: 1000);
       final result = FatigueService.restAtInn(player, 99, now);
-      expect(result, 'そんなメニューはないぜ');
+      expect(result.error, 'そんなメニューはないぜ');
     });
 
     test('innType 0: 50コイン消費、limitBonus=2', () {
       final now = DateTime(2026, 5, 22, 10, 0);
       final player = createPlayer(coins: 100);
       final result = FatigueService.restAtInn(player, 0, now);
-      expect(result, isNull);
-      expect(player.coins, 50);
-      expect(player.nextDayTaskLimitOffset, 2);
-      expect(player.lastRestDate, now);
+      expect(result.error, isNull);
+      expect(result.player.coins, 50);
+      expect(result.player.nextDayTaskLimitOffset, 2);
+      expect(result.player.lastRestDate, now);
     });
 
     test('innType 1: 200コイン消費、limitBonus=5', () {
       final now = DateTime(2026, 5, 22, 10, 0);
       final player = createPlayer(coins: 500);
       final result = FatigueService.restAtInn(player, 1, now);
-      expect(result, isNull);
-      expect(player.coins, 300);
-      expect(player.nextDayTaskLimitOffset, 5);
-      expect(player.lastRestDate, now);
+      expect(result.error, isNull);
+      expect(result.player.coins, 300);
+      expect(result.player.nextDayTaskLimitOffset, 5);
+      expect(result.player.lastRestDate, now);
     });
 
     test('innType 2: 1000コイン消費、limitBonus=12', () {
       final now = DateTime(2026, 5, 22, 10, 0);
       final player = createPlayer(coins: 1500);
       final result = FatigueService.restAtInn(player, 2, now);
-      expect(result, isNull);
-      expect(player.coins, 500);
-      expect(player.nextDayTaskLimitOffset, 12);
-      expect(player.lastRestDate, now);
+      expect(result.error, isNull);
+      expect(result.player.coins, 500);
+      expect(result.player.nextDayTaskLimitOffset, 12);
+      expect(result.player.lastRestDate, now);
     });
 
     test('ギリギリのコインで宿泊できる', () {
       final now = DateTime(2026, 5, 22, 10, 0);
       final player = createPlayer(coins: 50);
       final result = FatigueService.restAtInn(player, 0, now);
-      expect(result, isNull);
-      expect(player.coins, 0);
+      expect(result.error, isNull);
+      expect(result.player.coins, 0);
     });
 
     test('コインが1足りない場合はエラー', () {
       final now = DateTime(2026, 5, 22, 10, 0);
       final player = createPlayer(coins: 49);
       final result = FatigueService.restAtInn(player, 0, now);
-      expect(result, '文が足りないぜ');
+      expect(result.error, '文が足りないぜ');
     });
   });
 }

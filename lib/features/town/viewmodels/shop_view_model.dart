@@ -51,12 +51,13 @@ class ShopViewModel extends ChangeNotifier {
       return null;
     }
     final r = FatigueService.restAtInn(_playerVM.player, tier, DateTime.now());
-    if (r == null) {
-      _playerVM.notifyListeners();
+    if (r.error == null) {
+      // FatigueService.restAtInn はイミュータブルな新Playerを返すため置換する
+      _playerVM.player = r.player;
       _playerVM.save();
       notifyListeners();
     }
-    return r;
+    return r.error;
   }
 
   // ── ショップ購入 ──
