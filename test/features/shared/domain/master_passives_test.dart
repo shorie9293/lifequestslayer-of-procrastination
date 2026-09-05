@@ -126,15 +126,15 @@ void main() {
       });
 
       test('consumeStreakGrace decrements from 1 to 0', () {
-        final player = Player();
-        player.consumeStreakGrace();
+        var player = Player();
+        player = player.consumeStreakGrace();
         expect(player.streakGraceRemaining, 0);
       });
 
       test('consumeStreakGrace does not go below 0', () {
-        final player = Player();
-        player.consumeStreakGrace();
-        player.consumeStreakGrace(); // second call does nothing
+        var player = Player();
+        player = player.consumeStreakGrace();
+        player = player.consumeStreakGrace(); // second call does nothing
         expect(player.streakGraceRemaining, 0);
       });
     });

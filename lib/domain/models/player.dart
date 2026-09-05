@@ -273,7 +273,8 @@ class Player {
   final int pomodoroLongBreakMinutes;
   final int pomodorosBeforeLongBreak;
   /// T9: Samurai Lv10 集中の型 — ポモドーロアクティブセッションの開始時刻
-  DateTime? pomodoroStartTime;
+  /// イミュータブル化第十五段でfinal化（startPomodoro/endPomodoroがcopyWith返却）。
+  final DateTime? pomodoroStartTime;
 
   /// T10: Samurai Lv15 武士道の極意 — 最終完了日
   DateTime? lastDailyComplete;
@@ -281,9 +282,11 @@ class Player {
   int warriorDailyBuff = 0;
 
   /// T10: 悟りの境地 — 猶予回数（週1回リセット、最大1）
-  int streakGraceRemaining = 1;
+  /// イミュータブル化第十五段でfinal化（consumeStreakGrace/resetStreakGraceIfNeededがcopyWith返却）。
+  final int streakGraceRemaining;
   /// T10: 悟りの境地 — 最終猶予リセット日
-  DateTime? lastStreakGraceReset;
+  /// イミュータブル化第十五段でfinal化（copyWithのみで変更可能）。
+  final DateTime? lastStreakGraceReset;
 
   // --- v5: スキルツリー ---
   /// 未使用のスキルポイント。冒険者Lv上昇時に獲得。
@@ -333,14 +336,12 @@ class Player {
   DateTime? updatedAt;
 
   /// T9: 集中の型 — ポモドーロセッションを開始
-  void startPomodoro() {
-    pomodoroStartTime = DateTime.now();
-  }
+  /// イミュータブル化第十五段で純粋化（copyWith返却）。呼出側は再代入せよ。
+  Player startPomodoro() => copyWith(pomodoroStartTime: DateTime.now());
 
   /// T9: 集中の型 — ポモドーロセッションを終了
-  void endPomodoro() {
-    pomodoroStartTime = null;
-  }
+  /// イミュータブル化第十五段で純粋化（copyWith返却）。呼出側は再代入せよ。
+  Player endPomodoro() => copyWith(pomodoroStartTime: null);
 
   /// T10: 武士道の極意 — 本日の初回完了かを判定し、buffを蓄積
   void recordDailyCompletion() {
@@ -356,25 +357,32 @@ class Player {
   }
 
   /// T10: 悟りの境地 — 猶予を消費
-  void consumeStreakGrace() {
-    if (streakGraceRemaining > 0) {
-      streakGraceRemaining--;
-    }
-  }
+  /// イミュータブル化第十五段で純粋化（copyWith返却・0未満にはならない）。呼出側は再代入せよ。
+  Player consumeStreakGrace() =>
+      streakGraceRemaining > 0
+          ? copyWith(streakGraceRemaining: streakGraceRemaining - 1)
+          : this;
 
   /// T10: 悟りの境地 — 週次リセット判定
-  void resetStreakGraceIfNeeded() {
+  /// イミュータブル化第十五段で純粋化（copyWith返却）。呼出側は再代入せよ。
+  Player resetStreakGraceIfNeeded() {
     final now = DateTime.now();
-    if (lastStreakGraceReset == null) {
-      lastStreakGraceReset = DateTime(now.year, now.month, now.day);
-      streakGraceRemaining = 1;
-      return;
+    final last = lastStreakGraceReset;
+    final resetDate = DateTime(now.year, now.month, now.day);
+    if (last == null) {
+      return copyWith(
+        lastStreakGraceReset: resetDate,
+        streakGraceRemaining: 1,
+      );
     }
-    final diff = now.difference(lastStreakGraceReset!).inDays;
+    final diff = now.difference(last).inDays;
     if (diff >= 7) {
-      lastStreakGraceReset = DateTime(now.year, now.month, now.day);
-      streakGraceRemaining = 1;
+      return copyWith(
+        lastStreakGraceReset: resetDate,
+        streakGraceRemaining: 1,
+      );
     }
+    return this;
   }
 
   // --- v4: タグ・プロジェクト ---
@@ -1387,16 +1395,16 @@ class PlayerAdapter extends TypeAdapter<Player> {
       }
     } catch (e) { _log('pomodorosBeforeLongBreak read failed', e); }
     try {
-      if (reader.availableBytes > 0) { player.pomodoroStartTime = reader.read(); }
+      if (reader.availableBytes > 0) { player = player.copyWith(pomodoroStartTime: reader.read() as DateTime?); }
     } catch (e) { _log('pomodoroStartTime read failed', e); }
     try {
       if (reader.availableBytes >= 4) { player.warriorDailyBuff = reader.readInt(); }
     } catch (e) { _log('warriorDailyBuff read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.streakGraceRemaining = reader.readInt(); }
+      if (reader.availableBytes >= 4) { player = player.copyWith(streakGraceRemaining: reader.readInt()); }
     } catch (e) { _log('streakGraceRemaining read failed', e); }
     try {
-      if (reader.availableBytes > 0) { player.lastStreakGraceReset = reader.read(); }
+      if (reader.availableBytes > 0) { player = player.copyWith(lastStreakGraceReset: reader.read() as DateTime?); }
     } catch (e) { _log('lastStreakGraceReset read failed', e); }
     // v4: タグ
     try {

@@ -538,4 +538,80 @@ void main() {
       expect(p.lastRestDate, now);
     });
   });
+
+  group('pomodoroStartTime/streakGraceRemaining/lastStreakGraceReset final（段階返済第十五段）', () {
+    test('pomodoroStartTime は copyWith でのみ変更可能で元は不変', () {
+      final p = Player();
+      final started = p.copyWith(pomodoroStartTime: DateTime(2026, 1, 1, 9, 0));
+
+      expect(p.pomodoroStartTime, isNull, reason: '元は不変');
+      expect(started.pomodoroStartTime, DateTime(2026, 1, 1, 9, 0));
+      final cleared = started.copyWith(pomodoroStartTime: null);
+      expect(cleared.pomodoroStartTime, isNull, reason: 'nullでクリア可能');
+      expect(started.pomodoroStartTime, isNotNull, reason: '元は不変');
+    });
+
+    test('startPomodoro/endPomodoro相当（純粋copyWith）は元を不変に保つ', () {
+      final p = Player();
+      final started = p.copyWith(pomodoroStartTime: DateTime(2026, 1, 1, 9, 0));
+      final ended = started.copyWith(pomodoroStartTime: null);
+
+      expect(p.pomodoroStartTime, isNull, reason: '元は不変');
+      expect(started.pomodoroStartTime, isNotNull);
+      expect(ended.pomodoroStartTime, isNull);
+    });
+
+    test('streakGraceRemaining は copyWith でのみ変更可能で元は不変（0未満不可）', () {
+      final p = Player();
+      final consumed = p.copyWith(streakGraceRemaining: 0);
+
+      expect(p.streakGraceRemaining, 1, reason: '元は不変（デフォルト1）');
+      expect(consumed.streakGraceRemaining, 0);
+    });
+
+    test('lastStreakGraceReset は copyWith でのみ設定され元は不変（nullクリア可）', () {
+      final p = Player().copyWith(streakGraceRemaining: 0);
+      final reset = p.copyWith(
+          lastStreakGraceReset: DateTime(2026, 1, 8), streakGraceRemaining: 1);
+
+      expect(p.lastStreakGraceReset, isNull, reason: '元は不変');
+      expect(p.streakGraceRemaining, 0, reason: '元は不変');
+      expect(reset.lastStreakGraceReset, DateTime(2026, 1, 8));
+      expect(reset.streakGraceRemaining, 1);
+    });
+
+    test('resetStreakGraceIfNeeded相当（7日経過で猶予回復）のcopyWithは元を不変に保つ', () {
+      final p = Player().copyWith(
+        streakGraceRemaining: 0,
+        lastStreakGraceReset: DateTime(2026, 1, 1),
+      );
+      final reset = p.copyWith(
+        lastStreakGraceReset: DateTime(2026, 1, 8),
+        streakGraceRemaining: 1,
+      );
+
+      expect(p.streakGraceRemaining, 0, reason: '元は不変');
+      expect(p.lastStreakGraceReset, DateTime(2026, 1, 1), reason: '元は不変');
+      expect(reset.streakGraceRemaining, 1);
+      expect(reset.lastStreakGraceReset, DateTime(2026, 1, 8));
+    });
+
+    test('copyWith後も元インスタンスのポモドーロ/猶予字段は不変のまま', () {
+      final p = Player().copyWith(
+        pomodoroStartTime: DateTime(2026, 1, 1, 9, 0),
+        streakGraceRemaining: 0,
+        lastStreakGraceReset: DateTime(2026, 1, 1),
+      );
+      final before = p.toJson();
+      final _ = p.copyWith(
+        pomodoroStartTime: DateTime(2026, 1, 2, 10, 0),
+        streakGraceRemaining: 1,
+        lastStreakGraceReset: DateTime(2026, 1, 8),
+      );
+      expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
+      expect(p.pomodoroStartTime, DateTime(2026, 1, 1, 9, 0));
+      expect(p.streakGraceRemaining, 0);
+      expect(p.lastStreakGraceReset, DateTime(2026, 1, 1));
+    });
+  });
 }

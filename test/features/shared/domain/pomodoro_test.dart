@@ -6,15 +6,14 @@ import 'package:rpg_todo/features/shared/domain/task_completion_service.dart';
 void main() {
   group('Player - Pomodoro session', () {
     test('startPomodoro sets pomodoroStartTime', () {
-      final player = Player();
+      var player = Player();
       expect(player.pomodoroStartTime, isNull);
-      player.startPomodoro();
+      player = player.startPomodoro();
       expect(player.pomodoroStartTime, isNotNull);
     });
 
     test('isPomodoroActive returns true when session just started', () {
-      final player = Player();
-      player.pomodoroStartTime = DateTime.now();
+      final player = Player(pomodoroStartTime: DateTime.now());
       expect(player.isPomodoroActive, isTrue);
     });
 
@@ -24,26 +23,30 @@ void main() {
     });
 
     test('isPomodoroActive returns false after duration expires', () {
-      final player = Player(pomodoroMinutes: 25);
       // Simulate starting 26 minutes ago
-      player.pomodoroStartTime =
-          DateTime.now().subtract(const Duration(minutes: 26));
+      final player = Player(
+        pomodoroMinutes: 25,
+        pomodoroStartTime:
+            DateTime.now().subtract(const Duration(minutes: 26)),
+      );
       expect(player.isPomodoroActive, isFalse);
     });
 
     test('isPomodoroActive returns true within duration', () {
-      final player = Player(pomodoroMinutes: 25);
       // Simulate starting 5 minutes ago
-      player.pomodoroStartTime =
-          DateTime.now().subtract(const Duration(minutes: 5));
+      final player = Player(
+        pomodoroMinutes: 25,
+        pomodoroStartTime:
+            DateTime.now().subtract(const Duration(minutes: 5)),
+      );
       expect(player.isPomodoroActive, isTrue);
     });
 
     test('endPomodoro clears pomodoroStartTime', () {
-      final player = Player();
-      player.startPomodoro();
+      var player = Player();
+      player = player.startPomodoro();
       expect(player.pomodoroStartTime, isNotNull);
-      player.endPomodoro();
+      player = player.endPomodoro();
       expect(player.pomodoroStartTime, isNull);
     });
   });
@@ -71,10 +74,10 @@ void main() {
         () {
       final task = makeTask(id: 'pomo-1');
       // Give player Warrior Lv10 to have warriorPomodoro
-      final player = Player(currentJob: Job.samurai);
+      var player = Player(currentJob: Job.samurai);
       player.jobLevels[Job.samurai] = 10;
       // Start pomodoro session
-      player.startPomodoro();
+      player = player.startPomodoro();
 
       final result = service.complete(
         task: task,
@@ -99,8 +102,8 @@ void main() {
         () {
       final task = makeTask(id: 'pomo-2');
       // No warrior job, no warriorPomodoro skill (default adventurer)
-      final player = Player();
-      player.startPomodoro();
+      var player = Player();
+      player = player.startPomodoro();
 
       final result = service.complete(
         task: task,

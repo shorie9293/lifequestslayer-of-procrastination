@@ -601,9 +601,9 @@ void main() {
     test('v4 streakGrace round-trip', () async {
       final original = Player(
         jobLevels: {Job.monk: 15},
+        streakGraceRemaining: 5,
+        lastStreakGraceReset: DateTime(2026, 5, 15),
       );
-      original.streakGraceRemaining = 5;
-      original.lastStreakGraceReset = DateTime(2026, 5, 15);
       await box.put('p', original);
       final restored = box.get('p')!;
       expect(restored.streakGraceRemaining, 5);
@@ -613,8 +613,8 @@ void main() {
     test('v4 pomodoroStartTime round-trip', () async {
       final original = Player(
         jobLevels: {Job.samurai: 10},
+        pomodoroStartTime: DateTime(2026, 5, 29, 10, 30),
       );
-      original.pomodoroStartTime = DateTime(2026, 5, 29, 10, 30);
       await box.put('p', original);
       final restored = box.get('p')!;
       expect(restored.pomodoroStartTime, isNotNull);

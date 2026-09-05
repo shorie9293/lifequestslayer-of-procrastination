@@ -312,10 +312,10 @@ void main() {
         lastLoginDate: DateTime(2026, 5, 30, 10, 30, 0),
         nextDayTaskLimitOffset: 2,
         lastRestDate: DateTime(2026, 5, 29),
+        pomodoroStartTime: DateTime(2026, 5, 30, 9, 0),
+        lastStreakGraceReset: DateTime(2026, 5, 23),
       );
-      original.pomodoroStartTime = DateTime(2026, 5, 30, 9, 0);
       original.lastDailyComplete = DateTime(2026, 5, 30);
-      original.lastStreakGraceReset = DateTime(2026, 5, 23);
       original.warriorDailyBuff = 10;
 
       final jsonStr = jsonEncode(original.toJson());
