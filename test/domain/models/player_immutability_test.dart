@@ -739,4 +739,37 @@ void main() {
       expect(p.updatedAt, isNotNull, reason: '元は不変');
     });
   });
+
+  group('warriorDailyBuff/lastDailyComplete final（段階返済第十八段）', () {
+    test('両字段ともコンストラクタで初期化でき copyWith で変更可能', () {
+      final p = Player(
+        currentJob: Job.samurai,
+        warriorDailyBuff: 7,
+        lastDailyComplete: DateTime(2026, 1, 1),
+      );
+      expect(p.warriorDailyBuff, 7);
+      expect(p.lastDailyComplete, DateTime(2026, 1, 1));
+
+      final p2 = p.copyWith(warriorDailyBuff: 8);
+      expect(p2.warriorDailyBuff, 8);
+      expect(p.warriorDailyBuff, 7, reason: '元は不変');
+      expect(p2.lastDailyComplete, DateTime(2026, 1, 1), reason: '他字段は引き継ぎ');
+    });
+
+    test('warriorDailyBuff デフォルト0・lastDailyComplete デフォルトnull', () {
+      final p = Player();
+      expect(p.warriorDailyBuff, 0);
+      expect(p.lastDailyComplete, isNull);
+    });
+
+    test('recordDailyCompletionPure は初回のみ増分し void版は存在しない', () {
+      final p = Player().copyWith(warriorDailyBuff: 0);
+      final updated = p.recordDailyCompletionPure();
+
+      expect(updated.warriorDailyBuff, 1);
+      expect(updated.lastDailyComplete, isNotNull);
+      expect(p.warriorDailyBuff, 0, reason: '元は不変');
+      expect(p.lastDailyComplete, isNull, reason: '元は不変');
+    });
+  });
 }

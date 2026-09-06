@@ -178,8 +178,8 @@ void main() {
           lastLoginDate: DateTime(2026, 5, 30, 10, 30),
           lastRestDate: DateTime(2026, 5, 29),
           lastStreakGraceReset: DateTime(2026, 5, 23),
-          pomodoroStartTime: DateTime(2026, 5, 30, 9, 0))
-        ..lastDailyComplete = DateTime(2026, 5, 30);
+          pomodoroStartTime: DateTime(2026, 5, 30, 9, 0),
+          lastDailyComplete: DateTime(2026, 5, 30));
       final tasks = [
         Task(
           id: 'dt-test-1',
@@ -279,9 +279,9 @@ void main() {
         streakGraceRemaining: 1,
         pomodoroStartTime: DateTime(2026, 5, 30, 9, 0),
         lastStreakGraceReset: DateTime(2026, 5, 23),
+        warriorDailyBuff: 15,
+        lastDailyComplete: DateTime(2026, 5, 30),
       );
-      player.warriorDailyBuff = 15;
-      player.lastDailyComplete = DateTime(2026, 5, 30);
 
       final tasks = <Task>[];
       final jsonStr = service.exportToJson(player, tasks);

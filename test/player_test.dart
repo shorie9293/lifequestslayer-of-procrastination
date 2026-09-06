@@ -314,9 +314,9 @@ void main() {
         lastRestDate: DateTime(2026, 5, 29),
         pomodoroStartTime: DateTime(2026, 5, 30, 9, 0),
         lastStreakGraceReset: DateTime(2026, 5, 23),
+        lastDailyComplete: DateTime(2026, 5, 30),
+        warriorDailyBuff: 10,
       );
-      original.lastDailyComplete = DateTime(2026, 5, 30);
-      original.warriorDailyBuff = 10;
 
       final jsonStr = jsonEncode(original.toJson());
       final restored = Player.fromJson(jsonDecode(jsonStr) as Map<String, dynamic>);

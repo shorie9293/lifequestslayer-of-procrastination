@@ -284,9 +284,11 @@ class Player {
   final DateTime? pomodoroStartTime;
 
   /// T10: Samurai Lv15 武士道の極意 — 最終完了日
-  DateTime? lastDailyComplete;
+  /// イミュータブル化第十八段でfinal化（copyWithのみで変更可能）。
+  final DateTime? lastDailyComplete;
   /// T10: 武士道の極意 — 蓄積バフ（0.1%単位、例: 10 = 1.0%）
-  int warriorDailyBuff = 0;
+  /// イミュータブル化第十八段でfinal化（copyWithのみで変更可能）。
+  final int warriorDailyBuff;
 
   /// T10: 悟りの境地 — 猶予回数（週1回リセット、最大1）
   /// イミュータブル化第十五段でfinal化（consumeStreakGrace/resetStreakGraceIfNeededがcopyWith返却）。
@@ -351,19 +353,6 @@ class Player {
   /// T9: 集中の型 — ポモドーロセッションを終了
   /// イミュータブル化第十五段で純粋化（copyWith返却）。呼出側は再代入せよ。
   Player endPomodoro() => copyWith(pomodoroStartTime: null);
-
-  /// T10: 武士道の極意 — 本日の初回完了かを判定し、buffを蓄積
-  void recordDailyCompletion() {
-    final now = DateTime.now();
-    final last = lastDailyComplete;
-    if (last == null ||
-        last.year != now.year ||
-        last.month != now.month ||
-        last.day != now.day) {
-      lastDailyComplete = DateTime(now.year, now.month, now.day);
-      warriorDailyBuff++;
-    }
-  }
 
   /// T10: 悟りの境地 — 猶予を消費
   /// イミュータブル化第十五段で純粋化（copyWith返却・0未満にはならない）。呼出側は再代入せよ。
@@ -1519,7 +1508,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
       if (reader.availableBytes > 0) { player = player.copyWith(pomodoroStartTime: reader.read() as DateTime?); }
     } catch (e) { _log('pomodoroStartTime read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.warriorDailyBuff = reader.readInt(); }
+      if (reader.availableBytes >= 4) { player = player.copyWith(warriorDailyBuff: reader.readInt()); }
     } catch (e) { _log('warriorDailyBuff read failed', e); }
     try {
       if (reader.availableBytes >= 4) { player = player.copyWith(streakGraceRemaining: reader.readInt()); }

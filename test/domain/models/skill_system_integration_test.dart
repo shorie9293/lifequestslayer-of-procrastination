@@ -586,9 +586,9 @@ void main() {
     test('v4 warriorDailyBuff round-trip', () async {
       final original = Player(
         jobLevels: {Job.samurai: 15},
+        warriorDailyBuff: 42,
+        lastDailyComplete: DateTime(2026, 5, 20),
       );
-      original.warriorDailyBuff = 42;
-      original.lastDailyComplete = DateTime(2026, 5, 20);
       await box.put('p', original);
       final restored = box.get('p')!;
       expect(restored.warriorDailyBuff, 42);
