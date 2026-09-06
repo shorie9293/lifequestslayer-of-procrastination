@@ -340,7 +340,9 @@ class Player {
   final DateTime? lastReturnMissionIssuedAt;
 
   /// オフライン同期: 最後に変更された日時（last-write-wins判定用）。
-  DateTime? updatedAt;
+  /// イミュータブル化第十七段でfinal化（copyWithのみで変更可能）。save時は
+  /// HybridPlayerRepository がcopyWithで新インスタンスに刻印する（引数は不変）。
+  final DateTime? updatedAt;
 
   /// T9: 集中の型 — ポモドーロセッションを開始
   /// イミュータブル化第十五段で純粋化（copyWith返却）。呼出側は再代入せよ。
@@ -1267,7 +1269,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
     } catch (e) { _log('lastReturnMissionIssuedAt read failed', e); }
     try {
       if (reader.availableBytes > 0) {
-        player.updatedAt = reader.read();
+        player = player.copyWith(updatedAt: reader.read() as DateTime?);
       }
     } catch (e) { _log('updatedAt read failed', e); }
 

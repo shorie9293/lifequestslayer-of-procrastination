@@ -721,4 +721,22 @@ void main() {
       expect(result.updatedPlayer.taskStreaks['pure-1']!.currentStreak, 1);
     });
   });
+
+  group('updatedAt final（段階返済第十七段）', () {
+    test('updatedAt は copyWith でのみ変更可能で元は不変', () {
+      final p = Player().copyWith(updatedAt: DateTime(2026, 1, 1));
+      final p2 = p.copyWith(updatedAt: DateTime(2026, 1, 2));
+
+      expect(identical(p, p2), isFalse);
+      expect(p.updatedAt, DateTime(2026, 1, 1), reason: '元は不変');
+      expect(p2.updatedAt, DateTime(2026, 1, 2));
+    });
+
+    test('updatedAt は null にクリアできる（nullable）', () {
+      final p = Player().copyWith(updatedAt: DateTime(2026, 1, 1));
+      final cleared = p.copyWith(updatedAt: null);
+      expect(cleared.updatedAt, isNull);
+      expect(p.updatedAt, isNotNull, reason: '元は不変');
+    });
+  });
 }

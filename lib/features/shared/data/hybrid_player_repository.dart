@@ -66,14 +66,15 @@ class HybridPlayerRepository implements IPlayerRepository {
 
   @override
   Future<void> savePlayer(Player player) async {
-    // ローカル保存のタイムスタンプを付与（last-write-wins 判定用）
-    player.updatedAt = DateTime.now();
+    // ローカル保存のタイムスタンプを付与（last-write-wins 判定用）。
+    // イミュータブル化: 引数playerは破壊的変更せず、copyWithで新インスタンスに刻印する。
+    final stamped = player.copyWith(updatedAt: DateTime.now());
 
     // プライマリ: Hiveに即時保存
-    await _hiveRepo.savePlayer(player);
+    await _hiveRepo.savePlayer(stamped);
 
     // セカンダリ: Supabaseに非同期保存（失敗は無視）
-    _supabaseRepo.savePlayer(player).catchError((e) {
+    _supabaseRepo.savePlayer(stamped).catchError((e) {
       debugPrint('[HybridPlayerRepo] Supabase save failed (offline): $e');
     });
   }

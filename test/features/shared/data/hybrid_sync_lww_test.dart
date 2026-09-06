@@ -171,5 +171,23 @@ void main() {
       expect(cloud.savePlayerCalls, greaterThan(0));
       expect(cloud.playerStore!.coins, 77);
     });
+
+    test('savePlayer は引数playerを不変に保ち新インスタンスにupdatedAtを刻印する', () async {
+      final local = FakeRepo();
+      final cloud = FakeRepo();
+      final hybrid =
+          HybridPlayerRepository(hiveRepo: local, supabaseRepo: cloud);
+      final original = Player();
+
+      await hybrid.savePlayer(original);
+
+      expect(original.updatedAt, isNull, reason: '引数playerは不変');
+      expect(local.playerStore, isNotNull);
+      expect(local.playerStore!.updatedAt, isNotNull,
+          reason: '保存先にcopyWith刻印が反映される');
+      await Future<void>.delayed(Duration.zero);
+      expect(cloud.playerStore!.updatedAt, isNotNull,
+          reason: '非同期pushにも刻印が反映される');
+    });
   });
 }
