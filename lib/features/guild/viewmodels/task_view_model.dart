@@ -282,6 +282,8 @@ class TaskViewModel extends ChangeNotifier {
       _completing.remove(id);
       return null;
     }
+    // イミュータブル化第十六段: サービス純粋化により新Playerインスタンスを丸ごと置換
+    _playerVM.player = r.updatedPlayer;
     _playerVM.notifyListeners(); // player state changed
     notifyListeners();
     _playerVM.save(); // player の変更も永続化

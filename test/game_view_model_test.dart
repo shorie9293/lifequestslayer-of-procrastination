@@ -593,7 +593,8 @@ void main() {
       await _waitForLoad(vm);
 
       vm.changeJob(Job.adventurer);
-      vm.player.comboCount = 5; // 手動で高コンボ状態に
+      // 手動で高コンボ状態に（イミュータブル化第十六段: copyWithで置換）
+      vm.player = vm.player.copyWith(comboCount: 5);
 
       vm.addTask('クエスト', rank: QuestRank.B);
       vm.acceptTask(vm.tasks[0].id);
@@ -678,7 +679,7 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.player.dailyTasksCompleted = 0;
+vm.player = vm.player.copyWith(dailyTasksCompleted: 0);
 
       vm.addTask('クエスト', rank: QuestRank.B);
       vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化
@@ -698,7 +699,7 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.player.dailyTasksCompleted = 5; // warnThreshold=5+0=5
+vm.player = vm.player.copyWith(dailyTasksCompleted: 5); // warnThreshold=5+0=5
 
       vm.addTask('クエスト', rank: QuestRank.B);
       vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化
@@ -720,7 +721,7 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.player.dailyTasksCompleted = 10; // severeThreshold=10+0=10
+vm.player = vm.player.copyWith(dailyTasksCompleted: 10); // severeThreshold=10+0=10
 
       vm.addTask('クエスト', rank: QuestRank.B);
       vm.tasks.last.enemyXpMultiplier = 1.0; // テスト決定論化
@@ -791,7 +792,7 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.player.dailyTasksCompleted = 2;
+vm.player = vm.player.copyWith(dailyTasksCompleted: 2);
 
       vm.addTask('クエスト', rank: QuestRank.B);
       vm.acceptTask(vm.tasks[0].id);
@@ -813,7 +814,7 @@ void main() {
       );
       await _waitForLoad(vm);
 
-      vm.player.dailyTasksCompleted = 0;
+vm.player = vm.player.copyWith(dailyTasksCompleted: 0);
 
       vm.addTask('クエスト', rank: QuestRank.B);
       vm.acceptTask(vm.tasks[0].id);
@@ -834,7 +835,7 @@ void main() {
       await _waitForLoad(vm);
 
       vm.player.jobLevels[vm.player.currentJob] = 10;
-      vm.player.weeklySRankCompleted = 0;
+vm.player = vm.player.copyWith(weeklySRankCompleted: 0);
 
       vm.addTask('Sクエスト', rank: QuestRank.S);
       vm.acceptTask(vm.tasks[0].id);

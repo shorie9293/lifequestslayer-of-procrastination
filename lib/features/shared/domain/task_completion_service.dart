@@ -21,6 +21,9 @@ class TaskCompletionResult {
   final int wrongAnswerPenaltyExp;
   /// 刻の番人クイズに誤答した場合の追加ペナルティ文（0ならペナルティなし）
   final int wrongAnswerPenaltyCoins;
+  /// イミュータブル化第十六段: 純粋化により、報酬・カウンタ・称号を全て反映した
+  /// 新Playerインスタンス。呼出側は PlayerViewModel.player をこれで置換せよ。
+  final Player updatedPlayer;
 
   const TaskCompletionResult({
     required this.leveledUp,
@@ -29,6 +32,7 @@ class TaskCompletionResult {
     required this.bonusMessages,
     required this.showFatiguePopup,
     required this.shouldResetFatiguePopup,
+    required this.updatedPlayer,
     this.quizQuestion,
     this.isOverdueBoss = false,
     this.wrongAnswerPenaltyExp = 0,
@@ -104,19 +108,19 @@ class TaskCompletionService {
       task.status = TaskStatus.inGuild;
     }
 
-    // Monk Lv10: 連続の誓い — クエスト完了をstreakに記録
-    player.recordTaskCompletion(task.id, DateTime.now());
+    // Monk Lv10: 連続の誓い — クエスト完了をstreakに記録（純粋化: copyWithで新Map差し替え）
+    var p = player.recordTaskCompletionPure(task.id, DateTime.now());
 
     final bonusMessages = <String>[];
-    final fatigueMultiplier = FatigueService.fatigueMultiplier(player);
+    final fatigueMultiplier = FatigueService.fatigueMultiplier(p);
 
     // v2.1: Skill tree effects resolver
-    final skillEffects = SkillEffectService(player.unlockedSkillIds);
+    final skillEffects = SkillEffectService(p.unlockedSkillIds);
 
     // 疲労メッセージ
-    if (player.dailyTasksCompleted >= FatigueService.severeThreshold(player)) {
+    if (p.dailyTasksCompleted >= FatigueService.severeThreshold(p)) {
       bonusMessages.add("🌙 今日の英雄は十分戦った。宿屋で休んで明日に備えよ！");
-    } else if (player.dailyTasksCompleted >= FatigueService.warnThreshold(player)) {
+    } else if (p.dailyTasksCompleted >= FatigueService.warnThreshold(p)) {
       bonusMessages.add("🍺 疲れが溜まってきたぞ。宿屋で一息つくか？");
     }
 
@@ -149,18 +153,18 @@ class TaskCompletionService {
       if (expGain > prev) bonusMessages.add("🔮 先見の理！ +${expGain - prev} EXP");
     }
 
-    // Samurai: コンボボーナス
-    if (player.canUseSkill(Job.samurai)) {
-      player.comboCount++;
+    // Samurai: コンボボーナス（純粋化: copyWithでcomboCount更新）
+    if (p.canUseSkill(Job.samurai)) {
+      p = p.copyWith(comboCount: p.comboCount + 1);
       // v2.1: 連撃 (war_combo) boosts combo EXP per count from 10 → 20
       final comboExpEach = skillEffects.hasCombo ? skillEffects.comboExpPerCount : 10;
-      final comboBonus = player.comboCount * comboExpEach;
+      final comboBonus = p.comboCount * comboExpEach;
       expGain += comboBonus;
-      if (player.comboCount > 1) {
-        bonusMessages.add("⚔️ ${player.comboCount}コンボ！ +$comboBonus EXP");
+      if (p.comboCount > 1) {
+        bonusMessages.add("⚔️ ${p.comboCount}コンボ！ +$comboBonus EXP");
       }
-    } else {
-      player.comboCount = 0;
+    } else if (p.comboCount != 0) {
+      p = p.copyWith(comboCount: 0);
     }
 
     expGain = (expGain * fatigueMultiplier).round();
@@ -175,7 +179,7 @@ class TaskCompletionService {
     }
 
     // 称号ボーナス
-    if (player.equippedTitle != null) {
+    if (p.equippedTitle != null) {
       expGain = (expGain * 1.05).round();
     }
 
@@ -189,14 +193,14 @@ class TaskCompletionService {
     }
 
     // Samurai Lv10: 集中の型 — ポモドーロアクティブ中は+50% EXP
-    if (player.hasSkill(JobSkill.samuraiPomodoro) && player.isPomodoroActive) {
+    if (p.hasSkill(JobSkill.samuraiPomodoro) && p.isPomodoroActive) {
       expGain = (expGain * 1.5).round();
       bonusMessages.add("🧘 集中の型ボーナス！ +50% EXP");
     }
 
     // Samurai Lv15: 武士道の極意 — 蓄積バフ
-    if (player.hasSkill(JobSkill.samuraiBushido) && player.warriorDailyBuff > 0) {
-      final buffMultiplier = 1.0 + (player.warriorDailyBuff / 1000.0);
+    if (p.hasSkill(JobSkill.samuraiBushido) && p.warriorDailyBuff > 0) {
+      final buffMultiplier = 1.0 + (p.warriorDailyBuff / 1000.0);
       final prevExp = expGain;
       expGain = (expGain * buffMultiplier).round();
       final increase = expGain - prevExp;
@@ -206,14 +210,14 @@ class TaskCompletionService {
     }
 
     // Monk Lv10: 連続の誓い — 7日間streakで+20% EXP
-    if (player.getTaskStreakBonus(task.id) > 1.0) {
-      expGain = (expGain * player.getTaskStreakBonus(task.id)).round();
+    if (p.getTaskStreakBonus(task.id) > 1.0) {
+      expGain = (expGain * p.getTaskStreakBonus(task.id)).round();
       bonusMessages.add("📿 連続の誓いボーナス！ +20% EXP");
     }
 
     // v2.1: 加護 (cle_ward) — streak bonus for tasks with ≥3 day streaks
     if (skillEffects.hasWard) {
-      final taskStreak = player.taskStreaks[task.id];
+      final taskStreak = p.taskStreaks[task.id];
       final streakDays = taskStreak?.currentStreak ?? 0;
       final wardBonus = skillEffects.applyWardStreakBonus(expGain, streakDays);
       if (wardBonus > 0) {
@@ -231,7 +235,7 @@ class TaskCompletionService {
     coinsGained = (coinsGained * fatigueMultiplier).round();
 
     // レアドロップ
-    final dropChance = (player.level * 0.02).clamp(0.01, 0.5);
+    final dropChance = (p.level * 0.02).clamp(0.01, 0.5);
     if (_rng.nextDouble() < dropChance) {
       final rareBonus = (coinsGained * 5 * fatigueMultiplier).round();
       if (rareBonus > 0) {
@@ -240,39 +244,44 @@ class TaskCompletionService {
       }
     }
 
-    // カウント更新
-    player.dailyTasksCompleted++;
-    if (task.rank == QuestRank.S) player.weeklySRankCompleted++;
-    player.totalTasksCompleted++;
-    if (task.rank == QuestRank.S) player.totalSRankCompleted++;
-    if (task.rank == QuestRank.A) player.totalARankCompleted++;
-    if (task.rank == QuestRank.B) player.totalBRankCompleted++;
+    // カウント更新（純粋化: copyWithで一括更新）
+    p = p.copyWith(
+      dailyTasksCompleted: p.dailyTasksCompleted + 1,
+      weeklySRankCompleted:
+          task.rank == QuestRank.S ? p.weeklySRankCompleted + 1 : p.weeklySRankCompleted,
+      totalTasksCompleted: p.totalTasksCompleted + 1,
+      totalSRankCompleted:
+          task.rank == QuestRank.S ? p.totalSRankCompleted + 1 : p.totalSRankCompleted,
+      totalARankCompleted:
+          task.rank == QuestRank.A ? p.totalARankCompleted + 1 : p.totalARankCompleted,
+      totalBRankCompleted:
+          task.rank == QuestRank.B ? p.totalBRankCompleted + 1 : p.totalBRankCompleted,
+    );
 
-    // T10: Samurai Lv15 武士道の極意 — 本日の完了を記録
-    if (player.hasSkill(JobSkill.samuraiBushido)) {
-      player.recordDailyCompletion();
+    // T10: Samurai Lv15 武士道の極意 — 本日の完了を記録（純粋版）
+    if (p.hasSkill(JobSkill.samuraiBushido)) {
+      p = p.recordDailyCompletionPure();
     }
 
-    TitleService.checkTitles(player, bonusMessages);
-
     // デイリーミッション
-    if (player.dailyTasksCompleted == 3) {
+    if (p.dailyTasksCompleted == 3) {
       coinsGained += 200;
       bonusMessages.add("📅 デイリーミッション達成！ +200文");
     }
     // ウィークリーミッション
-    if (task.rank == QuestRank.S && player.weeklySRankCompleted == 1) {
+    if (task.rank == QuestRank.S && p.weeklySRankCompleted == 1) {
       coinsGained += 500;
       bonusMessages.add("🏆 ウィークリーSランク達成！ +500文");
     }
 
-    player.coins += coinsGained;
-    final leveledUp = player.addExp(expGain);
+    p = p.copyWith(coins: p.coins + coinsGained);
+    final (expPlayer, leveledUp) = p.addExpPure(expGain);
+    p = expPlayer;
 
     // 疲労MAXポップアップ
     bool showFatiguePopup = false;
     bool shouldResetFatiguePopup = false;
-    if (player.dailyTasksCompleted >= FatigueService.severeThreshold(player) &&
+    if (p.dailyTasksCompleted >= FatigueService.severeThreshold(p) &&
         !hasShownFatiguePopupToday) {
       showFatiguePopup = true;
       shouldResetFatiguePopup = true;
@@ -335,13 +344,13 @@ class TaskCompletionService {
 
     // Mystic Lv10: 計画の陣 — プロジェクト全完了ボーナス
     int projectBonusExp = 0;
-    if (player.isSkillEquipped(JobSkill.mysticProject) &&
+    if (p.isSkillEquipped(JobSkill.mysticProject) &&
         allTasks != null &&
         allTasks.isNotEmpty) {
-      final projectName = player.taskProjects[task.id];
+      final projectName = p.taskProjects[task.id];
       if (projectName != null) {
-        final project = player.projects
-            .where((p) => p.name == projectName)
+        final project = p.projects
+            .where((pr) => pr.name == projectName)
             .firstOrNull;
         if (project != null && project.bonusExp > 0) {
           // プロジェクトに属する全クエストが完了しているか
@@ -375,6 +384,13 @@ class TaskCompletionService {
       }
     }
 
+    // 称号判定（純粋化: copyWithで新インスタンス化）
+    final (titlePlayer, titleMessages) = TitleService.checkTitlesPure(p);
+    if (titleMessages.isNotEmpty) {
+      bonusMessages.addAll(titleMessages);
+      p = titlePlayer;
+    }
+
     return TaskCompletionResult(
       leveledUp: leveledUp,
       coinsGained: coinsGained,
@@ -382,6 +398,7 @@ class TaskCompletionService {
       bonusMessages: bonusMessages,
       showFatiguePopup: showFatiguePopup,
       shouldResetFatiguePopup: shouldResetFatiguePopup,
+      updatedPlayer: p,
       quizQuestion: quizQuestion,
       isOverdueBoss: isOverdueBoss,
       wrongAnswerPenaltyExp: wrongAnswerPenaltyExp,

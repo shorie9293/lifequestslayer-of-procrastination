@@ -64,6 +64,8 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
 
   // ── 委譲プロパティ ──
   Player get player => _playerVM.player;
+  /// イミュータブル化第十六段: テスト・デバッグ用のPlayer置換セッター。
+  set player(Player value) { _playerVM.player = value; _save(); }
   List<Task> get tasks => _taskVM.tasks;
   int get tutorialStep => _settingsVM.tutorialStep;
   bool get isLoaded => _playerVM.isLoaded && _taskVM.isLoaded;

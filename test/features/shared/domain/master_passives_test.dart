@@ -31,12 +31,14 @@ void main() {
         );
 
         expect(result, isNotNull);
-        expect(player.lastDailyComplete, isNotNull);
+        // イミュータブル化第十六段: 純粋化に伴いupdatedPlayerで検証
+        final updated = result!.updatedPlayer;
+        expect(updated.lastDailyComplete, isNotNull);
         final today = DateTime.now();
-        expect(player.lastDailyComplete!.year, today.year);
-        expect(player.lastDailyComplete!.month, today.month);
-        expect(player.lastDailyComplete!.day, today.day);
-        expect(player.warriorDailyBuff, 1); // +0.1% stored as *1000
+        expect(updated.lastDailyComplete!.year, today.year);
+        expect(updated.lastDailyComplete!.month, today.month);
+        expect(updated.lastDailyComplete!.day, today.day);
+        expect(updated.warriorDailyBuff, 1); // +0.1% stored as *1000
       });
 
       test('warriorDailyBuff does NOT increment on same day', () {

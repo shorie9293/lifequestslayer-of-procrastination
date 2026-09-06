@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/features/shared/domain/task_completion_service.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart'
     show CharacterSkin, SkinSlot;
 import 'package:rpg_todo/features/temple/domain/enlightenment_stage.dart';
@@ -611,7 +613,112 @@ void main() {
       expect(p.toJson(), before, reason: '元インスタンスは不変のまま');
       expect(p.pomodoroStartTime, DateTime(2026, 1, 1, 9, 0));
       expect(p.streakGraceRemaining, 0);
-      expect(p.lastStreakGraceReset, DateTime(2026, 1, 1));
+      expect(p.lastDailyComplete, isNull);
+    });
+  });
+
+  group('task_completion系7字段 final（段階返済第十六段）', () {
+    test('7カウンタ字段はfinalでありcopyWithでのみ変更可能', () {
+      final p = Player().copyWith(
+        comboCount: 3,
+        dailyTasksCompleted: 2,
+        weeklySRankCompleted: 1,
+        totalTasksCompleted: 10,
+        totalSRankCompleted: 1,
+        totalARankCompleted: 3,
+        totalBRankCompleted: 6,
+      );
+
+      expect(p.comboCount, 3);
+      expect(p.dailyTasksCompleted, 2);
+      expect(p.weeklySRankCompleted, 1);
+      expect(p.totalTasksCompleted, 10);
+      expect(p.totalSRankCompleted, 1);
+      expect(p.totalARankCompleted, 3);
+      expect(p.totalBRankCompleted, 6);
+    });
+
+    test('recordTaskCompletionPureは元インスタンスのtaskStreaksを不変に保つ', () {
+      final p = Player().copyWith(
+        taskStreaks: {
+          't1': TaskStreak(currentStreak: 5, lastCompletedDate: DateTime(2026, 1, 5)),
+        },
+      );
+      final updated = p.recordTaskCompletionPure('t1', DateTime(2026, 1, 6));
+
+      expect(identical(p, updated), isFalse, reason: '純粋版は新インスタンスを返す');
+      expect(p.taskStreaks['t1']!.currentStreak, 5, reason: '元は不変');
+      expect(updated.taskStreaks['t1']!.currentStreak, 6, reason: '連続日で+1');
+      expect(updated.taskStreaks['t1']!.lastCompletedDate, DateTime(2026, 1, 6));
+    });
+
+    test('recordTaskCompletionPure: 同日の複数完了は無視・1日空きでリセット', () {
+      final p = Player().copyWith(
+        taskStreaks: {
+          't1': TaskStreak(currentStreak: 5, lastCompletedDate: DateTime(2026, 1, 5)),
+        },
+      );
+      final sameDay = p.recordTaskCompletionPure('t1', DateTime(2026, 1, 5));
+      expect(sameDay.taskStreaks['t1']!.currentStreak, 5, reason: '同日は無視');
+      expect(identical(p.taskStreaks['t1'], sameDay.taskStreaks['t1']), isTrue);
+
+      final reset = p.recordTaskCompletionPure('t1', DateTime(2026, 1, 9));
+      expect(reset.taskStreaks['t1']!.currentStreak, 1, reason: '1日以上空きでリセット');
+      expect(p.taskStreaks['t1']!.currentStreak, 5, reason: '元は不変');
+    });
+
+    test('recordDailyCompletionPureは元を不変に保ち初回のみbuff増分', () {
+      final p = Player().copyWith(warriorDailyBuff: 3);
+      final updated = p.recordDailyCompletionPure();
+
+      expect(identical(p, updated), isFalse);
+      expect(p.warriorDailyBuff, 3, reason: '元は不変');
+      expect(p.lastDailyComplete, isNull);
+      expect(updated.warriorDailyBuff, 4);
+      expect(updated.lastDailyComplete, isNotNull);
+
+      final twice = updated.recordDailyCompletionPure();
+      expect(twice.warriorDailyBuff, 4, reason: '同日2回目は無視');
+      expect(identical(twice, updated), isTrue, reason: '同日は同一インスタンス');
+    });
+
+    test('addExpPureは元インスタンスのjobLevels/jobExps/skillPointsを不変に保つ', () {
+      final p = Player().copyWith(jobLevels: {Job.adventurer: 1}, jobExps: {Job.adventurer: 40});
+      final (updated, leveledUp) = p.addExpPure(50); // Lv1→2 (50EXP)
+
+      expect(leveledUp, isTrue);
+      expect(identical(p, updated), isFalse);
+      expect(p.jobLevels[Job.adventurer], 1, reason: '元は不変');
+      expect(p.jobExps[Job.adventurer], 40, reason: '元は不変');
+      expect(p.skillPoints, 0, reason: '元は不変');
+      expect(updated.jobLevels[Job.adventurer], 2);
+      expect(updated.skillPoints, greaterThanOrEqualTo(0));
+    });
+
+    test('TaskCompletionService.completeは引数playerを不変に保ちupdatedPlayerで返す', () {
+      final player = Player().copyWith(jobLevels: {Job.adventurer: 10});
+      final before = player.toJson();
+      final task = Task(
+        id: 'pure-1',
+        title: '純粋化試練',
+        status: TaskStatus.active,
+        rank: QuestRank.B,
+      );
+
+      final result = TaskCompletionService().complete(
+        task: task,
+        player: player,
+        hasShownFatiguePopupToday: false,
+        knowledgeQuestEnabled: false,
+      );
+
+      expect(result, isNotNull);
+      expect(player.toJson(), before, reason: '引数playerは不変');
+      expect(identical(result!.updatedPlayer, player), isFalse);
+      expect(result.updatedPlayer.totalTasksCompleted, 1);
+      expect(result.updatedPlayer.dailyTasksCompleted, 1);
+      expect(result.updatedPlayer.coins, greaterThanOrEqualTo(10));
+      expect(result.updatedPlayer.taskStreaks['pure-1']!.currentStreak, 1);
     });
   });
 }

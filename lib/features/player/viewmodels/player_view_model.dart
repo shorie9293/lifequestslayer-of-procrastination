@@ -290,7 +290,7 @@ class PlayerViewModel extends ChangeNotifier {
 
   /// デバッグ用
   void debugSetCoins(int amount) {
-    _player.coins = amount.clamp(0, 99999999);
+    _player = _player.copyWith(coins: amount.clamp(0, 99999999));
     notifyListeners();
     _autoSave();
   }
@@ -363,11 +363,15 @@ class PlayerViewModel extends ChangeNotifier {
 
   /// 誤答ペナルティの適用（GameViewModelから移行）
   void applyWrongAnswerPenalty(int expPenalty, int coinPenalty) {
-    final p = _player;
-    p.jobExps[p.currentJob] = (p.jobExps[p.currentJob] ?? 0) - expPenalty;
-    if (p.jobExps[p.currentJob]! < 0) p.jobExps[p.currentJob] = 0;
-    p.coins -= coinPenalty;
-    if (p.coins < 0) p.coins = 0;
+    var p = _player;
+    final newJobExps = Map<Job, int>.of(p.jobExps);
+    newJobExps[p.currentJob] =
+        ((newJobExps[p.currentJob] ?? 0) - expPenalty).clamp(0, 1 << 62);
+    p = p.copyWith(
+      jobExps: newJobExps,
+      coins: (p.coins - coinPenalty).clamp(0, 1 << 62),
+    );
+    _player = p;
     notifyListeners();
     _autoSave();
   }

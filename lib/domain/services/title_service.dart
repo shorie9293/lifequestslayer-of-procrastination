@@ -11,6 +11,25 @@ class TitleService {
     }
   }
 
+  /// 純粋版: 引数 player を破壊的変更せず、獲得称号を反映した新インスタンスを返す。
+  /// イミュータブル化第十六段で TaskCompletionService 純粋化に伴い追加。
+  static (Player, List<String>) checkTitlesPure(Player player) {
+    final messages = <String>[];
+    final unlocked = <String>{};
+    var updated = player;
+    for (final def in kAllTitles) {
+      if (!updated.titles.contains(def.id) &&
+          def.getProgress(updated) >= def.requiredCount) {
+        unlocked.add(def.id);
+        messages.add('🏅 称号獲得：『${def.id}』');
+      }
+    }
+    if (unlocked.isNotEmpty) {
+      updated = updated.copyWith(titles: [...updated.titles, ...unlocked]);
+    }
+    return (updated, messages);
+  }
+
   static void _unlockTitle(
       Player player, TitleDefinition def, List<String> messages) {
     if (!player.titles.contains(def.id) &&

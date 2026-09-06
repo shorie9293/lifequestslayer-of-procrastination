@@ -15,7 +15,7 @@ void main() {
     });
 
     test('getTitleProgressList - クエスト完了数が反映される', () {
-      final player = Player()..totalTasksCompleted = 10;
+      final player = Player().copyWith(totalTasksCompleted: 10);
       // checkTitles を呼んで称号を実際に獲得させる
       TitleService.checkTitles(player, []);
       final progress = TitleService.getTitleProgressList(player);
@@ -26,7 +26,7 @@ void main() {
     });
 
     test('checkTitles - 条件を満たす称号を獲得する', () {
-      final player = Player()..totalTasksCompleted = 100;
+      final player = Player().copyWith(totalTasksCompleted: 100);
       final messages = <String>[];
       TitleService.checkTitles(player, messages);
       // 100クエスト完了で「ベテラン」を獲得
@@ -36,8 +36,7 @@ void main() {
 
     test('checkTitles - 既に獲得済みの称号は重複して獲得しない', () {
       final player = Player()
-        ..totalTasksCompleted = 100
-        ..titles = ['ベテラン'];
+        .copyWith(totalTasksCompleted: 100, titles: ['ベテラン']);
       final messages = <String>[];
       TitleService.checkTitles(player, messages);
       // 既に獲得済みなので新たなメッセージは追加されない

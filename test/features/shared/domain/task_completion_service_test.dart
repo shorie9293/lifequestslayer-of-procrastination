@@ -383,7 +383,8 @@ void main() {
       expect(task.lastCompletedAt, isNotNull);
       expect(task.status, isNot(TaskStatus.inGuild));
       expect(result!.expGain, greaterThan(0));
-      expect(player.coins, greaterThan(coinsBefore));
+      // イミュータブル化第十六段: 純粋化に伴いupdatedPlayerで検証
+      expect(result.updatedPlayer.coins, greaterThan(coinsBefore));
     });
 
     test('RoninRepeatTask未開放時はrepeatInterval≠noneでもisCompleted=true', () {

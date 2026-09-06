@@ -230,12 +230,15 @@ class Player {
   List<EquippedSkill> equippedSkills; // v4: 装備スキル
   /// 現在の職業。イミュータブル化第十二段でfinal化（copyWithのみで変更可能）。
   final Job currentJob;
-  int comboCount;
+  /// イミュータブル化第十六段でfinal化（TaskCompletionService純粋化に伴う）。
+  final int comboCount;
   int coins;
   /// イミュータブル化第十一段でfinal化（copyWithのみで変更可能）。
   final List<String> homeItems;
-  int dailyTasksCompleted;
-  int weeklySRankCompleted;
+  /// イミュータブル化第十六段でfinal化（TaskCompletionService純粋化に伴う）。
+  final int dailyTasksCompleted;
+  /// イミュータブル化第十六段でfinal化（TaskCompletionService純粋化に伴う）。
+  final int weeklySRankCompleted;
   /// 最終ミッションリセット日時（日次/週次リセット判定用）。
   /// イミュータブル化第十段でfinal化（copyWithのみで変更可能）。
   final DateTime? lastMissionResetDate;
@@ -248,10 +251,14 @@ class Player {
   final DateTime? lastRestDate;
 
   // Title / Achievement System (Plan 3)
-  int totalTasksCompleted;
-  int totalSRankCompleted;
-  int totalARankCompleted;
-  int totalBRankCompleted;
+  /// イミュータブル化第十六段でfinal化（TaskCompletionService純粋化に伴う）。
+  final int totalTasksCompleted;
+  /// イミュータブル化第十六段でfinal化（TaskCompletionService純粋化に伴う）。
+  final int totalSRankCompleted;
+  /// イミュータブル化第十六段でfinal化（TaskCompletionService純粋化に伴う）。
+  final int totalARankCompleted;
+  /// イミュータブル化第十六段でfinal化（TaskCompletionService純粋化に伴う）。
+  final int totalBRankCompleted;
   final int timesWardenDefeated; // 刻の番人討伐回数（イミュータブル化第五段でfinal化）
   List<String> titles;
   final String? equippedTitle;
@@ -852,6 +859,108 @@ class Player {
     totalReflections++;
   }
 
+  /// イミュータブル化第十六段: addExp の純粋版。
+  /// 引数を破壊的変更せず、EXP加算・レベルアップ・スキルポイント付与を
+  /// 反映した新インスタンスと leveledUp を返す。TaskCompletionService用。
+  (Player, bool) addExpPure(int amount) {
+    var lvl = jobLevels[currentJob] ?? 1;
+    // レベル上限到達時はEXPを加算しない
+    if (lvl >= maxLevel) return (this, false);
+
+    var cExp = (jobExps[currentJob] ?? 0) + amount;
+
+    // v5: 冒険者の場合、レベルアップ前のLvを記録（スキルポイント用）
+    final isAdventurer = currentJob == Job.adventurer;
+    final int oldAdvLevel = isAdventurer ? lvl : 0;
+
+    var expNext = expForLevel(lvl);
+    if (expNext >= double.maxFinite.toInt() || expNext <= 0) {
+      expNext = double.maxFinite.toInt() ~/ 2;
+    }
+
+    var leveledUp = false;
+    final newJobLevels = Map<Job, int>.of(jobLevels);
+    while (cExp >= expNext && lvl < maxLevel) {
+      cExp -= expNext;
+      lvl++;
+      newJobLevels[currentJob] = lvl;
+      expNext = expForLevel(lvl);
+      if (expNext >= double.maxFinite.toInt() || expNext <= 0) {
+        expNext = double.maxFinite.toInt() ~/ 2;
+      }
+      leveledUp = true;
+    }
+
+    // レベル上限到達時はEXPを上限値で固定
+    if (lvl >= maxLevel) {
+      cExp = 0;
+    }
+
+    final newJobExps = Map<Job, int>.of(jobExps)..[currentJob] = cExp;
+
+    var updated = copyWith(jobLevels: newJobLevels, jobExps: newJobExps);
+
+    // v5: 冒険者のレベルアップ時にスキルポイントを付与
+    if (isAdventurer && leveledUp) {
+      final newLevel = newJobLevels[Job.adventurer] ?? 1;
+      final delta = totalEarnedSkillPoints(newLevel) -
+          totalEarnedSkillPoints(oldAdvLevel);
+      if (delta > 0) {
+        updated = updated.copyWith(skillPoints: updated.skillPoints + delta);
+      }
+    }
+
+    return (updated, leveledUp);
+  }
+
+  /// イミュータブル化第十六段: recordTaskCompletion の純粋版。
+  /// taskStreaks を新Mapで差し替えた新インスタンスを返す。TaskCompletionService用。
+  Player recordTaskCompletionPure(String taskId, DateTime completedDate) {
+    final today =
+        DateTime(completedDate.year, completedDate.month, completedDate.day);
+    final existing = taskStreaks[taskId];
+    final newMap = Map<String, TaskStreak>.of(taskStreaks);
+
+    if (existing == null) {
+      newMap[taskId] = TaskStreak(
+        currentStreak: 1,
+        lastCompletedDate: today,
+      );
+    } else {
+      final diffDays = today.difference(existing.lastCompletedDate).inDays;
+      if (diffDays == 1) {
+        newMap[taskId] = existing.copyWith(
+          currentStreak: existing.currentStreak + 1,
+          lastCompletedDate: today,
+        );
+      } else if (diffDays > 1) {
+        newMap[taskId] = existing.copyWith(
+          currentStreak: 1,
+          lastCompletedDate: today,
+        );
+      }
+      // diffDays == 0: 同日の複数完了は無視
+    }
+    return copyWith(taskStreaks: newMap);
+  }
+
+  /// イミュータブル化第十六段: recordDailyCompletion の純粋版。
+  /// 本日の初回完了なら warriorDailyBuff を増分した新インスタンスを返す。
+  Player recordDailyCompletionPure() {
+    final now = DateTime.now();
+    final last = lastDailyComplete;
+    if (last == null ||
+        last.year != now.year ||
+        last.month != now.month ||
+        last.day != now.day) {
+      return copyWith(
+        lastDailyComplete: DateTime(now.year, now.month, now.day),
+        warriorDailyBuff: warriorDailyBuff + 1,
+      );
+    }
+    return this;
+  }
+
   bool addExp(int amount) {
     // レベル上限到達時はEXPを加算しない
     int lvl = jobLevels[currentJob] ?? 1;
@@ -1286,7 +1395,9 @@ class PlayerAdapter extends TypeAdapter<Player> {
       }
     } catch (e) { _log('currentJob read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.comboCount = reader.readInt(); }
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(comboCount: reader.readInt());
+      }
     } catch (e) { _log('comboCount read failed', e); }
     try {
       if (reader.availableBytes >= 4) { player.coins = reader.readInt(); }
@@ -1318,16 +1429,24 @@ class PlayerAdapter extends TypeAdapter<Player> {
       if (reader.availableBytes > 0) { player = player.copyWith(lastRestDate: reader.read() as DateTime?); }
     } catch (e) { _log('lastRestDate read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.totalTasksCompleted = reader.readInt(); }
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(totalTasksCompleted: reader.readInt());
+      }
     } catch (e) { _log('totalTasksCompleted read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.totalSRankCompleted = reader.readInt(); }
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(totalSRankCompleted: reader.readInt());
+      }
     } catch (e) { _log('totalSRankCompleted read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.totalARankCompleted = reader.readInt(); }
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(totalARankCompleted: reader.readInt());
+      }
     } catch (e) { _log('totalARankCompleted read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.totalBRankCompleted = reader.readInt(); }
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(totalBRankCompleted: reader.readInt());
+      }
     } catch (e) { _log('totalBRankCompleted read failed', e); }
     try {
       if (reader.availableBytes > 0) {
@@ -1515,7 +1634,9 @@ class PlayerAdapter extends TypeAdapter<Player> {
           currentJob: (reader.read() as Job?) ?? Job.adventurer);
     });
     safeRead('comboCount', () {
-      if (reader.availableBytes >= 4) player.comboCount = reader.readInt();
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(comboCount: reader.readInt());
+      }
     });
     safeRead('coins', () {
       if (reader.availableBytes >= 4) player.coins = reader.readInt();
@@ -1545,16 +1666,24 @@ class PlayerAdapter extends TypeAdapter<Player> {
       player = player.copyWith(lastRestDate: reader.read() as DateTime?);
     });
     safeRead('totalTasksCompleted', () {
-      if (reader.availableBytes >= 4) player.totalTasksCompleted = reader.readInt();
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(totalTasksCompleted: reader.readInt());
+      }
     });
     safeRead('totalSRankCompleted', () {
-      if (reader.availableBytes >= 4) player.totalSRankCompleted = reader.readInt();
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(totalSRankCompleted: reader.readInt());
+      }
     });
     safeRead('totalARankCompleted', () {
-      if (reader.availableBytes >= 4) player.totalARankCompleted = reader.readInt();
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(totalARankCompleted: reader.readInt());
+      }
     });
     safeRead('totalBRankCompleted', () {
-      if (reader.availableBytes >= 4) player.totalBRankCompleted = reader.readInt();
+      if (reader.availableBytes >= 4) {
+        player = player.copyWith(totalBRankCompleted: reader.readInt());
+      }
     });
     safeRead('titles', () {
       player.titles =
