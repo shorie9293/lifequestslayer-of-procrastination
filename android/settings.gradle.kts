@@ -23,6 +23,8 @@ plugins {
     id("org.jetbrains.kotlin.android") version "2.2.20" apply false
     // Firebase 運用監視基盤（Crashlytics / Analytics）のための google-services プラグイン
     id("com.google.gms.google-services") version "4.4.2" apply false
+    // Crashlytics マッピング/シンボル自動アップロード（release AAB の難読化スタックトレース解決）
+    id("com.google.firebase.crashlytics") version "3.0.6" apply false
 }
 
 include(":app")

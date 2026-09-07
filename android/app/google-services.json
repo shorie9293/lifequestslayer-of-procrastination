@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:581507070467:android:286d2f73083c05ada9ec36",
+        "android_client_info": {
+          "package_name": "com.shorie.election"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVGlT-FurVCmQ9Ihq5jhrwK1YYpS4jMwE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:581507070467:android:92cafac4710937bca9ec36",
         "android_client_info": {
           "package_name": "com.shorie.kozuchi"
@@ -48,6 +67,25 @@
         "mobilesdk_app_id": "1:581507070467:android:b7d0ec9855210ba7a9ec36",
         "android_client_info": {
           "package_name": "com.shorie.tsundoku"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAVGlT-FurVCmQ9Ihq5jhrwK1YYpS4jMwE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:581507070467:android:bdd8c5d24cbccf94a9ec36",
+        "android_client_info": {
+          "package_name": "com.takamagahara.book_review_app"
         }
       },
       "oauth_client": [],

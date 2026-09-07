@@ -143,6 +143,11 @@ void main() async {
   // ③ ゾーン外の非同期エラー（Platformレベル）
   PlatformDispatcher.instance.onError = (error, stack) {
     debugPrint('💀 捕捉不能エラー: $error\n$stack');
+    try {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    } catch (_) {
+      // Firebase 未初期化（テスト環境等）はスキップ
+    }
     return true; // true = 処理済み（クラッシュさせない）
   };
 
