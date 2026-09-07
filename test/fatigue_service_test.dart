@@ -70,13 +70,13 @@ void main() {
     });
 
     test('restAtInn - コインが足りない場合はエラー', () {
-      final player = Player()..coins = 0;
+      final player = Player(coins: 0);
       final result = FatigueService.restAtInn(player, 0, DateTime.now());
       expect(result.error, '文が足りないぜ');
     });
 
     test('restAtInn - コインが足りる場合は成功', () {
-      final player = Player()..coins = 100;
+      final player = Player(coins: 100);
       final result = FatigueService.restAtInn(player, 0, DateTime.now());
       expect(result.error, isNull);
       expect(result.player.coins, 50); // 50コイン消費
@@ -85,28 +85,28 @@ void main() {
 
     test('restAtInn - 同じ日に2回泊まるとエラー', () {
       final now = DateTime.now();
-      final player = Player()..coins = 1000;
+      final player = Player(coins: 1000);
       final first = FatigueService.restAtInn(player, 0, now);
       final result = FatigueService.restAtInn(first.player, 0, now);
       expect(result.error, '今日はもう十分休んだ。また明日来な！');
     });
 
     test('restAtInn - innType=1で200コイン消費・limitBonus=5', () {
-      final player = Player()..coins = 500;
+      final player = Player(coins: 500);
       final result = FatigueService.restAtInn(player, 1, DateTime.now());
       expect(result.player.coins, 300);
       expect(result.player.nextDayTaskLimitOffset, 5);
     });
 
     test('restAtInn - innType=2で1000コイン消費・limitBonus=12', () {
-      final player = Player()..coins = 1500;
+      final player = Player(coins: 1500);
       final result = FatigueService.restAtInn(player, 2, DateTime.now());
       expect(result.player.coins, 500);
       expect(result.player.nextDayTaskLimitOffset, 12);
     });
 
     test('restAtInn - 無効なinnTypeでエラー', () {
-      final player = Player()..coins = 100;
+      final player = Player(coins: 100);
       final result = FatigueService.restAtInn(player, 99, DateTime.now());
       expect(result.error, 'そんなメニューはないぜ');
     });

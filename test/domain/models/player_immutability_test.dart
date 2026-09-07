@@ -789,4 +789,29 @@ void main() {
       expect(p.wisdomPoints, 0);
     });
   });
+
+  group('coins final（段階返済第二十段）', () {
+    test('コンストラクタで初期化でき copyWith で変更可能', () {
+      final p = Player(coins: 300);
+      expect(p.coins, 300);
+
+      final p2 = p.copyWith(coins: 350);
+      expect(p2.coins, 350);
+      expect(p.coins, 300, reason: '元は不変');
+      expect(p2.homeItems, p.homeItems, reason: '他字段は引き継ぎ');
+    });
+
+    test('coins デフォルト0', () {
+      final p = Player();
+      expect(p.coins, 0);
+    });
+
+    test('addCoins/spendCoins相当のcopyWith増減は元を不変に保つ', () {
+      final p = Player(coins: 100);
+      final afterAdd = p.copyWith(coins: p.coins + 50);
+      final afterSpend = p.copyWith(coins: afterAdd.coins - 30);
+      expect(afterSpend.coins, 120);
+      expect(p.coins, 100, reason: '元インスタンスは不変');
+    });
+  });
 }

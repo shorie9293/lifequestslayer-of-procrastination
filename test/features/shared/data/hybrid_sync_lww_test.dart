@@ -128,11 +128,9 @@ void main() {
   group('HybridPlayerRepository last-write-wins', () {
     test('ローカルが新しい場合、ローカル進行が保持されクラウドへpushされる', () async {
       final local = FakeRepo();
-      local.playerStore = Player(updatedAt: DateTime(2026, 1, 2));
-      local.playerStore!.coins = 100;
+      local.playerStore = Player(updatedAt: DateTime(2026, 1, 2), coins: 100);
       final cloud = FakeRepo();
-      cloud.playerStore = Player(updatedAt: DateTime(2026, 1, 1));
-      cloud.playerStore!.coins = 50;
+      cloud.playerStore = Player(updatedAt: DateTime(2026, 1, 1), coins: 50);
       final hybrid = HybridPlayerRepository(hiveRepo: local, supabaseRepo: cloud);
 
       final result = await hybrid.loadPlayer();
@@ -145,11 +143,9 @@ void main() {
 
     test('クラウドが新しい場合、クラウドが採用される', () async {
       final local = FakeRepo();
-      local.playerStore = Player(updatedAt: DateTime(2026, 1, 1));
-      local.playerStore!.coins = 10;
+      local.playerStore = Player(updatedAt: DateTime(2026, 1, 1), coins: 10);
       final cloud = FakeRepo();
-      cloud.playerStore = Player(updatedAt: DateTime(2026, 1, 3));
-      cloud.playerStore!.coins = 999;
+      cloud.playerStore = Player(updatedAt: DateTime(2026, 1, 3), coins: 999);
       final hybrid = HybridPlayerRepository(hiveRepo: local, supabaseRepo: cloud);
 
       final result = await hybrid.loadPlayer();
@@ -160,8 +156,7 @@ void main() {
 
     test('ローカルのみ存在する場合、クラウドへpushされる', () async {
       final local = FakeRepo();
-      local.playerStore = Player(updatedAt: DateTime(2026, 1, 2));
-      local.playerStore!.coins = 77;
+      local.playerStore = Player(updatedAt: DateTime(2026, 1, 2), coins: 77);
       final cloud = FakeRepo()..playerStore = null;
       final hybrid = HybridPlayerRepository(hiveRepo: local, supabaseRepo: cloud);
 

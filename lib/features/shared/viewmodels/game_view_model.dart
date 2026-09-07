@@ -206,16 +206,22 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
 
   /// 刻の番人クイズ誤答時のペナルティ。EXPとコインを減らす。
   void applyWrongAnswerPenalty(int expPenalty, int coinsPenalty) {
+    var next = _playerVM.player;
     if (expPenalty > 0) {
       // 現在職のEXPからペナルティ分だけ減らす（0未満にはしない）
-      final currentExp = _playerVM.player.currentExp;
-      _playerVM.player.jobExps[_playerVM.player.currentJob] =
-          (currentExp - expPenalty).clamp(0, 99999999);
+      final currentExp = next.currentExp;
+      next = next.copyWith(
+        jobExps: {
+          ...next.jobExps,
+          next.currentJob: (currentExp - expPenalty).clamp(0, 99999999),
+        },
+      );
     }
     if (coinsPenalty > 0) {
-      _playerVM.player.coins =
-          (_playerVM.player.coins - coinsPenalty).clamp(0, 99999999);
+      next = next.copyWith(
+          coins: (next.coins - coinsPenalty).clamp(0, 99999999));
     }
+    _playerVM.player = next;
     _save();
   }
   void addGems(int a) { _playerVM.addGems(a); _save(); }

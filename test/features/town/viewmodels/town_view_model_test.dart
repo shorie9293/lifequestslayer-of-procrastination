@@ -110,12 +110,12 @@ void main() {
     });
 
     test('upgrades building and deducts coins', () async {
-      final player = (await playerRepo.loadPlayer())!;
+      var player = (await playerRepo.loadPlayer())!;
       final result = viewModel.upgradeBuilding(
         Building.inn,
         playerCoins: player.coins,
         spendCoins: (amount) {
-          player.coins -= amount;
+          player = player.copyWith(coins: player.coins - amount);
         },
       );
       expect(result, isTrue);
@@ -123,8 +123,8 @@ void main() {
     });
 
     test('fails when not enough coins', () async {
-      final player = (await playerRepo.loadPlayer())!;
-      player.coins = 5;
+      final loaded = (await playerRepo.loadPlayer())!;
+      final player = loaded.copyWith(coins: 5);
       final result = viewModel.upgradeBuilding(
         Building.inn,
         playerCoins: player.coins,
@@ -146,14 +146,14 @@ void main() {
     });
 
     test('notifies listeners on successful upgrade', () async {
-      final player = (await playerRepo.loadPlayer())!;
+      var player = (await playerRepo.loadPlayer())!;
       bool notified = false;
       viewModel.addListener(() => notified = true);
       viewModel.upgradeBuilding(
         Building.inn,
         playerCoins: player.coins,
         spendCoins: (amount) {
-          player.coins -= amount;
+          player = player.copyWith(coins: player.coins - amount);
         },
       );
       expect(notified, isTrue);

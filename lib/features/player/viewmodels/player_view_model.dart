@@ -138,7 +138,7 @@ class PlayerViewModel extends ChangeNotifier {
     final isNewDay = oldResetDate == null ||
         !DateUtils.isSameDay(oldResetDate, now);
     if (isNewDay) {
-      _player.coins += 50;
+      _player = _player.copyWith(coins: _player.coins + 50);
       pendingLoginBonusAmount = 50;
     }
 
@@ -147,7 +147,7 @@ class PlayerViewModel extends ChangeNotifier {
         oldResetDate.year != now.year ||
         oldResetDate.month != now.month;
     if (monthChanged) {
-      _player.coins += 5000;
+      _player = _player.copyWith(coins: _player.coins + 5000);
       pendingLoginBonusAmount = (pendingLoginBonusAmount ?? 0) + 5000;
     }
   }
@@ -182,8 +182,8 @@ class PlayerViewModel extends ChangeNotifier {
     _autoSave();
     return true;
   }
-  void addCoins(int amount) { _player.coins += amount; notifyListeners(); _autoSave(); }
-  void spendCoins(int amount) { _player.coins -= amount; notifyListeners(); _autoSave(); }
+  void addCoins(int amount) { _player = _player.copyWith(coins: _player.coins + amount); notifyListeners(); _autoSave(); }
+  void spendCoins(int amount) { _player = _player.copyWith(coins: _player.coins - amount); notifyListeners(); _autoSave(); }
   void setDailyTasksCompleted(int v) { _player = _player.copyWith(dailyTasksCompleted: v); notifyListeners(); _autoSave(); }
   void incrementDailyTasksCompleted() { _player = _player.copyWith(dailyTasksCompleted: _player.dailyTasksCompleted + 1); notifyListeners(); _autoSave(); }
   void incrementWeeklySRank() { _player = _player.copyWith(weeklySRankCompleted: _player.weeklySRankCompleted + 1); notifyListeners(); _autoSave(); }
@@ -279,7 +279,7 @@ class PlayerViewModel extends ChangeNotifier {
 
   bool buyHomeItem(String id, int price, {bool debugMode = false}) {
     if (debugMode || (_player.coins >= price && !_player.homeItems.contains(id))) {
-      if (!debugMode) _player.coins -= price;
+      if (!debugMode) _player = _player.copyWith(coins: _player.coins - price);
       _player = _player.copyWith(homeItems: [..._player.homeItems, id]);
       notifyListeners();
       _autoSave();

@@ -232,7 +232,8 @@ class Player {
   final Job currentJob;
   /// イミュータブル化第十六段でfinal化（TaskCompletionService純粋化に伴う）。
   final int comboCount;
-  int coins;
+  /// 所持文（通貨）。イミュータブル化第二十段でfinal化（copyWithのみで変更可能）。
+  final int coins;
   /// イミュータブル化第十一段でfinal化（copyWithのみで変更可能）。
   final List<String> homeItems;
   /// イミュータブル化第十六段でfinal化（TaskCompletionService純粋化に伴う）。
@@ -1392,7 +1393,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
       }
     } catch (e) { _log('comboCount read failed', e); }
     try {
-      if (reader.availableBytes >= 4) { player.coins = reader.readInt(); }
+      if (reader.availableBytes >= 4) { player = player.copyWith(coins: reader.readInt()); }
     } catch (e) { _log('coins read failed', e); }
     try {
       if (reader.availableBytes > 0) {
@@ -1631,7 +1632,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
       }
     });
     safeRead('coins', () {
-      if (reader.availableBytes >= 4) player.coins = reader.readInt();
+      if (reader.availableBytes >= 4) player = player.copyWith(coins: reader.readInt());
     });
     safeRead('homeItems', () {
       player = player.copyWith(
