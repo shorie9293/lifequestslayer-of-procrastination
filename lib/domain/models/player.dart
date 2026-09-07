@@ -320,7 +320,8 @@ class Player {
   bool get isSamuraiLine => currentJob == Job.samurai;
 
   /// 残心【初段】: 戒め選択時に蓄積される知恵ポイント
-  int wisdomPoints = 0;
+  /// イミュータブル化第十九段でfinal化（copyWithのみで変更可能）。
+  final int wisdomPoints;
 
   /// 修行段階（悟りの境地）。知恵ポイントに応じて自動昇格。
   /// イミュータブル化第八段でfinal化（copyWithのみで変更可能）。
@@ -1294,7 +1295,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
   }
 
   Player _readV6(BinaryReader reader) {
-    final player = _readV5(reader);
+    var player = _readV5(reader);
 
     try {
       if (reader.availableBytes >= 4) {
@@ -1311,7 +1312,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
 
     try {
       if (reader.availableBytes >= 4) {
-        player.wisdomPoints = reader.readInt();
+        player = player.copyWith(wisdomPoints: reader.readInt());
       }
     } catch (e) { _log('wisdomPoints read failed', e); }
 

@@ -215,10 +215,11 @@ void main() {
 
     test('wisdomPoints can be incremented', () {
       final player = Player();
-      player.wisdomPoints += 1;
-      expect(player.wisdomPoints, 1);
-      player.wisdomPoints += 2;
-      expect(player.wisdomPoints, 3);
+      final p1 = player.copyWith(wisdomPoints: player.wisdomPoints + 1);
+      expect(p1.wisdomPoints, 1);
+      final p2 = p1.copyWith(wisdomPoints: p1.wisdomPoints + 2);
+      expect(p2.wisdomPoints, 3);
+      expect(player.wisdomPoints, 0, reason: '元は不変');
     });
 
     test('wisdomPoints round-trip through toJson/fromJson', () {

@@ -772,4 +772,21 @@ void main() {
       expect(p.lastDailyComplete, isNull, reason: '元は不変');
     });
   });
+
+  group('wisdomPoints final（段階返済第十九段）', () {
+    test('コンストラクタで初期化でき copyWith で変更可能', () {
+      final p = Player(currentJob: Job.samurai, wisdomPoints: 7);
+      expect(p.wisdomPoints, 7);
+
+      final p2 = p.copyWith(wisdomPoints: 8);
+      expect(p2.wisdomPoints, 8);
+      expect(p.wisdomPoints, 7, reason: '元は不変');
+      expect(p2.currentJob, Job.samurai, reason: '他字段は引き継ぎ');
+    });
+
+    test('wisdomPoints デフォルト0', () {
+      final p = Player();
+      expect(p.wisdomPoints, 0);
+    });
+  });
 }

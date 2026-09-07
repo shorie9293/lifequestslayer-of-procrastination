@@ -311,7 +311,7 @@ class PlayerViewModel extends ChangeNotifier {
   /// - null: 昇格なし、または既に視聴済み。
   EnlightenmentTransitionType? addWisdomPoint() {
     final oldStage = _player.enlightenmentStage;
-    _player.wisdomPoints++;
+    _player = _player.copyWith(wisdomPoints: _player.wisdomPoints + 1);
     final newStage = EnlightenmentStage.forWisdom(_player.wisdomPoints);
 
     if (newStage.stageIndex <= oldStage.stageIndex) {

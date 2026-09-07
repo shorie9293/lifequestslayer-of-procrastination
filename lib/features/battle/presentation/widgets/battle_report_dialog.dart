@@ -102,7 +102,6 @@ class _BattleReportDialogState extends State<BattleReportDialog> {
         onImashime: () {
           widget.onReflectionSubmit?.call();
         },
-        player: widget.player,
       );
     } else if (isSamurai) {
       // 侍系だが残心未解放（浪人フロー）→ 即完了

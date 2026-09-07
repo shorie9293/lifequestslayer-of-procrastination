@@ -2,43 +2,65 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
+import 'package:provider/provider.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/features/battle/presentation/widgets/zanshin_dialog.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
+
+/// モックリポジトリ — 何もしない
+class _MockPlayerRepo implements IPlayerRepository {
+  @override
+  Future<Player?> loadPlayer() async => null;
+
+  @override
+  Future<void> savePlayer(Player player) async {}
+
+  @override
+  bool get loadFailedDueToCorruption => false;
+
+  @override
+  Future<void> close() async {}
+}
 
 /// Helper: show ZanshinDialog and settle animations.
 Future<void> pumpZanshinDialog(
   WidgetTester tester, {
   required String taskId,
+  required PlayerViewModel vm,
   String taskTitle = 'テスト討伐',
   QuestRank aiDifficulty = QuestRank.B,
   int inputBonusExp = 50,
   VoidCallback? onKaishin,
   VoidCallback? onImashime,
-  Player? player,
 }) async {
   await tester.pumpWidget(
-    MaterialApp(
-      home: Builder(
-        builder: (context) {
-          return ElevatedButton(
-            onPressed: () {
-              ZanshinDialog.show(
-                context,
-                taskId: taskId,
-                taskTitle: taskTitle,
-                aiDifficulty: aiDifficulty,
-                inputBonusExp: inputBonusExp,
-                onKaishin: onKaishin ?? () {},
-                onImashime: onImashime ?? () {},
-                player: player,
-              );
-            },
-            child: const Text('Show'),
-          );
-        },
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<PlayerViewModel>.value(value: vm),
+      ],
+      child: MaterialApp(
+        home: Builder(
+          builder: (context) {
+            return ElevatedButton(
+              onPressed: () {
+                ZanshinDialog.show(
+                  context,
+                  taskId: taskId,
+                  taskTitle: taskTitle,
+                  aiDifficulty: aiDifficulty,
+                  inputBonusExp: inputBonusExp,
+                  onKaishin: onKaishin ?? () {},
+                  onImashime: onImashime ?? () {},
+                );
+              },
+              child: const Text('Show'),
+            );
+          },
+        ),
       ),
     ),
   );
@@ -75,7 +97,7 @@ void main() {
       bool kaishinCalled = false;
       bool imashimeCalled = false;
 
-      final player = Player(currentJob: Job.samurai, wisdomPoints: 0);
+      final vm = PlayerViewModel(_MockPlayerRepo());
 
       await pumpZanshinDialog(
         tester,
@@ -83,7 +105,7 @@ void main() {
         taskTitle: '会心テスト討伐',
         onKaishin: () => kaishinCalled = true,
         onImashime: () => imashimeCalled = true,
-        player: player,
+        vm: vm,
       );
 
       // 「会心」ボタンをタップ
@@ -102,22 +124,23 @@ void main() {
       expect(reflections.first.content, '会心の一撃');
 
       // WisdomPoints 変化なし
-      expect(player.wisdomPoints, 0);
+      expect(vm.player.wisdomPoints, 0);
     });
 
     testWidgets('会心選択では WisdomPoints 変化なし', (tester) async {
-      final player = Player(currentJob: Job.samurai, wisdomPoints: 5);
+      final vm = PlayerViewModel(_MockPlayerRepo());
+      vm.player = Player(currentJob: Job.samurai, wisdomPoints: 5);
 
       await pumpZanshinDialog(
         tester,
         taskId: 'task-kaishin-wp',
-        player: player,
+        vm: vm,
       );
 
       await tester.tap(find.text('会心 — 見事な太刀筋'));
       await tester.pumpAndSettle();
 
-      expect(player.wisdomPoints, 5);
+      expect(vm.player.wisdomPoints, 5);
     });
   });
 
@@ -127,7 +150,7 @@ void main() {
       bool kaishinCalled = false;
       bool imashimeCalled = false;
 
-      final player = Player(currentJob: Job.samurai, wisdomPoints: 0);
+      final vm = PlayerViewModel(_MockPlayerRepo());
 
       await pumpZanshinDialog(
         tester,
@@ -135,7 +158,7 @@ void main() {
         taskTitle: '戒めテスト討伐',
         onKaishin: () => kaishinCalled = true,
         onImashime: () => imashimeCalled = true,
-        player: player,
+        vm: vm,
       );
 
       // 「戒め」ボタンをタップ（入力画面に遷移）
@@ -165,19 +188,19 @@ void main() {
       expect(reflections.first.content, '準備を怠らぬこと');
 
       // WisdomPoints +1
-      expect(player.wisdomPoints, 1);
+      expect(vm.player.wisdomPoints, 1);
     });
 
     testWidgets('戒め選択 → テキスト空でも保存可能', (tester) async {
       bool imashimeCalled = false;
 
-      final player = Player(currentJob: Job.samurai, wisdomPoints: 0);
+      final vm = PlayerViewModel(_MockPlayerRepo());
 
       await pumpZanshinDialog(
         tester,
         taskId: 'task-imashime-empty',
         onImashime: () => imashimeCalled = true,
-        player: player,
+        vm: vm,
       );
 
       // 「戒め」ボタンをタップ
@@ -197,16 +220,17 @@ void main() {
       expect(reflections.first.content, '');
 
       // WisdomPoints +1（空でも加算）
-      expect(player.wisdomPoints, 1);
+      expect(vm.player.wisdomPoints, 1);
     });
 
     testWidgets('WisdomPointsが戒め選択後に+1される', (tester) async {
-      final player = Player(currentJob: Job.samurai, wisdomPoints: 3);
+      final vm = PlayerViewModel(_MockPlayerRepo());
+      vm.player = Player(currentJob: Job.samurai, wisdomPoints: 3);
 
       await pumpZanshinDialog(
         tester,
         taskId: 'task-imashime-wp',
-        player: player,
+        vm: vm,
       );
 
       await tester.tap(find.text('戒め — 次に活かす'));
@@ -218,36 +242,42 @@ void main() {
       await tester.tap(find.text('戒めを刻む'));
       await tester.pumpAndSettle();
 
-      expect(player.wisdomPoints, 4);
+      expect(vm.player.wisdomPoints, 4);
     });
   });
 
   group('ZanshinDialog UI', () {
     testWidgets('タイトル「⚔️ 残心の刻」が表示される', (tester) async {
+      final vm = PlayerViewModel(_MockPlayerRepo());
       await pumpZanshinDialog(
         tester,
         taskId: 'task-ui-1',
         taskTitle: 'UIテスト',
+        vm: vm,
       );
 
       expect(find.text('⚔️ 残心の刻'), findsOneWidget);
     });
 
     testWidgets('クエスト名が表示される', (tester) async {
+      final vm = PlayerViewModel(_MockPlayerRepo());
       await pumpZanshinDialog(
         tester,
         taskId: 'task-ui-2',
         taskTitle: '特別なクエスト名',
+        vm: vm,
       );
 
       expect(find.textContaining('特別なクエスト名'), findsOneWidget);
     });
 
     testWidgets('inputBonusExp が表示される', (tester) async {
+      final vm = PlayerViewModel(_MockPlayerRepo());
       await pumpZanshinDialog(
         tester,
         taskId: 'task-ui-3',
         inputBonusExp: 80,
+        vm: vm,
       );
 
       expect(find.textContaining('+80'), findsOneWidget);

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
-import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart';
 
@@ -18,7 +19,6 @@ class ZanshinDialog extends StatefulWidget {
   final int inputBonusExp;
   final VoidCallback onKaishin;
   final VoidCallback onImashime;
-  final Player? player;
 
   const ZanshinDialog({
     super.key,
@@ -28,7 +28,6 @@ class ZanshinDialog extends StatefulWidget {
     this.inputBonusExp = 50,
     required this.onKaishin,
     required this.onImashime,
-    this.player,
   });
 
   /// ダイアログを表示する。
@@ -40,7 +39,6 @@ class ZanshinDialog extends StatefulWidget {
     int inputBonusExp = 50,
     required VoidCallback onKaishin,
     required VoidCallback onImashime,
-    Player? player,
   }) =>
       showDialog<void>(
         context: context,
@@ -52,7 +50,6 @@ class ZanshinDialog extends StatefulWidget {
           inputBonusExp: inputBonusExp,
           onKaishin: onKaishin,
           onImashime: onImashime,
-          player: player,
         ),
       );
 
@@ -118,8 +115,12 @@ class _ZanshinDialogState extends State<ZanshinDialog> {
 
     await _repository.save(reflection);
 
-    // 知恵ポイント蓄積
-    widget.player?.wisdomPoints = (widget.player?.wisdomPoints ?? 0) + 1;
+    // 知恵ポイント蓄積（PlayerViewModel 委譲・v2.5.81イミュータブル化第十九段）
+    try {
+      context.read<PlayerViewModel>().addWisdomPoint();
+    } catch (_) {
+      // Provider ツリー外（防御: 本番では常にProvider配下で表示される）
+    }
 
     widget.onImashime();
 
