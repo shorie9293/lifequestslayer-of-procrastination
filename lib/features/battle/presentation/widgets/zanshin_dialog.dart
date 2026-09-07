@@ -20,6 +20,9 @@ class ZanshinDialog extends StatefulWidget {
   final VoidCallback onKaishin;
   final VoidCallback onImashime;
 
+  /// 振り返り保存先リポジトリ（テスト注入用）。null なら実 Hive を使用。
+  final ReflectionRepository? repository;
+
   const ZanshinDialog({
     super.key,
     required this.taskId,
@@ -28,6 +31,7 @@ class ZanshinDialog extends StatefulWidget {
     this.inputBonusExp = 50,
     required this.onKaishin,
     required this.onImashime,
+    this.repository,
   });
 
   /// ダイアログを表示する。
@@ -39,6 +43,7 @@ class ZanshinDialog extends StatefulWidget {
     int inputBonusExp = 50,
     required VoidCallback onKaishin,
     required VoidCallback onImashime,
+    ReflectionRepository? repository,
   }) =>
       showDialog<void>(
         context: context,
@@ -50,6 +55,7 @@ class ZanshinDialog extends StatefulWidget {
           inputBonusExp: inputBonusExp,
           onKaishin: onKaishin,
           onImashime: onImashime,
+          repository: repository,
         ),
       );
 
@@ -62,7 +68,13 @@ class _ZanshinDialogState extends State<ZanshinDialog> {
   final _contentController = TextEditingController();
   bool _isSaving = false;
 
-  final _repository = ReflectionRepository();
+  late final ReflectionRepository _repository;
+
+  @override
+  void initState() {
+    super.initState();
+    _repository = widget.repository ?? ReflectionRepository();
+  }
 
   @override
   void dispose() {

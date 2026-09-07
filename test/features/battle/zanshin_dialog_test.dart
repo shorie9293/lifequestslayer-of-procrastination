@@ -1,7 +1,5 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive/hive.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/player.dart';
@@ -11,7 +9,7 @@ import 'package:rpg_todo/features/battle/presentation/widgets/zanshin_dialog.dar
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 
-/// モックリポジトリ — 何もしない
+/// モックプレイヤーリポジトリ — 何もしない（実IOなし）
 class _MockPlayerRepo implements IPlayerRepository {
   @override
   Future<Player?> loadPlayer() async => null;
@@ -26,11 +24,41 @@ class _MockPlayerRepo implements IPlayerRepository {
   Future<void> close() async {}
 }
 
+/// 同期インメモリな振り返りリポジトリ。
+///
+/// 本物の ReflectionRepository は Hive（実ファイルIO）を使うため、
+/// testWidgets（FakeAsync ゾーン）内で await すると完了せず
+/// 「kaishin callback 未発火＋loadingハング」（P5日内変動型フレーク）を
+/// 引き起こす。widget 試験は同期フェイクに差し替え、実Hiveの保存整合性は
+/// reflection_repository_test（実Hive・16 GREEN）が担保する。
+class _FakeReflectionRepository extends ReflectionRepository {
+  final List<Reflection> _saved = [];
+
+  @override
+  Future<void> save(Reflection reflection) async {
+    _saved.removeWhere((r) => r.id == reflection.id);
+    _saved.add(reflection);
+  }
+
+  @override
+  Future<List<Reflection>> getAll() async => List.of(_saved);
+
+  @override
+  Future<int> getCount() async => _saved.length;
+
+  @override
+  Future<void> clearAll() async => _saved.clear();
+
+  @override
+  Future<void> close() async {}
+}
+
 /// Helper: show ZanshinDialog and settle animations.
 Future<void> pumpZanshinDialog(
   WidgetTester tester, {
   required String taskId,
   required PlayerViewModel vm,
+  required ReflectionRepository repository,
   String taskTitle = 'テスト討伐',
   QuestRank aiDifficulty = QuestRank.B,
   int inputBonusExp = 50,
@@ -55,6 +83,7 @@ Future<void> pumpZanshinDialog(
                   inputBonusExp: inputBonusExp,
                   onKaishin: onKaishin ?? () {},
                   onImashime: onImashime ?? () {},
+                  repository: repository,
                 );
               },
               child: const Text('Show'),
@@ -71,33 +100,13 @@ Future<void> pumpZanshinDialog(
 }
 
 void main() {
-  late String tempDir;
-  late ReflectionRepository repository;
-
-  setUp(() async {
-    tempDir = Directory.systemTemp.createTempSync('hive_test_').path;
-    Hive.init(tempDir);
-    if (!Hive.isAdapterRegistered(7)) {
-      Hive.registerAdapter(ReflectionAdapter());
-    }
-    repository = ReflectionRepository();
-  });
-
-  tearDown(() async {
-    await repository.clearAll();
-    await repository.close();
-    await Hive.close();
-    if (Directory(tempDir).existsSync()) {
-      Directory(tempDir).deleteSync(recursive: true);
-    }
-  });
-
   group('ZanshinDialog 会心選択', () {
     testWidgets('会心選択 → sentiment=kaishin で Reflection 保存', (tester) async {
       bool kaishinCalled = false;
       bool imashimeCalled = false;
 
       final vm = PlayerViewModel(_MockPlayerRepo());
+      final repository = _FakeReflectionRepository();
 
       await pumpZanshinDialog(
         tester,
@@ -106,6 +115,7 @@ void main() {
         onKaishin: () => kaishinCalled = true,
         onImashime: () => imashimeCalled = true,
         vm: vm,
+        repository: repository,
       );
 
       // 「会心」ボタンをタップ
@@ -130,11 +140,13 @@ void main() {
     testWidgets('会心選択では WisdomPoints 変化なし', (tester) async {
       final vm = PlayerViewModel(_MockPlayerRepo());
       vm.player = Player(currentJob: Job.samurai, wisdomPoints: 5);
+      final repository = _FakeReflectionRepository();
 
       await pumpZanshinDialog(
         tester,
         taskId: 'task-kaishin-wp',
         vm: vm,
+        repository: repository,
       );
 
       await tester.tap(find.text('会心 — 見事な太刀筋'));
@@ -151,6 +163,7 @@ void main() {
       bool imashimeCalled = false;
 
       final vm = PlayerViewModel(_MockPlayerRepo());
+      final repository = _FakeReflectionRepository();
 
       await pumpZanshinDialog(
         tester,
@@ -159,6 +172,7 @@ void main() {
         onKaishin: () => kaishinCalled = true,
         onImashime: () => imashimeCalled = true,
         vm: vm,
+        repository: repository,
       );
 
       // 「戒め」ボタンをタップ（入力画面に遷移）
@@ -195,12 +209,14 @@ void main() {
       bool imashimeCalled = false;
 
       final vm = PlayerViewModel(_MockPlayerRepo());
+      final repository = _FakeReflectionRepository();
 
       await pumpZanshinDialog(
         tester,
         taskId: 'task-imashime-empty',
         onImashime: () => imashimeCalled = true,
         vm: vm,
+        repository: repository,
       );
 
       // 「戒め」ボタンをタップ
@@ -226,11 +242,13 @@ void main() {
     testWidgets('WisdomPointsが戒め選択後に+1される', (tester) async {
       final vm = PlayerViewModel(_MockPlayerRepo());
       vm.player = Player(currentJob: Job.samurai, wisdomPoints: 3);
+      final repository = _FakeReflectionRepository();
 
       await pumpZanshinDialog(
         tester,
         taskId: 'task-imashime-wp',
         vm: vm,
+        repository: repository,
       );
 
       await tester.tap(find.text('戒め — 次に活かす'));
@@ -249,11 +267,13 @@ void main() {
   group('ZanshinDialog UI', () {
     testWidgets('タイトル「⚔️ 残心の刻」が表示される', (tester) async {
       final vm = PlayerViewModel(_MockPlayerRepo());
+      final repository = _FakeReflectionRepository();
       await pumpZanshinDialog(
         tester,
         taskId: 'task-ui-1',
         taskTitle: 'UIテスト',
         vm: vm,
+        repository: repository,
       );
 
       expect(find.text('⚔️ 残心の刻'), findsOneWidget);
@@ -261,11 +281,13 @@ void main() {
 
     testWidgets('クエスト名が表示される', (tester) async {
       final vm = PlayerViewModel(_MockPlayerRepo());
+      final repository = _FakeReflectionRepository();
       await pumpZanshinDialog(
         tester,
         taskId: 'task-ui-2',
         taskTitle: '特別なクエスト名',
         vm: vm,
+        repository: repository,
       );
 
       expect(find.textContaining('特別なクエスト名'), findsOneWidget);
@@ -273,11 +295,13 @@ void main() {
 
     testWidgets('inputBonusExp が表示される', (tester) async {
       final vm = PlayerViewModel(_MockPlayerRepo());
+      final repository = _FakeReflectionRepository();
       await pumpZanshinDialog(
         tester,
         taskId: 'task-ui-3',
         inputBonusExp: 80,
         vm: vm,
+        repository: repository,
       );
 
       expect(find.textContaining('+80'), findsOneWidget);
