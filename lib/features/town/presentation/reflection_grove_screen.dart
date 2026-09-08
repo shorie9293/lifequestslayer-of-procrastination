@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
+import 'package:rpg_todo/domain/models/reflection_analytics.dart';
 import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/domain/services/reflection_analytics_service.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -74,6 +76,12 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
     }
     return streak;
   }
+
+  /// #24: 残心の質的蓄積の月間/年間俯瞰（純粋解析サービスによる算出）。
+  ReflectionAnalytics get _analytics => ReflectionAnalyticsService.compute(
+        reflections: _reflections,
+        now: DateTime.now(),
+      );
 
   // ── 比較用データ ──
 
@@ -178,6 +186,12 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
                     // ── 統計概要カード ──
                     _buildStatsRow(),
                     const SizedBox(height: 20),
+
+                    // ── 月間/年間 俯瞰（残心の質的蓄積・#24） ──
+                    _buildSectionTitle('📅 月間・年間の俯瞰'),
+                    const SizedBox(height: 8),
+                    _MonthlyOverview(analytics: _analytics),
+                    const SizedBox(height: 24),
 
                     // ── 自己評価 vs AI推定 比較グラフ ──
                     _buildSectionTitle('📊 自己評価 vs AI推定 難易度比較'),
@@ -762,6 +776,150 @@ class _TrendChartPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _TrendChartPainter oldDelegate) =>
       oldDelegate.data != data;
+}
+
+// ── 月間/年間 俯瞰（#24 残心の質的蓄積ダッシュボード） ──
+
+/// 残心の蓄積を月間/年間で時系列俯瞰するためのカード群。
+class _MonthlyOverview extends StatelessWidget {
+  final ReflectionAnalytics analytics;
+
+  const _MonthlyOverview({required this.analytics});
+
+  @override
+  Widget build(BuildContext context) {
+    final buckets = analytics.lastMonths.length > 12
+        ? analytics.lastMonths.sublist(analytics.lastMonths.length - 12)
+        : analytics.lastMonths;
+    final maxCount =
+        buckets.fold<int>(0, (acc, b) => b.count > acc ? b.count : acc);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _overviewCard(
+          child: Row(
+            children: [
+              _kpi('本年', '${analytics.currentYearTotal}件',
+                  const Color(0xFF4CAF50)),
+              _kpi('前年', '${analytics.previousYearTotal}件',
+                  const Color(0xFFFFD700)),
+              _kpi('活動月', '${analytics.activeMonths}月',
+                  const Color(0xFF81C784)),
+              _kpi('月連続', '${analytics.currentMonthlyStreak}月',
+                  const Color(0xFFFF8A65)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        _overviewCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '月別の振り返り（直近12か月）',
+                style: TextStyle(fontSize: 12, color: Colors.white54),
+              ),
+              const SizedBox(height: 8),
+              ...buckets.map((b) => _monthBar(b, maxCount)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        _overviewCard(
+          child: Row(
+            children: [
+              _kpi('⚔️ 会心', '${analytics.sentiment.kaishin}',
+                  const Color(0xFFFFD700)),
+              _kpi('💧 戒め', '${analytics.sentiment.imashime}',
+                  const Color(0xFF64B5F6)),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _overviewCard({required Widget child}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _kpi(String label, String value, Color color) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10, color: Colors.white54),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _monthBar(ReflectionMonthlyCount bucket, int maxCount) {
+    final fraction = maxCount > 0 ? bucket.count / maxCount : 0.0;
+    final label = '${bucket.year % 100}/${bucket.month}';
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 44,
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 11, color: Colors.white54),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              height: 14,
+              decoration: BoxDecoration(
+                color: Colors.white10,
+                borderRadius: BorderRadius.circular(3),
+              ),
+              child: FractionallySizedBox(
+                alignment: Alignment.centerLeft,
+                widthFactor: fraction.clamp(0.0, 1.0).toDouble(),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF4CAF50).withValues(alpha: 0.75),
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          SizedBox(
+            width: 30,
+            child: Text(
+              '${bucket.count}',
+              textAlign: TextAlign.right,
+              style: const TextStyle(fontSize: 11, color: Colors.white70),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ── 振り返りログ タイル ──
