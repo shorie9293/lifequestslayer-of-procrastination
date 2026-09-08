@@ -300,7 +300,8 @@ class Player {
 
   // --- v5: スキルツリー ---
   /// 未使用のスキルポイント。冒険者Lv上昇時に獲得。
-  int skillPoints = 0;
+  /// イミュータブル化第二十一段でfinal化（純粋メソッド/copyWithのみで変更可能）。
+  final int skillPoints;
   /// 解放済みのスキルノードID一覧。
   /// イミュータブル化第十一段でfinal化（copyWithのみで変更可能）。
   final List<String> unlockedSkillIds;
@@ -807,39 +808,48 @@ class Player {
   ///
   /// [oldAdventurerLevel] はレベルアップ前の冒険者Lv。
   /// 計算式: max(0, (newLv - 2) ~/ 3) - max(0, (oldLv - 2) ~/ 3)
-  void awardSkillPointsOnLevelUp(int oldAdventurerLevel) {
+  /// イミュータブル化第二十一段: void変異 → Player返却の純粋化。
+  Player awardSkillPointsOnLevelUp(int oldAdventurerLevel) {
     final newLevel = jobLevels[Job.adventurer] ?? 1;
     final oldEarned = totalEarnedSkillPoints(oldAdventurerLevel);
     final newEarned = totalEarnedSkillPoints(newLevel);
     final delta = newEarned - oldEarned;
     if (delta > 0) {
-      skillPoints += delta;
+      return copyWith(skillPoints: skillPoints + delta);
     }
+    return this;
   }
 
   /// スキルノードを解放する。
   ///
   /// 戻り値: 解放に成功した場合は `true`。
   /// ポイント不足、前提条件未達成、または既解放の場合は `false`。
-  bool unlockSkillNode(String nodeId) {
+  /// イミュータブル化第二十一段: void変異 → (Player, bool)返却の純粋化。
+  (Player, bool) unlockSkillNode(String nodeId) {
     final node = skillTreeDefinition[nodeId];
-    if (node == null) return false;
-    if (unlockedSkillIds.contains(nodeId)) return false;
-    if (skillPoints < node.pointCost) return false;
+    if (node == null) return (this, false);
+    if (unlockedSkillIds.contains(nodeId)) return (this, false);
+    if (skillPoints < node.pointCost) return (this, false);
     for (final prereq in node.prerequisites) {
-      if (!unlockedSkillIds.contains(prereq)) return false;
+      if (!unlockedSkillIds.contains(prereq)) return (this, false);
     }
-    skillPoints -= node.pointCost;
-    unlockedSkillIds.add(nodeId);
-    return true;
+    return (
+      copyWith(
+        skillPoints: skillPoints - node.pointCost,
+        unlockedSkillIds: [...unlockedSkillIds, nodeId],
+      ),
+      true,
+    );
   }
 
   /// スキルポイントを冒険者Lvに基づいて再計算する。
   ///
   /// Hive v4→v5 移行時やデバッグ用途に使用。
-  void recalculateSkillPoints() {
+  /// イミュータブル化第二十一段: void変異 → Player返却の純粋化。
+  Player recalculateSkillPoints() {
     final advLevel = jobLevels[Job.adventurer] ?? 1;
-    skillPoints = availableSkillPoints(advLevel, unlockedSkillIds);
+    return copyWith(
+        skillPoints: availableSkillPoints(advLevel, unlockedSkillIds));
   }
 
   /// このノードが解放済みか。
@@ -954,50 +964,6 @@ class Player {
     return this;
   }
 
-  bool addExp(int amount) {
-    // レベル上限到達時はEXPを加算しない
-    int lvl = jobLevels[currentJob] ?? 1;
-    if (lvl >= maxLevel) return false;
-
-    int cExp = jobExps[currentJob] ?? 0;
-    cExp += amount;
-
-    // v5: 冒険者の場合、レベルアップ前のLvを記録（スキルポイント用）
-    final isAdventurer = currentJob == Job.adventurer;
-    final int oldAdvLevel = isAdventurer ? lvl : 0;
-
-    int expNext = expForLevel(lvl);
-    // v1.3: pow が double.maxFinite を超えた場合のガード
-    if (expNext >= double.maxFinite.toInt() || expNext <= 0) {
-      expNext = double.maxFinite.toInt() ~/ 2;
-    }
-
-    bool leveledUp = false;
-    while (cExp >= expNext && lvl < maxLevel) {
-      cExp -= expNext;
-      lvl++;
-      jobLevels[currentJob] = lvl;
-      expNext = expForLevel(lvl);
-      if (expNext >= double.maxFinite.toInt() || expNext <= 0) {
-        expNext = double.maxFinite.toInt() ~/ 2;
-      }
-      leveledUp = true;
-    }
-
-    // レベル上限到達時はEXPを上限値で固定
-    if (lvl >= maxLevel) {
-      cExp = 0;
-    }
-
-    jobExps[currentJob] = cExp;
-
-    // v5: 冒険者のレベルアップ時にスキルポイントを付与
-    if (isAdventurer && leveledUp) {
-      awardSkillPointsOnLevelUp(oldAdvLevel);
-    }
-
-    return leveledUp;
-  }
 
   Map<String, dynamic> toJson() => {
         'jobLevels': jobLevels.map((k, v) => MapEntry(k.name, v)),
@@ -1213,8 +1179,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
       if (version == 4) {
         _log('Migrating v4→v5 format');
         final player = _readV4(reader);
-        player.recalculateSkillPoints();
-        return player;
+        return player.recalculateSkillPoints();
       }
       if (version == 3) {
         _log('Migrating v3→v4 format');
@@ -1326,7 +1291,7 @@ class PlayerAdapter extends TypeAdapter<Player> {
 
     try {
       if (reader.availableBytes >= 4) {
-        player.skillPoints = reader.readInt();
+        player = player.copyWith(skillPoints: reader.readInt());
       }
     } catch (e) { _log('skillPoints read failed', e); }
     try {

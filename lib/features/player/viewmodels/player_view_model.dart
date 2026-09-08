@@ -172,7 +172,11 @@ class PlayerViewModel extends ChangeNotifier {
     });
   }
 
-  void addExp(int amount) { _player.addExp(amount); notifyListeners(); _autoSave(); }
+  void addExp(int amount) {
+    _player = _player.addExpPure(amount).$1;
+    notifyListeners();
+    _autoSave();
+  }
   void addGems(int amount) { _player = _player.copyWith(gems: _player.gems + amount); notifyListeners(); _autoSave(); }
   bool spendGems(int amount, {bool debugMode = false}) {
     if (debugMode) return true;

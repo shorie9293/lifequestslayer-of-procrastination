@@ -20,9 +20,9 @@ void main() {
     test('addExp でレベルアップする', () {
       final player = Player();
       // Lv1→2 には 50 EXP 必要
-      final leveledUp = player.addExp(50);
+      final (updated, leveledUp) = player.addExpPure(50);
       expect(leveledUp, true);
-      expect(player.level, 2);
+      expect(updated.level, 2);
     });
   });
 }

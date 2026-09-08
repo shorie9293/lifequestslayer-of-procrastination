@@ -223,11 +223,11 @@ void main() {
         jobExps: {Job.adventurer: 99}, // あと少しでLvUP
         currentJob: Job.adventurer,
       );
-      final leveledUp = player.addExp(1); // expNext for Lv2 = ~70
+      final (updated, leveledUp) = player.addExpPure(1); // expNext for Lv2 = ~70
 
       expect(leveledUp, true);
-      expect(player.skillPoints, 1);
-      expect(player.level, greaterThan(2));
+      expect(updated.skillPoints, 1);
+      expect(updated.level, greaterThan(2));
     });
 
     test('冒険者 Lv5 → Lv6 でさらに 1 ポイント（合計2）', () {
@@ -235,14 +235,14 @@ void main() {
         jobLevels: {Job.adventurer: 5},
         jobExps: {Job.adventurer: 0},
         currentJob: Job.adventurer,
+        skillPoints: 1, // Lv5 時点では1ポイント獲得済み
       );
-      player.skillPoints = 1; // Lv5 時点では1ポイント獲得済み
 
       // Lv5 の expNext ≈ 50*1.4^4 ≈ 192
-      final leveledUp = player.addExp(200);
+      final (updated, leveledUp) = player.addExpPure(200);
 
       expect(leveledUp, true);
-      expect(player.skillPoints, 2); // +1
+      expect(updated.skillPoints, 2); // +1
     });
 
     test('他職（Warrior）のレベルアップではスキルポイントは増えない', () {
@@ -259,10 +259,10 @@ void main() {
       );
 
       // Lv3 warrior → expNext ≈ 50*1.4^2 ≈ 98
-      final leveledUp = player.addExp(100);
+      final (updated, leveledUp) = player.addExpPure(100);
 
       expect(leveledUp, true);
-      expect(player.skillPoints, 0); // 冒険者ではないので増えない
+      expect(updated.skillPoints, 0); // 冒険者ではないので増えない
     });
   });
 
@@ -271,22 +271,25 @@ void main() {
   group('unlockSkillNode', () {
     test('ポイント十分 + 前提条件なし → 解放成功', () {
       final player = Player(jobLevels: {Job.adventurer: 3}, skillPoints: 2);
-      expect(player.unlockSkillNode('war_flash'), true);
-      expect(player.skillPoints, 0); // 2 - 2 = 0
-      expect(player.unlockedSkillIds, contains('war_flash'));
+      final (updated, ok) = player.unlockSkillNode('war_flash');
+      expect(ok, true);
+      expect(updated.skillPoints, 0); // 2 - 2 = 0
+      expect(updated.unlockedSkillIds, contains('war_flash'));
     });
 
     test('ポイント不足 → 失敗', () {
       final player = Player(skillPoints: 1);
-      expect(player.unlockSkillNode('war_flash'), false);
-      expect(player.skillPoints, 1);
-      expect(player.unlockedSkillIds, isEmpty);
+      final (updated, ok) = player.unlockSkillNode('war_flash');
+      expect(ok, false);
+      expect(updated.skillPoints, 1);
+      expect(updated.unlockedSkillIds, isEmpty);
     });
 
     test('前提条件未達成 → 失敗', () {
       final player = Player(skillPoints: 10);
-      expect(player.unlockSkillNode('war_combo'), false);
-      expect(player.skillPoints, 10);
+      final (updated, ok) = player.unlockSkillNode('war_combo');
+      expect(ok, false);
+      expect(updated.skillPoints, 10);
     });
 
     test('既解放済み → 失敗', () {
@@ -294,8 +297,9 @@ void main() {
         skillPoints: 5,
         unlockedSkillIds: ['war_flash'],
       );
-      expect(player.unlockSkillNode('war_flash'), false);
-      expect(player.skillPoints, 5);
+      final (updated, ok) = player.unlockSkillNode('war_flash');
+      expect(ok, false);
+      expect(updated.skillPoints, 5);
     });
 
     test('前提条件満たし → 成功', () {
@@ -303,14 +307,17 @@ void main() {
         skillPoints: 5,
         unlockedSkillIds: ['war_flash'],
       );
-      expect(player.unlockSkillNode('war_combo'), true);
-      expect(player.unlockedSkillIds, containsAll(['war_flash', 'war_combo']));
-      expect(player.skillPoints, 2); // 5 - 3 = 2
+      final (updated, ok) = player.unlockSkillNode('war_combo');
+      expect(ok, true);
+      expect(updated.unlockedSkillIds, containsAll(['war_flash', 'war_combo']));
+      expect(updated.skillPoints, 2); // 5 - 3 = 2
     });
 
     test('存在しないノードID → 失敗', () {
       final player = Player(skillPoints: 99);
-      expect(player.unlockSkillNode('nonexistent'), false);
+      final (updated, ok) = player.unlockSkillNode('nonexistent');
+      expect(ok, false);
+      expect(updated.skillPoints, 99);
     });
   });
 
@@ -322,8 +329,8 @@ void main() {
         jobLevels: {Job.adventurer: 3},
         skillPoints: 0,
       );
-      player.awardSkillPointsOnLevelUp(2);
-      expect(player.skillPoints, 1);
+      final updated = player.awardSkillPointsOnLevelUp(2);
+      expect(updated.skillPoints, 1);
     });
 
     test('Lv1→Lv3（複数Lv一気に） → delta は 1', () {
@@ -331,8 +338,8 @@ void main() {
         jobLevels: {Job.adventurer: 3},
         skillPoints: 0,
       );
-      player.awardSkillPointsOnLevelUp(1);
-      expect(player.skillPoints, 1); // 0→1
+      final updated = player.awardSkillPointsOnLevelUp(1);
+      expect(updated.skillPoints, 1); // 0→1
     });
 
     test('Lv5→Lv6 → +1（合計2）', () {
@@ -340,8 +347,8 @@ void main() {
         jobLevels: {Job.adventurer: 6},
         skillPoints: 1, // Lv5 時点
       );
-      player.awardSkillPointsOnLevelUp(5);
-      expect(player.skillPoints, 2);
+      final updated = player.awardSkillPointsOnLevelUp(5);
+      expect(updated.skillPoints, 2);
     });
 
     test('Lv2→Lv2（変化なし）→ delta 0', () {
@@ -349,8 +356,8 @@ void main() {
         jobLevels: {Job.adventurer: 2},
         skillPoints: 0,
       );
-      player.awardSkillPointsOnLevelUp(2);
-      expect(player.skillPoints, 0);
+      final updated = player.awardSkillPointsOnLevelUp(2);
+      expect(updated.skillPoints, 0);
     });
   });
 
@@ -362,8 +369,8 @@ void main() {
         jobLevels: {Job.adventurer: 6},
         skillPoints: 999, // corrupted
       );
-      player.recalculateSkillPoints();
-      expect(player.skillPoints, 2);
+      final updated = player.recalculateSkillPoints();
+      expect(updated.skillPoints, 2);
     });
 
     test('Lv6, war_flash 解放済み(2コスト) → 0', () {
@@ -372,8 +379,8 @@ void main() {
         unlockedSkillIds: ['war_flash'],
         skillPoints: 999,
       );
-      player.recalculateSkillPoints();
-      expect(player.skillPoints, 0);
+      final updated = player.recalculateSkillPoints();
+      expect(updated.skillPoints, 0);
     });
 
     test('Lv12 (4ポイント), war_flash+war_combo (5コスト) → -1', () {
@@ -381,9 +388,9 @@ void main() {
         jobLevels: {Job.adventurer: 12},
         unlockedSkillIds: ['war_flash', 'war_combo'],
       );
-      player.recalculateSkillPoints();
+      final updated = player.recalculateSkillPoints();
       // Lv12 → totalEarned = 12~/3 = 4, spent = 5 → -1
-      expect(player.skillPoints, -1);
+      expect(updated.skillPoints, -1);
     });
   });
 

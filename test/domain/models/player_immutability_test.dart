@@ -814,4 +814,63 @@ void main() {
       expect(p.coins, 100, reason: '元インスタンスは不変');
     });
   });
+
+  group('skillPoints final（段階返済第二十一段）', () {
+    test('コンストラクタで初期化でき copyWith で変更可能', () {
+      final p = Player(skillPoints: 3);
+      expect(p.skillPoints, 3);
+
+      final p2 = p.copyWith(skillPoints: 5);
+      expect(p2.skillPoints, 5);
+      expect(p.skillPoints, 3, reason: '元は不変');
+    });
+
+    test('awardSkillPointsOnLevelUp は純粋（元を不変・新インスタンス返却）', () {
+      final p = Player(jobLevels: {Job.adventurer: 3}, skillPoints: 0);
+      final updated = p.awardSkillPointsOnLevelUp(2);
+      expect(updated.skillPoints, 1);
+      expect(p.skillPoints, 0, reason: '元インスタンスは不変');
+      expect(identical(p, updated), isFalse);
+    });
+
+    test('unlockSkillNode は純粋（成功時 新インスタンス+true）', () {
+      final p = Player(jobLevels: {Job.adventurer: 3}, skillPoints: 2);
+      final (updated, ok) = p.unlockSkillNode('war_flash');
+      expect(ok, isTrue);
+      expect(updated.skillPoints, 0);
+      expect(updated.unlockedSkillIds, contains('war_flash'));
+      expect(p.skillPoints, 2, reason: '元インスタンスは不変');
+      expect(p.unlockedSkillIds, isEmpty, reason: '元インスタンスは不変');
+    });
+
+    test('unlockSkillNode は失敗時 元と同値+false', () {
+      final p = Player(skillPoints: 1);
+      final (updated, ok) = p.unlockSkillNode('war_flash');
+      expect(ok, isFalse);
+      expect(updated.skillPoints, 1);
+      expect(p.unlockedSkillIds, isEmpty);
+    });
+
+    test('recalculateSkillPoints は純粋（元を不変）', () {
+      final p = Player(
+        jobLevels: {Job.adventurer: 6},
+        skillPoints: 999,
+      );
+      final updated = p.recalculateSkillPoints();
+      expect(updated.skillPoints, 2);
+      expect(p.skillPoints, 999, reason: '元インスタンスは不変');
+    });
+
+    test('addExpPure はスキルポイント付与を copyWith で行う（元は不変）', () {
+      final p = Player(
+        jobLevels: {Job.adventurer: 2},
+        jobExps: {Job.adventurer: 99},
+        currentJob: Job.adventurer,
+      );
+      final (updated, leveledUp) = p.addExpPure(1);
+      expect(leveledUp, isTrue);
+      expect(updated.skillPoints, 1);
+      expect(p.skillPoints, 0, reason: '元インスタンスは不変');
+    });
+  });
 }

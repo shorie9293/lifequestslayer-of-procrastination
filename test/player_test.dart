@@ -64,30 +64,30 @@ void main() {
     test('EXP獲得でレベルアップする', () {
       final player = Player();
       expect(player.level, 1);
-      final leveledUp = player.addExp(50); // Lv1→2は50EXP
+      final (updated, leveledUp) = player.addExpPure(50); // Lv1→2は50EXP
       expect(leveledUp, true);
-      expect(player.level, 2);
+      expect(updated.level, 2);
     });
 
     test('EXP不足ではレベルアップしない', () {
       final player = Player();
-      final leveledUp = player.addExp(49);
+      final (updated, leveledUp) = player.addExpPure(49);
       expect(leveledUp, false);
-      expect(player.level, 1);
+      expect(updated.level, 1);
     });
 
     // v1.3: レベル上限テスト
     test('レベル上限（Lv.99）到達後はEXPを加算しない', () {
       final player = Player(jobLevels: {Job.adventurer: 99});
-      final leveledUp = player.addExp(999999);
+      final (updated, leveledUp) = player.addExpPure(999999);
       expect(leveledUp, false);
-      expect(player.level, 99);
+      expect(updated.level, 99);
     });
 
     test('巨大EXPを与えても無限ループしない', () {
       final player = Player();
       // 非常に大きいEXPを与えてもクラッシュ・無限ループしないこと
-      final leveledUp = player.addExp(1000000000);
+      final (_, leveledUp) = player.addExpPure(1000000000);
       expect(leveledUp, isA<bool>());
       // レベル上限を超えないこと
       expect(player.level, lessThanOrEqualTo(Player.maxLevel));
