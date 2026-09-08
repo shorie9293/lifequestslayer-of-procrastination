@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
-import 'package:rpg_todo/domain/services/reflection_badge_service.dart';
+import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart';
 
@@ -94,14 +95,18 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
 
     // プレイヤーが指定されていれば内省バッジをチェック
     if (widget.player != null) {
-      widget.player!.recordReflection();
       final badgeMessages = <String>[];
-      await ReflectionBadgeService.checkBadges(
-        widget.player!,
-        badgeMessages,
-        repository: _repository,
-        latestReflection: reflection,
-      );
+      // PlayerViewModel 委譲（イミュータブル化第二十二段）。
+      // recordReflection 純粋化＋checkBadges copyWith化は VM が担う。
+      try {
+        await context.read<PlayerViewModel>().checkReflectionBadges(
+          repository: _repository,
+          latestReflection: reflection,
+          bonusMessages: badgeMessages,
+        );
+      } catch (_) {
+        // Provider ツリー外（防御: 本番では常にProvider配下で表示される）
+      }
       // バッジ獲得メッセージがあれば onSaved の前に SnackBar で通知
       if (badgeMessages.isNotEmpty && mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

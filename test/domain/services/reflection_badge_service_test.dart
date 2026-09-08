@@ -77,7 +77,7 @@ void main() {
       }
     });
 
-    test('requiresRepositoryがtrueのバッジは5つ', () {
+    test('requiresRepositoryがtrueのバッジは4つ', () {
       final repoBadges =
           kAllReflectionBadges.where((b) => b.requiresRepository);
       expect(repoBadges.length, 4);
@@ -86,162 +86,147 @@ void main() {
 
   group('ReflectionBadgeService - カウント系バッジ', () {
     test('初回の振り返りで first_reflection を獲得', () async {
-      final player = Player();
+      final player = Player(totalReflections: 1);
       final messages = <String>[];
 
-      player.recordReflection();
-      await ReflectionBadgeService.checkBadges(player, messages);
+      final updated = await ReflectionBadgeService.checkBadges(player, messages);
 
-      expect(player.reflectionBadges.contains('first_reflection'), true);
+      expect(updated.reflectionBadges.contains('first_reflection'), true);
       expect(messages.any((m) => m.contains('初めての内省')), true);
     });
 
     test('5回の振り返りで reflection_novice を獲得', () async {
-      final player = Player();
+      final player = Player(totalReflections: 5);
       final messages = <String>[];
 
-      for (int i = 0; i < 5; i++) {
-        player.recordReflection();
-      }
-      await ReflectionBadgeService.checkBadges(player, messages);
+      final updated = await ReflectionBadgeService.checkBadges(player, messages);
 
-      expect(player.reflectionBadges.contains('reflection_novice'), true);
-      expect(player.reflectionBadges.contains('first_reflection'), true);
+      expect(updated.reflectionBadges.contains('reflection_novice'), true);
+      expect(updated.reflectionBadges.contains('first_reflection'), true);
     });
 
     test('20回の振り返りで reflection_adept を獲得', () async {
-      final player = Player();
+      final player = Player(totalReflections: 20);
       final messages = <String>[];
 
-      for (int i = 0; i < 20; i++) {
-        player.recordReflection();
-      }
-      await ReflectionBadgeService.checkBadges(player, messages);
+      final updated = await ReflectionBadgeService.checkBadges(player, messages);
 
-      expect(player.reflectionBadges.contains('reflection_adept'), true);
+      expect(updated.reflectionBadges.contains('reflection_adept'), true);
     });
 
     test('50回の振り返りで reflection_sage を獲得', () async {
-      final player = Player();
+      final player = Player(totalReflections: 50);
       final messages = <String>[];
 
-      for (int i = 0; i < 50; i++) {
-        player.recordReflection();
-      }
-      await ReflectionBadgeService.checkBadges(player, messages);
+      final updated = await ReflectionBadgeService.checkBadges(player, messages);
 
-      expect(player.reflectionBadges.contains('reflection_sage'), true);
+      expect(updated.reflectionBadges.contains('reflection_sage'), true);
     });
 
     test('100回の振り返りで reflection_master を獲得', () async {
-      final player = Player();
+      final player = Player(totalReflections: 100);
       final messages = <String>[];
 
-      for (int i = 0; i < 100; i++) {
-        player.recordReflection();
-      }
-      await ReflectionBadgeService.checkBadges(player, messages);
+      final updated = await ReflectionBadgeService.checkBadges(player, messages);
 
-      expect(player.reflectionBadges.contains('reflection_master'), true);
+      expect(updated.reflectionBadges.contains('reflection_master'), true);
     });
 
     test('既に獲得済みのバッジは重複メッセージが出ない', () async {
-      final player = Player()..reflectionBadges = ['first_reflection'];
-      player.recordReflection();
+      final player = Player(
+        totalReflections: 1,
+        reflectionBadges: ['first_reflection'],
+      );
       final messages = <String>[];
 
-      await ReflectionBadgeService.checkBadges(player, messages);
+      final updated = await ReflectionBadgeService.checkBadges(player, messages);
 
       expect(messages.any((m) => m.contains('初めての内省')), false);
+      expect(updated.reflectionBadges, ['first_reflection']);
     });
   });
 
   group('ReflectionBadgeService - コンテンツ系バッジ', () {
     test('50文字以上の内容で first_insight を獲得', () async {
-      final player = Player();
+      final player = Player(totalReflections: 1);
       final messages = <String>[];
 
       final reflection = await createReflection(
         content: 'これは50文字以上の振り返り内容です。十分な長さがあれば内省バッジが獲得できます。テスト用の長文です。',
       );
 
-      player.recordReflection();
-      await ReflectionBadgeService.checkBadges(
+      final updated = await ReflectionBadgeService.checkBadges(
         player, messages,
         latestReflection: reflection,
       );
 
-      expect(player.reflectionBadges.contains('first_insight'), true);
+      expect(updated.reflectionBadges.contains('first_insight'), true);
     });
 
     test('短い内容では first_insight を獲得できない', () async {
-      final player = Player();
+      final player = Player(totalReflections: 1);
       final messages = <String>[];
 
       final reflection = await createReflection(content: '短い');
 
-      player.recordReflection();
-      await ReflectionBadgeService.checkBadges(
+      final updated = await ReflectionBadgeService.checkBadges(
         player, messages,
         latestReflection: reflection,
       );
 
-      expect(player.reflectionBadges.contains('first_insight'), false);
+      expect(updated.reflectionBadges.contains('first_insight'), false);
     });
 
     test('100文字以上の内容で deep_insight を獲得', () async {
-      final player = Player();
+      final player = Player(totalReflections: 1);
       final messages = <String>[];
 
       final reflection = await createReflection(
         content: 'A' * 100,
       );
 
-      player.recordReflection();
-      await ReflectionBadgeService.checkBadges(
+      final updated = await ReflectionBadgeService.checkBadges(
         player, messages,
         latestReflection: reflection,
       );
 
-      expect(player.reflectionBadges.contains('deep_insight'), true);
+      expect(updated.reflectionBadges.contains('deep_insight'), true);
     });
   });
 
   group('ReflectionBadgeService - 自己評価系バッジ', () {
     test('自己評価4以上で honest_assessor を獲得', () async {
-      final player = Player();
+      final player = Player(totalReflections: 1);
       final messages = <String>[];
 
       final reflection = await createReflection(selfDifficulty: 4);
 
-      player.recordReflection();
-      await ReflectionBadgeService.checkBadges(
+      final updated = await ReflectionBadgeService.checkBadges(
         player, messages,
         latestReflection: reflection,
       );
 
-      expect(player.reflectionBadges.contains('honest_assessor'), true);
+      expect(updated.reflectionBadges.contains('honest_assessor'), true);
     });
 
     test('自己評価3以下では honest_assessor を獲得できない', () async {
-      final player = Player();
+      final player = Player(totalReflections: 1);
       final messages = <String>[];
 
       final reflection = await createReflection(selfDifficulty: 3);
 
-      player.recordReflection();
-      await ReflectionBadgeService.checkBadges(
+      final updated = await ReflectionBadgeService.checkBadges(
         player, messages,
         latestReflection: reflection,
       );
 
-      expect(player.reflectionBadges.contains('honest_assessor'), false);
+      expect(updated.reflectionBadges.contains('honest_assessor'), false);
     });
   });
 
   group('ReflectionBadgeService - ストリーク系バッジ', () {
     test('3日連続で streak_3 を獲得', () async {
-      final player = Player();
+      final player = Player(totalReflections: 3);
       final messages = <String>[];
       final now = DateTime.now();
 
@@ -250,19 +235,16 @@ void main() {
       await createReflection(id: 's2', date: now.subtract(const Duration(days: 1)));
       await createReflection(id: 's3', date: now);
 
-      player.recordReflection();
-      player.recordReflection();
-      player.recordReflection();
-      await ReflectionBadgeService.checkBadges(
+      final updated = await ReflectionBadgeService.checkBadges(
         player, messages,
         repository: repository,
       );
 
-      expect(player.reflectionBadges.contains('streak_3'), true);
+      expect(updated.reflectionBadges.contains('streak_3'), true);
     });
 
     test('7日連続で streak_7 を獲得', () async {
-      final player = Player();
+      final player = Player(totalReflections: 7);
       final messages = <String>[];
       final now = DateTime.now();
 
@@ -271,20 +253,19 @@ void main() {
           id: 's7_$i',
           date: now.subtract(Duration(days: i)),
         );
-        player.recordReflection();
       }
 
-      await ReflectionBadgeService.checkBadges(
+      final updated = await ReflectionBadgeService.checkBadges(
         player, messages,
         repository: repository,
       );
 
-      expect(player.reflectionBadges.contains('streak_7'), true);
-      expect(player.reflectionBadges.contains('streak_3'), true);
+      expect(updated.reflectionBadges.contains('streak_7'), true);
+      expect(updated.reflectionBadges.contains('streak_3'), true);
     });
 
     test('連続していない振り返りでは streak_3 を獲得できない', () async {
-      final player = Player();
+      final player = Player(totalReflections: 3);
       final messages = <String>[];
       final now = DateTime.now();
 
@@ -293,22 +274,18 @@ void main() {
       await createReflection(id: 'g2', date: now.subtract(const Duration(days: 2)));
       await createReflection(id: 'g3', date: now);
 
-      player.recordReflection();
-      player.recordReflection();
-      player.recordReflection();
-
-      await ReflectionBadgeService.checkBadges(
+      final updated = await ReflectionBadgeService.checkBadges(
         player, messages,
         repository: repository,
       );
 
-      expect(player.reflectionBadges.contains('streak_3'), false);
+      expect(updated.reflectionBadges.contains('streak_3'), false);
     });
   });
 
   group('ReflectionBadgeService - self_awareness', () {
     test('AI難易度と自己評価が3回一致で self_awareness を獲得', () async {
-      final player = Player();
+      final player = Player(totalReflections: 3);
       final messages = <String>[];
 
       // AI=S(5), self=5 → 一致
@@ -318,57 +295,52 @@ void main() {
       // AI=B(1), self=1 → 一致
       await createReflection(id: 'a3', selfDifficulty: 1, aiDifficulty: QuestRank.B);
 
-      player.recordReflection();
-      player.recordReflection();
-      player.recordReflection();
-
-      await ReflectionBadgeService.checkBadges(
+      final updated = await ReflectionBadgeService.checkBadges(
         player, messages,
         repository: repository,
       );
 
-      expect(player.reflectionBadges.contains('self_awareness'), true);
+      expect(updated.reflectionBadges.contains('self_awareness'), true);
     });
 
     test('一致が2回では self_awareness を獲得できない', () async {
-      final player = Player();
+      final player = Player(totalReflections: 3);
       final messages = <String>[];
 
       await createReflection(id: 'm1', selfDifficulty: 5, aiDifficulty: QuestRank.S);
       await createReflection(id: 'm2', selfDifficulty: 3, aiDifficulty: QuestRank.A);
       await createReflection(id: 'm3', selfDifficulty: 3, aiDifficulty: QuestRank.S); // 不一致
 
-      player.recordReflection();
-      player.recordReflection();
-      player.recordReflection();
-
-      await ReflectionBadgeService.checkBadges(
+      final updated = await ReflectionBadgeService.checkBadges(
         player, messages,
         repository: repository,
       );
 
-      expect(player.reflectionBadges.contains('self_awareness'), false);
+      expect(updated.reflectionBadges.contains('self_awareness'), false);
     });
   });
 
   group('Player model integration', () {
-    test('Player.recordReflection で totalReflections が増える', () {
+    test('Player.recordReflection は新インスタンスを返し totalReflections が増える', () {
       final player = Player();
       expect(player.totalReflections, 0);
 
-      player.recordReflection();
-      expect(player.totalReflections, 1);
+      final r1 = player.recordReflection();
+      expect(r1.totalReflections, 1);
+      expect(player.totalReflections, 0, reason: '元インスタンスは不変');
 
-      player.recordReflection();
-      expect(player.totalReflections, 2);
+      final r2 = r1.recordReflection();
+      expect(r2.totalReflections, 2);
+      expect(r1.totalReflections, 1, reason: '元インスタンスは不変');
     });
 
     test('Player Hive roundtrip with v6 fields', () async {
       final box = await Hive.openBox<Player>('test_player_v6');
 
-      final player = Player()
-        ..totalReflections = 42
-        ..reflectionBadges = ['first_reflection', 'streak_3'];
+      final player = Player(
+        totalReflections: 42,
+        reflectionBadges: ['first_reflection', 'streak_3'],
+      );
 
       await box.put('p1', player);
       final loaded = box.get('p1');

@@ -9,7 +9,7 @@ import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 /// [TitleService] と同様のパターンで、プレイヤーの状態と振り返り履歴を
 /// 照合してバッジ獲得を判定する。
 class ReflectionBadgeService {
-  /// 全バッジをチェックし、新たに獲得したバッジをプレイヤーに追加する。
+  /// 全バッジをチェックし、新たに獲得したバッジを反映した新インスタンスを返す。
   /// 獲得したバッジがあれば、[bonusMessages] にメッセージを追加する。
   ///
   /// [repository] は [requiresRepository]=true のバッジ判定にのみ使用される。
@@ -18,7 +18,9 @@ class ReflectionBadgeService {
   /// [latestReflection] は直近に保存された振り返り。
   /// コンテンツ系バッジ（first_insight, deep_insight, honest_assessor）の
   /// 判定に使用される。
-  static Future<void> checkBadges(
+  ///
+  /// イミュータブル化第二十二段で純粋化（copyWith返却）。引数 [player] は不変。
+  static Future<Player> checkBadges(
     Player player,
     List<String> bonusMessages, {
     ReflectionRepository? repository,
@@ -30,15 +32,24 @@ class ReflectionBadgeService {
       allReflections = await repository.getAll();
     }
 
+    final earnedIds = <String>[];
     for (final def in kAllReflectionBadges) {
-      await _unlockBadge(player, def, bonusMessages,
+      final earnedId = await _unlockBadge(player, def, bonusMessages,
           repository: repository, allReflections: allReflections,
           latestReflection: latestReflection);
+      if (earnedId != null) {
+        earnedIds.add(earnedId);
+      }
     }
+    if (earnedIds.isEmpty) return player;
+    return player.copyWith(
+      reflectionBadges: [...player.reflectionBadges, ...earnedIds],
+    );
   }
 
-  /// 単一バッジの獲得判定。
-  static Future<void> _unlockBadge(
+  /// 単一バッジの獲得判定。獲得した場合はそのバッジIDを、しない場合は null を返す。
+  /// 純粋関数（引数の [player] は変更しない）。メッセージは [messages] に追加する。
+  static Future<String?> _unlockBadge(
     Player player,
     ReflectionBadgeDefinition def,
     List<String> messages, {
@@ -47,7 +58,7 @@ class ReflectionBadgeService {
     Reflection? latestReflection,
   }) async {
     // 既に獲得済みならスキップ
-    if (player.reflectionBadges.contains(def.id)) return;
+    if (player.reflectionBadges.contains(def.id)) return null;
 
     final bool earned;
     switch (def.id) {
@@ -91,9 +102,10 @@ class ReflectionBadgeService {
     }
 
     if (earned) {
-      player.reflectionBadges.add(def.id);
       messages.add('🏅 内省バッジ獲得：${def.icon} ${def.name}');
+      return def.id;
     }
+    return null;
   }
 
   /// 連続日数 [requiredDays] を達成しているか。

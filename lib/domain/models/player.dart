@@ -308,9 +308,11 @@ class Player {
 
   // --- v6: 内省バッジシステム ---
   /// 累計振り返り回数。
-  int totalReflections = 0;
+  /// イミュータブル化第二十二段でfinal化（recordReflection純粋化・copyWithのみで変更可能）。
+  final int totalReflections;
   /// 獲得済み内省バッジID一覧。
-  List<String> reflectionBadges = [];
+  /// イミュータブル化第二十二段でfinal化（copyWithのみで変更可能）。
+  final List<String> reflectionBadges;
 
   /// T9: 集中の型 — ポモドーロセッションがアクティブか
   bool get isPomodoroActive {
@@ -858,9 +860,8 @@ class Player {
   // --- v6: 内省バッジ ---
 
   /// 振り返りを1回記録する。
-  void recordReflection() {
-    totalReflections++;
-  }
+  /// イミュータブル化第二十二段で純粋化（copyWith返却）。呼出側は再代入せよ。
+  Player recordReflection() => copyWith(totalReflections: totalReflections + 1);
 
   /// イミュータブル化第十六段: addExp の純粋版。
   /// 引数を破壊的変更せず、EXP加算・レベルアップ・スキルポイント付与を
@@ -1265,14 +1266,15 @@ class PlayerAdapter extends TypeAdapter<Player> {
 
     try {
       if (reader.availableBytes >= 4) {
-        player.totalReflections = reader.readInt();
+        player = player.copyWith(totalReflections: reader.readInt());
       }
     } catch (e) { _log('totalReflections read failed', e); }
     try {
       if (reader.availableBytes > 0) {
         final raw = reader.readList();
-        player.reflectionBadges =
-            (raw as List?)?.cast<String>() ?? [];
+        player = player.copyWith(
+          reflectionBadges: (raw as List?)?.cast<String>() ?? [],
+        );
       }
     } catch (e) { _log('reflectionBadges read failed', e); }
 

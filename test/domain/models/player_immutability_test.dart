@@ -873,4 +873,51 @@ void main() {
       expect(p.skillPoints, 0, reason: '元インスタンスは不変');
     });
   });
+
+  group('totalReflections/reflectionBadges final（段階返済第二十二段）', () {
+    test('コンストラクタで初期化でき copyWith で変更可能', () {
+      final p = Player(
+        totalReflections: 7,
+        reflectionBadges: ['first_reflection'],
+      );
+      expect(p.totalReflections, 7);
+      expect(p.reflectionBadges, ['first_reflection']);
+
+      final p2 = p.copyWith(
+        totalReflections: 8,
+        reflectionBadges: ['first_reflection', 'streak_3'],
+      );
+      expect(p2.totalReflections, 8);
+      expect(p2.reflectionBadges, ['first_reflection', 'streak_3']);
+      expect(p.totalReflections, 7, reason: '元は不変');
+      expect(p.reflectionBadges, ['first_reflection'], reason: '元は不変');
+    });
+
+    test('デフォルトは totalReflections=0 / reflectionBadges=空', () {
+      final p = Player();
+      expect(p.totalReflections, 0);
+      expect(p.reflectionBadges, isEmpty);
+    });
+
+    test('recordReflection は純粋（元を不変・新インスタンス返却）', () {
+      final p = Player();
+      final updated = p.recordReflection();
+      expect(updated.totalReflections, 1);
+      expect(p.totalReflections, 0, reason: '元インスタンスは不変');
+      expect(identical(p, updated), isFalse);
+    });
+
+    test('copyWith後も元インスタンスの reflectionBadges リストは不変', () {
+      final p = Player(
+        totalReflections: 3,
+        reflectionBadges: ['first_reflection'],
+      );
+      final p2 = p.copyWith(
+        reflectionBadges: ['first_reflection', 'reflection_novice'],
+      );
+      expect(p2.reflectionBadges, ['first_reflection', 'reflection_novice']);
+      expect(p.reflectionBadges, ['first_reflection'], reason: '元は不変');
+      expect(p.totalReflections, 3, reason: '元は不変');
+    });
+  });
 }

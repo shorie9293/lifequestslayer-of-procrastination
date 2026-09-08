@@ -76,9 +76,9 @@ class PlayerViewModel extends ChangeNotifier {
     required Reflection latestReflection,
     List<String>? bonusMessages,
   }) async {
-    _player.recordReflection();
+    _player = _player.recordReflection();
     final messages = bonusMessages ?? <String>[];
-    await ReflectionBadgeService.checkBadges(
+    _player = await ReflectionBadgeService.checkBadges(
       _player,
       messages,
       repository: repository,
