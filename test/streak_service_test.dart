@@ -45,10 +45,12 @@ void main() {
       expect(StreakService.calcStreakReward(10), 0);
     });
 
-    test('calcStreakReward - 100日超は10000', () {
-      expect(StreakService.calcStreakReward(31), 5000);
-      expect(StreakService.calcStreakReward(61), 8000);
-      expect(StreakService.calcStreakReward(101), 10000);
+    test('calcStreakReward - マイルストーン超過日は0（毎日再付与されない）', () {
+      expect(StreakService.calcStreakReward(31), 0);
+      expect(StreakService.calcStreakReward(59), 0);
+      expect(StreakService.calcStreakReward(61), 0);
+      expect(StreakService.calcStreakReward(99), 0);
+      expect(StreakService.calcStreakReward(101), 0);
     });
   });
 
