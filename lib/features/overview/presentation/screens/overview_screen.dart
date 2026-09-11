@@ -4,6 +4,7 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/overview/domain/overview_service.dart';
+import 'package:rpg_todo/features/overview/presentation/widgets/growth_trajectory_chart.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
@@ -22,7 +23,7 @@ class OverviewScreen extends StatelessWidget {
     }
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('俯瞰の魔眼'),
@@ -43,6 +44,7 @@ class OverviewScreen extends StatelessWidget {
             tabs: [
               Tab(text: 'カレンダー'),
               Tab(text: 'カンバン'),
+              Tab(text: '成長'),
             ],
           ),
         ),
@@ -55,6 +57,7 @@ class OverviewScreen extends StatelessWidget {
               children: [
                 _CalendarView(tasks: allTasks, service: service),
                 _KanbanView(tasks: allTasks, service: service),
+                const GrowthTrajectoryTab(),
               ],
             );
           },
