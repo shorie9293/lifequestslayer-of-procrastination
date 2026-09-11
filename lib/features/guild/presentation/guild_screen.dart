@@ -15,6 +15,7 @@ import 'widgets/task_card.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/features/kozuchi/presentation/widgets/kozuchi_quest_card.dart';
+import 'package:rpg_todo/features/habits/presentation/screens/habit_calendar_screen.dart';
 import 'dialogs/tutorial_reset_dialog.dart';
 import 'dialogs/create_task_dialog.dart';
 import 'dialogs/bulk_create_task_dialog.dart';
@@ -406,7 +407,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.10+106", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.11+107", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -443,6 +444,20 @@ class _GuildScreenState extends State<GuildScreen> {
                 },
               ),
             ),
+          SemanticHelper.interactive(
+            testId: SemanticHelper.createTestId(SemanticTypes.button, 'habit_calendar'),
+            label: '勤行の習慣カレンダー',
+            child: IconButton(
+              key: AppKeys.habitCalendarEntry,
+              icon: const Icon(Icons.calendar_month),
+              tooltip: '勤行の習慣カレンダー',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => const HabitCalendarScreen(),
+                ),
+              ),
+            ),
+          ),
           PopupMenuButton<String>(
             key: AppKeys.settingsButton,
             icon: const Icon(Icons.settings),

@@ -24,6 +24,12 @@ class AppKeys {
   static const Key guildUrgentSection = Key('sec_urgent_quests');
   static const Key urgentDelete = Key('btn_urgent_delete_task');
 
+  // ━━━ 勤行の習慣カレンダー（#31） ━━━
+  static const Key habitCalendarEntry = Key('btn_habit_calendar_entry');
+  static const Key habitCalendarScreen = Key('screen_habit_calendar');
+  static const Key habitPrevMonth = Key('btn_habit_prev_month');
+  static const Key habitNextMonth = Key('btn_habit_next_month');
+
   // ━━━ 認証 ━━━
   static const Key continueOffline = Key('btn_continue_offline');
   static const Key offlineBanner = Key('banner_offline');
