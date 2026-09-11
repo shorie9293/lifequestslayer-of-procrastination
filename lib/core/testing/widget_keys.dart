@@ -145,6 +145,18 @@ class AppKeys {
   static const Key townEventTitle = Key('txt_event_title');
   static const Key townEventDescription = Key('txt_event_description');
 
+  // ━━━ 集中の型（ポモドーロタイマー） ━━━
+  static const Key pomodoroEntry = Key('btn_pomodoro_entry');
+  static const Key pomodoroScreen = Key('screen_pomodoro');
+  static const Key pomodoroTime = Key('txt_pomodoro_time');
+  static const Key pomodoroPhaseLabel = Key('txt_pomodoro_phase');
+  static const Key pomodoroProgress = Key('ind_pomodoro_progress');
+  static const Key pomodoroStartPause = Key('btn_pomodoro_start_pause');
+  static const Key pomodoroReset = Key('btn_pomodoro_reset');
+  static const Key pomodoroSkip = Key('btn_pomodoro_skip');
+  static const Key pomodoroSessionCount = Key('txt_pomodoro_sessions');
+  static const Key pomodoroSkillStatus = Key('txt_pomodoro_skill_status');
+
   // ━━━ 汎用 ━━━
   static const Key backButton = Key('btn_back');
   static const Key closeButton = Key('btn_close');

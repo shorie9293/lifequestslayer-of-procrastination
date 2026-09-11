@@ -7,6 +7,7 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/domain/services/data_export_service.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
+import 'package:rpg_todo/features/temple/presentation/pomodoro_timer_screen.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class TempleScreen extends StatelessWidget {
@@ -32,6 +33,14 @@ class TempleScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('寺院'),
         actions: [
+          IconButton(
+            key: AppKeys.pomodoroEntry,
+            icon: const Icon(Icons.timer_outlined),
+            tooltip: '集中の型（ポモドーロ）',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const PomodoroTimerScreen()),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.help_outline),
             tooltip: '神託補佐（ヘルプ）',

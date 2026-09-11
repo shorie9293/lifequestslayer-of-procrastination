@@ -193,6 +193,28 @@ class PlayerViewModel extends ChangeNotifier {
   void incrementWeeklySRank() { _player = _player.copyWith(weeklySRankCompleted: _player.weeklySRankCompleted + 1); notifyListeners(); _autoSave(); }
   void setNextDayTaskLimitOffset(int v) { _player = _player.copyWith(nextDayTaskLimitOffset: v); notifyListeners(); _autoSave(); }
 
+  // ── 集中の型（ポモドーロ）──
+  /// 集中セッションを開始する。勤行のEXPボーナス（集中の型）は
+  /// `isPomodoroActive` が真の間にタスクを完了した場合に発生する。
+  /// 既に稼働中なら何もしない（タイマー画面の再入場で延長しないため）。
+  void startPomodoroSession() {
+    if (_player.isPomodoroActive) return;
+    _player = _player.startPomodoro();
+    notifyListeners();
+    _autoSave();
+  }
+
+  /// 集中セッションを終了する（未開始なら何もしない）。
+  void endPomodoroSession() {
+    if (_player.pomodoroStartTime == null) return;
+    _player = _player.endPomodoro();
+    notifyListeners();
+    _autoSave();
+  }
+
+  /// 集中セッションが稼働中かどうか（勤行EXPボーナスの前提）。
+  bool get isPomodoroActive => _player.isPomodoroActive;
+
   void changeJob(Job j, {bool debugMode = false}) {
     if (debugMode) {
       _player = _player.copyWith(currentJob: j);
