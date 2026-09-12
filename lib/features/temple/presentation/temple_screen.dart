@@ -8,6 +8,7 @@ import 'package:rpg_todo/domain/services/data_export_service.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/features/temple/presentation/pomodoro_timer_screen.dart';
+import 'package:rpg_todo/domain/services/skill_progression_service.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class TempleScreen extends StatelessWidget {
@@ -135,6 +136,10 @@ class TempleScreen extends StatelessWidget {
             // ━━━ 現在の職業スキル一覧 ━━━
             const SizedBox(height: 16),
             _buildCurrentJobSkillsSection(playerVM, player, currentJobSkills),
+
+            // ━━━ 修行の道標（スキル/ジョブ進捗の俯瞰） ━━━
+            const SizedBox(height: 16),
+            _buildSkillProgressionCard(player),
 
             // ━━━ バックアップ/復元 ━━━
             const SizedBox(height: 16),
@@ -448,6 +453,132 @@ class TempleScreen extends StatelessWidget {
               ),
             );
           }),
+        ],
+      ),
+    );
+  }
+
+  /// 修行の道標 — スキルツリーとジョブ習得の進捗俯瞰（道標§五 #30）。
+  Widget _buildSkillProgressionCard(Player player) {
+    final report = SkillProgressionService.compute(player);
+    return Container(
+      key: AppKeys.templeProgressionSection,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.timeline, color: Colors.amber, size: 20),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '修行の道標（スキル ${report.totalUnlocked}/${report.totalNodes}'
+                  '・残りポイント ${report.skillPoints}）',
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          // ジョブ習得進捗
+          ...report.jobs.map((j) {
+            final label = _jobDisplayName(j.job);
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 64,
+                    child: Text(label,
+                        style: const TextStyle(
+                            color: Colors.white, fontSize: 12)),
+                  ),
+                  Expanded(
+                    child: LinearProgressIndicator(
+                      key: AppKeys.templeProgressionJobBar(j.job),
+                      value: j.progressRatio,
+                      backgroundColor: Colors.white24,
+                      color: j.isMastered ? Colors.amber : Colors.tealAccent,
+                      minHeight: 6,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    j.isMastered
+                        ? '習得済み'
+                        : 'Lv.${j.level}/習得まであと${j.levelsToMaster}',
+                    style: TextStyle(
+                      color: j.isMastered ? Colors.amber : Colors.white60,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+          const SizedBox(height: 8),
+          // 次に解放できるスキルノード
+          if (report.trees.any((t) => t.hasNextNode)) ...[
+            const Text('次に解放できる技:',
+                style: TextStyle(
+                    color: Colors.tealAccent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold)),
+            ...report.trees.where((t) => t.hasNextNode).map((t) {
+              final node = t.nextNode!;
+              final treeLabel = _jobDisplayName(t.tree);
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  children: [
+                    Icon(
+                      t.nextNodeAffordable
+                          ? Icons.lock_open
+                          : Icons.lock_outline,
+                      size: 14,
+                      color: t.nextNodeAffordable
+                          ? Colors.greenAccent
+                          : Colors.grey,
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '$treeLabel・${node.name}（${node.pointCost}pt）',
+                        style: const TextStyle(
+                            color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                    Text(
+                      t.nextNodeAffordable
+                          ? '解放可能'
+                          : 'あと${t.pointsShortfall}pt',
+                      style: TextStyle(
+                        color: t.nextNodeAffordable
+                            ? Colors.greenAccent
+                            : Colors.redAccent,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }),
+          ] else
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 4),
+              child: Text('全ての技を極めた！',
+                  style: TextStyle(color: Colors.amber, fontSize: 12)),
+            ),
         ],
       ),
     );

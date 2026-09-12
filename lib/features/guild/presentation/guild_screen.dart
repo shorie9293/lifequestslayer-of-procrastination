@@ -407,7 +407,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.11+107", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.12+108", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [

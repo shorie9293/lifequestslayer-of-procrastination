@@ -8,6 +8,7 @@
 // 制定: 令和八年皐月三日（適1で基本定義、適2で拡張＋全紐付け）
 
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/domain/models/job.dart';
 
 class AppKeys {
   AppKeys._();
@@ -162,6 +163,11 @@ class AppKeys {
   static const Key pomodoroSkip = Key('btn_pomodoro_skip');
   static const Key pomodoroSessionCount = Key('txt_pomodoro_sessions');
   static const Key pomodoroSkillStatus = Key('txt_pomodoro_skill_status');
+
+  // ━━━ 修行の道標（スキル/ジョブ進捗の俯瞰） ━━━
+  static const Key templeProgressionSection = Key('sec_temple_progression');
+  static Key templeProgressionJobBar(Job job) =>
+      Key('ind_progression_job_${job.name}');
 
   // ━━━ 汎用 ━━━
   static const Key backButton = Key('btn_back');
