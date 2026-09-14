@@ -1,13 +1,16 @@
 import 'package:rpg_todo/domain/models/growth_trajectory.dart';
+import 'package:rpg_todo/domain/models/practice_log.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/domain/services/practice_log_service.dart';
 
 /// 成長軌跡（レベル/EXP/勤行完了数/討伐勝利数の時系列推移）を算出する純粋サービス。
 ///
 /// 道標§五 #26 の中核ロジック。状態・IO・乱数を持たず、テスト可能。
 ///
 /// 時系列の元データ:
-/// - 勤行完了数: [Task.lastCompletedAt]（クエスト完了日時）
+/// - 勤行完了数: 日別履歴ログ [PracticeLog]（道標§五 #50。未提供時は
+///   [Task.lastCompletedAt] へフォールバックし、ログが無い日は旧来データで補完）
 /// - 討伐勝利数: [Reflection.date]（討伐後の振り返り記録日時）
 ///
 /// レベル/EXPそのものは履歴を保持していないため、成長の量的指標として
@@ -29,15 +32,24 @@ class GrowthTrajectoryService {
     required List<Reflection> reflections,
     required DateTime now,
     int months = defaultWindowMonths,
+    List<PracticeLog> practiceLogs = const [],
   }) {
     if (months < 1) {
       throw ArgumentError.value(months, 'months', 'must be >= 1');
     }
 
-    final questDates = <DateTime>[
+    final legacyQuestDates = <DateTime>[
       for (final t in tasks)
         if (t.lastCompletedAt != null) t.lastCompletedAt!,
     ];
+    // 日別ログが正。ログが無い日のみ旧来の lastCompletedAt で補完する
+    // （同日の二重計上を避ける）。
+    final questDates = practiceLogs.isEmpty
+        ? legacyQuestDates
+        : PracticeLogService.mergeActivityDates(
+            logs: practiceLogs,
+            legacyDates: legacyQuestDates,
+          );
     final defeatDates = <DateTime>[
       for (final r in reflections) r.date,
     ];

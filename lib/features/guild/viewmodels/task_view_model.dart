@@ -15,6 +15,7 @@ import 'package:rpg_todo/features/crossapp/data/cross_app_settings_repository.da
 import 'package:rpg_todo/features/crossapp/domain/cross_app_reward_event.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/battle/domain/enemy_asset_service.dart';
+import 'package:rpg_todo/features/habits/data/practice_log_repository.dart';
 import 'package:injectable/injectable.dart';
 
 /// クエストのCRUDと操作を管理するViewModel
@@ -33,6 +34,7 @@ class TaskViewModel extends ChangeNotifier {
   ICrossAppRewardService? _crossAppRewardService;
   CrossAppSettingsRepository? _crossAppSettingsRepository;
   CrossAppReward? _pendingCrossAppReward;
+  PracticeLogRepository? _practiceLogRepository;
 
   TaskViewModel(this._taskRepository, this._playerVM);
 
@@ -85,6 +87,11 @@ class TaskViewModel extends ChangeNotifier {
 
   /// 処理済みで通知待ちのクロスアプリ報酬（UIがダイアログ表示後にクリア）
   CrossAppReward? get pendingCrossAppReward => _pendingCrossAppReward;
+
+  /// 勤行の日別履歴ログの記録先（道標§五 #50。省略時は記録しない）
+  PracticeLogRepository? get practiceLogRepository => _practiceLogRepository;
+  set practiceLogRepository(PracticeLogRepository? repo) =>
+      _practiceLogRepository = repo;
 
   /// 通知済みとして pending 報酬をクリアする。
   void clearPendingCrossAppReward() {
@@ -294,6 +301,11 @@ class TaskViewModel extends ChangeNotifier {
       questRank: _tasks[i].rank.name,
       baseExp: r.expGain,
     );
+    // 勤行の日別履歴ログ（道標§五 #50）: 完遂1件を記録（ベストエフォート）
+    _practiceLogRepository
+        ?.record()
+        .then((_) {})
+        .catchError((Object e) => debugPrint('[TaskVM] practice log failed: $e'));
     _completing.remove(id);
     return {
       'leveledUp': r.leveledUp,

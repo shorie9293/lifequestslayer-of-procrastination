@@ -21,6 +21,7 @@ import 'package:rpg_todo/features/crossapp/data/cross_app_reward_service.dart';
 import 'package:rpg_todo/features/crossapp/data/cross_app_settings_repository.dart';
 
 import 'package:rpg_todo/features/guild/data/task_repository.dart';
+import 'package:rpg_todo/features/habits/data/practice_log_repository.dart';
 import 'package:rpg_todo/features/shared/data/player_repository.dart';
 import 'package:rpg_todo/features/guild/data/supabase_task_repository.dart';
 import 'package:rpg_todo/features/shared/data/supabase_player_repository.dart';
@@ -105,6 +106,9 @@ void configureDependencies() {
   final gvm = getIt<GameViewModel>();
   gvm.crossAppRewardService = getIt<ICrossAppRewardService>();
   gvm.crossAppSettingsRepository = getIt<CrossAppSettingsRepository>();
+
+  // 勤行の日別履歴ログ（道標§五 #50）を TaskViewModel に配線
+  getIt<TaskViewModel>().practiceLogRepository = PracticeLogRepository();
 }
 
 /// 全VMのデータロードとアプリライフサイクル監視を統括する。

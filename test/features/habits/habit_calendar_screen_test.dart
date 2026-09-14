@@ -2,11 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/domain/models/practice_log.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/habits/data/practice_log_repository.dart';
 import 'package:rpg_todo/features/habits/presentation/screens/habit_calendar_screen.dart';
 import 'package:rpg_todo/features/habits/presentation/widgets/habit_month_grid.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
@@ -42,6 +44,15 @@ class _FakeReflectionRepository extends ReflectionRepository {
   _FakeReflectionRepository(this.reflections);
   @override
   Future<List<Reflection>> getAll() async => reflections;
+}
+
+/// 実Hiveを使わない日別履歴ログのリポジトリ（#50）。
+///
+/// Hive 未初期化で本物を渡すと hive 内部の Completer が未処理エラーを
+/// zone へ流して widget テストが落ちるため、必ず注入する。
+class _FakePracticeLogRepository extends PracticeLogRepository {
+  @override
+  Future<List<PracticeLog>> getAll() async => const [];
 }
 
 Reflection _refl(DateTime date) => Reflection(
@@ -154,7 +165,11 @@ void main() {
         ChangeNotifierProvider<TaskViewModel>.value(
           value: taskVM,
           child: MaterialApp(
-            home: HabitCalendarScreen(repository: repo, now: now),
+            home: HabitCalendarScreen(
+              repository: repo,
+              practiceLogRepository: _FakePracticeLogRepository(),
+              now: now,
+            ),
           ),
         ),
       );

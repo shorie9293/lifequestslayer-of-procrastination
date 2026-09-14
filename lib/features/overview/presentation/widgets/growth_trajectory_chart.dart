@@ -2,9 +2,11 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/domain/models/growth_trajectory.dart';
+import 'package:rpg_todo/domain/models/practice_log.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/services/growth_trajectory_service.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/habits/data/practice_log_repository.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 
@@ -324,10 +326,18 @@ class GrowthTrajectoryTab extends StatefulWidget {
   /// テスト用に注入可能な振り返りリポジトリ。
   final ReflectionRepository? repository;
 
+  /// テスト用に注入可能な日別履歴ログのリポジトリ（道標§五 #50）。
+  final PracticeLogRepository? practiceLogRepository;
+
   /// 基準日（テスト用。既定は現在時刻）。
   final DateTime? now;
 
-  const GrowthTrajectoryTab({super.key, this.repository, this.now});
+  const GrowthTrajectoryTab({
+    super.key,
+    this.repository,
+    this.practiceLogRepository,
+    this.now,
+  });
 
   @override
   State<GrowthTrajectoryTab> createState() => _GrowthTrajectoryTabState();
@@ -335,28 +345,38 @@ class GrowthTrajectoryTab extends StatefulWidget {
 
 class _GrowthTrajectoryTabState extends State<GrowthTrajectoryTab> {
   late final ReflectionRepository _repo;
+  late final PracticeLogRepository _logRepo;
   List<Reflection> _reflections = const [];
+  List<PracticeLog> _practiceLogs = const [];
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     _repo = widget.repository ?? ReflectionRepository();
+    _logRepo = widget.practiceLogRepository ?? PracticeLogRepository();
     _load();
   }
 
   Future<void> _load() async {
+    var reflections = const <Reflection>[];
+    var logs = const <PracticeLog>[];
     try {
-      final all = await _repo.getAll();
-      if (!mounted) return;
-      setState(() {
-        _reflections = all;
-        _loading = false;
-      });
+      reflections = await _repo.getAll();
     } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
+      // 振り返りが読めなくても日別ログだけで描画を継続する
     }
+    try {
+      logs = await _logRepo.getAll();
+    } catch (_) {
+      // 日別ログ未初期化（旧端末・試練）でも従来動作を保つ
+    }
+    if (!mounted) return;
+    setState(() {
+      _reflections = reflections;
+      _practiceLogs = logs;
+      _loading = false;
+    });
   }
 
   @override
@@ -370,6 +390,7 @@ class _GrowthTrajectoryTabState extends State<GrowthTrajectoryTab> {
       tasks: tasks,
       reflections: _reflections,
       now: widget.now ?? DateTime.now(),
+      practiceLogs: _practiceLogs,
     );
 
     return GrowthTrajectoryView(

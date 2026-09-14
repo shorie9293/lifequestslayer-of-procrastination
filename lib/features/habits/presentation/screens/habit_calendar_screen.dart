@@ -1,26 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/domain/models/habit_calendar.dart';
+import 'package:rpg_todo/domain/models/practice_log.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/services/habit_calendar_service.dart';
+import 'package:rpg_todo/domain/services/practice_log_service.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/habits/data/practice_log_repository.dart';
 import 'package:rpg_todo/features/habits/presentation/widgets/habit_month_grid.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 
-/// 勤行の習慣カレンダー画面（道標§五 #31）。
+/// 勤行の習慣カレンダー画面（道標§五 #31 / #50）。
 ///
 /// 連続勤行日数（ストリーク）と日別の出席マップを月単位で俯瞰し、
-/// 目標リマインドを添える。データ源は勤行完了履歴
-/// （[Task.lastCompletedAt]）と討伐後の振り返り（[Reflection.date]）。
+/// 目標リマインドを添える。データ源は日別履歴ログ（PracticeLog）を正とし、
+/// ログ導入前の履歴は勤行完了履歴（[Task.lastCompletedAt]）と
+/// 討伐後の振り返り（[Reflection.date]）で補完する。
 class HabitCalendarScreen extends StatefulWidget {
   /// テスト用に注入可能な振り返りリポジトリ。
   final ReflectionRepository? repository;
 
+  /// テスト用に注入可能な日別履歴ログのリポジトリ。
+  final PracticeLogRepository? practiceLogRepository;
+
   /// 基準日（テスト用。既定は現在時刻）。
   final DateTime? now;
 
-  const HabitCalendarScreen({super.key, this.repository, this.now});
+  const HabitCalendarScreen({
+    super.key,
+    this.repository,
+    this.practiceLogRepository,
+    this.now,
+  });
 
   @override
   State<HabitCalendarScreen> createState() => _HabitCalendarScreenState();
@@ -28,28 +40,38 @@ class HabitCalendarScreen extends StatefulWidget {
 
 class _HabitCalendarScreenState extends State<HabitCalendarScreen> {
   late final ReflectionRepository _repo;
+  late final PracticeLogRepository _logRepo;
   List<Reflection> _reflections = const [];
+  List<PracticeLog> _practiceLogs = const [];
   bool _loading = true;
 
   @override
   void initState() {
     super.initState();
     _repo = widget.repository ?? ReflectionRepository();
+    _logRepo = widget.practiceLogRepository ?? PracticeLogRepository();
     _load();
   }
 
   Future<void> _load() async {
+    var reflections = const <Reflection>[];
+    var logs = const <PracticeLog>[];
     try {
-      final all = await _repo.getAll();
-      if (!mounted) return;
-      setState(() {
-        _reflections = all;
-        _loading = false;
-      });
+      reflections = await _repo.getAll();
     } catch (_) {
-      if (!mounted) return;
-      setState(() => _loading = false);
+      // 振り返りが読めなくても日別ログだけで表示を継続する
     }
+    try {
+      logs = await _logRepo.getAll();
+    } catch (_) {
+      // 日別ログ未初期化（旧端末・試練）でも従来動作を保つ
+    }
+    if (!mounted) return;
+    setState(() {
+      _reflections = reflections;
+      _practiceLogs = logs;
+      _loading = false;
+    });
   }
 
   @override
@@ -61,11 +83,15 @@ class _HabitCalendarScreenState extends State<HabitCalendarScreen> {
           ? const Center(child: CircularProgressIndicator())
           : Consumer<TaskViewModel>(
               builder: (context, taskVM, _) {
-                final activityDates = <DateTime>[
+                final legacyDates = <DateTime>[
                   for (final t in taskVM.tasks)
                     if (t.lastCompletedAt != null) t.lastCompletedAt!,
                   for (final r in _reflections) r.date,
                 ];
+                final activityDates = PracticeLogService.mergeActivityDates(
+                  logs: _practiceLogs,
+                  legacyDates: legacyDates,
+                );
                 return HabitCalendarView(
                   activityDates: activityDates,
                   now: widget.now ?? DateTime.now(),
