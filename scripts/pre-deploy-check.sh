@@ -31,6 +31,7 @@ flutter test --no-pub -j 2 \
   test/features/auth/ \
   test/features/guild/ \
   test/features/habits/ \
+  test/features/reminder/ \
   test/features/kozuchi/ \
   test/features/player/ \
   test/features/shared/

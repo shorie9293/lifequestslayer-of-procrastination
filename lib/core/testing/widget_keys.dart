@@ -31,6 +31,15 @@ class AppKeys {
   static const Key habitPrevMonth = Key('btn_habit_prev_month');
   static const Key habitNextMonth = Key('btn_habit_next_month');
 
+  // ━━━ 勤行リマインダー ━━━
+  static const Key reminderSettingsScreen = Key('screen_reminder_settings');
+  static const Key reminderSettingsEntry = Key('btn_reminder_settings_entry');
+  static const Key reminderEnabledSwitch = Key('tgl_reminder_enabled');
+  static const Key reminderTimePicker = Key('btn_reminder_time');
+  static const Key reminderSaveButton = Key('btn_reminder_save');
+  static Key reminderWeekdayChip(int weekday) =>
+      Key('chip_reminder_weekday_$weekday');
+
   // ━━━ 認証 ━━━
   static const Key continueOffline = Key('btn_continue_offline');
   static const Key offlineBanner = Key('banner_offline');

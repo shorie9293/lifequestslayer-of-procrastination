@@ -305,6 +305,88 @@ class NotificationService {
     debugPrint('[NotificationService] 全ての通知をキャンセルしました');
   }
 
+  // --- 勤行リマインダー（通知ID 100..106 = 曜日1..7） ---
+
+  static const int _practiceReminderBaseId = 100;
+  static const String _practiceChannelId = 'rpg_practice';
+
+  /// 勤行リマインダーを選択曜日それぞれにスケジュールし、未選択曜日をキャンセルする。
+  /// 繰り返しは `DateTimeComponents.dayOfWeekAndTime` で毎週同時刻に発火する。
+  Future<void> schedulePracticeReminder({
+    required int hour,
+    required int minute,
+    required List<int> weekdays,
+  }) async {
+    final scheduleMode = await _getScheduleMode();
+
+    // チャンネルを明示的に作成（Android 8+）
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) {
+      await android.createNotificationChannel(
+        const AndroidNotificationChannel(
+          _practiceChannelId,
+          '勤行の刻',
+          description: '勤行リマインダーの通知',
+          importance: Importance.high,
+          playSound: true,
+          enableVibration: true,
+        ),
+      );
+    }
+
+    for (var weekday = 1; weekday <= 7; weekday++) {
+      final id = _practiceReminderBaseId + weekday;
+      if (!weekdays.contains(weekday)) {
+        await _plugin.cancel(id);
+        continue;
+      }
+      final scheduledDate = _nextInstanceOfWeekday(weekday, hour, minute);
+      debugPrint(
+        '[NotificationService] 勤行リマインダーをスケジュール: 曜日=$weekday $hour:$minute → $scheduledDate (mode: $scheduleMode)',
+      );
+      await _plugin.zonedSchedule(
+        id,
+        '🛕 勤行の刻',
+        '勤行の刻だ。今日の勤行を果たすべし。',
+        scheduledDate,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            _practiceChannelId,
+            '勤行の刻',
+            channelDescription: '勤行リマインダーの通知',
+            importance: Importance.high,
+            priority: Priority.high,
+          ),
+          iOS: DarwinNotificationDetails(),
+        ),
+        androidScheduleMode: scheduleMode,
+        uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+      );
+    }
+  }
+
+  /// 勤行リマインダー（全曜日分）をキャンセルする。
+  Future<void> cancelPracticeReminder() async {
+    for (var weekday = 1; weekday <= 7; weekday++) {
+      await _plugin.cancel(_practiceReminderBaseId + weekday);
+    }
+    debugPrint('[NotificationService] 勤行リマインダーをキャンセルしました');
+  }
+
+  /// 次に来る [weekday]（1=月..7=日）の [hour]:[minute] を返す。
+  tz.TZDateTime _nextInstanceOfWeekday(int weekday, int hour, int minute) {
+    final now = tz.TZDateTime.now(tz.local);
+    var scheduled =
+        tz.TZDateTime(tz.local, now.year, now.month, now.day, hour, minute);
+    while (scheduled.weekday != weekday || scheduled.isBefore(now)) {
+      scheduled = scheduled.add(const Duration(days: 1));
+    }
+    return scheduled;
+  }
+
   Future<void> _scheduleMorning({
     required int hour,
     required int minute,
