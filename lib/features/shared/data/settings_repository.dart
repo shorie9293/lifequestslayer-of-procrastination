@@ -230,6 +230,9 @@ class SettingsRepository {
   // ── テーマモード（ライト/ダーク切替） ──────────────────
 
   Future<ThemeMode> getThemeMode() async {
+    // Hive未初期化の試練環境で open を試みると zone 汚染が起きるため、
+    // 開かれていない場合は既定値を返す（本番では load() の先行読取で開済み）
+    if (!Hive.isBoxOpen(_settingsBoxName)) return ThemeMode.dark;
     try {
       final box = await _openSettingsBox();
       final saved = box.get('themeMode');
