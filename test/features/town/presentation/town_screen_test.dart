@@ -13,6 +13,7 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 
 // ━━━ DI Mock リポジトリ ━━━
 
@@ -124,6 +125,7 @@ Future<void> pumpTownScreen(WidgetTester tester, GameViewModel vm, PlayerViewMod
         ChangeNotifierProvider<PlayerViewModel>.value(value: playerVM),
         ChangeNotifierProvider<ShopViewModel>(create: (_) => ShopViewModel(playerVM)),
         ChangeNotifierProvider<TownViewModel>.value(value: townVM),
+        ChangeNotifierProvider<SettingsViewModel>.value(value: SettingsViewModel(SettingsRepository())),
       ],
       child: const MaterialApp(
         home: TownScreen(),
