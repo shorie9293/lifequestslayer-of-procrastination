@@ -271,12 +271,14 @@ class _RPGTodoAppState extends State<RPGTodoApp> {
                 PointerDeviceKind.unknown,
               },
             ),
-            theme: themeVM.currentTheme.copyWith(
+            theme: themeVM.currentThemeForMode(settingsVM.themeMode).copyWith(
               textTheme: GoogleFonts.dotGothic16TextTheme(
                       themeVM.currentTheme.textTheme)
                   .apply(
-                bodyColor: Colors.white,
-                displayColor: Colors.white,
+                bodyColor:
+                    settingsVM.themeMode == ThemeMode.light ? const Color(0xFF2A2520) : Colors.white,
+                displayColor:
+                    settingsVM.themeMode == ThemeMode.light ? const Color(0xFF2A2520) : Colors.white,
               ),
             ),
             home: const AuthGate(),

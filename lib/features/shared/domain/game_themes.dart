@@ -66,4 +66,72 @@ class GameThemes {
       Job.adventurer => adventurer,
     };
   }
+
+  // ── ライトテーマ（テーマ切替 #45） ──────────────────────
+  // 各ジョブのアクセント色（primary）はダーク版と共有し、
+  // 背景のみ明るい和紙色へ差し替える。
+
+  static const _paperWhite = Color(0xFFF7F3E8);
+  static const _paperSurface = Color(0xFFEFE9D8);
+
+  static final _lightBase = ThemeData(
+    brightness: Brightness.light,
+    primaryColor: _gold,
+    scaffoldBackgroundColor: _paperWhite,
+    useMaterial3: true,
+  );
+
+  /// 浪人（ライト） — 和紙白基調、金アクセント
+  static final adventurerLight = _lightBase.copyWith(
+    appBarTheme: const AppBarTheme(
+        backgroundColor: _paperSurface, elevation: 0),
+    colorScheme: const ColorScheme.light(
+      primary: _gold, secondary: _gold,
+      surface: _paperSurface, error: Color(0xFFC0392B)),
+  );
+
+  /// 侍（ライト） — 白基調、朱アクセント
+  static final warriorLight = _lightBase.copyWith(
+    scaffoldBackgroundColor: const Color(0xFFFBF4F2),
+    appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFFF2E2DE), elevation: 0),
+    colorScheme: const ColorScheme.light(
+      primary: Color(0xFFC0392B), secondary: _gold,
+      surface: Color(0xFFF2E2DE)),
+  );
+
+  /// 法師（ライト） — 白基調、青緑アクセント
+  static final clericLight = _lightBase.copyWith(
+    scaffoldBackgroundColor: const Color(0xFFF0F6F5),
+    appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFFDCEBE9), elevation: 0),
+    colorScheme: const ColorScheme.light(
+      primary: Color(0xFF2E8B82), secondary: _gold,
+      surface: Color(0xFFDCEBE9)),
+  );
+
+  /// 陰陽師（ライト） — 淡紫基調、金アクセント
+  static final wizardLight = _lightBase.copyWith(
+    scaffoldBackgroundColor: const Color(0xFFF4F1FA),
+    appBarTheme: const AppBarTheme(
+        backgroundColor: Color(0xFFE5DEF5), elevation: 0),
+    colorScheme: const ColorScheme.light(
+      primary: _gold, secondary: Color(0xFF7E57C2),
+      surface: Color(0xFFE5DEF5)),
+  );
+
+  /// ジョブに応じたライトテーマを返す
+  static ThemeData lightForJob(Job job) {
+    return switch (job) {
+      Job.samurai => warriorLight,
+      Job.monk => clericLight,
+      Job.mystic => wizardLight,
+      Job.adventurer => adventurerLight,
+    };
+  }
+
+  /// テーマモードに応じたテーマを返す（main.dart 配線用）
+  static ThemeData forJobInMode(Job job, ThemeMode mode) {
+    return mode == ThemeMode.light ? lightForJob(job) : forJob(job);
+  }
 }

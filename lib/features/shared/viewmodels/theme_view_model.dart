@@ -14,6 +14,10 @@ class ThemeViewModel extends ChangeNotifier {
 
   ThemeData get currentTheme => GameThemes.forJob(_playerVM.player.currentJob);
 
+  /// テーマモード（ライト/ダーク）に応じたテーマを返す
+  ThemeData currentThemeForMode(ThemeMode mode) =>
+      GameThemes.forJobInMode(_playerVM.player.currentJob, mode);
+
   @override
   void dispose() {
     _playerVM.removeListener(() => notifyListeners()); // best-effort

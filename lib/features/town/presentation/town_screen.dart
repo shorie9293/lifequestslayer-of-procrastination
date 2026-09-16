@@ -14,6 +14,7 @@ import 'widgets/home_shop_section.dart';
 import 'widgets/skin_section.dart';
 import 'widgets/inn_section.dart';
 import 'widgets/title_section.dart';
+import 'widgets/theme_section.dart';
 
 class TownScreen extends StatelessWidget {
   const TownScreen({super.key});
@@ -184,6 +185,8 @@ class _TownTab extends StatelessWidget {
                   InnSection(viewModel: shopVM, player: player),
                   const SizedBox(height: 24),
                   TitleSection(viewModel: playerVM, player: player),
+                  const SizedBox(height: 24),
+                  const ThemeSection(),
                 ],
               ),
             ),

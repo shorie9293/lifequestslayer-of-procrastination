@@ -114,6 +114,9 @@ class AppKeys {
   static const Key townGemBalance = Key('txt_gem_balance');
   static const Key townGemShopButton = Key('btn_gem_shop');
   static const Key townInnSection = Key('sec_inn');
+  static const Key themeSection = Key('sec_theme');
+  static const Key themeLightButton = Key('btn_theme_light');
+  static const Key themeDarkButton = Key('btn_theme_dark');
   static const Key townTitleSection = Key('sec_titles');
   static const Key townShopHomeSection = Key('sec_shop_home');
   static const Key townSkinShopSection = Key('sec_shop_skins');

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
 
@@ -223,6 +224,34 @@ class SettingsRepository {
     try {
       final box = await _openSettingsBox();
       await box.put('battleSceneEnabled', enabled);
+    } catch (_) {}
+  }
+
+  // ── テーマモード（ライト/ダーク切替） ──────────────────
+
+  Future<ThemeMode> getThemeMode() async {
+    try {
+      final box = await _openSettingsBox();
+      final saved = box.get('themeMode');
+      if (saved is int && saved >= 0 && saved <= 2) {
+        return ThemeMode.values[saved];
+      }
+      if (saved is String) {
+        return ThemeMode.values.firstWhere(
+          (m) => m.name == saved,
+          orElse: () => ThemeMode.dark,
+        );
+      }
+      return ThemeMode.dark;
+    } catch (_) {
+      return ThemeMode.dark;
+    }
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    try {
+      final box = await _openSettingsBox();
+      await box.put('themeMode', mode.name);
     } catch (_) {}
   }
 

@@ -19,6 +19,7 @@ class SettingsViewModel extends ChangeNotifier {
   bool _kqEnabled = true;
   bool _debugMode = false;
   bool _sfxEnabled = true;
+  ThemeMode _themeMode = ThemeMode.dark;
   bool _battleSceneEnabled = true;
   DateTime? _lastBackupTime;
 
@@ -35,6 +36,7 @@ class SettingsViewModel extends ChangeNotifier {
   bool get isKnowledgeQuestEnabled => _kqEnabled;
   bool get isDebugMode => _debugMode;
   bool get isSfxEnabled => _sfxEnabled;
+  ThemeMode get themeMode => _themeMode;
   bool get isBattleSceneEnabled => _battleSceneEnabled;
   DateTime? get lastBackupTime => _lastBackupTime;
 
@@ -60,6 +62,12 @@ class SettingsViewModel extends ChangeNotifier {
   Future<void> setFontSizeScale(double v) async {
     _fontSize = v;
     await _settingsRepository.setFontSizeScale(v);
+    notifyListeners();
+  }
+
+  Future<void> setThemeMode(ThemeMode mode) async {
+    _themeMode = mode;
+    await _settingsRepository.setThemeMode(mode);
     notifyListeners();
   }
 
@@ -152,6 +160,7 @@ class SettingsViewModel extends ChangeNotifier {
     await _load<bool>(_settingsRepository.getDebugModeEnabled, (v) => _debugMode = v, label: 'debugMode');
     await _load<bool>(_settingsRepository.getSfxEnabled, (v) => _sfxEnabled = v, label: 'sfxEnabled');
     await _load<bool>(_settingsRepository.getBattleSceneEnabled, (v) => _battleSceneEnabled = v, label: 'battleSceneEnabled');
+    await _load<ThemeMode>(_settingsRepository.getThemeMode, (v) => _themeMode = v, label: 'themeMode');
     await _load<DateTime?>(_settingsRepository.getLastBackupTime, (v) => _lastBackupTime = v, label: 'lastBackupTime');
 
     if (await _tutorial.repairSeenConcept(_tutorialStep, _sawConcept)) {
