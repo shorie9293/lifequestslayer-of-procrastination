@@ -42,6 +42,8 @@ echo ""
 echo "[4/5] 🧪 test shard 2/3..."
 flutter test --no-pub -j 1 \
   test/features/battle/domain/ \
+  test/features/battle/data/ \
+  test/features/battle/battle_record_wiring_test.dart \
   test/features/battle/presentation/ \
   test/features/battle/viewmodels/ \
   test/features/battle/battle_report_dialog_samurai_test.dart \

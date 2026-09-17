@@ -16,6 +16,7 @@ import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 
 import 'package:rpg_todo/features/battle/domain/battle_audio_service.dart';
+import 'package:rpg_todo/features/battle/data/battle_record_repository.dart';
 import 'package:rpg_todo/features/battle/viewmodels/battle_view_model.dart';
 import 'package:rpg_todo/features/crossapp/data/cross_app_reward_service.dart';
 import 'package:rpg_todo/features/crossapp/data/cross_app_settings_repository.dart';
@@ -109,6 +110,13 @@ void configureDependencies() {
 
   // 勤行の日別履歴ログ（道標§五 #50）を TaskViewModel に配線
   getIt<TaskViewModel>().practiceLogRepository = PracticeLogRepository();
+
+  // 討伐戦績（改善提案 #56）の永続層を配線（Hive box 'battle_records'）
+  if (!getIt.isRegistered<BattleRecordRepository>()) {
+    getIt.registerLazySingleton<BattleRecordRepository>(
+      () => HiveBattleRecordRepository(),
+    );
+  }
 }
 
 /// 全VMのデータロードとアプリライフサイクル監視を統括する。

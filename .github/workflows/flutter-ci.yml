@@ -45,7 +45,7 @@ jobs:
         run: flutter test --no-pub -j 2 test/domain/ test/features/auth/ test/features/guild/ test/features/habits/ test/features/kozuchi/ test/features/player/ test/features/shared/
 
       - name: Run tests (shard 2/3)
-        run: flutter test --no-pub -j 1 test/features/battle/domain/ test/features/battle/presentation/ test/features/battle/viewmodels/ test/features/battle/battle_report_dialog_samurai_test.dart test/features/temple/ test/features/character_customization/ test/features/crossapp/ test/features/overview/ test/features/town/
+        run: flutter test --no-pub -j 1 test/features/battle/domain/ test/features/battle/data/ test/features/battle/battle_record_wiring_test.dart test/features/battle/presentation/ test/features/battle/viewmodels/ test/features/battle/battle_report_dialog_samurai_test.dart test/features/temple/ test/features/character_customization/ test/features/crossapp/ test/features/overview/ test/features/town/
 
       - name: Run tests (shard 3/3)
         continue-on-error: true  # フレイキーテスト（Hive状態汚染）のため警告扱い

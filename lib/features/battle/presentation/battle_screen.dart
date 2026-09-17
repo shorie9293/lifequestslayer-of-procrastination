@@ -1,6 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/battle/domain/battle_record.dart';
+import 'package:rpg_todo/features/battle/data/battle_record_repository.dart';
+import 'package:rpg_todo/features/battle/presentation/battle_record_screen.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
@@ -27,7 +32,11 @@ import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 final Set<String> _completingTaskIds = {};
 
 class BattleScreen extends StatefulWidget {
-  const BattleScreen({super.key});
+  /// 討伐戦績リポジトリ（改善提案 #56）。試練では InMemory を注入できる。
+  /// null の場合は Hive 実装（Hive未初期化でも記録は握りつぶされる）。
+  final BattleRecordRepository? battleRecordRepository;
+
+  const BattleScreen({super.key, this.battleRecordRepository});
 
   @override
   State<BattleScreen> createState() => _BattleScreenState();
@@ -36,6 +45,32 @@ class BattleScreen extends StatefulWidget {
 class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver {
   late final BattleViewModel _battleVM;
   late final BattleAudioService _audioService;
+  late final BattleRecordRepository _recordRepo;
+
+  /// 討伐戦績を1件記録する（失敗は握りつぶし・UIを壊さない）。
+  ///
+  /// id は討伐ごとに一意（同一クエストを何度も討伐しても履歴が残る）。
+  void _recordBattle({
+    required Task task,
+    required bool isVictory,
+    required int comboCount,
+    required int remainingSubTasks,
+  }) {
+    final record = BattleRecord(
+      id: 'battle_${task.id}_${DateTime.now().microsecondsSinceEpoch}',
+      title: task.title,
+      occurredAt: DateTime.now(),
+      isVictory: isVictory,
+      comboCount: comboCount,
+      remainingSubTasks: remainingSubTasks,
+    );
+    // async の失敗が画面を落とさないよう握りつぶす。
+    unawaited(
+      _recordRepo.add(record).catchError((_) {
+        // Hive未初期化等は無視する（記録できないだけ）。
+      }),
+    );
+  }
 
   /// 現在戦術選択フェイズにあるクエストのID。
   /// null の場合は通常のクエスト一覧表示。
@@ -50,6 +85,13 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
 
     _battleVM = getIt<BattleViewModel>();
     _audioService = getIt<BattleAudioService>();
+    // 討伐戦績リポジトリ: 注入 > DI登録 > 無害なno-op の順で解決する。
+    // （Hive 未初期化の環境で openBox を呼ぶと zone の未処理エラーになるため、
+    //   未配線環境では Hive に触れない no-op を使う）
+    _recordRepo = widget.battleRecordRepository ??
+        (getIt.isRegistered<BattleRecordRepository>()
+            ? getIt<BattleRecordRepository>()
+            : NoopBattleRecordRepository());
 
     // BattleAudioServiceの変化でUIを再描画
     _audioService.addListener(_onAudioChanged);
@@ -73,6 +115,15 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
   /// BattleAudioServiceの状態変化でUIを再描画する。
   void _onAudioChanged() {
     setState(() {});
+  }
+
+  /// 討伐戦績画面を開く（改善提案 #56）。
+  void _openBattleRecordScreen() {
+    Navigator.of(context, rootNavigator: true).push(
+      MaterialPageRoute<void>(
+        builder: (_) => BattleRecordScreen(repository: _recordRepo),
+      ),
+    );
   }
 
   /// 戦術選択バーを表示して討伐フェイズに移行する。
@@ -148,6 +199,16 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
     // レベルアップ前のレベルを記録（completeTask 後に比較するため）
     final previousLevel = playerVM.player.level;
 
+    // 改善提案#56: 討伐結果を戦績に記録するため、討伐前のクエストを捕捉しておく
+    // （討伐成功後は activeTasks から外れるため、ここで保持しないと復元できない）。
+    Task? taskForRecord;
+    for (final t in taskVM.activeTasks) {
+      if (t.id == taskId) {
+        taskForRecord = t;
+        break;
+      }
+    }
+
     final result = gameVM.completeTask(taskId);
 
     if (result == null) {
@@ -157,6 +218,17 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
         bonusMessages: const [],
       );
       _audioService.playDefeat();
+
+      // 改善提案#56: 討伐失敗を戦績に1件記録する。
+      if (taskForRecord != null) {
+        _recordBattle(
+          task: taskForRecord,
+          isVictory: false,
+          comboCount: 0,
+          remainingSubTasks:
+              taskForRecord.subTasks.where((s) => !s.isCompleted).length,
+        );
+      }
 
       final stillActive = taskVM.activeTasks.any((t) => t.id == taskId);
       if (stillActive) {
@@ -192,12 +264,22 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
     final showFatiguePopup = result['showFatiguePopup'] as bool? ?? false;
 
     // 討伐成功 → BattleViewModelに勝利を通知 + SFX再生
-    _battleVM.declareVictory(
+    final battleResult = _battleVM.declareVictory(
       expGained: baseExp,
       coinsGained: coinsGained,
       bonusMessages: bonusMessages,
     );
     _audioService.playVictory();
+
+    // 改善提案#56: 討伐成功を戦績に1件記録する。
+    if (taskForRecord != null) {
+      _recordBattle(
+        task: taskForRecord,
+        isVictory: true,
+        comboCount: battleResult.comboCount,
+        remainingSubTasks: 0,
+      );
+    }
 
     // UX-6: 戦果報告書の統合 — SnackBarを廃止し、全てのフィードバックを戦果報告書ダイアログに集約
 
@@ -335,6 +417,13 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
           ),
         ),
         actions: [
+          // 改善提案#56: 討伐戦績画面への導線
+          IconButton(
+            key: AppKeys.battleRecordEntry,
+            icon: const Icon(Icons.history),
+            tooltip: '討伐戦績',
+            onPressed: _openBattleRecordScreen,
+          ),
           // 効果音トグル（SettingsViewModel連動）
           Consumer<SettingsViewModel>(
             builder: (context, settings, _) {

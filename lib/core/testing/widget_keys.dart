@@ -181,6 +181,17 @@ class AppKeys {
   static Key templeProgressionJobBar(Job job) =>
       Key('ind_progression_job_${job.name}');
 
+  // ━━━ 討伐戦績（改善提案#56） ━━━
+  static const Key battleRecordEntry = Key('btn_battle_record_entry');
+  static const Key battleRecordScreen = Key('screen_battle_record');
+  static const Key battleRecordFilterAll = Key('chip_battle_record_filter_all');
+  static const Key battleRecordFilterVictory =
+      Key('chip_battle_record_filter_victory');
+  static const Key battleRecordFilterDefeat =
+      Key('chip_battle_record_filter_defeat');
+  static const Key battleRecordEmpty = Key('empty_battle_record');
+  static const Key battleRecordHistoryList = Key('list_battle_record_history');
+
   // ━━━ 汎用 ━━━
   static const Key backButton = Key('btn_back');
   static const Key closeButton = Key('btn_close');
