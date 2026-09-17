@@ -145,3 +145,39 @@ const List<ReflectionBadgeDefinition> kAllReflectionBadges = [
     requiresRepository: true,
   ),
 ];
+
+/// 各バッジの達成必要数（分母）。
+///
+/// コレクション画面の進捗表示に使用する。
+/// キーは [ReflectionBadgeDefinition.id] と一致する。
+const Map<String, int> kReflectionBadgeRequirements = {
+  'first_reflection': 1,
+  'reflection_novice': 5,
+  'reflection_adept': 20,
+  'reflection_sage': 50,
+  'reflection_master': 100,
+  'first_insight': 1,
+  'deep_insight': 1,
+  'honest_assessor': 1,
+  'streak_3': 3,
+  'streak_7': 7,
+  'streak_30': 30,
+  'self_awareness': 3,
+};
+
+/// バッジtier（1-4）を日本語ラベルに変換する純粋ヘルパー。
+/// 未知のtierは「その他」を返す。
+String reflectionBadgeTierLabel(int tier) {
+  switch (tier) {
+    case 1:
+      return 'ブロンズ';
+    case 2:
+      return 'シルバー';
+    case 3:
+      return 'ゴールド';
+    case 4:
+      return '伝説';
+    default:
+      return 'その他';
+  }
+}

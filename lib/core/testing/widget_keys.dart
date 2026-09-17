@@ -192,6 +192,19 @@ class AppKeys {
   static const Key battleRecordEmpty = Key('empty_battle_record');
   static const Key battleRecordHistoryList = Key('list_battle_record_history');
 
+  // ━━━ 内省バッジコレクション ━━━
+  static const Key reflectionBadgeCollectionButton =
+      Key('btn_reflection_badge_collection');
+  static const Key reflectionBadgeCollectionScreen =
+      Key('screen_reflection_badge_collection');
+  static const Key reflectionBadgeSummaryCard =
+      Key('card_reflection_badge_summary');
+  static const Key reflectionBadgeSummaryProgress =
+      Key('ind_reflection_badge_summary_progress');
+  static Key reflectionBadgeTierSection(int tier) =>
+      Key('sec_reflection_badge_tier_$tier');
+  static Key reflectionBadgeRow(String id) => Key('row_reflection_badge_$id');
+
   // ━━━ 汎用 ━━━
   static const Key backButton = Key('btn_back');
   static const Key closeButton = Key('btn_close');

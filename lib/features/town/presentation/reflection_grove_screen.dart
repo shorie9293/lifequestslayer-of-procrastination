@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/reflection_analytics.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/services/reflection_analytics_service.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
+import 'package:rpg_todo/features/town/presentation/reflection_badge_collection_screen.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 振り返りの杜 — 学びログと成長の可視化ダッシュボード。
@@ -153,6 +155,25 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('🌳 振り返りの杜'),
+        actions: [
+          SemanticHelper.interactive(
+            testId: SemanticHelper.createTestId(
+                SemanticTypes.button, 'reflection_badge_collection'),
+            label: '内省バッジ',
+            child: IconButton(
+              key: AppKeys.reflectionBadgeCollectionButton,
+              icon: const Icon(Icons.emoji_events),
+              tooltip: '内省バッジ',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ReflectionBadgeCollectionScreen(),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
         leading: widget.onBack != null
             ? SemanticHelper.interactive(
                 testId: SemanticHelper.createTestId(
