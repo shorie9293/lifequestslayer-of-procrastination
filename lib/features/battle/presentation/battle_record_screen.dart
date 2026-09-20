@@ -3,6 +3,7 @@ import 'package:rpg_todo/features/battle/domain/battle_record.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record_summary.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record_service.dart';
 import 'package:rpg_todo/features/battle/data/battle_record_repository.dart';
+import 'package:rpg_todo/features/battle/presentation/enemy_catalog_screen.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 
 /// 討伐戦績の俯瞰画面（改善提案 #56）。
@@ -16,6 +17,10 @@ class BattleRecordScreen extends StatefulWidget {
   final DateTime? now;
 
   const BattleRecordScreen({super.key, required this.repository, this.now});
+
+  /// `yyyy/MM/dd HH:mm` 形式（他画面からも再利用可能な公開ラッパ）。
+  static String formatTimestamp(DateTime dt) =>
+      _BattleRecordScreenState.formatTimestamp(dt);
 
   @override
   State<BattleRecordScreen> createState() => _BattleRecordScreenState();
@@ -52,7 +57,6 @@ class _BattleRecordScreenState extends State<BattleRecordScreen> {
     }
   }
 
-  /// `yyyy/MM/dd HH:mm` 形式に整形する（intl 不依存・試練可能な純粋関数）。
   static String formatTimestamp(DateTime dt) {
     final y = dt.year.toString().padLeft(4, '0');
     final m = dt.month.toString().padLeft(2, '0');
@@ -80,6 +84,21 @@ class _BattleRecordScreenState extends State<BattleRecordScreen> {
       key: AppKeys.battleRecordScreen,
       appBar: AppBar(
         title: const Text('討伐戦績'),
+        actions: [
+          IconButton(
+            key: AppKeys.enemyCatalogEntry,
+            icon: const Icon(Icons.menu_book),
+            tooltip: '敵討伐図鑑',
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) =>
+                      EnemyCatalogScreen(repository: widget.repository),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

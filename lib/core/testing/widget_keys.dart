@@ -192,6 +192,20 @@ class AppKeys {
   static const Key battleRecordEmpty = Key('empty_battle_record');
   static const Key battleRecordHistoryList = Key('list_battle_record_history');
 
+  // ━━━ 敵討伐図鑑 ━━━
+  static const Key enemyCatalogEntry = Key('btn_enemy_catalog_entry');
+  static const Key enemyCatalogScreen = Key('screen_enemy_catalog');
+  static const Key enemyCatalogCompletion = Key('card_enemy_catalog_completion');
+  static const Key enemyCatalogFilterAll = Key('chip_enemy_catalog_filter_all');
+  static const Key enemyCatalogFilterUndiscovered =
+      Key('chip_enemy_catalog_filter_undiscovered');
+  static const Key enemyCatalogFilterRare =
+      Key('chip_enemy_catalog_filter_rare');
+  static const Key enemyCatalogGrid = Key('grid_enemy_catalog');
+  static const Key enemyCatalogEmpty = Key('empty_enemy_catalog');
+  static const Key enemyCatalogDetailDialog = Key('dlg_enemy_catalog_detail');
+  static const Key enemyCatalogRareProgress = Key('txt_enemy_catalog_rare');
+
   // ━━━ 内省バッジコレクション ━━━
   static const Key reflectionBadgeCollectionButton =
       Key('btn_reflection_badge_collection');

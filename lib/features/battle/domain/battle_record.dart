@@ -21,6 +21,9 @@ class BattleRecord {
   /// その討伐で記録したコンボ数。
   final int comboCount;
 
+  /// 討伐対象の敵アセットパス（記録されない場合は null）。
+  final String? enemyAssetPath;
+
   /// 討伐終了時に残っていたサブタスク数。
   final int remainingSubTasks;
 
@@ -36,6 +39,7 @@ class BattleRecord {
     required this.isVictory,
     int comboCount = 0,
     int remainingSubTasks = 0,
+    this.enemyAssetPath,
   })  : comboCount = comboCount < 0 ? 0 : comboCount,
         remainingSubTasks = remainingSubTasks < 0 ? 0 : remainingSubTasks {
     if (id.isEmpty) {
@@ -53,6 +57,7 @@ class BattleRecord {
         'isVictory': isVictory,
         'comboCount': comboCount,
         'remainingSubTasks': remainingSubTasks,
+        'enemyAssetPath': enemyAssetPath,
       };
 
   /// JSON から復元する。破損（キー欠落・型不一致・日時不正）は
@@ -83,6 +88,10 @@ class BattleRecord {
       isVictory: rawIsVictory,
       comboCount: rawCombo,
       remainingSubTasks: rawRemaining,
+      enemyAssetPath:
+          json['enemyAssetPath'] is String && (json['enemyAssetPath'] as String).isNotEmpty
+              ? json['enemyAssetPath'] as String
+              : null,
     );
   }
 
@@ -94,7 +103,8 @@ class BattleRecord {
       other.occurredAt == occurredAt &&
       other.isVictory == isVictory &&
       other.comboCount == comboCount &&
-      other.remainingSubTasks == remainingSubTasks;
+      other.remainingSubTasks == remainingSubTasks &&
+      other.enemyAssetPath == enemyAssetPath;
 
   @override
   int get hashCode => Object.hash(
@@ -104,6 +114,7 @@ class BattleRecord {
         isVictory,
         comboCount,
         remainingSubTasks,
+        enemyAssetPath,
       );
 
   @override

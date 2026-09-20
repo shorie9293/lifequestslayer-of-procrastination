@@ -63,6 +63,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
       isVictory: isVictory,
       comboCount: comboCount,
       remainingSubTasks: remainingSubTasks,
+      enemyAssetPath: task.enemyAssetPath,
     );
     // async の失敗が画面を落とさないよう握りつぶす。
     unawaited(
