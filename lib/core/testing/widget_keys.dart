@@ -226,4 +226,19 @@ class AppKeys {
   static const Key helpButton = Key('btn_help');
   static const Key settingsButton = Key('btn_settings');
   static const Key deleteButton = Key('btn_delete');
+
+  // ━━━ 寄合所のクエスト検索 (#80) ━━━
+  static const Key guildQuestSearchEntry = Key('btn_guild_quest_search_entry');
+  static const Key guildQuestSearchScreen = Key('screen_guild_quest_search');
+  static const Key guildQuestSearchField = Key('txt_guild_quest_search');
+  static const Key guildQuestSearchClear = Key('btn_guild_quest_search_clear');
+  static const Key guildQuestSearchReset = Key('btn_guild_quest_search_reset');
+  static const Key guildQuestSortMenu = Key('btn_guild_quest_sort');
+  static const Key guildQuestResultList = Key('list_guild_quest_results');
+  static const Key guildQuestEmptyState = Key('empty_guild_quest_search');
+  static const Key guildQuestResultCount = Key('txt_guild_quest_result_count');
+  static Key guildQuestStatusChip(String status) =>
+      Key('chip_guild_quest_status_$status');
+  static Key guildQuestRankChip(String rank) =>
+      Key('chip_guild_quest_rank_$rank');
 }

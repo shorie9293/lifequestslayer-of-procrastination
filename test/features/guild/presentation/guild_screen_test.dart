@@ -461,4 +461,27 @@ void main() {
       expect(find.byKey(AppKeys.guildUrgentSection), findsNothing);
     });
   });
+
+  group('GuildScreen クエスト検索導線 (#80)', () {
+    testWidgets(' AppBar の検索ボタンで GuildQuestSearchScreen へ遷移する',
+        (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+      });
+
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // 導線ボタンが存在する
+      expect(find.byKey(AppKeys.guildQuestSearchEntry), findsOneWidget);
+
+      // タップ → 検索画面へ遷移
+      await tester.tap(find.byKey(AppKeys.guildQuestSearchEntry));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(AppKeys.guildQuestSearchScreen), findsOneWidget);
+      expect(find.text('クエスト検索'), findsOneWidget);
+    });
+  });
 }

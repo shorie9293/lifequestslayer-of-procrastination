@@ -17,6 +17,7 @@ import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/features/kozuchi/presentation/widgets/kozuchi_quest_card.dart';
 import 'package:rpg_todo/features/habits/presentation/screens/habit_calendar_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
+import 'package:rpg_todo/features/guild/presentation/guild_quest_search_screen.dart';
 import 'dialogs/tutorial_reset_dialog.dart';
 import 'dialogs/create_task_dialog.dart';
 import 'dialogs/bulk_create_task_dialog.dart';
@@ -408,10 +409,20 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.18+114", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.19+115", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
+          IconButton(
+            key: AppKeys.guildQuestSearchEntry,
+            icon: const Icon(Icons.search),
+            tooltip: 'クエスト検索',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const GuildQuestSearchScreen(),
+              ),
+            ),
+          ),
           SemanticHelper.interactive(
             testId: SemanticHelper.createTestId(SemanticTypes.button, 'bulk_create'),
             label: '一括クエスト登録',
