@@ -79,6 +79,10 @@ class _TestSettingsRepo extends SettingsRepository {
   @override
   Future<bool> getSfxEnabled() async => true;
   @override
+  Future<double> getSfxVolume() async => 0.7;
+  @override
+  Future<void> setSfxVolume(double volume) async {}
+  @override
   Future<void> setSfxEnabled(bool enabled) async {}
   @override
   Future<bool> getBattleSceneEnabled() async => true;
