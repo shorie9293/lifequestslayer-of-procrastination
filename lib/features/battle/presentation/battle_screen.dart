@@ -86,6 +86,8 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
 
     _battleVM = getIt<BattleViewModel>();
     _audioService = getIt<BattleAudioService>();
+    // 保存済みの効果音音量を再生器へ反映する（改善提案#67）
+    _audioService.setVolume(context.read<SettingsViewModel>().sfxVolume);
     // 討伐戦績リポジトリ: 注入 > DI登録 > 無害なno-op の順で解決する。
     // （Hive 未初期化の環境で openBox を呼ぶと zone の未処理エラーになるため、
     //   未配線環境では Hive に触れない no-op を使う）

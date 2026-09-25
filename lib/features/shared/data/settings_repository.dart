@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
+import 'package:rpg_todo/features/battle/domain/sfx_volume.dart';
 
 /// Hiveの settingsBox / tutorialBox へのアクセスを集約するリポジトリ。
 ///
@@ -206,6 +207,24 @@ class SettingsRepository {
     try {
       final box = await _openSettingsBox();
       await box.put('sfxEnabled', enabled);
+    } catch (_) {}
+  }
+
+  /// 効果音の音量（0.0〜1.0）。破損値は既定値へ安全フォールバックする（改善提案#67）。
+  Future<double> getSfxVolume() async {
+    try {
+      final box = await _openSettingsBox();
+      return SfxVolumeSetting.fromStored(box.get(SfxVolumeSetting.storageKey))
+          .value;
+    } catch (_) {
+      return SfxVolumeSetting.defaultValue;
+    }
+  }
+
+  Future<void> setSfxVolume(double volume) async {
+    try {
+      final box = await _openSettingsBox();
+      await box.put(SfxVolumeSetting.storageKey, SfxVolumeSetting(volume).value);
     } catch (_) {}
   }
 

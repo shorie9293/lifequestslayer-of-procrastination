@@ -241,4 +241,10 @@ class AppKeys {
       Key('chip_guild_quest_status_$status');
   static Key guildQuestRankChip(String rank) =>
       Key('chip_guild_quest_rank_$rank');
+
+  // ━━━ 効果音の音量設定 (#67) ━━━
+  static const Key sfxVolumeSection = Key('sec_sfx_volume');
+  static const Key sfxVolumeSlider = Key('sld_sfx_volume');
+  static const Key sfxVolumeValueLabel = Key('txt_sfx_volume_value');
+  static Key sfxVolumePreset(int index) => Key('chip_sfx_volume_preset_$index');
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/features/battle/domain/sfx_volume.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 import 'package:rpg_todo/features/shared/domain/tutorial_service.dart';
 import 'package:injectable/injectable.dart';
@@ -19,6 +20,7 @@ class SettingsViewModel extends ChangeNotifier {
   bool _kqEnabled = true;
   bool _debugMode = false;
   bool _sfxEnabled = true;
+  double _sfxVolume = SfxVolumeSetting.defaultValue;
   ThemeMode _themeMode = ThemeMode.dark;
   bool _battleSceneEnabled = true;
   DateTime? _lastBackupTime;
@@ -36,6 +38,7 @@ class SettingsViewModel extends ChangeNotifier {
   bool get isKnowledgeQuestEnabled => _kqEnabled;
   bool get isDebugMode => _debugMode;
   bool get isSfxEnabled => _sfxEnabled;
+  double get sfxVolume => _sfxVolume;
   ThemeMode get themeMode => _themeMode;
   bool get isBattleSceneEnabled => _battleSceneEnabled;
   DateTime? get lastBackupTime => _lastBackupTime;
@@ -50,6 +53,13 @@ class SettingsViewModel extends ChangeNotifier {
   Future<void> setSfxEnabled(bool v) async {
     _sfxEnabled = v;
     await _settingsRepository.setSfxEnabled(v);
+    notifyListeners();
+  }
+
+  /// 効果音の音量を設定する（改善提案#67）。0.0〜1.0 にクランプして永続化する。
+  Future<void> setSfxVolume(double v) async {
+    _sfxVolume = SfxVolumeSetting(v).value;
+    await _settingsRepository.setSfxVolume(_sfxVolume);
     notifyListeners();
   }
 
@@ -159,6 +169,7 @@ class SettingsViewModel extends ChangeNotifier {
     await _load<bool>(_settingsRepository.getJobTutorialCompleted, (v) => _jobTutorialCompleted = v, label: 'jobTutorialCompleted');
     await _load<bool>(_settingsRepository.getDebugModeEnabled, (v) => _debugMode = v, label: 'debugMode');
     await _load<bool>(_settingsRepository.getSfxEnabled, (v) => _sfxEnabled = v, label: 'sfxEnabled');
+    await _load<double>(_settingsRepository.getSfxVolume, (v) => _sfxVolume = SfxVolumeSetting(v).value, label: 'sfxVolume');
     await _load<bool>(_settingsRepository.getBattleSceneEnabled, (v) => _battleSceneEnabled = v, label: 'battleSceneEnabled');
     await _load<ThemeMode>(_settingsRepository.getThemeMode, (v) => _themeMode = v, label: 'themeMode');
     await _load<DateTime?>(_settingsRepository.getLastBackupTime, (v) => _lastBackupTime = v, label: 'lastBackupTime');

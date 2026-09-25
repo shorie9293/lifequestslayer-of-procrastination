@@ -15,6 +15,7 @@ import 'widgets/skin_section.dart';
 import 'widgets/inn_section.dart';
 import 'widgets/title_section.dart';
 import 'widgets/theme_section.dart';
+import 'widgets/sfx_volume_section.dart';
 
 class TownScreen extends StatelessWidget {
   const TownScreen({super.key});
@@ -187,6 +188,8 @@ class _TownTab extends StatelessWidget {
                   TitleSection(viewModel: playerVM, player: player),
                   const SizedBox(height: 24),
                   const ThemeSection(),
+                  const SizedBox(height: 24),
+                  const SfxVolumeSection(),
                 ],
               ),
             ),
