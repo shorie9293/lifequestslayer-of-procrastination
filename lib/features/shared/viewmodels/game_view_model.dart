@@ -159,9 +159,10 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
     if (result != null) {
       // 町にXPを付与（クエストランクに応じた量）
       if (_townVM != null) {
-        final task = _taskVM.tasks.firstWhere((t) => t.id == id);
-        final townXp = _townXpForRank(task.rank);
+        final task = _taskVM.tasks.where((t) => t.id == id).firstOrNull;
+        final townXp = task != null ? _townXpForRank(task.rank) : 0;
         _townVM!.addTownXp(townXp);
+        result['townXp'] = townXp;
       }
 
       if (_settingsVM.tutorialStep == 2) completeTutorialStep(2);

@@ -14,6 +14,7 @@ import 'package:takamagahara_ui/takamagahara_ui.dart';
 class BattleReportDialog extends StatefulWidget {
   final int coinsGained;
   final List<String> bonusMessages;
+  final int? townXp;
   final bool leveledUp;
   final int previousLevel, newLevel, currentExp, expToNextLevel;
   final QuizQuestion? quizQuestion;
@@ -34,6 +35,7 @@ class BattleReportDialog extends StatefulWidget {
     super.key,
     required this.coinsGained,
     this.bonusMessages = const [],
+    this.townXp,
     this.leveledUp = false,
     this.previousLevel = 1, this.newLevel = 1,
     this.currentExp = 0, this.expToNextLevel = 50,
@@ -51,6 +53,7 @@ class BattleReportDialog extends StatefulWidget {
 
   static Future<void> show(BuildContext context, {
     required int coinsGained, List<String> bonusMessages = const [],
+    int? townXp,
     bool leveledUp = false, int previousLevel = 1, int newLevel = 1,
     int currentExp = 0, int expToNextLevel = 50,
     QuizQuestion? quizQuestion, void Function(QuizQuestion)? onQuizCorrect,
@@ -64,6 +67,7 @@ class BattleReportDialog extends StatefulWidget {
     context: context, barrierDismissible: false,
     builder: (_) => BattleReportDialog(
       coinsGained: coinsGained, bonusMessages: bonusMessages,
+      townXp: townXp,
       leveledUp: leveledUp, previousLevel: previousLevel, newLevel: newLevel,
       currentExp: currentExp, expToNextLevel: expToNextLevel,
       quizQuestion: quizQuestion, onQuizCorrect: onQuizCorrect,
@@ -144,6 +148,33 @@ class _BattleReportDialogState extends State<BattleReportDialog> {
               children: [
                 BattleResultHeader(coinsGained: widget.coinsGained),
                 const SizedBox(height: 12),
+                if (widget.townXp != null && widget.townXp! > 0) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('🏠', style: TextStyle(fontSize: 20)),
+                      const SizedBox(width: 8),
+                      const Text(
+                        '町XP',
+                        style: TextStyle(
+                          fontSize: 18,
+                          color: Color(0xFF7FD48A),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '+${widget.townXp}',
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Color(0xFF7FD48A),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                ],
                 if (widget.bonusMessages.isNotEmpty)
                   BonusMessageList(messages: widget.bonusMessages),
                 if (widget.leveledUp) ...[

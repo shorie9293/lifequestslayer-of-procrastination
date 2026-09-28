@@ -257,6 +257,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
     final leveledUp = result['leveledUp'] as bool;
     final coinsGained = result['coinsGained'] as int;
     final bonusMessages = result['bonusMessages'] as List<String>;
+    final townXp = result['townXp'] as int?;
     final quizQuestion = result['quizQuestion'] as QuizQuestion?;
     final baseExp = result['baseExp'] as int;
     final isOverdueBoss = result['isOverdueBoss'] as bool? ?? false;
@@ -309,6 +310,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
         dialogContext,
         coinsGained: coinsGained,
         bonusMessages: bonusMessages,
+        townXp: townXp,
         leveledUp: leveledUp,
         previousLevel: previousLevel,
         newLevel: player.level,
