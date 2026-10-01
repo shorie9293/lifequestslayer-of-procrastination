@@ -18,6 +18,9 @@ import 'package:rpg_todo/features/kozuchi/presentation/widgets/kozuchi_quest_car
 import 'package:rpg_todo/features/habits/presentation/screens/habit_calendar_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_quest_search_screen.dart';
+import 'package:rpg_todo/features/guild/presentation/task_template_screen.dart';
+import 'package:rpg_todo/features/guild/data/task_template_repository.dart';
+import 'package:rpg_todo/core/di/injection.dart';
 import 'dialogs/tutorial_reset_dialog.dart';
 import 'dialogs/create_task_dialog.dart';
 import 'dialogs/bulk_create_task_dialog.dart';
@@ -409,7 +412,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.21+117", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.22+118", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -422,6 +425,36 @@ class _GuildScreenState extends State<GuildScreen> {
                 builder: (_) => const GuildQuestSearchScreen(),
               ),
             ),
+          ),
+          IconButton(
+            key: AppKeys.taskTemplateEntry,
+            icon: const Icon(Icons.bookmark_border),
+            tooltip: '勤行の定型',
+            onPressed: () {
+              final repo = getIt.isRegistered<TaskTemplateRepository>()
+                  ? getIt<TaskTemplateRepository>()
+                  : InMemoryTaskTemplateRepository();
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => TaskTemplateScreen(
+                    repository: repo,
+                    onTaskCreated: (task) {
+                      context.read<GameViewModel>().addTask(
+                            task.title,
+                            rank: task.rank,
+                            repeatInterval: task.repeatInterval,
+                            repeatWeekdays: task.repeatWeekdays.isEmpty
+                                ? null
+                                : task.repeatWeekdays,
+                            subTasks:
+                                task.subTasks.isEmpty ? null : task.subTasks,
+                            targetTimeMinutes: task.targetTimeMinutes,
+                          );
+                    },
+                  ),
+                ),
+              );
+            },
           ),
           SemanticHelper.interactive(
             testId: SemanticHelper.createTestId(SemanticTypes.button, 'bulk_create'),

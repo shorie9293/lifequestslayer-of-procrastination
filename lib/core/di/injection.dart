@@ -17,6 +17,7 @@ import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 
 import 'package:rpg_todo/features/battle/domain/battle_audio_service.dart';
 import 'package:rpg_todo/features/battle/data/battle_record_repository.dart';
+import 'package:rpg_todo/features/guild/data/task_template_repository.dart';
 import 'package:rpg_todo/features/battle/viewmodels/battle_view_model.dart';
 import 'package:rpg_todo/features/crossapp/data/cross_app_reward_service.dart';
 import 'package:rpg_todo/features/crossapp/data/cross_app_settings_repository.dart';
@@ -115,6 +116,13 @@ void configureDependencies() {
   if (!getIt.isRegistered<BattleRecordRepository>()) {
     getIt.registerLazySingleton<BattleRecordRepository>(
       () => HiveBattleRecordRepository(),
+    );
+  }
+
+  // 勤行テンプレート（改善提案 #73）の永続層を配線（Hive box 'task_templates'）
+  if (!getIt.isRegistered<TaskTemplateRepository>()) {
+    getIt.registerLazySingleton<TaskTemplateRepository>(
+      () => HiveTaskTemplateRepository(),
     );
   }
 }

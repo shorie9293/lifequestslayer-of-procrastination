@@ -247,4 +247,24 @@ class AppKeys {
   static const Key sfxVolumeSlider = Key('sld_sfx_volume');
   static const Key sfxVolumeValueLabel = Key('txt_sfx_volume_value');
   static Key sfxVolumePreset(int index) => Key('chip_sfx_volume_preset_$index');
+
+  // ━━━ 勤行の定型タスク (#73) ━━━
+  static const Key taskTemplateEntry = Key('btn_task_template_entry');
+  static const Key taskTemplateScreen = Key('screen_task_template');
+  static const Key taskTemplateList = Key('list_task_templates');
+  static const Key taskTemplateEmptyState = Key('empty_task_templates');
+  static const Key taskTemplateSearchField = Key('txt_task_template_search');
+  static const Key taskTemplateSearchClear = Key('btn_task_template_search_clear');
+  static const Key taskTemplateCount = Key('txt_task_template_count');
+  static const Key taskTemplateCreateButton = Key('btn_task_template_create');
+  static const Key taskTemplateSaveButton = Key('btn_task_template_save');
+  static const Key taskTemplateCreateQuestButton =
+      Key('btn_task_template_create_quest');
+  static const Key taskTemplateDeleteButton = Key('btn_task_template_delete');
+  static const Key taskTemplateConfirmDelete = Key('dlg_task_template_delete');
+  static const Key taskTemplateNameField = Key('txt_task_template_name');
+  static const Key taskTemplateTitleField = Key('txt_task_template_title');
+  static const Key taskTemplateSubTaskField = Key('txt_task_template_subtask');
+  static const Key taskTemplateSubTaskAdd = Key('btn_task_template_subtask_add');
+  static Key taskTemplateRow(String id) => Key('row_task_template_$id');
 }
