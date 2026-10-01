@@ -290,4 +290,11 @@ class AppKeys {
 
   // ━━━ クエスト作成ダイアログのプロジェクト欄 ━━━
   static const Key createTaskProjectField = Key('dd_create_task_project');
+
+  // ━━━ 冒険者カルテ（#98） ━━━
+  static const Key adventurerChartButton = Key('btn_adventurer_chart');
+  static const Key adventurerChartScreen = Key('screen_adventurer_chart');
+  static const Key adventurerRankCard = Key('card_adventurer_rank');
+  static Key adventurerGroupSection(String id) => Key('section_adventurer_$id');
+  static Key adventurerStatRow(String id) => Key('row_adventurer_stat_$id');
 }

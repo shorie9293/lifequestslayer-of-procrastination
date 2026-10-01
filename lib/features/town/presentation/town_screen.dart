@@ -7,6 +7,7 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
 import 'package:rpg_todo/features/town/domain/building.dart';
+import 'package:rpg_todo/features/adventurer/presentation/adventurer_chart_screen.dart';
 import 'package:rpg_todo/features/character_customization/presentation/equipment_tab.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'widgets/coin_gem_balance_bar.dart';
@@ -46,6 +47,14 @@ class TownScreen extends StatelessWidget {
         appBar: AppBar(
           title: Text("${scale.displayName} — ${hd['name']}"),
           actions: [
+            IconButton(
+              key: AppKeys.adventurerChartButton,
+              icon: const Icon(Icons.assignment_ind_outlined),
+              tooltip: '冒険者カルテ',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const AdventurerChartScreen()),
+              ),
+            ),
             SemanticHelper.interactive(
               testId:
                   SemanticHelper.createTestId(SemanticTypes.button, 'help'),
