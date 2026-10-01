@@ -24,6 +24,9 @@ void main() {
   testWidgets('寄合所 AppBar に定型導線が存在し、遷移できる', (tester) async {
     final vms = createViewModels();
     await _pump(tester, vms);
+    // v1.5.23: 定型導線は⋯オーバーフローメニューに集約された
+    await tester.tap(find.byKey(AppKeys.guildOverflowMenu));
+    await tester.pumpAndSettle();
     expect(find.byKey(AppKeys.taskTemplateEntry), findsOneWidget);
 
     await tester.tap(find.byKey(AppKeys.taskTemplateEntry));
@@ -36,6 +39,9 @@ void main() {
     final vms = createViewModels();
     await _pump(tester, vms);
 
+    // v1.5.23: 定型導線は⋯オーバーフローメニューに集約された
+    await tester.tap(find.byKey(AppKeys.guildOverflowMenu));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(AppKeys.taskTemplateEntry));
     await tester.pumpAndSettle();
 

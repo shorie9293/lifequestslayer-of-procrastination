@@ -27,6 +27,10 @@ import 'dialogs/bulk_create_task_dialog.dart';
 import 'dialogs/recurring_tasks_dialog.dart';
 import 'dialogs/notification_settings_dialog.dart';
 import 'package:rpg_todo/features/battle/presentation/widgets/knowledge_quest_dialog.dart';
+import 'package:rpg_todo/features/project/domain/project_service.dart';
+import 'package:rpg_todo/features/project/presentation/project_list_screen.dart';
+import 'package:rpg_todo/features/shared/widgets/widgets/player_avatar_section.dart'
+    show getJobName;
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class GuildScreen extends StatefulWidget {
@@ -34,6 +38,90 @@ class GuildScreen extends StatefulWidget {
 
   @override
   State<GuildScreen> createState() => _GuildScreenState();
+}
+
+/// 職業チップ＋スキルプルダウン（v1.5.23）。
+///
+/// 現在職業を表示し、タップで ProjectService.skillsFor のスキル一覧を出す。
+/// 解放済み計画の陣 → ProjectListScreen / 他の解放済みスキル → 説明 SnackBar。
+/// 未解放スキルはグレーアウト＋🔒でタップ不可。
+class _JobSkillChip extends StatelessWidget {
+  const _JobSkillChip({required this.player});
+
+  final Player player;
+
+  static const _jobEmoji = {
+    Job.adventurer: '⚔️',
+    Job.samurai: '🗡️',
+    Job.monk: '🙏',
+    Job.mystic: '🗺️',
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final skills = ProjectService.skillsFor(player);
+    return PopupMenuButton<JobSkill>(
+      key: AppKeys.guildJobChip,
+      tooltip: '現在の職業とスキル',
+      onSelected: (skill) {
+        if (skill == JobSkill.mysticProject) {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ProjectListScreen()),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${skill.displayName}: ${skill.description}')),
+          );
+        }
+      },
+      itemBuilder: (context) => [
+        for (final info in skills)
+          PopupMenuItem<JobSkill>(
+            key: AppKeys.guildJobSkillItem(info.skill),
+            value: info.skill,
+            enabled: info.isUnlocked,
+            child: Row(
+              children: [
+                Text(
+                  info.skill.displayName,
+                  style: TextStyle(
+                    color: info.isUnlocked ? null : Colors.grey,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  info.isUnlocked
+                      ? 'Lv${info.requiredLevel}'
+                      : '🔒 Lv${info.requiredLevel}で解放',
+                  style: const TextStyle(fontSize: 11, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+      ],
+      child: SemanticHelper.interactive(
+        testId: SemanticHelper.createTestId(SemanticTypes.button, 'guild_job_chip'),
+        label: '現在の職業とスキル一覧',
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(_jobEmoji[player.currentJob] ?? '',
+                  style: const TextStyle(fontSize: 12)),
+              const SizedBox(width: 4),
+              Text(getJobName(player.currentJob),
+                  style: const TextStyle(fontSize: 12)),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class _GuildScreenState extends State<GuildScreen> {
@@ -407,12 +495,12 @@ class _GuildScreenState extends State<GuildScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           mainAxisSize: MainAxisSize.min,
-          children: [
+          children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.22+118", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.23+119", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -426,96 +514,151 @@ class _GuildScreenState extends State<GuildScreen> {
               ),
             ),
           ),
-          IconButton(
-            key: AppKeys.taskTemplateEntry,
-            icon: const Icon(Icons.bookmark_border),
-            tooltip: '勤行の定型',
-            onPressed: () {
-              final repo = getIt.isRegistered<TaskTemplateRepository>()
-                  ? getIt<TaskTemplateRepository>()
-                  : InMemoryTaskTemplateRepository();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => TaskTemplateScreen(
-                    repository: repo,
-                    onTaskCreated: (task) {
-                      context.read<GameViewModel>().addTask(
-                            task.title,
-                            rank: task.rank,
-                            repeatInterval: task.repeatInterval,
-                            repeatWeekdays: task.repeatWeekdays.isEmpty
-                                ? null
-                                : task.repeatWeekdays,
-                            subTasks:
-                                task.subTasks.isEmpty ? null : task.subTasks,
-                            targetTimeMinutes: task.targetTimeMinutes,
-                          );
-                    },
-                  ),
-                ),
-              );
-            },
-          ),
-          SemanticHelper.interactive(
-            testId: SemanticHelper.createTestId(SemanticTypes.button, 'bulk_create'),
-            label: '一括クエスト登録',
-            child: IconButton(
-              icon: const Icon(Icons.post_add),
-              tooltip: '一括クエスト登録',
-              onPressed: () {
-                if (_isDialogOpen) return;
-                _isDialogOpen = true;
-                showDialog(
-                  context: context,
-                  builder: (context) => const BulkCreateTaskDialog(),
-                ).then((_) => _isDialogOpen = false);
-              },
-            ),
-          ),
-          if (playerVM.player.canUseSkill(Job.monk))
-            SemanticHelper.interactive(
-              testId: SemanticHelper.createTestId(SemanticTypes.button, 'recurring_tasks'),
-              label: '繰り返し任務一覧',
-              child: IconButton(
-                icon: const Icon(Icons.loop),
-                tooltip: '繰り返し任務一覧',
-                onPressed: () {
+          _JobSkillChip(player: playerVM.player),
+          PopupMenuButton<String>(
+            key: AppKeys.guildOverflowMenu,
+            icon: const Icon(Icons.more_vert),
+            tooltip: 'その他の操作',
+            onSelected: (value) {
+              switch (value) {
+                case 'task_template':
+                  final repo = getIt.isRegistered<TaskTemplateRepository>()
+                      ? getIt<TaskTemplateRepository>()
+                      : InMemoryTaskTemplateRepository();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => TaskTemplateScreen(
+                        repository: repo,
+                        onTaskCreated: (task) {
+                          context.read<GameViewModel>().addTask(
+                                task.title,
+                                rank: task.rank,
+                                repeatInterval: task.repeatInterval,
+                                repeatWeekdays: task.repeatWeekdays.isEmpty
+                                    ? null
+                                    : task.repeatWeekdays,
+                                subTasks:
+                                    task.subTasks.isEmpty ? null : task.subTasks,
+                                targetTimeMinutes: task.targetTimeMinutes,
+                              );
+                        },
+                      ),
+                    ),
+                  );
+                case 'bulk_create':
+                  if (_isDialogOpen) return;
+                  _isDialogOpen = true;
+                  showDialog(
+                    context: context,
+                    builder: (context) => const BulkCreateTaskDialog(),
+                  ).then((_) => _isDialogOpen = false);
+                case 'recurring_tasks':
                   if (_isDialogOpen) return;
                   _isDialogOpen = true;
                   showDialog(
                     context: context,
                     builder: (context) => const RecurringTasksDialog(),
                   ).then((_) => _isDialogOpen = false);
-                },
-              ),
-            ),
-          SemanticHelper.interactive(
-            testId: SemanticHelper.createTestId(SemanticTypes.button, 'habit_calendar'),
-            label: '勤行の習慣カレンダー',
-            child: IconButton(
-              key: AppKeys.habitCalendarEntry,
-              icon: const Icon(Icons.calendar_month),
-              tooltip: '勤行の習慣カレンダー',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const HabitCalendarScreen(),
+                case 'habit_calendar':
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const HabitCalendarScreen(),
+                    ),
+                  );
+                case 'reminder_settings':
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const ReminderSettingsScreen(),
+                    ),
+                  );
+              }
+            },
+            itemBuilder: (context) => [
+              PopupMenuItem(
+                value: 'task_template',
+                key: AppKeys.guildOverflowTaskTemplate,
+                child: SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'task_template'),
+                  label: '勤行の定型',
+                  child: Row(
+                    key: AppKeys.taskTemplateEntry,
+                    children: const [
+                      Icon(Icons.bookmark_border, color: Colors.black54),
+                      SizedBox(width: 8),
+                      Text('勤行の定型'),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          ),
-          SemanticHelper.interactive(
-            testId: SemanticHelper.createTestId(SemanticTypes.button, 'reminder_settings'),
-            label: '勤行リマインダー',
-            child: IconButton(
-              key: AppKeys.reminderSettingsEntry,
-              icon: const Icon(Icons.alarm),
-              tooltip: '勤行リマインダー',
-              onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => const ReminderSettingsScreen(),
+              PopupMenuItem(
+                value: 'bulk_create',
+                key: AppKeys.guildOverflowBulkCreate,
+                child: SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'bulk_create'),
+                  label: '一括クエスト登録',
+                  child: Row(
+                    children: const [
+                      Icon(Icons.post_add, color: Colors.black54),
+                      SizedBox(width: 8),
+                      Text('一括クエスト登録'),
+                    ],
+                  ),
                 ),
               ),
-            ),
+              if (playerVM.player.canUseSkill(Job.monk))
+                PopupMenuItem(
+                  value: 'recurring_tasks',
+                  key: AppKeys.guildOverflowRecurringTasks,
+                  child: SemanticHelper.interactive(
+                    testId: SemanticHelper.createTestId(
+                        SemanticTypes.button, 'recurring_tasks'),
+                    label: '繰り返し任務一覧',
+                    child: Row(
+                      children: const [
+                        Icon(Icons.loop, color: Colors.black54),
+                        SizedBox(width: 8),
+                        Text('繰り返し任務一覧'),
+                      ],
+                    ),
+                  ),
+                ),
+              PopupMenuItem(
+                value: 'habit_calendar',
+                key: AppKeys.guildOverflowHabitCalendar,
+                child: SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'habit_calendar'),
+                  label: '勤行の習慣カレンダー',
+                  child: Row(
+                    key: AppKeys.habitCalendarEntry,
+                    children: const [
+                      Icon(Icons.calendar_month, color: Colors.black54),
+                      SizedBox(width: 8),
+                      Text('勤行の習慣カレンダー'),
+                    ],
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'reminder_settings',
+                key: AppKeys.guildOverflowReminder,
+                child: SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'reminder_settings'),
+                  label: '勤行リマインダー',
+                  child: Row(
+                    key: AppKeys.reminderSettingsEntry,
+                    children: const [
+                      Icon(Icons.alarm, color: Colors.black54),
+                      SizedBox(width: 8),
+                      Text('勤行リマインダー'),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
           PopupMenuButton<String>(
             key: AppKeys.settingsButton,

@@ -7,6 +7,7 @@ import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/features/project/domain/project_service.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// クエスト作成/編集ダイアログ
@@ -28,11 +29,18 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
   late final TextEditingController _targetTimeController;
   DateTime? _deadline;
   int? _estimatedMinutes;
+  String? _selectedProject;
 
   @override
   void initState() {
     super.initState();
     final t = widget.task;
+    if (t != null) {
+      // 既存タスク編集時は現在の所属プロジェクトで初期選択
+      _selectedProject = Provider.of<PlayerViewModel>(context, listen: false)
+          .player
+          .taskProjects[t.id];
+    }
     _titleController = TextEditingController(text: t?.title ?? "");
     _selectedRank = t?.rank ?? QuestRank.B;
     _selectedRepeat = t?.repeatInterval ?? RepeatInterval.none;
@@ -156,7 +164,31 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
         deadline: _deadline,
       );
     }
+    // プロジェクト（計画の陣）への割り当て/解除
+    final playerVM = Provider.of<PlayerViewModel>(context, listen: false);
+    if (_selectedProject == null) {
+      if (widget.task != null) {
+        playerVM.unassignTaskFromProject(widget.task!.id);
+      }
+    } else {
+      final taskId = widget.task?.id ??
+          _resolveCreatedTaskId(gameVM, playerVM.player);
+      if (taskId != null) {
+        playerVM.assignTaskToProject(taskId, _selectedProject!);
+      }
+    }
     Navigator.pop(context);
+  }
+
+  /// 新規作成直後のタスクIDを解決（addTask はIDを返さないため同タイトルから特定）。
+  String? _resolveCreatedTaskId(GameViewModel gameVM, Player player) {
+    final candidates = gameVM.tasks
+        .where((t) =>
+            t.title == _titleController.text &&
+            !player.taskProjects.containsKey(t.id))
+        .toList();
+    if (candidates.isEmpty) return null;
+    return candidates.first.id;
   }
 
   @override
@@ -311,6 +343,28 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
                       }).toList(),
                     )
                   ]
+                ],
+                if (ProjectService.canUseProjectSkill(player)) ...[
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String?>(
+                    key: AppKeys.createTaskProjectField,
+                    value: _selectedProject,
+                    decoration: const InputDecoration(
+                        labelText: "プロジェクト (計画の陣)"),
+                    items: [
+                      const DropdownMenuItem<String?>(
+                        value: null,
+                        child: Text("なし"),
+                      ),
+                      ...player.projects.map(
+                        (g) => DropdownMenuItem<String?>(
+                          value: g.name,
+                          child: Text(g.name),
+                        ),
+                      ),
+                    ],
+                    onChanged: (val) => setState(() => _selectedProject = val),
+                  ),
                 ],
                 if (player.canUseSkill(Job.mystic)) ...[
                   const SizedBox(height: 16),

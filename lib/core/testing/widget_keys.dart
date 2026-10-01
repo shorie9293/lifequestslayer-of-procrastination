@@ -8,7 +8,7 @@
 // 制定: 令和八年皐月三日（適1で基本定義、適2で拡張＋全紐付け）
 
 import 'package:flutter/material.dart';
-import 'package:rpg_todo/domain/models/job.dart';
+import 'package:rpg_todo/domain/models/player.dart';
 
 class AppKeys {
   AppKeys._();
@@ -267,4 +267,27 @@ class AppKeys {
   static const Key taskTemplateSubTaskField = Key('txt_task_template_subtask');
   static const Key taskTemplateSubTaskAdd = Key('btn_task_template_subtask_add');
   static Key taskTemplateRow(String id) => Key('row_task_template_$id');
+
+  // ━━━ 寄合所 AppBar 3+1 集約（v1.5.23） ━━━
+  /// ⋯ オーバーフローメニューボタン。
+  static const Key guildOverflowMenu = Key('btn_guild_overflow_menu');
+  /// オーバーフロー内の各項目（PopupMenuItem 側のキー。既存 AppKeys は子 Row 側）。
+  static const Key guildOverflowTaskTemplate =
+      Key('item_guild_overflow_task_template');
+  static const Key guildOverflowBulkCreate =
+      Key('item_guild_overflow_bulk_create');
+  static const Key guildOverflowRecurringTasks =
+      Key('item_guild_overflow_recurring_tasks');
+  static const Key guildOverflowHabitCalendar =
+      Key('item_guild_overflow_habit_calendar');
+  static const Key guildOverflowReminder =
+      Key('item_guild_overflow_reminder');
+
+  // ━━━ 職業チップ＋スキルプルダウン ━━━
+  static const Key guildJobChip = Key('chip_guild_job');
+  static Key guildJobSkillItem(JobSkill skill) =>
+      Key('item_guild_job_skill_${skill.name}');
+
+  // ━━━ クエスト作成ダイアログのプロジェクト欄 ━━━
+  static const Key createTaskProjectField = Key('dd_create_task_project');
 }

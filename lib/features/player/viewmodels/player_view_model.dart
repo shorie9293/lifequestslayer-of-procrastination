@@ -193,6 +193,97 @@ class PlayerViewModel extends ChangeNotifier {
   void incrementWeeklySRank() { _player = _player.copyWith(weeklySRankCompleted: _player.weeklySRankCompleted + 1); notifyListeners(); _autoSave(); }
   void setNextDayTaskLimitOffset(int v) { _player = _player.copyWith(nextDayTaskLimitOffset: v); notifyListeners(); _autoSave(); }
 
+  // ── 計画の陣（プロジェクト）──
+  void addProject(String name, int bonusExp) {
+    _player = _player.copyWith(projects: [
+      ..._player.projects,
+      ProjectGroup(name: name, bonusExp: bonusExp),
+    ]);
+    notifyListeners();
+    _autoSave();
+  }
+
+  void renameProject(String oldName, String newName, {int? bonusExp}) {
+    final newProjects = _player.projects.map((g) {
+      if (g.name != oldName) return g;
+      return ProjectGroup(
+        name: newName,
+        taskIds: [...g.taskIds],
+        tags: [...g.tags],
+        bonusExp: bonusExp ?? g.bonusExp,
+      );
+    }).toList();
+    _player = _player.copyWith(projects: newProjects);
+    // taskProjects の参照名を張り替え
+    final newTaskProjects = Map.of(_player.taskProjects);
+    newTaskProjects.updateAll(
+        (taskId, projName) => projName == oldName ? newName : projName);
+    _player = _player.copyWith(taskProjects: newTaskProjects);
+    notifyListeners();
+    _autoSave();
+  }
+
+  void removeProject(String name) {
+    _player = _player.copyWith(
+      projects: _player.projects.where((g) => g.name != name).toList(),
+    );
+    // 所属タスクの割り当てを掃除
+    final newTaskProjects = Map.of(_player.taskProjects)
+      ..removeWhere((_, projName) => projName == name);
+    _player = _player.copyWith(taskProjects: newTaskProjects);
+    notifyListeners();
+    _autoSave();
+  }
+
+  void assignTaskToProject(String taskId, String projectName) {
+    final group = _player.projects
+        .where((g) => g.name == projectName)
+        .firstOrNull;
+    if (group == null) return;
+    if (group.taskIds.contains(taskId) &&
+        _player.taskProjects[taskId] == projectName) {
+      return;
+    }
+    final newGroup = ProjectGroup(
+      name: group.name,
+      taskIds: [...group.taskIds, if (!group.taskIds.contains(taskId)) taskId],
+      tags: [...group.tags],
+      bonusExp: group.bonusExp,
+    );
+    _player = _player.copyWith(projects: [
+      for (final g in _player.projects) g.name == projectName ? newGroup : g,
+    ]);
+    _player = _player.copyWith(
+      taskProjects: Map.of(_player.taskProjects)..[taskId] = projectName,
+    );
+    notifyListeners();
+    _autoSave();
+  }
+
+  void unassignTaskFromProject(String taskId) {
+    final projectName = _player.taskProjects[taskId];
+    if (projectName == null) return;
+    final group = _player.projects
+        .where((g) => g.name == projectName)
+        .firstOrNull;
+    if (group != null) {
+      final newGroup = ProjectGroup(
+        name: group.name,
+        taskIds: group.taskIds.where((id) => id != taskId).toList(),
+        tags: [...group.tags],
+        bonusExp: group.bonusExp,
+      );
+      _player = _player.copyWith(projects: [
+        for (final g in _player.projects) g.name == projectName ? newGroup : g,
+      ]);
+    }
+    _player = _player.copyWith(
+      taskProjects: Map.of(_player.taskProjects)..remove(taskId),
+    );
+    notifyListeners();
+    _autoSave();
+  }
+
   // ── 集中の型（ポモドーロ）──
   /// 集中セッションを開始する。勤行のEXPボーナス（集中の型）は
   /// `isPomodoroActive` が真の間にタスクを完了した場合に発生する。
