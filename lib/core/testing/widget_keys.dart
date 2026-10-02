@@ -297,4 +297,14 @@ class AppKeys {
   static const Key adventurerRankCard = Key('card_adventurer_rank');
   static Key adventurerGroupSection(String id) => Key('section_adventurer_$id');
   static Key adventurerStatRow(String id) => Key('row_adventurer_stat_$id');
+
+  // ━━━ 週次グリフォン報告（振り返りの杜） ━━━
+  static const Key gryphonReportSection = Key('sec_gryphon_report');
+  static const Key gryphonReportGenerateButton =
+      Key('btn_gryphon_report_generate');
+  static const Key gryphonReportCard = Key('card_gryphon_report');
+  static const Key gryphonReportEmpty = Key('empty_gryphon_report');
+  static const Key gryphonReportGrowthScore =
+      Key('txt_gryphon_report_growth_score');
+  static const Key gryphonReportWeek = Key('txt_gryphon_report_week');
 }

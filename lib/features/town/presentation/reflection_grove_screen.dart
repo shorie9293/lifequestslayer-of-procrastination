@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/domain/models/gryphon_report.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/reflection_analytics.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/services/reflection_analytics_service.dart';
+import 'package:rpg_todo/features/town/data/gryphon_report_repository.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
+import 'package:rpg_todo/features/shared/domain/gryphon_insight_generator.dart';
+import 'package:rpg_todo/features/shared/domain/gryphon_report_service.dart';
 import 'package:rpg_todo/features/town/presentation/reflection_badge_collection_screen.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -17,7 +21,18 @@ import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 class ReflectionGroveScreen extends StatefulWidget {
   final VoidCallback? onBack;
 
-  const ReflectionGroveScreen({super.key, this.onBack});
+  /// 週次グリフォン報告のインサイト生成器（試練用に注入可能、既定は Real）。
+  final GryphonInsightGenerator? insightGenerator;
+
+  /// 報告の永続化先（試練用に注入可能、既定は Hive 実装）。
+  final GryphonReportRepository? reportRepository;
+
+  const ReflectionGroveScreen({
+    super.key,
+    this.onBack,
+    this.insightGenerator,
+    this.reportRepository,
+  });
 
   @override
   State<ReflectionGroveScreen> createState() => _ReflectionGroveScreenState();
@@ -25,8 +40,16 @@ class ReflectionGroveScreen extends StatefulWidget {
 
 class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
   final ReflectionRepository _repo = ReflectionRepository();
+  late final GryphonReportRepository _reportRepo =
+      widget.reportRepository ?? GryphonReportRepository();
+  late final GryphonReportService _reportService = GryphonReportService(
+    insightGenerator:
+        widget.insightGenerator ?? RealGryphonInsightGenerator(),
+  );
   List<Reflection> _reflections = [];
+  GryphonReport? _latestReport;
   bool _loading = true;
+  bool _generating = false;
 
   @override
   void initState() {
@@ -36,11 +59,34 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
 
   Future<void> _load() async {
     final all = await _repo.getAll();
+    final latestReport = await _reportRepo.getLatest();
     if (mounted) {
       setState(() {
         _reflections = all;
+        _latestReport = latestReport;
         _loading = false;
       });
+    }
+  }
+
+  /// 週次グリフォン報告を生成して永続化する。
+  Future<void> _generateReport() async {
+    if (_generating) return;
+    setState(() => _generating = true);
+    try {
+      final report = await _reportService.generateWeeklyReport(
+        weekStart: GryphonReportService.getCurrentWeekStart(),
+        reflections: _reflections,
+      );
+      await _reportRepo.save(report);
+      if (mounted) {
+        setState(() {
+          _latestReport = report;
+          _generating = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _generating = false);
     }
   }
 
@@ -208,6 +254,10 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
                     _buildStatsRow(),
                     const SizedBox(height: 20),
 
+                    // ── 週次グリフォン報告 ──
+                    _buildGryphonReportSection(),
+                    const SizedBox(height: 24),
+
                     // ── 月間/年間 俯瞰（残心の質的蓄積・#24） ──
                     _buildSectionTitle('📅 月間・年間の俯瞰'),
                     const SizedBox(height: 8),
@@ -289,6 +339,61 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
     );
   }
 
+  // ── 週次グリフォン報告 ──
+
+  Widget _buildGryphonReportSection() {
+    return Container(
+      key: AppKeys.gryphonReportSection,
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle('🦅 週次グリフォン報告'),
+          const SizedBox(height: 8),
+          if (_latestReport == null)
+            Container(
+              key: AppKeys.gryphonReportEmpty,
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              child: const Text(
+                '魔導書グリフォンはまだ今週の報告を書いていません。\n「報告を召喚」で今週の振り返りを解析させましょう。',
+                style: TextStyle(fontSize: 12, color: Colors.white54),
+              ),
+            )
+          else
+            _GryphonReportCard(report: _latestReport!),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerRight,
+            child: SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(
+                  SemanticTypes.button, 'gryphon_report_generate'),
+              label: '週次グリフォン報告を生成',
+              child: ElevatedButton.icon(
+                key: AppKeys.gryphonReportGenerateButton,
+                icon: _generating
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.auto_stories, size: 16),
+                label: Text(_generating ? '解析中…' : '報告を召喚'),
+                onPressed: _generating ? null : _generateReport,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildStatsRow() {
     return Row(
       children: [
@@ -317,6 +422,100 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
           icon: '🔥',
         ),
       ],
+    );
+  }
+}
+
+// ── 週次グリフォン報告カード ──
+
+class _GryphonReportCard extends StatelessWidget {
+  final GryphonReport report;
+
+  const _GryphonReportCard({required this.report});
+
+  String _formatDate(DateTime d) => '${d.month}/${d.day}';
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: AppKeys.gryphonReportCard,
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black38,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.white12),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                'M/d - M/d'
+                    .replaceFirst('M/d', _formatDate(report.weekStartDate))
+                    .replaceFirst('M/d', _formatDate(report.weekEndDate)),
+                key: AppKeys.gryphonReportWeek,
+                style: const TextStyle(fontSize: 11, color: Colors.white54),
+              ),
+              const Spacer(),
+              if (report.growthScore != null) ...[
+                const Text('🪶', style: TextStyle(fontSize: 12)),
+                Text(
+                  '成長スコア ${report.growthScore}',
+                  key: AppKeys.gryphonReportGrowthScore,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFFFD700),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          const SizedBox(height: 8),
+          _ReportSection(label: '📊 今週の傾向', body: report.trends),
+          _ReportSection(label: '💪 伸びた力', body: report.strengths),
+          _ReportSection(label: '🧭 次の一手', body: report.nextSteps),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReportSection extends StatelessWidget {
+  final String label;
+  final String body;
+
+  const _ReportSection({required this.label, required this.body});
+
+  @override
+  Widget build(BuildContext context) {
+    if (body.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF81C784),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            body,
+            style: const TextStyle(
+              fontSize: 12,
+              color: Colors.white70,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
