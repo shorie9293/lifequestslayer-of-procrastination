@@ -35,7 +35,8 @@ flutter test --no-pub -j 2 \
   test/features/kozuchi/ \
   test/features/player/ \
   test/features/shared/ \
-  test/features/adventurer/
+  test/features/adventurer/ \
+  test/features/project/
 echo "✅ shard 1/3 passed"
 
 # --- Step 4: Test shard 2/3 (battle, temple, character_customization, etc.) ---

@@ -27,8 +27,11 @@ import 'dialogs/bulk_create_task_dialog.dart';
 import 'dialogs/recurring_tasks_dialog.dart';
 import 'dialogs/notification_settings_dialog.dart';
 import 'package:rpg_todo/features/battle/presentation/widgets/knowledge_quest_dialog.dart';
-import 'package:rpg_todo/features/project/domain/project_service.dart';
+import 'package:rpg_todo/features/project/domain/job_skill_pulldown.dart';
 import 'package:rpg_todo/features/project/presentation/project_list_screen.dart';
+import 'package:rpg_todo/features/temple/presentation/temple_screen.dart';
+import 'package:rpg_todo/features/temple/presentation/pomodoro_timer_screen.dart';
+import 'package:rpg_todo/features/overview/presentation/screens/overview_screen.dart';
 import 'package:rpg_todo/features/shared/widgets/widgets/player_avatar_section.dart'
     show getJobName;
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
@@ -40,10 +43,10 @@ class GuildScreen extends StatefulWidget {
   State<GuildScreen> createState() => _GuildScreenState();
 }
 
-/// 職業チップ＋スキルプルダウン（v1.5.23）。
+/// 職業チップ＋スキルプルダウン（v1.5.26）。
 ///
-/// 現在職業を表示し、タップで ProjectService.skillsFor のスキル一覧を出す。
-/// 解放済み計画の陣 → ProjectListScreen / 他の解放済みスキル → 説明 SnackBar。
+/// 現在職業を表示し、タップで JobSkillPulldownService.build のグループ別
+/// スキル一覧（現職＋継承の技）を出す。全14スキルが実機能に接続される。
 /// 未解放スキルはグレーアウト＋🔒でタップ不可。
 class _JobSkillChip extends StatelessWidget {
   const _JobSkillChip({required this.player});
@@ -57,47 +60,110 @@ class _JobSkillChip extends StatelessWidget {
     Job.mystic: '🗺️',
   };
 
+  void _onSelected(BuildContext context, JobSkill skill) {
+    final pulldown = JobSkillPulldownService.build(player);
+    final entry = pulldown.allEntries.firstWhere((e) => e.skill == skill);
+    switch (entry.action) {
+      case JobSkillActionKind.navigateProject:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ProjectListScreen()),
+        );
+      case JobSkillActionKind.navigateRecurring:
+        showDialog(context: context, builder: (_) => const RecurringTasksDialog());
+      case JobSkillActionKind.navigateHabitCalendar:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const HabitCalendarScreen()),
+        );
+      case JobSkillActionKind.navigateReminder:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ReminderSettingsScreen()),
+        );
+      case JobSkillActionKind.navigatePomodoro:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const PomodoroTimerScreen()),
+        );
+      case JobSkillActionKind.navigateOverview:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const OverviewScreen()),
+        );
+      case JobSkillActionKind.navigateEnlightenment:
+      case JobSkillActionKind.equipInTemple:
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const TempleScreen()),
+        );
+      case JobSkillActionKind.openCreateTaskDialog:
+        showDialog(context: context, builder: (_) => const CreateTaskDialog());
+      case JobSkillActionKind.passiveAlwaysOn:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('${skill.displayName}: ${skill.description}（常時効果中）')),
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final skills = ProjectService.skillsFor(player);
+    final pulldown = JobSkillPulldownService.build(player);
     return PopupMenuButton<JobSkill>(
       key: AppKeys.guildJobChip,
       tooltip: '現在の職業とスキル',
-      onSelected: (skill) {
-        if (skill == JobSkill.mysticProject) {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ProjectListScreen()),
-          );
-        } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${skill.displayName}: ${skill.description}')),
-          );
-        }
-      },
+      onSelected: (skill) => _onSelected(context, skill),
       itemBuilder: (context) => [
-        for (final info in skills)
+        for (final group in pulldown.groups) ...[
           PopupMenuItem<JobSkill>(
-            key: AppKeys.guildJobSkillItem(info.skill),
-            value: info.skill,
-            enabled: info.isUnlocked,
-            child: Row(
-              children: [
-                Text(
-                  info.skill.displayName,
-                  style: TextStyle(
-                    color: info.isUnlocked ? null : Colors.grey,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  info.isUnlocked
-                      ? 'Lv${info.requiredLevel}'
-                      : '🔒 Lv${info.requiredLevel}で解放',
-                  style: const TextStyle(fontSize: 11, color: Colors.grey),
-                ),
-              ],
+            enabled: false,
+            height: 32,
+            key: AppKeys.guildJobSkillGroupHeader(group.key),
+            child: Text(
+              group.label,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
             ),
           ),
+          for (final entry in group.entries)
+            PopupMenuItem<JobSkill>(
+              key: AppKeys.guildJobSkillItem(entry.skill),
+              value: entry.skill,
+              enabled: entry.isUnlocked,
+              child: Row(
+                children: [
+                  Text(
+                    entry.skill.displayName,
+                    style: TextStyle(
+                      color: entry.isUnlocked ? null : Colors.grey,
+                    ),
+                  ),
+                  if (entry.isInherited) ...[
+                    const SizedBox(width: 4),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text('継承',
+                          style: TextStyle(fontSize: 9, color: Colors.grey)),
+                    ),
+                  ],
+                  if (entry.isEquipped) ...[
+                    const SizedBox(width: 4),
+                    Icon(Icons.check_circle,
+                        size: 14, color: Colors.green,
+                        key: AppKeys.guildJobSkillEquippedBadge(entry.skill)),
+                  ],
+                  const Spacer(),
+                  Text(
+                    entry.isUnlocked
+                        ? 'Lv${entry.requiredLevel}'
+                        : '🔒 Lv${entry.requiredLevel}で解放',
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+        ],
       ],
       child: SemanticHelper.interactive(
         testId: SemanticHelper.createTestId(SemanticTypes.button, 'guild_job_chip'),
@@ -500,7 +566,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.25+121", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.26+122", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [

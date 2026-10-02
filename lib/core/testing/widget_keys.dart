@@ -287,6 +287,10 @@ class AppKeys {
   static const Key guildJobChip = Key('chip_guild_job');
   static Key guildJobSkillItem(JobSkill skill) =>
       Key('item_guild_job_skill_${skill.name}');
+  static Key guildJobSkillGroupHeader(String groupKey) =>
+      Key('header_guild_job_skill_$groupKey');
+  static Key guildJobSkillEquippedBadge(JobSkill skill) =>
+      Key('badge_guild_job_skill_equipped_${skill.name}');
 
   // ━━━ クエスト作成ダイアログのプロジェクト欄 ━━━
   static const Key createTaskProjectField = Key('dd_create_task_project');

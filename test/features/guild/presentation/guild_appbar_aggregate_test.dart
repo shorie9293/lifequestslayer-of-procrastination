@@ -19,6 +19,7 @@ import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/domain/models/skill_slot.dart';
 
 import 'guild_screen_test.dart' show createViewModels, pumpGuildScreen;
 
@@ -44,11 +45,11 @@ void main() {
     await Hive.openBox<String>('practice_logs');
   });
 
-  testWidgets('AppBar バージョン標識が v1.5.25+121 に同期している', (tester) async {
+  testWidgets('AppBar バージョン標識が v1.5.26+122 に同期している', (tester) async {
     final vms = createViewModels();
     await pumpGuildScreen(
         tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
-    expect(find.text('v1.5.25+121'), findsOneWidget);
+    expect(find.text('v1.5.26+122'), findsOneWidget);
   });
 
   testWidgets('⋯メニューから勤行の定型へ遷移できる', (tester) async {
@@ -142,7 +143,7 @@ void main() {
         reason: 'ProjectListScreen の AppBar タイトルへ遷移していること');
   });
 
-  testWidgets('解放済みの他スキルは説明文の SnackBar を出す', (tester) async {
+  testWidgets('解放済みスキル（分割の理）で CreateTaskDialog が開く', (tester) async {
     final vms = createViewModels();
     vms.player.player = mysticPlayer();
     await pumpGuildScreen(
@@ -151,10 +152,10 @@ void main() {
     await tester.tap(find.byKey(AppKeys.guildJobChip));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(AppKeys.guildJobSkillItem(JobSkill.mysticSubtask)));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    expect(find.textContaining('サブクエスト'), findsOneWidget,
-        reason: 'JobSkillMeta.description が SnackBar で表示されること');
+    expect(find.byType(CreateTaskDialog), findsOneWidget,
+        reason: '分割の理は openCreateTaskDialog アクションでダイアログを開くこと');
   });
 
   testWidgets('未解放スキルはタップ不可（メニューが閉じず遷移もしない）', (tester) async {
@@ -187,6 +188,89 @@ void main() {
     expect(ProjectService.canUseProjectSkill(vms.player.player), isFalse);
     await _pumpDialog(tester, vms);
     expect(find.byKey(AppKeys.createTaskProjectField), findsNothing);
+  });
+
+  testWidgets('プルダウンに「現在の職業のスキル」グループヘッダが出る（未経験職は継承なし）', (tester) async {
+    final vms = createViewModels();
+    vms.player.player = mysticPlayer();
+    await pumpGuildScreen(
+        tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+    await tester.tap(find.byKey(AppKeys.guildJobChip));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(AppKeys.guildJobSkillGroupHeader('current')), findsOneWidget);
+    // 他職を経験していないので継承グループは出ない
+    expect(find.byKey(AppKeys.guildJobSkillGroupHeader('inherited')), findsNothing);
+  });
+
+  testWidgets('全職経験済みのPlayerでは全14スキルが実在し enabled=true、継承ヘッダも出る', (tester) async {
+    final vms = createViewModels();
+    vms.player.player = Player().copyWith(
+      currentJob: Job.adventurer,
+      jobLevels: const {
+        Job.adventurer: 20,
+        Job.samurai: 20,
+        Job.monk: 20,
+        Job.mystic: 20,
+      },
+    );
+    await pumpGuildScreen(
+        tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+    await tester.tap(find.byKey(AppKeys.guildJobChip));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(AppKeys.guildJobSkillGroupHeader('current')), findsOneWidget);
+    expect(find.byKey(AppKeys.guildJobSkillGroupHeader('inherited')), findsOneWidget);
+    expect(find.text('継承の技'), findsOneWidget);
+
+    for (final s in JobSkill.values) {
+      final item = find.byKey(AppKeys.guildJobSkillItem(s));
+      expect(item, findsOneWidget, reason: '${s.name} がメニューに存在すること');
+      final widget = tester.widget<PopupMenuItem<JobSkill>>(item);
+      expect(widget.enabled, isTrue, reason: '${s.name} が enabled であること');
+    }
+  });
+
+  testWidgets('装備中スキルには check_circle バッジ（AppKeys）が出る', (tester) async {
+    final vms = createViewModels();
+    vms.player.player = Player().copyWith(
+      currentJob: Job.adventurer,
+      jobLevels: const {Job.adventurer: 12},
+      equippedSkills: [EquippedSkill(skill: JobSkill.roninSlots, isActive: true)],
+    );
+    await pumpGuildScreen(
+        tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+    await tester.tap(find.byKey(AppKeys.guildJobChip));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.byKey(AppKeys.guildJobSkillEquippedBadge(JobSkill.roninSlots)),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('継承スキル（経験済み職・装備なし）には「継承」バッジが出る', (tester) async {
+    final vms = createViewModels();
+    vms.player.player = Player().copyWith(
+      currentJob: Job.mystic,
+      jobLevels: const {Job.mystic: 12, Job.adventurer: 10},
+    );
+    await pumpGuildScreen(
+        tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+    await tester.tap(find.byKey(AppKeys.guildJobChip));
+    await tester.pumpAndSettle();
+
+    // 継承グループヘッダが出、ronin スキルは継承項目として enabled
+    expect(find.byKey(AppKeys.guildJobSkillGroupHeader('inherited')), findsOneWidget);
+    final item = tester.widget<PopupMenuItem<JobSkill>>(
+      find.byKey(AppKeys.guildJobSkillItem(JobSkill.roninRepeatTask)),
+    );
+    expect(item.enabled, isTrue);
+    expect(find.text('継承'), findsWidgets);
   });
 }
 
