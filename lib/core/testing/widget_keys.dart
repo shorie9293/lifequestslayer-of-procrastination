@@ -311,4 +311,15 @@ class AppKeys {
   static const Key gryphonReportGrowthScore =
       Key('txt_gryphon_report_growth_score');
   static const Key gryphonReportWeek = Key('txt_gryphon_report_week');
+
+  // ━━━ 設定ハブ画面（#86） ━━━
+  static const Key settingsHubButton = Key('btn_settings_hub');
+  static const Key settingsHubScreen = Key('screen_settings_hub');
+  static const Key settingsFontSizeSlider = Key('slider_settings_font_size');
+  static const Key settingsFontSizeLabel = Key('txt_settings_font_size');
+  static const Key settingsSfxEnabledSwitch = Key('switch_settings_sfx_enabled');
+  static const Key settingsMorningNotificationSwitch = Key('switch_settings_morning_notification');
+  static const Key settingsKnowledgeQuestSwitch = Key('switch_settings_knowledge_quest');
+  static const Key settingsBattleSceneSwitch = Key('switch_settings_battle_scene');
+  static const Key settingsReminderTile = Key('tile_settings_reminder');
 }

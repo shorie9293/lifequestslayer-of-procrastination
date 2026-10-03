@@ -7,6 +7,7 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
 import 'package:rpg_todo/features/town/domain/building.dart';
+import 'package:rpg_todo/features/settings/presentation/settings_hub_screen.dart';
 import 'package:rpg_todo/features/adventurer/presentation/adventurer_chart_screen.dart';
 import 'package:rpg_todo/features/character_customization/presentation/equipment_tab.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
@@ -47,6 +48,14 @@ class TownScreen extends StatelessWidget {
         appBar: AppBar(
           title: Text("${scale.displayName} — ${hd['name']}"),
           actions: [
+            IconButton(
+              key: AppKeys.settingsHubButton,
+              icon: const Icon(Icons.settings_outlined),
+              tooltip: '設定',
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SettingsHubScreen()),
+              ),
+            ),
             IconButton(
               key: AppKeys.adventurerChartButton,
               icon: const Icon(Icons.assignment_ind_outlined),

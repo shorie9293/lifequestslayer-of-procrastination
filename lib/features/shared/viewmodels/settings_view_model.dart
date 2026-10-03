@@ -24,6 +24,7 @@ class SettingsViewModel extends ChangeNotifier {
   ThemeMode _themeMode = ThemeMode.dark;
   bool _battleSceneEnabled = true;
   DateTime? _lastBackupTime;
+  bool _morningNotificationEnabled = true;
 
   SettingsViewModel(this._settingsRepository)
       : _tutorial = TutorialService(_settingsRepository);
@@ -41,6 +42,7 @@ class SettingsViewModel extends ChangeNotifier {
   double get sfxVolume => _sfxVolume;
   ThemeMode get themeMode => _themeMode;
   bool get isBattleSceneEnabled => _battleSceneEnabled;
+  bool get isMorningNotificationEnabled => _morningNotificationEnabled;
   DateTime? get lastBackupTime => _lastBackupTime;
 
   // ── 設定操作 ──
@@ -78,6 +80,12 @@ class SettingsViewModel extends ChangeNotifier {
   Future<void> setThemeMode(ThemeMode mode) async {
     _themeMode = mode;
     await _settingsRepository.setThemeMode(mode);
+    notifyListeners();
+  }
+
+  Future<void> setMorningNotificationEnabled(bool v) async {
+    _morningNotificationEnabled = v;
+    await _settingsRepository.setMorningNotificationEnabled(v);
     notifyListeners();
   }
 
@@ -171,6 +179,7 @@ class SettingsViewModel extends ChangeNotifier {
     await _load<bool>(_settingsRepository.getSfxEnabled, (v) => _sfxEnabled = v, label: 'sfxEnabled');
     await _load<double>(_settingsRepository.getSfxVolume, (v) => _sfxVolume = SfxVolumeSetting(v).value, label: 'sfxVolume');
     await _load<bool>(_settingsRepository.getBattleSceneEnabled, (v) => _battleSceneEnabled = v, label: 'battleSceneEnabled');
+    await _load<bool>(_settingsRepository.getMorningNotificationEnabled, (v) => _morningNotificationEnabled = v, label: 'morningNotification');
     await _load<ThemeMode>(_settingsRepository.getThemeMode, (v) => _themeMode = v, label: 'themeMode');
     await _load<DateTime?>(_settingsRepository.getLastBackupTime, (v) => _lastBackupTime = v, label: 'lastBackupTime');
 
