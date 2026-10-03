@@ -122,8 +122,15 @@ class SettingsRepository {
   // ── 通知設定（個別ON/OFF） ──────────────────────────────
 
   Future<bool> getMorningNotificationEnabled() async {
-    final box = await _openSettingsBox();
-    return box.get('morningNotificationEnabled', defaultValue: true) as bool;
+    // Hive未初期化の試練環境で open を試みると zone 汚染が起きるため、
+    // 開かれていない場合は既定値を返す（getThemeMode と同じ防御）。
+    if (!Hive.isBoxOpen(_settingsBoxName)) return true;
+    try {
+      final box = await _openSettingsBox();
+      return box.get('morningNotificationEnabled', defaultValue: true) as bool;
+    } catch (_) {
+      return true;
+    }
   }
 
   Future<void> setMorningNotificationEnabled(bool enabled) async {
