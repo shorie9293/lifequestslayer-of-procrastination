@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record.dart';
+import 'package:rpg_todo/features/battle/domain/battle_record_aggregation.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record_summary.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record_service.dart';
 import 'package:rpg_todo/features/battle/data/battle_record_repository.dart';
@@ -110,6 +111,15 @@ class _BattleRecordScreenState extends State<BattleRecordScreen> {
                   children: [
                     _buildSummaryCard(summary),
                     const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: _buildEnemyStatsSection()),
+                        const SizedBox(width: 8),
+                        Expanded(child: _buildMonthlyStatsSection()),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
                     _buildFilterChips(),
                     const SizedBox(height: 8),
                     ...visible.map(_buildRecordTile),
@@ -158,6 +168,76 @@ class _BattleRecordScreenState extends State<BattleRecordScreen> {
         ),
       ),
     );
+  }
+
+  Widget _buildEnemyStatsSection() {
+    final stats = BattleRecordAggregationService.buildEnemyStats(_records);
+    return Card(
+      key: AppKeys.battleRecordEnemyStatsSection,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '敵別戦績',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            ...stats.map(
+              (stat) => ListTile(
+                key: AppKeys.battleRecordEnemyStatRow(stat.assetPath),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                title: Text(stat.displayName),
+                subtitle: Text(
+                  '最終: '
+                  '${stat.lastDefeatedAt == null ? '—' : _formatDateOnly(stat.lastDefeatedAt!)}',
+                ),
+                trailing: Text('${stat.wins}勝 ${stat.losses}敗'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMonthlyStatsSection() {
+    final stats = BattleRecordAggregationService.buildMonthlyStats(_records);
+    return Card(
+      key: AppKeys.battleRecordMonthlyStatsSection,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '月別戦績',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            ...stats.map(
+              (stat) => ListTile(
+                key: AppKeys.battleRecordMonthlyStatRow(stat.yearMonth),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+                title: Text(stat.label),
+                subtitle: Text('${stat.wins}勝 ${stat.losses}敗'),
+                trailing: Text('${stat.defeats}回'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static String _formatDateOnly(DateTime dt) {
+    final y = dt.year.toString().padLeft(4, '0');
+    final m = dt.month.toString().padLeft(2, '0');
+    final d = dt.day.toString().padLeft(2, '0');
+    return '$y/$m/$d';
   }
 
   Widget _buildFilterChips() {

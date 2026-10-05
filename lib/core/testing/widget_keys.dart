@@ -322,4 +322,12 @@ class AppKeys {
   static const Key settingsKnowledgeQuestSwitch = Key('switch_settings_knowledge_quest');
   static const Key settingsBattleSceneSwitch = Key('switch_settings_battle_scene');
   static const Key settingsReminderTile = Key('tile_settings_reminder');
+
+  // ━━━ 討伐戦績 敵別・月別集計（#96） ━━━
+  static const Key battleRecordEnemyStatsSection = Key('section_battle_record_enemy_stats');
+  static const Key battleRecordMonthlyStatsSection = Key('section_battle_record_monthly_stats');
+  static Key battleRecordEnemyStatRow(String assetPath) =>
+      Key('row_battle_record_enemy_${assetPath.isEmpty ? 'unknown' : assetPath}');
+  static Key battleRecordMonthlyStatRow(String yearMonth) =>
+      Key('row_battle_record_monthly_$yearMonth');
 }
