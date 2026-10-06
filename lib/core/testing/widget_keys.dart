@@ -330,4 +330,16 @@ class AppKeys {
       Key('row_battle_record_enemy_${assetPath.isEmpty ? 'unknown' : assetPath}');
   static Key battleRecordMonthlyStatRow(String yearMonth) =>
       Key('row_battle_record_monthly_$yearMonth');
+
+  // ━━━ 寄合所 クエスト一括操作（#91） ━━━
+  static const Key guildBulkEntry = Key('btn_guild_bulk_entry');
+  static const Key guildBulkScreen = Key('screen_guild_bulk');
+  static const Key guildBulkCountLabel = Key('txt_guild_bulk_count');
+  static const Key guildBulkSelectAll = Key('btn_guild_bulk_select_all');
+  static const Key guildBulkClearSelection = Key('btn_guild_bulk_clear');
+  static const Key guildBulkActionAccept = Key('btn_guild_bulk_accept');
+  static const Key guildBulkActionPostpone = Key('btn_guild_bulk_postpone');
+  static const Key guildBulkActionDelete = Key('btn_guild_bulk_delete');
+  static Key guildBulkRow(String taskId) => Key('row_guild_bulk_$taskId');
+  static Key guildBulkPostponeChip(int days) => Key('chip_guild_bulk_postpone_$days');
 }

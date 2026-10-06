@@ -249,6 +249,58 @@ class TaskViewModel extends ChangeNotifier {
     _autoSave();
   }
 
+  // ── 一括操作（改善提案 #91） ──
+
+  /// 選択した複数クエストをまとめて出発（受注）する。
+  /// キャパシティ超過等で拒否された分はスキップされ、適用件数を返す。
+  int acceptTasks(Iterable<String> ids, {bool debugMode = false}) {
+    var accepted = 0;
+    for (final id in ids) {
+      final err = acceptTask(id, debugMode: debugMode);
+      if (err == null) accepted++;
+    }
+    return accepted;
+  }
+
+  /// 選択した複数クエストをまとめて破棄する。破棄件数を返す（1回だけ保存）。
+  int deleteTasks(Iterable<String> ids) {
+    final set = Set<String>.of(ids);
+    if (set.isEmpty) return 0;
+    final before = _tasks.length;
+    _tasks.removeWhere((t) => set.contains(t.id));
+    final removed = before - _tasks.length;
+    if (removed > 0) {
+      notifyListeners();
+      _autoSave();
+    }
+    return removed;
+  }
+
+  /// 選択した複数クエストの期限をまとめて延期する。
+  /// 既存期限があればそこから、無ければ [now] から N 日後に設定する。
+  /// 延件数を返す（1回だけ保存）。days が0以下の場合は何もしない。
+  int postponeTasks(Iterable<String> ids, int days, {DateTime? now}) {
+    if (days <= 0) return 0;
+    final base = now ?? DateTime.now();
+    final set = Set<String>.of(ids);
+    var postponed = 0;
+    for (final id in set) {
+      final i = _tasks.indexWhere((t) =>
+          t.id == id &&
+          t.status == TaskStatus.inGuild &&
+          !t.isCompleted);
+      if (i == -1) continue;
+      final current = _tasks[i].deadline ?? base;
+      _tasks[i].deadline = current.add(Duration(days: days));
+      postponed++;
+    }
+    if (postponed > 0) {
+      notifyListeners();
+      _autoSave();
+    }
+    return postponed;
+  }
+
   void cancelTask(String id) {
     final i = _tasks.indexWhere((t) => t.id == id);
     if (i != -1) {

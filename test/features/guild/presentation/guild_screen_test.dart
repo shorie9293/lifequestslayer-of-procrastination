@@ -488,4 +488,27 @@ void main() {
       expect(find.text('クエスト検索'), findsOneWidget);
     });
   });
+
+  group('GuildScreen クエスト一括操作導線 (#91)', () {
+    testWidgets(' AppBar の一括操作ボタンで GuildBulkActionScreen へ遷移する',
+        (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+      });
+
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // 導線ボタンが存在する
+      expect(find.byKey(AppKeys.guildBulkEntry), findsOneWidget);
+
+      // タップ → 一括操作画面へ遷移
+      await tester.tap(find.byKey(AppKeys.guildBulkEntry));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(AppKeys.guildBulkScreen), findsOneWidget);
+      expect(find.text('クエスト一括操作'), findsOneWidget);
+    });
+  });
 }

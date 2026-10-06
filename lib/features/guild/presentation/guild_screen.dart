@@ -17,6 +17,7 @@ import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/features/kozuchi/presentation/widgets/kozuchi_quest_card.dart';
 import 'package:rpg_todo/features/habits/presentation/screens/habit_calendar_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
+import 'package:rpg_todo/features/guild/presentation/guild_bulk_action_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_quest_search_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/task_template_screen.dart';
 import 'package:rpg_todo/features/guild/data/task_template_repository.dart';
@@ -566,10 +567,20 @@ class _GuildScreenState extends State<GuildScreen> {
           children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.28+124", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.29+125", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
+          IconButton(
+            key: AppKeys.guildBulkEntry,
+            icon: const Icon(Icons.checklist),
+            tooltip: 'クエスト一括操作',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const GuildBulkActionScreen(),
+              ),
+            ),
+          ),
           IconButton(
             key: AppKeys.guildQuestSearchEntry,
             icon: const Icon(Icons.search),
