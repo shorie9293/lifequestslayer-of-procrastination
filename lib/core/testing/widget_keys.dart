@@ -342,4 +342,8 @@ class AppKeys {
   static const Key guildBulkActionDelete = Key('btn_guild_bulk_delete');
   static Key guildBulkRow(String taskId) => Key('row_guild_bulk_$taskId');
   static Key guildBulkPostponeChip(int days) => Key('chip_guild_bulk_postpone_$days');
+
+  // ━━━ 勤行ヒートマップ ━━━
+  static const Key practiceHeatmapSection = Key('practice_heatmap_section');
+  static const Key practiceHeatmapEmpty = Key('practice_heatmap_empty');
 }

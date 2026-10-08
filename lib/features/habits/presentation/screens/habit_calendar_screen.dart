@@ -9,6 +9,7 @@ import 'package:rpg_todo/domain/services/practice_log_service.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/habits/data/practice_log_repository.dart';
 import 'package:rpg_todo/features/habits/presentation/widgets/habit_month_grid.dart';
+import 'package:rpg_todo/features/habits/presentation/widgets/practice_heatmap.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 
 /// 勤行の習慣カレンダー画面（道標§五 #31 / #50）。
@@ -94,6 +95,7 @@ class _HabitCalendarScreenState extends State<HabitCalendarScreen> {
                 );
                 return HabitCalendarView(
                   activityDates: activityDates,
+                  practiceLogs: _practiceLogs,
                   now: widget.now ?? DateTime.now(),
                 );
               },
@@ -105,11 +107,16 @@ class _HabitCalendarScreenState extends State<HabitCalendarScreen> {
 /// 勤行カレンダーの本体（Provider非依存・試練可能）。
 class HabitCalendarView extends StatefulWidget {
   final List<DateTime> activityDates;
+
+  /// ヒートマップ集計に使う日別履歴ログ（既定は空）。
+  final List<PracticeLog> practiceLogs;
+
   final DateTime now;
 
   const HabitCalendarView({
     super.key,
     required this.activityDates,
+    this.practiceLogs = const [],
     required this.now,
   });
 
@@ -143,6 +150,8 @@ class _HabitCalendarViewState extends State<HabitCalendarView> {
         HabitMonthGrid(month: cal.month),
         const SizedBox(height: 16),
         _goalReminder(cal),
+        const SizedBox(height: 16),
+        PracticeHeatmapView(logs: widget.practiceLogs),
       ],
     );
   }
