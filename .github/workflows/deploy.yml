@@ -28,6 +28,11 @@ jobs:
       - name: 📥 Checkout repository
         uses: actions/checkout@v7
 
+      - name: 🔒 Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: 📦 Setup local packages
         run: |
           # takamagahara_core と takamagahara_ui は親リポジトリから取得
