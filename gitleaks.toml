@@ -1,0 +1,14 @@
+# gitleaks allowlist configuration
+# google-services.json contains a Firebase API key, which is an *identifier*,
+# not a secret (Google official guidance). Security is enforced by
+# SHA-1 restriction / Firestore RLS, not by keeping this file secret.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Firebase public configuration files"
+paths = [
+  '''android/app/google-services\.json''',
+  '''ios/Runner/GoogleService-Info\.plist''',
+  '''lib/firebase_options\.dart''',
+]
