@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/features/adventurer/domain/adventure_share_card_service.dart';
 import 'package:rpg_todo/features/adventurer/domain/adventurer_chart.dart';
 import 'package:rpg_todo/features/adventurer/domain/adventurer_chart_service.dart';
+import 'package:rpg_todo/features/adventurer/presentation/adventure_share_card_screen.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 
 class AdventurerChartScreen extends StatelessWidget {
@@ -23,7 +25,26 @@ class AdventurerChartScreen extends StatelessWidget {
     final resolved = _resolve(context);
     return Scaffold(
       key: AppKeys.adventurerChartScreen,
-      appBar: AppBar(title: const Text('冒険者カルテ')),
+      appBar: AppBar(
+        title: const Text('冒険者カルテ'),
+        actions: [
+          IconButton(
+            key: AppKeys.adventureChartShareEntry,
+            icon: const Icon(Icons.ios_share),
+            tooltip: '戦績を共有',
+            onPressed: () {
+              final p = player ?? context.read<PlayerViewModel>().player;
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => AdventureShareCardScreen(
+                    card: AdventureShareCardService.build(p),
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [

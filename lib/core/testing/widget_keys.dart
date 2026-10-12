@@ -346,4 +346,12 @@ class AppKeys {
   // ━━━ 勤行ヒートマップ ━━━
   static const Key practiceHeatmapSection = Key('practice_heatmap_section');
   static const Key practiceHeatmapEmpty = Key('practice_heatmap_empty');
+
+  // ━━━ 冒険の戦績シェアカード ━━━
+  static const Key adventureShareCardScreen = Key('screen_adventure_share_card');
+  static const Key adventureShareCardPreview = Key('preview_adventure_share_card');
+  static const Key adventureShareCardShare = Key('btn_adventure_share_card_share');
+  static const Key adventureShareCardCopy = Key('btn_adventure_share_card_copy');
+  static const Key adventureShareCardView = Key('card_adventure_share_card');
+  static const Key adventureChartShareEntry = Key('btn_adventure_chart_share_entry');
 }
