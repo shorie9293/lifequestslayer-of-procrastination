@@ -21,6 +21,8 @@ import 'package:rpg_todo/features/guild/presentation/guild_bulk_action_screen.da
 import 'package:rpg_todo/features/guild/presentation/guild_quest_search_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/task_template_screen.dart';
 import 'package:rpg_todo/features/guild/data/task_template_repository.dart';
+import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_screen.dart';
+import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_keys.dart';
 import 'package:rpg_todo/core/di/injection.dart';
 import 'dialogs/tutorial_reset_dialog.dart';
 import 'dialogs/create_task_dialog.dart';
@@ -567,7 +569,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.32+128", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.33+129", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -646,6 +648,12 @@ class _GuildScreenState extends State<GuildScreen> {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const ReminderSettingsScreen(),
+                    ),
+                  );
+                case 'estimate_accuracy':
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const EstimateAccuracyScreen(),
                     ),
                   );
               }
@@ -731,6 +739,22 @@ class _GuildScreenState extends State<GuildScreen> {
                       Icon(Icons.alarm, color: Colors.black54),
                       SizedBox(width: 8),
                       Text('勤行リマインダー'),
+                    ],
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'estimate_accuracy',
+                key: EstimateAccuracyKeys.guildEntry,
+                child: SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'estimate_accuracy'),
+                  label: '見積もり精度レポート',
+                  child: Row(
+                    children: const [
+                      Icon(Icons.insights, color: Colors.black54),
+                      SizedBox(width: 8),
+                      Text('見積もり精度レポート'),
                     ],
                   ),
                 ),
