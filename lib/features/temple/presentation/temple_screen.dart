@@ -1,18 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/skill_slot.dart';
+import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/domain/services/data_export_service.dart';
+import 'package:rpg_todo/domain/services/full_backup.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
+import 'package:rpg_todo/features/temple/data/backup_storage.dart';
 import 'package:rpg_todo/features/temple/presentation/pomodoro_timer_screen.dart';
 import 'package:rpg_todo/domain/services/skill_progression_service.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class TempleScreen extends StatelessWidget {
-  const TempleScreen({super.key});
+  const TempleScreen({super.key, BackupStorage Function()? storageFactory})
+      : _storageFactory = storageFactory ?? _defaultStorageFactory;
+
+  final BackupStorage Function() _storageFactory;
+
+  static HiveBackupStorage _defaultStorageFactory() => HiveBackupStorage();
 
   @override
   Widget build(BuildContext context) {
@@ -606,13 +615,25 @@ class TempleScreen extends StatelessWidget {
               ),
               onPressed: () async {
                 final taskVM = context.read<TaskViewModel>();
-                final tasks = taskVM.tasks;
                 final service = DataExportService();
-                await service.exportToFile(playerVM.player, tasks);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('バックアップを共有しました')),
+                try {
+                  final json = await buildBackupJsonWithStorage(
+                    player: playerVM.player,
+                    tasks: taskVM.tasks,
+                    storage: _storageFactory(),
                   );
+                  await service.exportStringToFile(json);
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('バックアップを共有しました')),
+                    );
+                  }
+                } catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('バックアップに失敗しました')),
+                    );
+                  }
                 }
               },
             ),
@@ -629,8 +650,10 @@ class TempleScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               onPressed: () async {
-                final result = await DataExportService().importFromFile();
-                if (result == null) {
+                final playerVM = context.read<PlayerViewModel>();
+                final taskVM = context.read<TaskViewModel>();
+                final json = await DataExportService().importStringFromFile();
+                if (json == null) {
                   if (context.mounted) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('復元に失敗しました')),
@@ -638,13 +661,19 @@ class TempleScreen extends StatelessWidget {
                   }
                   return;
                 }
-                final playerVM = context.read<PlayerViewModel>();
-                final taskVM = context.read<TaskViewModel>();
-                playerVM.restorePlayer(result.player);
-                taskVM.setTasks(result.tasks);
+                final ok = await applyRestore(
+                  jsonString: json,
+                  playerVM: playerVM,
+                  taskVM: taskVM,
+                  storage: _storageFactory(),
+                );
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('データを復元しました')),
+                    SnackBar(
+                      content: Text(
+                        ok ? 'データを復元しました' : '復元に失敗しました',
+                      ),
+                    ),
                   );
                 }
               },
@@ -653,6 +682,40 @@ class TempleScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// バックアップ用 JSON を構築する（storage から boxes を capture する）。
+  @visibleForTesting
+  static Future<String> buildBackupJsonWithStorage({
+    required Player player,
+    required List<Task> tasks,
+    required BackupStorage storage,
+  }) async {
+    final boxes = await storage.capture();
+    return FullBackupService().encode(
+      player: player,
+      tasks: tasks,
+      boxes: boxes,
+      exportedAt: DateTime.now(),
+    );
+  }
+
+  /// 復元用 JSON を player / tasks / boxes へ適用する。
+  ///
+  /// 成功で true、decode 失敗（破損 JSON 等）で false。
+  @visibleForTesting
+  static Future<bool> applyRestore({
+    required String jsonString,
+    required PlayerViewModel playerVM,
+    required TaskViewModel taskVM,
+    required BackupStorage storage,
+  }) async {
+    final data = FullBackupService().decode(jsonString);
+    if (data == null) return false;
+    playerVM.restorePlayer(data.player);
+    taskVM.setTasks(data.tasks);
+    await storage.restore(data.boxes);
+    return true;
   }
 
   String _jobDisplayName(Job job) {

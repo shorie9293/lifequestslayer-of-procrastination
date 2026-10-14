@@ -62,6 +62,36 @@ class DataExportService {
     );
   }
 
+  /// 任意の JSON 文字列（全データバックアップ等）を一時ファイルへ書き出し、
+  /// share_plus で共有する。
+  Future<void> exportStringToFile(String jsonString) async {
+    final dir = await getTemporaryDirectory();
+    final file = File('${dir.path}/rpg_todo_full_backup.json');
+    await file.writeAsString(jsonString);
+    await Share.shareXFiles(
+      [XFile(file.path)],
+      text: 'RPG Task 全データバックアップ',
+    );
+  }
+
+  /// file_picker で .json ファイルを選び、本文（JSON 文字列）を返す。
+  ///
+  /// キャンセル時や読み込み失敗時は `null` を返す。
+  Future<String?> importStringFromFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['json'],
+      );
+      if (result == null || result.files.isEmpty) return null;
+      final filePath = result.files.single.path;
+      if (filePath == null) return null;
+      return await File(filePath).readAsString();
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// file_picker で .json ファイルを選択し、読み込んでパースする。
   ///
   /// ユーザーがキャンセルした場合やパースに失敗した場合は `null` を返す。
