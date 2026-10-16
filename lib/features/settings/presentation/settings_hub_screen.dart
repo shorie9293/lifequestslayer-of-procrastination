@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rpg_todo/core/infrastructure/app_lock_settings_screen.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
@@ -70,6 +71,16 @@ class SettingsHubScreen extends StatelessWidget {
             title: const Text('戦闘シーン演出'),
             value: vm.isBattleSceneEnabled,
             onChanged: (v) => vm.setBattleSceneEnabled(v),
+          ),
+          ListTile(
+            key: AppKeys.appLockSettingsTile,
+            title: const Text('アプリロック'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const AppLockSettingsScreen(),
+              ),
+            ),
           ),
         ],
       ),

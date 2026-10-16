@@ -26,6 +26,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:app_links/app_links.dart';
+import 'package:rpg_todo/core/infrastructure/app_lock_gate.dart';
 import 'package:rpg_todo/core/infrastructure/deep_link_service.dart';
 
 /// ディープリンクナビゲーションのためのグローバルナビゲーターキー
@@ -281,7 +282,7 @@ class _RPGTodoAppState extends State<RPGTodoApp> {
                     settingsVM.themeMode == ThemeMode.light ? const Color(0xFF2A2520) : Colors.white,
               ),
             ),
-            home: const AuthGate(),
+            home: AppLockGate(unlockedBuilder: (context) => const AuthGate()),
             builder: (context, child) {
               return MediaQuery(
                 data: MediaQuery.of(context).copyWith(

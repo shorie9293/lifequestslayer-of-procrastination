@@ -356,4 +356,16 @@ class AppKeys {
   static const Key adventureShareCardCopy = Key('btn_adventure_share_card_copy');
   static const Key adventureShareCardView = Key('card_adventure_share_card');
   static const Key adventureChartShareEntry = Key('btn_adventure_chart_share_entry');
+
+  // ━━━ アプリロック（パスコード） ━━━
+  static const Key appLockGateScreen = Key('screen_app_lock_gate');
+  static const Key appLockPasscodeField = Key('txt_app_lock_passcode');
+  static const Key appLockConfirmPasscodeField =
+      Key('txt_app_lock_confirm_passcode');
+  static const Key appLockUnlockButton = Key('btn_app_lock_unlock');
+  static const Key appLockEnableButton = Key('btn_app_lock_enable');
+  static const Key appLockDisableButton = Key('btn_app_lock_disable');
+  static const Key appLockErrorText = Key('txt_app_lock_error');
+  static const Key appLockSettingsScreen = Key('screen_app_lock_settings');
+  static const Key appLockSettingsTile = Key('tile_settings_app_lock');
 }
