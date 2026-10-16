@@ -282,6 +282,8 @@ class AppKeys {
       Key('item_guild_overflow_habit_calendar');
   static const Key guildOverflowReminder =
       Key('item_guild_overflow_reminder');
+  static const Key guildOverflowQuestStreak =
+      Key('item_guild_overflow_quest_streak');
 
   // ━━━ 職業チップ＋スキルプルダウン ━━━
   static const Key guildJobChip = Key('chip_guild_job');

@@ -23,6 +23,8 @@ import 'package:rpg_todo/features/guild/presentation/task_template_screen.dart';
 import 'package:rpg_todo/features/guild/data/task_template_repository.dart';
 import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_keys.dart';
+import 'package:rpg_todo/features/guild/presentation/quest_streak_keys.dart' as qAppKeys;
+import 'package:rpg_todo/features/guild/presentation/quest_streak_screen.dart';
 import 'package:rpg_todo/core/di/injection.dart';
 import 'dialogs/tutorial_reset_dialog.dart';
 import 'dialogs/create_task_dialog.dart';
@@ -569,7 +571,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.34+130", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.35+131", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -654,6 +656,12 @@ class _GuildScreenState extends State<GuildScreen> {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const EstimateAccuracyScreen(),
+                    ),
+                  );
+                case 'quest_streak':
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const QuestStreakScreen(),
                     ),
                   );
               }
@@ -755,6 +763,23 @@ class _GuildScreenState extends State<GuildScreen> {
                       Icon(Icons.insights, color: Colors.black54),
                       SizedBox(width: 8),
                       Text('見積もり精度レポート'),
+                    ],
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'quest_streak',
+                key: AppKeys.guildOverflowQuestStreak,
+                child: SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'quest_streak'),
+                  label: 'クエスト別ストリーク',
+                  child: Row(
+                    key: qAppKeys.QuestStreakKeys.guildEntry,
+                    children: const [
+                      Icon(Icons.local_fire_department, color: Colors.black54),
+                      SizedBox(width: 8),
+                      Text('クエスト別ストリーク'),
                     ],
                   ),
                 ),
