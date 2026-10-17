@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/infrastructure/app_lock_settings_screen.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/about/presentation/about_app_keys.dart';
+import 'package:rpg_todo/features/about/presentation/about_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/town/presentation/widgets/sfx_volume_section.dart';
@@ -56,7 +58,8 @@ class SettingsHubScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: reminderScreenBuilder ?? (_) => const ReminderSettingsScreen(),
+                builder: reminderScreenBuilder ??
+                    (_) => const ReminderSettingsScreen(),
               ),
             ),
           ),
@@ -79,6 +82,16 @@ class SettingsHubScreen extends StatelessWidget {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => const AppLockSettingsScreen(),
+              ),
+            ),
+          ),
+          ListTile(
+            key: AboutAppKeys.entryFromSettings,
+            title: const Text('アプリについて'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const AboutScreen(),
               ),
             ),
           ),
