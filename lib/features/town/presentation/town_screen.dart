@@ -11,6 +11,9 @@ import 'package:rpg_todo/features/settings/presentation/settings_hub_screen.dart
 import 'package:rpg_todo/features/adventurer/presentation/adventurer_chart_screen.dart';
 import 'package:rpg_todo/features/character_customization/presentation/equipment_tab.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
+import 'package:rpg_todo/features/town/domain/random_event.dart';
+import 'package:rpg_todo/features/town/domain/town_event_reward.dart';
+import 'widgets/town_event_gate.dart';
 import 'widgets/coin_gem_balance_bar.dart';
 import 'widgets/home_shop_section.dart';
 import 'widgets/skin_section.dart';
@@ -20,7 +23,11 @@ import 'widgets/theme_section.dart';
 import 'widgets/sfx_volume_section.dart';
 
 class TownScreen extends StatelessWidget {
-  const TownScreen({super.key});
+  const TownScreen({super.key, this.eventChecker});
+
+  /// 町のランダムイベント抽選関数。null なら不活性（Hive 未初期化の試練を汚染しない既定）。
+  /// 本番は MainScreen が RandomEventService().checkForEvent を渡す。
+  final Future<RandomEvent?> Function()? eventChecker;
 
   static Map<String, String> homeData(player) {
     if (player.homeItems.contains("home_4")) return {'name': '寄合長屋', 'image': 'assets/images/home_4.png'};
@@ -41,7 +48,10 @@ class TownScreen extends StatelessWidget {
     final next = scale.nextScale;
     final nextLv = scale.nextLevelForUpgrade;
 
-    return DefaultTabController(
+    return TownEventGate(
+      checkEvent: eventChecker,
+      onEventShown: (event) => _grantEventReward(context, playerVM, event),
+      child: DefaultTabController(
       length: 2,
       child: Scaffold(
         key: AppKeys.townScreen,
@@ -113,6 +123,28 @@ class TownScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+      ),
+    );
+  }
+
+  /// イベント報酬を付与し、付与内容を提示する。
+  /// 付与していない疲労回復は表示しない（嘘を奏上しない）。
+  void _grantEventReward(
+    BuildContext context,
+    PlayerViewModel playerVM,
+    RandomEvent event,
+  ) {
+    final reward = TownEventReward.fromMap(event.reward);
+    if (reward.xp > 0) playerVM.addExp(reward.xp);
+    if (reward.gems > 0) playerVM.addGems(reward.gems);
+
+    final label = reward.label;
+    if (label.isEmpty) return;
+    ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+      SnackBar(
+        content: Text('${event.emoji} ${event.title} — $label'),
+        duration: const Duration(seconds: 3),
       ),
     );
   }

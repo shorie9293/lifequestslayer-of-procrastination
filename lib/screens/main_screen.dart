@@ -9,6 +9,7 @@ import 'package:rpg_todo/features/guild/presentation/guild_screen.dart';
 import 'package:rpg_todo/features/battle/presentation/battle_screen.dart';
 import 'package:rpg_todo/features/temple/presentation/temple_screen.dart';
 import 'package:rpg_todo/features/town/presentation/town_screen.dart';
+import 'package:rpg_todo/features/town/domain/random_event_service.dart';
 import 'package:rpg_todo/features/shared/widgets/debug_panel.dart';
 import 'package:rpg_todo/features/crossapp/presentation/cross_app_reward_dialog.dart';
 import 'widgets/main_bottom_nav.dart';
@@ -38,11 +39,16 @@ class _MainScreenState extends State<MainScreen> {
   final PageController _pageController = PageController(initialPage: 0);
   final MainTutorialController _tutorialController = MainTutorialController();
 
-  final List<Widget> _screens = [
+  /// 町のランダムイベント抽選器（日次回数は Hive settingsBox に保存）。
+  final RandomEventService _townEventService = RandomEventService();
+
+  late final List<Widget> _screens = [
     const ErrorBoundary(child: BattleScreen()),
     const ErrorBoundary(child: GuildScreen()),
     const ErrorBoundary(child: TempleScreen()),
-    const ErrorBoundary(child: TownScreen()),
+    ErrorBoundary(
+      child: TownScreen(eventChecker: _townEventService.checkForEvent),
+    ),
   ];
 
   @override
