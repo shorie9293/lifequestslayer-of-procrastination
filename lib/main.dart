@@ -18,6 +18,7 @@ import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/core/infrastructure/notification_service.dart';
+import 'package:rpg_todo/features/reminder/infrastructure/deadline_reminder_coordinator.dart';
 import 'package:rpg_todo/core/infrastructure/iap_service.dart';
 import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
 import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
@@ -178,6 +179,10 @@ void main() async {
         final notificationService = NotificationService();
         await notificationService.scheduleAll();
         debugPrint('[main] 通知スケジュールが完了しました');
+        // 締切リマインド（期限間近クエストの通知）を設定に従って反映する。
+        // 無効・対象0件なら解除。失敗してもアプリ起動は妨げない。
+        final outcome = await DeadlineReminderCoordinator().run();
+        debugPrint('[main] 締切リマインドの反映が完了しました: $outcome');
       } catch (e) {
         debugPrint('[main] 通知スケジュールに失敗しました: $e');
       }

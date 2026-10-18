@@ -5,6 +5,7 @@ import '../data/reminder_repository.dart';
 import '../domain/reminder_schedule_service.dart';
 import '../domain/reminder_settings.dart';
 import '../infrastructure/reminder_scheduler.dart';
+import 'deadline_reminder_settings_screen.dart';
 
 /// 勤行リマインダーの設定画面。
 ///
@@ -15,13 +16,16 @@ class ReminderSettingsScreen extends StatefulWidget {
     ReminderRepository? repository,
     ReminderScheduler? scheduler,
     DateTime? now,
+    WidgetBuilder? deadlineScreenBuilder,
   })  : _repository = repository,
         _scheduler = scheduler,
-        _now = now;
+        _now = now,
+        _deadlineScreenBuilder = deadlineScreenBuilder;
 
   final ReminderRepository? _repository;
   final ReminderScheduler? _scheduler;
   final DateTime? _now;
+  final WidgetBuilder? _deadlineScreenBuilder;
 
   @override
   State<ReminderSettingsScreen> createState() => _ReminderSettingsScreenState();
@@ -105,6 +109,19 @@ class _ReminderSettingsScreenState extends State<ReminderSettingsScreen> {
     final appBar = AppBar(
       key: AppKeys.reminderSettingsScreen,
       title: const Text('勤行リマインダー'),
+      actions: [
+        IconButton(
+          key: AppKeys.deadlineReminderEntry,
+          icon: const Icon(Icons.hourglass_bottom),
+          tooltip: '締切リマインド',
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: widget._deadlineScreenBuilder ??
+                  (_) => const DeadlineReminderSettingsScreen(),
+            ),
+          ),
+        ),
+      ],
     );
     if (!_loaded) {
       return Scaffold(

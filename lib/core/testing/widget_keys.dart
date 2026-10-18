@@ -368,4 +368,18 @@ class AppKeys {
   static const Key appLockErrorText = Key('txt_app_lock_error');
   static const Key appLockSettingsScreen = Key('screen_app_lock_settings');
   static const Key appLockSettingsTile = Key('tile_settings_app_lock');
+
+  // ━━━ 締切リマインド（期限間近クエストの通知） ━━━
+  static const Key deadlineReminderSettingsScreen =
+      Key('screen_deadline_reminder_settings');
+  static const Key deadlineReminderEntry = Key('btn_deadline_reminder_entry');
+  static const Key deadlineReminderEnabledSwitch =
+      Key('tgl_deadline_reminder_enabled');
+  static const Key deadlineReminderTimePicker =
+      Key('btn_deadline_reminder_time');
+  static const Key deadlineReminderPreview = Key('txt_deadline_reminder_preview');
+  static const Key deadlineReminderSaveButton =
+      Key('btn_deadline_reminder_save');
+  static Key deadlineReminderWithinChip(int days) =>
+      Key('chip_deadline_reminder_within_$days');
 }

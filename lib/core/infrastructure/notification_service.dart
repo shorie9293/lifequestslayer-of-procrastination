@@ -301,8 +301,73 @@ class NotificationService {
     await _plugin.cancel(_morningId);
     await _plugin.cancel(_noonId);
     await _plugin.cancel(_eveningId);
+    await _plugin.cancel(_deadlineReminderId);
     await _plugin.cancel(_testNotificationId);
     debugPrint('[NotificationService] 全ての通知をキャンセルしました');
+  }
+
+  // --- 締切リマインド（通知ID 200） ---
+  //
+  // 勤行リマインダー（ID 1..7 / 100..106）とは独立。毎日同時刻に繰り返す。
+  // 本文は呼び出し側が「期限間近クエスト」から組み立てて渡す。
+
+  static const int _deadlineReminderId = 200;
+  static const String _deadlineChannelId = 'rpg_deadline';
+  static const String _deadlineChannelName = '締切の刻';
+
+  /// 締切リマインドを毎日 [hour]:[minute] にスケジュールする。
+  /// 既存予約は一旦取り消してから登録する（二重予約の防止）。
+  Future<void> scheduleDeadlineReminder({
+    required int hour,
+    required int minute,
+    required String title,
+    required String body,
+  }) async {
+    await _plugin.cancel(_deadlineReminderId);
+    final scheduleMode = await _getScheduleMode();
+    final scheduledDate = _nextInstanceOfTime(hour, minute);
+
+    final android = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (android != null) {
+      await android.createNotificationChannel(
+        const AndroidNotificationChannel(
+          _deadlineChannelId,
+          _deadlineChannelName,
+          description: '期限間近のクエストを知らせる通知',
+          importance: Importance.high,
+        ),
+      );
+    }
+
+    debugPrint('[NotificationService] 締切リマインドをスケジュール: '
+        '$hour:$minute → $scheduledDate (mode: $scheduleMode)');
+    await _plugin.zonedSchedule(
+      _deadlineReminderId,
+      title,
+      body,
+      scheduledDate,
+      const NotificationDetails(
+        android: AndroidNotificationDetails(
+          _deadlineChannelId,
+          _deadlineChannelName,
+          channelDescription: '期限間近のクエストを知らせる通知',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: scheduleMode,
+      uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+  }
+
+  /// 締切リマインドの予約を取り消す。
+  Future<void> cancelDeadlineReminder() async {
+    await _plugin.cancel(_deadlineReminderId);
+    debugPrint('[NotificationService] 締切リマインドをキャンセルしました');
   }
 
   // --- 勤行リマインダー（通知ID 100..106 = 曜日1..7） ---
