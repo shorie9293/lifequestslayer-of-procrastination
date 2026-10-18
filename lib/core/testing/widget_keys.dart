@@ -285,6 +285,9 @@ class AppKeys {
   static const Key guildOverflowQuestStreak =
       Key('item_guild_overflow_quest_streak');
 
+  // ━━━ クエスト期限のカレンダー書き出し (.ics) ━━━
+  static const Key guildCalendarExportEntry = Key('btn_guild_calendar_export');
+
   // ━━━ 職業チップ＋スキルプルダウン ━━━
   static const Key guildJobChip = Key('chip_guild_job');
   static Key guildJobSkillItem(JobSkill skill) =>

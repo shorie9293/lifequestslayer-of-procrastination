@@ -25,6 +25,7 @@ import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_screen.da
 import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_keys.dart';
 import 'package:rpg_todo/features/guild/presentation/quest_streak_keys.dart' as qAppKeys;
 import 'package:rpg_todo/features/guild/presentation/quest_streak_screen.dart';
+import 'package:rpg_todo/features/calendar_export/presentation/calendar_export_screen.dart';
 import 'package:rpg_todo/core/di/injection.dart';
 import 'dialogs/tutorial_reset_dialog.dart';
 import 'dialogs/create_task_dialog.dart';
@@ -571,7 +572,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.40+136", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.41+137", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -662,6 +663,14 @@ class _GuildScreenState extends State<GuildScreen> {
                   Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (_) => const QuestStreakScreen(),
+                    ),
+                  );
+                case 'calendar_export':
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CalendarExportScreen(
+                        tasksOverride: taskVM.guildTasks,
+                      ),
                     ),
                   );
               }
@@ -780,6 +789,22 @@ class _GuildScreenState extends State<GuildScreen> {
                       Icon(Icons.local_fire_department, color: Colors.black54),
                       SizedBox(width: 8),
                       Text('クエスト別ストリーク'),
+                    ],
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'calendar_export',
+                key: AppKeys.guildCalendarExportEntry,
+                child: SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'calendar_export'),
+                  label: 'カレンダー書き出し',
+                  child: Row(
+                    children: const [
+                      Icon(Icons.event_available, color: Colors.black54),
+                      SizedBox(width: 8),
+                      Text('カレンダー書き出し'),
                     ],
                   ),
                 ),

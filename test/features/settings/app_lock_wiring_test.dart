@@ -27,9 +27,9 @@ void main() {
     );
   });
 
-  test('pubspec.yaml は crypto 依存と新版数 1.5.40+136 を持つ', () {
+  test('pubspec.yaml は crypto 依存と新版数 1.5.41+137 を持つ', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
     expect(pubspec, contains('crypto: ^3.0.7'));
-    expect(pubspec, contains('version: 1.5.40+136'));
+    expect(pubspec, contains('version: 1.5.41+137'));
   });
 }
