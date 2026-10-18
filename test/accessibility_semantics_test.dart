@@ -25,6 +25,7 @@ import 'package:rpg_todo/features/overview/presentation/screens/overview_screen.
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/town/presentation/reflection_grove_screen.dart';
 import 'package:rpg_todo/features/town/presentation/town_screen.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
@@ -301,6 +302,8 @@ void main() {
             ChangeNotifierProvider<ShopViewModel>(
                 create: (_) => ShopViewModel(playerVM)),
             ChangeNotifierProvider<TownViewModel>.value(value: townVM),
+            ChangeNotifierProvider<SettingsViewModel>(
+                create: (_) => SettingsViewModel(_MockSettingsRepository())),
           ],
           child: const MaterialApp(home: TownScreen()),
         ),
