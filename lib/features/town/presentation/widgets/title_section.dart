@@ -4,6 +4,7 @@ import 'package:rpg_todo/domain/models/title_definition.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/crossapp/presentation/cross_app_title_encyclopedia_screen.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 称号セクション
@@ -25,15 +26,37 @@ class TitleSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.military_tech, color: Colors.white),
-            SizedBox(width: 8),
-            Text("称号セット (EXP+5%ボーナス)",
-                style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white)),
+            const Icon(Icons.military_tech, color: Colors.white),
+            const SizedBox(width: 8),
+            const Expanded(
+              child: Text("称号セット (EXP+5%ボーナス)",
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white)),
+            ),
+            SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(
+                  SemanticTypes.button, 'cross_app_title_encyclopedia'),
+              label: 'クロスアプリ称号図鑑を開く',
+              child: IconButton(
+                key: AppKeys.crossAppTitleEncyclopediaEntry,
+                tooltip: 'クロスアプリ称号図鑑',
+                icon: const Icon(Icons.menu_book, color: Colors.white),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => CrossAppTitleEncyclopediaScreen(
+                        ownedTitles: player.titles,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 12),

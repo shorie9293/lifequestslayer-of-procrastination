@@ -382,4 +382,15 @@ class AppKeys {
       Key('btn_deadline_reminder_save');
   static Key deadlineReminderWithinChip(int days) =>
       Key('chip_deadline_reminder_within_$days');
+
+  // ━━━ クロスアプリ称号図鑑 ━━━
+  static const Key crossAppTitleEncyclopediaScreen =
+      Key('screen_cross_app_title_encyclopedia');
+  static const Key crossAppTitleEncyclopediaEntry =
+      Key('btn_cross_app_title_encyclopedia_entry');
+  static const Key crossAppTitleSummary = Key('card_cross_app_title_summary');
+  static const Key crossAppTitleEmpty = Key('txt_cross_app_title_empty');
+  static Key crossAppTitleRow(String id) => Key('row_cross_app_title_$id');
+  static Key crossAppTitleFilterChip(String name) =>
+      Key('chip_cross_app_title_filter_$name');
 }
