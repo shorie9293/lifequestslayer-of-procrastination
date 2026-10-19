@@ -72,7 +72,9 @@ void main() {
     final label =
         tester.widget<Text>(find.byKey(AppKeys.guildBulkCountLabel)).data!;
     expect(label, contains('選択: 0件'));
-    expect(find.text('3件を破棄しました。'), findsOneWidget);
+    // v1.5.43: 一括削除は Undo 付き SnackBar に統一
+    expect(find.text('クエストを削除しました'), findsOneWidget);
+    expect(find.text('元に戻す'), findsOneWidget);
   });
 
   testWidgets('未選択で操作すると案内が出て適用されない', (tester) async {

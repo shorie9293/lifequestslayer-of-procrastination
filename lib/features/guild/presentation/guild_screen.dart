@@ -26,6 +26,8 @@ import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_keys.dart
 import 'package:rpg_todo/features/guild/presentation/quest_streak_keys.dart' as qAppKeys;
 import 'package:rpg_todo/features/guild/presentation/quest_streak_screen.dart';
 import 'package:rpg_todo/features/calendar_export/presentation/calendar_export_screen.dart';
+import 'package:rpg_todo/features/undo/domain/undo_buffer.dart';
+import 'package:rpg_todo/features/undo/presentation/undo_snack_bar.dart';
 import 'package:rpg_todo/core/di/injection.dart';
 import 'dialogs/tutorial_reset_dialog.dart';
 import 'dialogs/create_task_dialog.dart';
@@ -199,6 +201,12 @@ class _JobSkillChip extends StatelessWidget {
 class _GuildScreenState extends State<GuildScreen> {
   bool _isDialogOpen = false;
 
+  /// 削除Undo用バッファ（呼出側 State に保持・一度だけ復元）。
+  final _undoBuffer = UndoBuffer<Task>();
+
+  /// 削除前の並び位置（元の位置へ戻すため）。
+  int _undoIndex = -1;
+
   Color _getRankColor(QuestRank rank) => RankColors.forRank(rank);
 
   void _showCreateTaskDialog(BuildContext context) {
@@ -309,6 +317,18 @@ class _GuildScreenState extends State<GuildScreen> {
     }
   }
 
+  /// 削除したクエストを復元する（同一idが既に存在する場合は何もしない）。
+  /// 元の並び位置（[_undoIndex]）へ挿入する＝末尾へ落とさない。
+  void _restoreDeletedTask(Task task) {
+    if (!mounted) return;
+    final taskVM = context.read<TaskViewModel>();
+    if (taskVM.tasks.any((t) => t.id == task.id)) return; // 二重追加防止
+    final restored = List<Task>.of(taskVM.tasks);
+    final at = _undoIndex < 0 ? restored.length : _undoIndex;
+    restored.insert(at.clamp(0, restored.length), task);
+    taskVM.setTasks(restored);
+  }
+
   void _deleteTask(BuildContext context, String taskId) {
     // UX-4: クエスト契約解除に確認ダイアログを追加
     if (_isDialogOpen) return;
@@ -326,10 +346,22 @@ class _GuildScreenState extends State<GuildScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<TaskViewModel>().deleteTask(taskId);
-              context.read<TaskViewModel>().save();
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text("クエストを破棄しました。")),
+              final taskVM = context.read<TaskViewModel>();
+              final index = taskVM.tasks.indexWhere((t) => t.id == taskId);
+              if (index < 0) return;
+              // 削除対象のコピーを保持 → 削除実行（即時削除の既存挙動は不変）
+              _undoIndex = index;
+              _undoBuffer.push(Task.fromJson(taskVM.tasks[index].toJson()));
+              taskVM.deleteTask(taskId);
+              taskVM.save();
+              showUndoSnackBar(
+                context,
+                message: 'クエストを削除しました',
+                onUndo: () {
+                  final restored = _undoBuffer.take();
+                  if (restored == null) return;
+                  _restoreDeletedTask(restored);
+                },
               );
             },
             child: const Text("破棄する", style: TextStyle(color: Colors.red)),
@@ -572,7 +604,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.42+138", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.43+139", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [

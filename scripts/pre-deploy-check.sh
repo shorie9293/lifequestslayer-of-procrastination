@@ -30,6 +30,7 @@ flutter test --no-pub -j 2 \
   test/domain/ \
   test/features/auth/ \
   test/features/guild/ \
+  test/features/undo/ \
   test/features/habits/ \
   test/features/reminder/ \
   test/features/kozuchi/ \

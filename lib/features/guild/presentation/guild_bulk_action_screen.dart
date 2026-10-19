@@ -11,6 +11,8 @@ import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/domain/guild_bulk_action.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/undo/domain/undo_buffer.dart';
+import 'package:rpg_todo/features/undo/presentation/undo_snack_bar.dart';
 
 /// 一括操作の適用処理（試練用に差し替え可能）。適用できた件数を返す。
 typedef GuildBulkApplyHandler = int Function(
@@ -33,6 +35,9 @@ class _GuildBulkActionScreenState extends State<GuildBulkActionScreen> {
   final Set<String> _selected = {};
   int _postponeDays = 1;
 
+  /// 一括削除Undo用バッファ（呼出側 State に保持・一度だけ復元）。
+  final _undoBuffer = UndoBuffer<List<Task>>();
+
   static const _postponeChoices = [1, 3, 7];
 
   void _toggle(String id, bool value) {
@@ -45,6 +50,16 @@ class _GuildBulkActionScreenState extends State<GuildBulkActionScreen> {
     });
   }
 
+  /// 一括削除したクエスト群を復元する（同一idが既に存在する分は捨てる）。
+  void _restoreDeletedTasks(List<Task> tasks) {
+    if (!mounted) return;
+    final taskVM = context.read<TaskViewModel>();
+    final existing = taskVM.tasks.map((t) => t.id).toSet();
+    final restored = tasks.where((t) => !existing.contains(t.id)).toList();
+    if (restored.isEmpty) return; // 二重追加防止
+    taskVM.setTasks([...taskVM.tasks, ...restored]);
+  }
+
   void _apply(GuildBulkAction action, List<Task> tasks) {
     final plan = GuildBulkActionService.buildPlan(tasks, _selected, action);
     if (plan.isEmpty) {
@@ -53,10 +68,32 @@ class _GuildBulkActionScreenState extends State<GuildBulkActionScreen> {
       );
       return;
     }
+    // 一括削除は対象のコピーを保持してから適用する
+    if (action == GuildBulkAction.delete) {
+      final ids = Set<String>.of(plan.targetIds);
+      _undoBuffer.push([
+        for (final t in tasks)
+          if (ids.contains(t.id)) Task.fromJson(t.toJson()),
+      ]);
+    }
     final applied = widget.applyOverride != null
         ? widget.applyOverride!(action, Set<String>.of(plan.targetIds))
         : _applyToViewModel(action, plan.targetIds);
     setState(() => _selected.clear());
+    if (action == GuildBulkAction.delete) {
+      showUndoSnackBar(
+        context,
+        message: 'クエストを削除しました',
+        onUndo: () {
+          final restored = _undoBuffer.take();
+          if (restored == null || restored.isEmpty) return;
+          // 試練用ハンドラ差し替え時は復元先の ViewModel が無い
+          if (widget.applyOverride != null) return;
+          _restoreDeletedTasks(restored);
+        },
+      );
+      return;
+    }
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${applied}件を${action.label}しました。')),
     );
