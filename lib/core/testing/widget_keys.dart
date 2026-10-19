@@ -396,4 +396,16 @@ class AppKeys {
   static Key crossAppTitleRow(String id) => Key('row_cross_app_title_$id');
   static Key crossAppTitleFilterChip(String name) =>
       Key('chip_cross_app_title_filter_$name');
+
+  // ━━━ クエストの札（タグ） ━━━
+  static const Key questTagEmpty = Key('txt_quest_tag_empty');
+  static const Key questTagInput = Key('txt_quest_tag_input');
+  static const Key questTagAddButton = Key('btn_quest_tag_add');
+  static const Key questTagError = Key('txt_quest_tag_error');
+  static const Key questTagSaveButton = Key('btn_quest_tag_save');
+  static const Key questTagCancelButton = Key('btn_quest_tag_cancel');
+  static Key questTagEditButton(String id) => Key('btn_quest_tag_edit_$id');
+  static Key questTagChip(String tag) => Key('chip_quest_tag_$tag');
+  static Key guildQuestTagChip(String tag) => Key('chip_quest_tag_$tag');
+  static Key questTagChipDelete(String tag) => Key('chip_quest_tag_delete_$tag');
 }

@@ -33,12 +33,16 @@ class GuildQuestQuery {
 
   /// 絞り込む難易度。空集合 = 全難易度
   final Set<QuestRank> ranks;
+
+  /// 絞り込む札（タグ）。空集合 = 全タグ
+  final Set<String> tags;
   final GuildQuestSortOrder sortOrder;
 
   const GuildQuestQuery({
     this.text = '',
     this.statuses = const {},
     this.ranks = const {},
+    this.tags = const {},
     this.sortOrder = GuildQuestSortOrder.deadlineAsc,
   });
 
@@ -47,25 +51,29 @@ class GuildQuestQuery {
       text.trim().isEmpty &&
       statuses.isEmpty &&
       ranks.isEmpty &&
+      tags.isEmpty &&
       sortOrder == GuildQuestSortOrder.deadlineAsc;
 
-  /// 有効な絞り込み条件の数（テキスト + statuses + ranks + 既定以外のソート）
+  /// 有効な絞り込み条件の数（テキスト + statuses + ranks + tags + 既定以外のソート）
   int get activeFilterCount =>
       (text.trim().isEmpty ? 0 : 1) +
       statuses.length +
       ranks.length +
+      tags.length +
       (sortOrder == GuildQuestSortOrder.deadlineAsc ? 0 : 1);
 
   GuildQuestQuery copyWith({
     String? text,
     Set<GuildQuestStatusFilter>? statuses,
     Set<QuestRank>? ranks,
+    Set<String>? tags,
     GuildQuestSortOrder? sortOrder,
   }) {
     return GuildQuestQuery(
       text: text ?? this.text,
       statuses: statuses ?? this.statuses,
       ranks: ranks ?? this.ranks,
+      tags: tags ?? this.tags,
       sortOrder: sortOrder ?? this.sortOrder,
     );
   }
@@ -77,6 +85,7 @@ class GuildQuestQuery {
         other.text == text &&
         setEquals(other.statuses, statuses) &&
         setEquals(other.ranks, ranks) &&
+        setEquals(other.tags, tags) &&
         other.sortOrder == sortOrder;
   }
 
@@ -85,6 +94,7 @@ class GuildQuestQuery {
         text,
         Object.hashAllUnordered(statuses),
         Object.hashAllUnordered(ranks),
+        Object.hashAllUnordered(tags),
         sortOrder,
       );
 }

@@ -11,17 +11,27 @@ import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/domain/guild_quest_query.dart';
 import 'package:rpg_todo/features/guild/domain/guild_quest_query_service.dart';
+import 'package:rpg_todo/features/guild/domain/quest_tag_service.dart';
+import 'package:rpg_todo/features/guild/presentation/dialogs/quest_tag_edit_dialog.dart';
 import 'package:rpg_todo/features/guild/presentation/widgets/task_card.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 
 class GuildQuestSearchScreen extends StatefulWidget {
-  const GuildQuestSearchScreen({super.key, this.tasksOverride, this.now});
+  const GuildQuestSearchScreen({
+    super.key,
+    this.tasksOverride,
+    this.now,
+    this.onTagsSaved,
+  });
 
   /// 試練用: Provider なしでクエスト一覧を注入できる
   final List<Task>? tasksOverride;
 
   /// 試練用: 期日超過判定の基準時刻を固定できる
   final DateTime? now;
+
+  /// 札（タグ）編集の保存先。null なら札編集導線を出さない。
+  final void Function(Task task, List<String> tags)? onTagsSaved;
 
   @override
   State<GuildQuestSearchScreen> createState() => _GuildQuestSearchScreenState();
@@ -52,11 +62,42 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
     });
   }
 
+  /// 札（タグ）の選択トグル。選択は OR（QuestTagService.matchesTags の意味論）。
+  void _toggleTag(String tag) {
+    setState(() {
+      final next = Set<String>.of(_query.tags);
+      if (!next.add(tag)) {
+        next.remove(tag);
+      }
+      _query = _query.copyWith(tags: next);
+    });
+  }
+
+  /// 札編集ダイアログを開く。onTagsSaved 未注入（試練の後方互換）なら何もしない。
+  Future<void> _openTagEditor(Task task) async {
+    if (widget.onTagsSaved == null) return;
+    await showDialog<void>(
+      context: context,
+      builder: (_) => QuestTagEditDialog(
+        taskTitle: task.title,
+        initialTags: List<String>.of(task.tags),
+        onSave: (tags) {
+          widget.onTagsSaved?.call(task, tags);
+          // 呼び出し元が同じ Task を書き換える場合に備え、表示を同期する
+          if (mounted) setState(() {});
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final tasks = widget.tasksOverride ??
         Provider.of<TaskViewModel>(context, listen: false).guildTasks;
     final results = GuildQuestQueryService.apply(tasks, _query, now: widget.now);
+    // 札の件数は絞り込み前の全件から集計する
+    final tagCounts = QuestTagService.counts(tasks);
+    final showTagEdit = widget.tasksOverride == null || widget.onTagsSaved != null;
 
     return Scaffold(
       key: AppKeys.guildQuestSearchScreen,
@@ -115,6 +156,22 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
               ],
             ),
           ),
+          if (tagCounts.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  for (final stat in tagCounts)
+                    FilterChip(
+                      key: AppKeys.guildQuestTagChip(stat.tag),
+                      label: Text('${stat.tag} (${stat.count})'),
+                      selected: _query.tags.contains(stat.tag),
+                      onSelected: (_) => _toggleTag(stat.tag),
+                    ),
+                ],
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Row(
@@ -192,6 +249,14 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
                           color: _rankColor(task.rank),
                           titleOverride: '[${task.rank.name}] ${task.title}',
                           hideCountdown: true,
+                          trailing: showTagEdit
+                              ? IconButton(
+                                  key: AppKeys.questTagEditButton(task.id),
+                                  icon: const Icon(Icons.label_outline),
+                                  tooltip: '札を編集',
+                                  onPressed: () => _openTagEditor(task),
+                                )
+                              : null,
                         ),
                       );
                     },

@@ -572,7 +572,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.41+137", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.42+138", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -592,7 +592,11 @@ class _GuildScreenState extends State<GuildScreen> {
             tooltip: 'クエスト検索',
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
-                builder: (_) => const GuildQuestSearchScreen(),
+                builder: (searchContext) => GuildQuestSearchScreen(
+                  onTagsSaved: (task, tags) => searchContext
+                      .read<TaskViewModel>()
+                      .setTaskTags(task.id, tags),
+                ),
               ),
             ),
           ),

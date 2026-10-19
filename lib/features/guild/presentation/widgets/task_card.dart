@@ -230,6 +230,7 @@ class _TaskCardState extends State<TaskCard>
                 iconColor: textColor,
                 collapsedTextColor: textColor,
                 textColor: textColor,
+                trailing: widget.trailing,
                 tilePadding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 leading: (_task.status == TaskStatus.active ||

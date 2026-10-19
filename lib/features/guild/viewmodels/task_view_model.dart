@@ -249,6 +249,15 @@ class TaskViewModel extends ChangeNotifier {
     _autoSave();
   }
 
+  /// クエストの札（タグ）を差し替える。見つからなければ何もしない。
+  void setTaskTags(String taskId, List<String> tags) {
+    final index = _tasks.indexWhere((t) => t.id == taskId);
+    if (index < 0) return;
+    _tasks[index].tags = List<String>.of(tags);
+    notifyListeners();
+    save();
+  }
+
   // ── 一括操作（改善提案 #91） ──
 
   /// 選択した複数クエストをまとめて出発（受注）する。

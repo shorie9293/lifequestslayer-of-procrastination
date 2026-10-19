@@ -1,5 +1,6 @@
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/domain/guild_quest_query.dart';
+import 'package:rpg_todo/features/guild/domain/quest_tag_service.dart';
 
 /// 寄合所クエスト一覧の検索・絞り込み・並び替え（純粋関数のみ）
 class GuildQuestQueryService {
@@ -121,6 +122,9 @@ class GuildQuestQueryService {
     result = result
         .where((task) => matchesRank(task, query.ranks))
         .toList(growable: false);
+    result = QuestTagService.filterByTags(result, query.tags).toList(
+      growable: false,
+    );
     return sort(result, query.sortOrder);
   }
 }
