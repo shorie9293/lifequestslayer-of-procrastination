@@ -39,6 +39,7 @@ flutter test --no-pub -j 2 \
   test/features/adventurer/ \
   test/features/project/ \
   test/features/settings/ \
+  test/features/streak_freeze/ \
   test/features/about/
 echo "✅ shard 1/3 passed"
 

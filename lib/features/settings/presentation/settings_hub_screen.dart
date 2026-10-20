@@ -6,14 +6,19 @@ import 'package:rpg_todo/features/about/presentation/about_app_keys.dart';
 import 'package:rpg_todo/features/about/presentation/about_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/streak_freeze/presentation/streak_freeze_app_keys.dart';
+import 'package:rpg_todo/features/streak_freeze/presentation/streak_freeze_screen.dart';
 import 'package:rpg_todo/features/town/presentation/widgets/sfx_volume_section.dart';
 import 'package:rpg_todo/features/town/presentation/widgets/theme_section.dart';
 
 /// 設定ハブ画面（#86）— 分散していた設定を一覧・操作する単一画面。
 class SettingsHubScreen extends StatelessWidget {
-  const SettingsHubScreen({super.key, this.reminderScreenBuilder});
+  const SettingsHubScreen({super.key, this.reminderScreenBuilder, this.streakFreezeScreenBuilder});
 
   final WidgetBuilder? reminderScreenBuilder;
+
+  /// お休み券画面のビルダー（試練での注入用。未指定なら実画面）。
+  final WidgetBuilder? streakFreezeScreenBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +87,18 @@ class SettingsHubScreen extends StatelessWidget {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => const AppLockSettingsScreen(),
+              ),
+            ),
+          ),
+          ListTile(
+            key: StreakFreezeKeys.entryFromSettings,
+            title: const Text('連続記録お休み券'),
+            subtitle: const Text('連続記録を1日分守る券の残数と履歴'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: streakFreezeScreenBuilder ??
+                    (_) => const StreakFreezeScreen(),
               ),
             ),
           ),

@@ -12,6 +12,8 @@ import 'package:rpg_todo/domain/services/reflection_badge_service.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
+import 'package:rpg_todo/features/streak_freeze/domain/streak_freeze_service.dart';
+import 'package:rpg_todo/features/streak_freeze/domain/streak_freeze_state.dart';
 import 'package:rpg_todo/core/utils/date_utils.dart';
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
 import 'package:rpg_todo/features/temple/domain/enlightenment_stage.dart';
@@ -27,6 +29,9 @@ class PlayerViewModel extends ChangeNotifier {
   bool _isLoaded = false;
   int? pendingLoginBonusAmount;
   int? pendingStreakReward;
+
+  /// ストリーク切断時に提示するお休み券の使用提案（#153）。
+  StreakFreezeOffer? _pendingStreakFreezeOffer;
 
   PlayerViewModel(this._playerRepository);
 
@@ -119,11 +124,24 @@ class PlayerViewModel extends ChangeNotifier {
       _player = _player.copyWith(weeklySRankCompleted: 0);
     }
     if (!login) return;
+    final previousLastLogin = _player.lastLoginDate;
     final (streakPlayer, streakResult) =
         StreakService.checkAndUpdateStreak(_player, now);
     _player = streakPlayer;
     if (streakResult.reward > 0) {
       pendingStreakReward = streakResult.reward;
+    }
+    // ストリーク切断時はお休み券の使用提案を保持する（#153）。
+    // 券の消費とプレイヤー復元は画面側（StreakFreezeScreen）が行う。
+    if (streakResult.wasBroken && streakResult.previousStreak > 0) {
+      _pendingStreakFreezeOffer = StreakFreezeOffer(
+        previousStreak: streakResult.previousStreak,
+        missedDays: StreakFreezeService.missedDaysBetween(previousLastLogin, now),
+        missedDateKeys:
+            StreakFreezeService.missedDateKeys(previousLastLogin, now),
+      );
+    } else {
+      _pendingStreakFreezeOffer = null;
     }
     // ストリーク切断時に帰還ミッションを発行
     if (streakResult.wasBroken && streakResult.previousStreak > 0) {
@@ -150,6 +168,37 @@ class PlayerViewModel extends ChangeNotifier {
       _player = _player.copyWith(coins: _player.coins + 5000);
       pendingLoginBonusAmount = (pendingLoginBonusAmount ?? 0) + 5000;
     }
+  }
+
+  // ── お休み券（#153） ──
+
+  /// 切断時に提示する使用提案。提案が無ければ null。
+  StreakFreezeOffer? get pendingStreakFreezeOffer => _pendingStreakFreezeOffer;
+
+  /// 提案を破棄する（使わない場合）。
+  void clearPendingStreakFreezeOffer() {
+    if (_pendingStreakFreezeOffer == null) return;
+    _pendingStreakFreezeOffer = null;
+    notifyListeners();
+  }
+
+  /// お休み券を使って連続記録を復元する。
+  ///
+  /// 券の消費（リポジトリ保存）は呼び出し側の責務。ここではプレイヤーの
+  /// streakDays/longestStreak/lastLoginDate を戻し、保存・通知する。
+  /// 提案が無い場合は何もせず false を返す。
+  bool applyStreakFreeze(DateTime now) {
+    final offer = _pendingStreakFreezeOffer;
+    if (offer == null) return false;
+    _player = StreakFreezeService.restorePlayer(
+      _player,
+      previousStreak: offer.previousStreak,
+      now: now,
+    );
+    _pendingStreakFreezeOffer = null;
+    _autoSave();
+    notifyListeners();
+    return true;
   }
 
   // ── 操作 ──
