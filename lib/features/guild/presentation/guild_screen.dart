@@ -16,6 +16,7 @@ import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/features/kozuchi/presentation/widgets/kozuchi_quest_card.dart';
 import 'package:rpg_todo/features/habits/presentation/screens/habit_calendar_screen.dart';
+import 'package:rpg_todo/features/reminder/presentation/quiet_hours_settings_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_bulk_action_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_quest_search_screen.dart';
@@ -43,6 +44,10 @@ import 'package:rpg_todo/features/overview/presentation/screens/overview_screen.
 import 'package:rpg_todo/features/shared/widgets/widgets/player_avatar_section.dart'
     show getJobName;
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
+
+/// 勤行リマインダー画面から静穏時間画面への導線（本番結線）。
+Widget _buildQuietHoursScreen(BuildContext context) =>
+    const QuietHoursSettingsScreen();
 
 class GuildScreen extends StatefulWidget {
   const GuildScreen({super.key});
@@ -84,7 +89,11 @@ class _JobSkillChip extends StatelessWidget {
         );
       case JobSkillActionKind.navigateReminder:
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const ReminderSettingsScreen()),
+          MaterialPageRoute(
+            builder: (_) => const ReminderSettingsScreen(
+              quietHoursScreenBuilder: _buildQuietHoursScreen,
+            ),
+          ),
         );
       case JobSkillActionKind.navigatePomodoro:
         Navigator.of(context).push(
@@ -604,7 +613,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.44+140", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.45+141", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -686,7 +695,9 @@ class _GuildScreenState extends State<GuildScreen> {
                 case 'reminder_settings':
                   Navigator.of(context).push(
                     MaterialPageRoute(
-                      builder: (_) => const ReminderSettingsScreen(),
+                      builder: (_) => const ReminderSettingsScreen(
+                        quietHoursScreenBuilder: _buildQuietHoursScreen,
+                      ),
                     ),
                   );
                 case 'estimate_accuracy':

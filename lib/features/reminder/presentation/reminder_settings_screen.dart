@@ -6,6 +6,7 @@ import '../domain/reminder_schedule_service.dart';
 import '../domain/reminder_settings.dart';
 import '../infrastructure/reminder_scheduler.dart';
 import 'deadline_reminder_settings_screen.dart';
+import 'quiet_hours_app_keys.dart';
 
 /// 勤行リマインダーの設定画面。
 ///
@@ -17,15 +18,18 @@ class ReminderSettingsScreen extends StatefulWidget {
     ReminderScheduler? scheduler,
     DateTime? now,
     WidgetBuilder? deadlineScreenBuilder,
+    WidgetBuilder? quietHoursScreenBuilder,
   })  : _repository = repository,
         _scheduler = scheduler,
         _now = now,
-        _deadlineScreenBuilder = deadlineScreenBuilder;
+        _deadlineScreenBuilder = deadlineScreenBuilder,
+        _quietHoursScreenBuilder = quietHoursScreenBuilder;
 
   final ReminderRepository? _repository;
   final ReminderScheduler? _scheduler;
   final DateTime? _now;
   final WidgetBuilder? _deadlineScreenBuilder;
+  final WidgetBuilder? _quietHoursScreenBuilder;
 
   @override
   State<ReminderSettingsScreen> createState() => _ReminderSettingsScreenState();
@@ -121,6 +125,17 @@ class _ReminderSettingsScreenState extends State<ReminderSettingsScreen> {
             ),
           ),
         ),
+        if (widget._quietHoursScreenBuilder != null)
+          IconButton(
+            key: QuietHoursAppKeys.entry,
+            icon: const Icon(Icons.bedtime_outlined),
+            tooltip: '静穏時間（おやすみモード）',
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: widget._quietHoursScreenBuilder!,
+              ),
+            ),
+          ),
       ],
     );
     if (!_loaded) {

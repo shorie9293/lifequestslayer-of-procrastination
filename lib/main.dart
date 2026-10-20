@@ -19,6 +19,7 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/core/infrastructure/notification_service.dart';
 import 'package:rpg_todo/features/reminder/infrastructure/deadline_reminder_coordinator.dart';
+import 'package:rpg_todo/features/reminder/infrastructure/hive_quiet_hours_repository.dart';
 import 'package:rpg_todo/core/infrastructure/iap_service.dart';
 import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
 import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
@@ -78,6 +79,16 @@ void main() async {
   Hive.registerAdapter(ReflectionAdapter()); // TypeId: 7
 
   // Boxes are opened in Repositories on demand/init.
+
+  // ━━━ 静穏時間（おやすみモード）box を起動時に開く ━━━
+  // 通知スケジューラの既定ガード（QuietHoursGuardWiring）は
+  // 「既に open された box を読む」だけなので、ここで開いておかないと
+  // 設定画面で保存した静穏時間が通知へ反映されない（設定と本体の分裂）。
+  try {
+    await Hive.openBox<String>(HiveQuietHoursRepository.boxName);
+  } catch (e) {
+    debugPrint('[main] ⚠️ 静穏時間 box の初期化に失敗（通知は通常動作）: $e');
+  }
 
   // ━━━ DI 初期化 ━━━
   // configureDependencies() はVMシングルトン登録のみ（データロードはしない）。

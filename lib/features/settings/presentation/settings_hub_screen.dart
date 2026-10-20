@@ -4,12 +4,17 @@ import 'package:rpg_todo/core/infrastructure/app_lock_settings_screen.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/about/presentation/about_app_keys.dart';
 import 'package:rpg_todo/features/about/presentation/about_screen.dart';
+import 'package:rpg_todo/features/reminder/presentation/quiet_hours_settings_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/streak_freeze/presentation/streak_freeze_app_keys.dart';
 import 'package:rpg_todo/features/streak_freeze/presentation/streak_freeze_screen.dart';
 import 'package:rpg_todo/features/town/presentation/widgets/sfx_volume_section.dart';
 import 'package:rpg_todo/features/town/presentation/widgets/theme_section.dart';
+
+/// 勤行リマインダー画面から静穏時間画面への導線（本番結線）。
+Widget _buildQuietHoursScreen(BuildContext context) =>
+    const QuietHoursSettingsScreen();
 
 /// 設定ハブ画面（#86）— 分散していた設定を一覧・操作する単一画面。
 class SettingsHubScreen extends StatelessWidget {
@@ -64,7 +69,9 @@ class SettingsHubScreen extends StatelessWidget {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: reminderScreenBuilder ??
-                    (_) => const ReminderSettingsScreen(),
+                    (_) => const ReminderSettingsScreen(
+                          quietHoursScreenBuilder: _buildQuietHoursScreen,
+                        ),
               ),
             ),
           ),
