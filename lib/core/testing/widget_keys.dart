@@ -409,4 +409,9 @@ class AppKeys {
   static Key questTagChip(String tag) => Key('chip_quest_tag_$tag');
   static Key guildQuestTagChip(String tag) => Key('chip_quest_tag_$tag');
   static Key questTagChipDelete(String tag) => Key('chip_quest_tag_delete_$tag');
+
+  // ━━━ 微睡みの加護（クエストのスヌーズ） ━━━
+  static Key questSnoozeButton(String id) => Key('btn_quest_snooze_$id');
+  static Key questSnoozeBadge(String id) => Key('badge_quest_snooze_$id');
+  static const Key questSnoozeConfirmButton = Key('btn_quest_snooze_confirm');
 }

@@ -258,6 +258,18 @@ class TaskViewModel extends ChangeNotifier {
     save();
   }
 
+  /// 微睡みの加護。期限を1日延ばし、クエストとプレイヤーの双方を永続化する。
+  bool snoozeTask(String taskId, {DateTime? now}) {
+    final index = _tasks.indexWhere((t) => t.id == taskId);
+    if (index < 0) return false;
+    final task = _tasks[index];
+    final ok = _playerVM.snoozeQuest(taskId, task, now: now);
+    if (!ok) return false;
+    notifyListeners();
+    save();
+    return true;
+  }
+
   // ── 一括操作（改善提案 #91） ──
 
   /// 選択した複数クエストをまとめて出発（受注）する。

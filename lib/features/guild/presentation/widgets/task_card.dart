@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/domain/models/task.dart';
-import 'package:takamagahara_ui/takamagahara_ui.dart';
+import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class TaskCard extends StatefulWidget {
   // ━━━ 緊急度カラー定数 ━━━
@@ -26,6 +27,12 @@ class TaskCard extends StatefulWidget {
   final Widget? expandedDetails;
   final String? titleOverride;
 
+  /// 微睡みの加護でスヌーズ済みか（バッジ表示の前提）
+  final bool isSnoozed;
+
+  /// スヌーズ済みバッジの文言（例: '微睡み 10/21'）。null ならバッジを出さない。
+  final String? snoozeLabel;
+
   TaskCard({
     super.key,
     required this.task,
@@ -38,6 +45,8 @@ class TaskCard extends StatefulWidget {
     this.hideCountdown = false,
     this.expandedDetails,
     this.titleOverride,
+    this.isSnoozed = false,
+    this.snoozeLabel,
     bool? isUrgent,
   }) : isUrgent = isUrgent ??
            (task.deadline != null &&
@@ -290,6 +299,27 @@ class _TaskCardState extends State<TaskCard>
                                 style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold)),
+                          ),
+                        if (widget.isSnoozed && widget.snoozeLabel != null)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 4),
+                            child: Container(
+                              key: AppKeys.questSnoozeBadge(_task.id),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Colors.indigo.shade300,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                widget.snoozeLabel!,
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
                           ),
                       ],
                     ),

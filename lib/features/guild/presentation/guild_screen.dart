@@ -22,6 +22,7 @@ import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen
 import 'package:rpg_todo/features/guild/presentation/guild_bulk_action_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_quest_search_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/task_template_screen.dart';
+import 'package:rpg_todo/features/guild/domain/quest_snooze_service.dart';
 import 'package:rpg_todo/features/guild/data/task_template_repository.dart';
 import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_keys.dart';
@@ -310,6 +311,51 @@ class _GuildScreenState extends State<GuildScreen> {
     ).then((_) => _isDialogOpen = false);
   }
 
+  /// 微睡みの加護: 確認ダイアログ → 期限を1日延ばす（Monk Lv5 解放時のみ導線が出る）。
+  Future<void> _showSnoozeDialog(
+      BuildContext context, TaskViewModel taskVM, Task task) async {
+    const snooze = QuestSnoozeService();
+    final messenger = ScaffoldMessenger.of(context);
+    final blockReason = snooze.blockReason(task);
+    if (blockReason != null) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(blockReason, style: const TextStyle(color: Colors.white)),
+          backgroundColor: Colors.orange.shade900,
+        ),
+      );
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('微睡みの加護'),
+        content: Text(snooze.confirmMessage(task)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('やめる'),
+          ),
+          TextButton(
+            key: AppKeys.questSnoozeConfirmButton,
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('微睡む'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    if (!context.mounted) return;
+    final ok = taskVM.snoozeTask(task.id);
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(ok
+            ? '微睡みの加護 — 期限を1日延ばした'
+            : (snooze.blockReason(task) ?? '微睡めなかった')),
+      ),
+    );
+  }
+
   void _acceptTask(BuildContext context, String taskId) {
     final gameVM = context.read<GameViewModel>();
     final error = gameVM.acceptTask(taskId);
@@ -431,6 +477,10 @@ class _GuildScreenState extends State<GuildScreen> {
 
   /// 緊急セクションウィジェット（24時間以内の期限クエスト）
   Widget _buildUrgentSection(BuildContext context, List<Task> urgentTasks) {
+    final player = context.read<PlayerViewModel>().player;
+    const snooze = QuestSnoozeService();
+    final canSnooze = player.hasSkill(JobSkill.monkSnooze);
+
     return Container(
       key: AppKeys.guildUrgentSection,
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -468,6 +518,7 @@ class _GuildScreenState extends State<GuildScreen> {
             final diff = task.deadline!.difference(DateTime.now());
             final timeStr = _formatTimeRemaining(diff);
             final isExpired = diff.isNegative;
+            final snoozeBadge = snooze.badgeLabel(player.snoozedTasks, task.id);
 
             return Container(
               margin: const EdgeInsets.only(bottom: 6),
@@ -510,6 +561,26 @@ class _GuildScreenState extends State<GuildScreen> {
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white)),
                         ),
+                        // 🌙 スヌーズ済みバッジ（Monk Lv5 で微睡ませた記録）
+                        if (snoozeBadge != null) ...[
+                          const SizedBox(width: 4),
+                          Container(
+                            key: AppKeys.questSnoozeBadge(task.id),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.indigo.shade700,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              snoozeBadge,
+                              style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.white),
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -588,6 +659,44 @@ class _GuildScreenState extends State<GuildScreen> {
                       ),
                     ),
                   ),
+                  // 🌙 微睡みの加護ボタン — Monk Lv5 解放時のみ（緊急でも期限を1日延ばせる）
+                  if (canSnooze) ...[
+                    const SizedBox(width: 6),
+                    SemanticHelper.interactive(
+                      testId: SemanticHelper.createTestId(
+                          SemanticTypes.button, 'urgent_snooze'),
+                      label: '微睡みの加護',
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => _showSnoozeDialog(
+                            context, context.read<TaskViewModel>(), task),
+                        child: Container(
+                          key: AppKeys.questSnoozeButton(task.id),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.indigo.shade700,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('🌙', style: TextStyle(fontSize: 12)),
+                              SizedBox(width: 2),
+                              Text(
+                                '微睡み',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             );
@@ -608,6 +717,11 @@ class _GuildScreenState extends State<GuildScreen> {
         t.deadline != null &&
         t.deadline!.isBefore(now.add(const Duration(days: 1)))).toList();
 
+    // 微睡みの加護（Monk Lv5）: バッジ表示と実行導線の可否
+    const snooze = QuestSnoozeService();
+    final player = playerVM.player;
+    final canSnooze = player.hasSkill(JobSkill.monkSnooze);
+
     return Scaffold(
       appBar: AppBar(
         title: Row(
@@ -615,7 +729,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.46+142", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.47+143", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -1069,6 +1183,9 @@ class _GuildScreenState extends State<GuildScreen> {
                           color: _getRankColor(task.rank),
                           titleOverride: _getCompactTitle(task),
                           hideCountdown: true,
+                          isSnoozed: snooze.isSnoozed(player.snoozedTasks, task.id),
+                          snoozeLabel:
+                              snooze.badgeLabel(player.snoozedTasks, task.id),
                           expandedDetails: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
@@ -1139,6 +1256,23 @@ class _GuildScreenState extends State<GuildScreen> {
                                 child: const Text("出発する"),
                               ),
                             ),
+                            if (canSnooze)
+                              SemanticHelper.interactive(
+                                testId: SemanticHelper.createTestId(
+                                    SemanticTypes.button, 'snooze_quest'),
+                                label: '微睡みの加護',
+                                child: TextButton(
+                                  key: AppKeys.questSnoozeButton(task.id),
+                                  onPressed: () =>
+                                      _showSnoozeDialog(context, taskVM, task),
+                                  child: const Text(
+                                    '微睡みの加護',
+                                    style: TextStyle(
+                                        color: Colors.indigoAccent,
+                                        fontSize: 12),
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       );

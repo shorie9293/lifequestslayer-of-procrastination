@@ -420,6 +420,17 @@ class PlayerViewModel extends ChangeNotifier {
     _autoSave();
   }
 
+  /// Monk Lv5: 微睡みの加護 — クエストの期限を1日延ばし、記録を永続化する。
+  /// 未解放または期限が無い場合は何もせず false を返す。
+  bool snoozeQuest(String taskId, Task task, {DateTime? now}) {
+    if (!_player.hasSkill(JobSkill.monkSnooze)) return false;
+    if (task.deadline == null) return false;
+    _player.snoozeTask(taskId, task, now ?? DateTime.now());
+    notifyListeners();
+    _autoSave();
+    return true;
+  }
+
   void equipTitle(String t) {
     if (_player.titles.contains(t) || t.isEmpty) {
       _player = _player.copyWith(equippedTitle: t.isEmpty ? null : t);
