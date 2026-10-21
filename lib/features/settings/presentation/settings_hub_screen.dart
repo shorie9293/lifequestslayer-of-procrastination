@@ -6,6 +6,7 @@ import 'package:rpg_todo/features/about/presentation/about_app_keys.dart';
 import 'package:rpg_todo/features/about/presentation/about_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/quiet_hours_settings_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
+import 'package:rpg_todo/features/settings/presentation/reduce_motion_settings_screen.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/streak_freeze/presentation/streak_freeze_app_keys.dart';
 import 'package:rpg_todo/features/streak_freeze/presentation/streak_freeze_screen.dart';
@@ -116,6 +117,18 @@ class SettingsHubScreen extends StatelessWidget {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => const AboutScreen(),
+              ),
+            ),
+          ),
+          // 末尾追加: 「動きを減らす」（WCAG 2.3.3 配慮）
+          ListTile(
+            key: AppKeys.settingsReduceMotionTile,
+            title: const Text('動きを減らす'),
+            subtitle: const Text('アニメーションの抑制（前庭障害への配慮）'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const ReduceMotionSettingsScreen(),
               ),
             ),
           ),

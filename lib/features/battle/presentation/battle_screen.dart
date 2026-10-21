@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/core/haptics.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record.dart';
 import 'package:rpg_todo/features/battle/data/battle_record_repository.dart';
 import 'package:rpg_todo/features/battle/presentation/battle_record_screen.dart';
@@ -188,6 +189,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
     // M4禍津対策: 連打ガード。同一クエストの二重実行を防止する。
     if (_completingTaskIds.contains(taskId)) return;
     _completingTaskIds.add(taskId);
+    hapticTap(); // 討伐（クエスト完了）の触覚フィードバック
 
     final taskVM = context.read<TaskViewModel>();
     final playerVM = context.read<PlayerViewModel>();

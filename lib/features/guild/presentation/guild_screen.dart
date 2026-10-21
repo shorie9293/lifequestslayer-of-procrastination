@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/core/haptics.dart';
 import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
@@ -355,6 +356,7 @@ class _GuildScreenState extends State<GuildScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
+              hapticTap(); // 破棄（取り消せない操作）の触覚フィードバック
               final taskVM = context.read<TaskViewModel>();
               final index = taskVM.tasks.indexWhere((t) => t.id == taskId);
               if (index < 0) return;
@@ -613,7 +615,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.45+141", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.46+142", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [

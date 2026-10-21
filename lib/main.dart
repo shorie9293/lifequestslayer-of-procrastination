@@ -5,6 +5,9 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rpg_todo/features/shared/viewmodels/theme_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/shared/viewmodels/reduce_motion_view_model.dart';
+import 'package:rpg_todo/features/shared/data/reduce_motion_repository.dart';
+import 'package:rpg_todo/features/shared/domain/reduce_motion_setting.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
@@ -273,6 +276,11 @@ class _RPGTodoAppState extends State<RPGTodoApp> {
         // 全VM統括
         ChangeNotifierProvider<GameViewModel>.value(
             value: getIt<GameViewModel>()),
+        // 「動きを減らす」設定 — Hive専用boxから復元（端末設定の上書き）
+        ChangeNotifierProvider<ReduceMotionViewModel>(
+          create: (_) =>
+              ReduceMotionViewModel(const HiveReduceMotionRepository())..load(),
+        ),
       ],
       child: Consumer2<ThemeViewModel, SettingsViewModel>(
         builder: (context, themeVM, settingsVM, child) {
@@ -300,9 +308,12 @@ class _RPGTodoAppState extends State<RPGTodoApp> {
             ),
             home: AppLockGate(unlockedBuilder: (context) => const AuthGate()),
             builder: (context, child) {
+              // 端末設定に従う／アプリ内で上書き（既存の textScaler 挙動は不変）
+              final rm = context.watch<ReduceMotionViewModel>().setting;
+              final mediaQuery = MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(settingsVM.fontSizeScale));
               return MediaQuery(
-                data: MediaQuery.of(context).copyWith(
-                    textScaler: TextScaler.linear(settingsVM.fontSizeScale)),
+                data: applyReduceMotion(mediaQuery, rm),
                 child: child!,
               );
             },
