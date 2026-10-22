@@ -192,6 +192,7 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
   Widget build(BuildContext context) {
     if (_loading) {
       return const Scaffold(
+        key: AppKeys.reflectionGroveScreen,
         body: Center(child: CircularProgressIndicator()),
       );
     }
@@ -199,6 +200,7 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
     final comparisonData = _comparisonData;
 
     return Scaffold(
+      key: AppKeys.reflectionGroveScreen,
       appBar: AppBar(
         title: const Text('🌳 振り返りの杜'),
         actions: [

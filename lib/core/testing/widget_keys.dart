@@ -414,4 +414,8 @@ class AppKeys {
   static Key questSnoozeButton(String id) => Key('btn_quest_snooze_$id');
   static Key questSnoozeBadge(String id) => Key('badge_quest_snooze_$id');
   static const Key questSnoozeConfirmButton = Key('btn_quest_snooze_confirm');
+
+  // ━━━ 振り返りの杜 ━━━
+  static const Key reflectionGroveScreen = Key('screen_reflection_grove');
+  static const Key reflectionGroveEntry = Key('btn_reflection_grove_entry');
 }

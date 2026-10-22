@@ -10,6 +10,7 @@ import 'package:rpg_todo/features/settings/presentation/reduce_motion_settings_s
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/streak_freeze/presentation/streak_freeze_app_keys.dart';
 import 'package:rpg_todo/features/streak_freeze/presentation/streak_freeze_screen.dart';
+import 'package:rpg_todo/features/town/presentation/reflection_grove_screen.dart';
 import 'package:rpg_todo/features/town/presentation/widgets/sfx_volume_section.dart';
 import 'package:rpg_todo/features/town/presentation/widgets/theme_section.dart';
 
@@ -19,12 +20,20 @@ Widget _buildQuietHoursScreen(BuildContext context) =>
 
 /// 設定ハブ画面（#86）— 分散していた設定を一覧・操作する単一画面。
 class SettingsHubScreen extends StatelessWidget {
-  const SettingsHubScreen({super.key, this.reminderScreenBuilder, this.streakFreezeScreenBuilder});
+  const SettingsHubScreen({
+    super.key,
+    this.reminderScreenBuilder,
+    this.streakFreezeScreenBuilder,
+    this.reflectionGroveScreenBuilder,
+  });
 
   final WidgetBuilder? reminderScreenBuilder;
 
   /// お休み券画面のビルダー（試練での注入用。未指定なら実画面）。
   final WidgetBuilder? streakFreezeScreenBuilder;
+
+  /// 振り返りの杜画面のビルダー（試練での注入用。未指定なら実画面）。
+  final WidgetBuilder? reflectionGroveScreenBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -129,6 +138,19 @@ class SettingsHubScreen extends StatelessWidget {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) => const ReduceMotionSettingsScreen(),
+              ),
+            ),
+          ),
+          // 末尾追加: 振り返りの杜（学びログ・週次報告・内省バッジ）
+          ListTile(
+            key: AppKeys.reflectionGroveEntry,
+            title: const Text('振り返りの杜'),
+            subtitle: const Text('学びログ・週次報告・内省バッジ'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: reflectionGroveScreenBuilder ??
+                    (_) => const ReflectionGroveScreen(),
               ),
             ),
           ),
