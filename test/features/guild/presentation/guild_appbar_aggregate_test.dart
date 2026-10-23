@@ -45,11 +45,11 @@ void main() {
     await Hive.openBox<String>('practice_logs');
   });
 
-  testWidgets('AppBar バージョン標識が v1.5.48+144 に同期している', (tester) async {
+  testWidgets('AppBar バージョン標識が v1.5.49+145 に同期している', (tester) async {
     final vms = createViewModels();
     await pumpGuildScreen(
         tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
-    expect(find.text('v1.5.48+144'), findsOneWidget);
+    expect(find.text('v1.5.49+145'), findsOneWidget);
   });
 
   testWidgets('⋯メニューから勤行の定型へ遷移できる', (tester) async {

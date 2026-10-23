@@ -21,6 +21,7 @@ import 'package:rpg_todo/features/guild/data/task_template_repository.dart';
 import 'package:rpg_todo/features/battle/viewmodels/battle_view_model.dart';
 import 'package:rpg_todo/features/crossapp/data/cross_app_reward_service.dart';
 import 'package:rpg_todo/features/crossapp/data/cross_app_settings_repository.dart';
+import 'package:rpg_todo/features/crossapp/data/enemy_defeat_wiring.dart';
 
 import 'package:rpg_todo/features/guild/data/task_repository.dart';
 import 'package:rpg_todo/features/habits/data/practice_log_repository.dart';
@@ -111,6 +112,9 @@ void configureDependencies() {
 
   // 勤行の日別履歴ログ（道標§五 #50）を TaskViewModel に配線
   getIt<TaskViewModel>().practiceLogRepository = PracticeLogRepository();
+
+  // kozuchi 連携: 敵討伐イベントのデュアルライト（契約 v1）を TaskViewModel に配線
+  wireEnemyDefeatExporter(getIt<TaskViewModel>());
 
   // 討伐戦績（改善提案 #56）の永続層を配線（Hive box 'battle_records'）
   if (!getIt.isRegistered<BattleRecordRepository>()) {
