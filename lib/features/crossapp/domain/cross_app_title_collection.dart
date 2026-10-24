@@ -23,6 +23,8 @@ const Map<String, String> kCrossAppEventTypeLabels = {
   'reading_streak': '連続読書日数',
   'xp_milestone': '獲得XP',
   'pages_milestone': '読了ページ数',
+  'election_completed': '当選回数',
+  'quiz_completed': 'クイズ正解数',
 };
 
 /// 条件表記の組み立て用テンプレート（接頭辞＋数値＋単位）
@@ -39,6 +41,8 @@ const Map<String, _ConditionTemplate> _kConditionTemplates = {
   'reading_streak': _ConditionTemplate('連続 ', '日'),
   'xp_milestone': _ConditionTemplate('XP ', ''),
   'pages_milestone': _ConditionTemplate('通算 ', 'ページ'),
+  'election_completed': _ConditionTemplate('当選 ', '回'),
+  'quiz_completed': _ConditionTemplate('正解 ', '問'),
 };
 
 /// 整数を3桁区切りカンマ付きで整形する（純粋関数）

@@ -79,7 +79,7 @@ void main() {
       findsOneWidget,
     );
     expect(find.byKey(AppKeys.crossAppTitleSummary), findsOneWidget);
-    expect(find.text('獲得 1 / 11'), findsOneWidget);
+    expect(find.text('獲得 1 / 15'), findsOneWidget);
     expect(find.text('読書家の卵'), findsOneWidget);
     expect(tester.takeException(), isNull);
   });
@@ -93,7 +93,7 @@ void main() {
     await tester.tap(find.byKey(AppKeys.crossAppTitleEncyclopediaEntry));
     await tester.pumpAndSettle();
 
-    expect(find.text('獲得 3 / 11'), findsOneWidget);
+    expect(find.text('獲得 3 / 15'), findsOneWidget);
     expect(find.text('書庫の冒険者'), findsOneWidget);
     expect(find.text('知識の探求者'), findsOneWidget);
   });

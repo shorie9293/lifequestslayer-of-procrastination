@@ -35,20 +35,20 @@ double _progressValue(WidgetTester tester) {
 }
 
 void main() {
-  testWidgets('ownedTitles 注入で全11行が表示される', (tester) async {
+  testWidgets('ownedTitles 注入で全15行が表示される', (tester) async {
     await _pump(tester, ownedTitles: const []);
     for (final def in kCrossAppTitles) {
       expect(find.byKey(AppKeys.crossAppTitleRow(def.id)), findsOneWidget);
     }
-    expect(kCrossAppTitles.length, 11);
+    expect(kCrossAppTitles.length, 15);
   });
 
-  testWidgets('サマリーに「獲得 2 / 11」と達成率が出る', (tester) async {
+  testWidgets('サマリーに「獲得 2 / 15」と達成率が出る', (tester) async {
     await _pump(tester, ownedTitles: const ['読書家の卵', '知識の探求者']);
     expect(find.byKey(AppKeys.crossAppTitleSummary), findsOneWidget);
-    expect(find.text('獲得 2 / 11'), findsOneWidget);
-    expect(find.text('18%'), findsOneWidget);
-    expect(_progressValue(tester), closeTo(2 / 11, 0.001));
+    expect(find.text('獲得 2 / 15'), findsOneWidget);
+    expect(find.text('13%'), findsOneWidget);
+    expect(_progressValue(tester), closeTo(2 / 15, 0.001));
   });
 
   testWidgets('獲得行にはロックアイコンが出ず、未獲得行には出る', (tester) async {
@@ -84,7 +84,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byKey(AppKeys.crossAppTitleRow('読書家の卵')), findsOneWidget);
     expect(find.byKey(AppKeys.crossAppTitleRow('書庫の冒険者')), findsNothing);
-    expect(find.text('獲得 2 / 11'), findsOneWidget);
+    expect(find.text('獲得 2 / 15'), findsOneWidget);
   });
 
   testWidgets('未獲得で絞り込み0件なら空状態を表示する', (tester) async {
@@ -101,14 +101,14 @@ void main() {
   testWidgets('全獲得なら ratioLabel が 100%・progress が 1.0', (tester) async {
     final all = kCrossAppTitles.map((d) => d.id).toList();
     await _pump(tester, ownedTitles: all);
-    expect(find.text('獲得 11 / 11'), findsOneWidget);
+    expect(find.text('獲得 15 / 15'), findsOneWidget);
     expect(find.text('100%'), findsOneWidget);
     expect(_progressValue(tester), 1.0);
   });
 
   testWidgets('全未獲得なら ratioLabel が 0%（0除算なし）', (tester) async {
     await _pump(tester, ownedTitles: const []);
-    expect(find.text('獲得 0 / 11'), findsOneWidget);
+    expect(find.text('獲得 0 / 15'), findsOneWidget);
     expect(find.text('0%'), findsOneWidget);
     expect(_progressValue(tester), 0.0);
     expect(tester.takeException(), isNull);

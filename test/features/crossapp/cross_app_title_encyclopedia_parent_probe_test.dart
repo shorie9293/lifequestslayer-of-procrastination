@@ -28,16 +28,14 @@ void main() {
     await tester.pump();
   }
 
-  testWidgets('画面の行が純粋サービス出力と同一（定義順・全11件・独自集計なし）',
-      (tester) async {
+  testWidgets('画面の行が純粋サービス出力と同一（定義順・全15件・独自集計なし）', (tester) async {
     final owned = <String>[
       kCrossAppTitles[0].id, // 読書家の卵
       kCrossAppTitles[1].id, // 書庫の冒険者
       '存在しない称号',
       kCrossAppTitles[0].id, // 重複
     ];
-    final collection =
-        const CrossAppTitleService().build(ownedTitles: owned);
+    final collection = const CrossAppTitleService().build(ownedTitles: owned);
 
     await pumpScreen(tester, ownedTitles: owned);
 
@@ -47,8 +45,8 @@ void main() {
           reason: '行が欠落: ${entry.id}');
     }
     expect(collection.total, kCrossAppTitles.length);
-    expect(collection.total, 11);
-    // 未知称号名は行にならない（既知の11行のみ）
+    expect(collection.total, 15);
+    // 未知称号名は行にならない（既知の15行のみ）
     expect(find.text('存在しない称号'), findsNothing);
     // サマリーはサービス出力と完全一致
     expect(find.text(collection.summaryLabel), findsOneWidget);
@@ -56,11 +54,9 @@ void main() {
     expect(collection.earnedCount, 2);
   });
 
-  testWidgets('獲得済み絞込の行集合が collection.earned と完全一致（未獲得混入なし）',
-      (tester) async {
+  testWidgets('獲得済み絞込の行集合が collection.earned と完全一致（未獲得混入なし）', (tester) async {
     final owned = <String>[kCrossAppTitles[2].id, kCrossAppTitles[9].id];
-    final collection =
-        const CrossAppTitleService().build(ownedTitles: owned);
+    final collection = const CrossAppTitleService().build(ownedTitles: owned);
     expect(collection.earnedCount, 2);
 
     await pumpScreen(tester, ownedTitles: owned);
@@ -80,14 +76,13 @@ void main() {
 
   testWidgets('未獲得絞込では獲得行が消え、空にならない', (tester) async {
     final owned = <String>[kCrossAppTitles[0].id];
-    final collection =
-        const CrossAppTitleService().build(ownedTitles: owned);
+    final collection = const CrossAppTitleService().build(ownedTitles: owned);
 
     await pumpScreen(tester, ownedTitles: owned);
     await tester.tap(find.byKey(AppKeys.crossAppTitleFilterChip('unearned')));
     await tester.pumpAndSettle();
 
-    expect(collection.unearnedCount, 10);
+    expect(collection.unearnedCount, 14);
     expect(find.byKey(AppKeys.crossAppTitleRow(owned.first)), findsNothing);
     expect(find.byKey(AppKeys.crossAppTitleEmpty), findsNothing);
   });
@@ -95,7 +90,7 @@ void main() {
   testWidgets('全獲得で100%・ロック0件、全未獲得で0%（0除算なし）', (tester) async {
     final all = kCrossAppTitles.map((d) => d.id).toList();
     await pumpScreen(tester, ownedTitles: all);
-    expect(find.text('獲得 11 / 11'), findsOneWidget);
+    expect(find.text('獲得 15 / 15'), findsOneWidget);
     expect(find.text('100%'), findsOneWidget);
     expect(find.byIcon(Icons.lock_outline), findsNothing);
 
@@ -103,9 +98,9 @@ void main() {
     await tester.pump();
 
     await pumpScreen(tester, ownedTitles: const <String>[]);
-    expect(find.text('獲得 0 / 11'), findsOneWidget);
+    expect(find.text('獲得 0 / 15'), findsOneWidget);
     expect(find.text('0%'), findsOneWidget);
-    expect(find.byIcon(Icons.lock_outline), findsNWidgets(11));
+    expect(find.byIcon(Icons.lock_outline), findsNWidgets(15));
   });
 
   testWidgets('注入した定義がサービスまで届く（2件定義・獲得1件）', (tester) async {

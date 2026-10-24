@@ -116,8 +116,8 @@ void main() {
   });
 
   group('CrossAppTitleDefinition', () {
-    test('11のクロスアプリ称号が定義されている', () {
-      expect(kCrossAppTitles.length, 11);
+    test('15のクロスアプリ称号が定義されている', () {
+      expect(kCrossAppTitles.length, 15);
     });
 
     test('全称号のIDがユニークである', () {
@@ -406,6 +406,8 @@ void main() {
         'trophy_written': 60,
         'daily_mission_complete': 40,
         'pages_milestone': 70,
+        'election_completed': 120,
+        'quiz_completed': 60,
       };
 
       final expectedExp = {
@@ -416,6 +418,8 @@ void main() {
         'trophy_written': 250,
         'daily_mission_complete': 150,
         'pages_milestone': 200,
+        'election_completed': 400,
+        'quiz_completed': 150,
       };
 
       for (final eventType in CrossAppRewardEvent.knownEventTypes) {

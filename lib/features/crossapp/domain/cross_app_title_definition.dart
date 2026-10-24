@@ -14,7 +14,7 @@ class CrossAppTitleDefinition {
   });
 }
 
-/// 全クロスアプリ称号定義（11種）
+/// 全クロスアプリ称号定義（15種）
 ///
 /// イベント到着時に threshold を満たしていれば自動付与。
 /// 重複付与は player.titles 重複チェックで防止。
@@ -81,6 +81,30 @@ const kCrossAppTitles = <CrossAppTitleDefinition>[
     eventType: 'pages_milestone',
     threshold: 10000,
   ),
+
+  // ── election_completed (1/3) ── wins = 累計当選回数
+  CrossAppTitleDefinition(
+    id: '初当選',
+    eventType: 'election_completed',
+    threshold: 1,
+  ),
+  CrossAppTitleDefinition(
+    id: '三選',
+    eventType: 'election_completed',
+    threshold: 3,
+  ),
+
+  // ── quiz_completed (8/10) ── correct_count = 正解数
+  CrossAppTitleDefinition(
+    id: '八問正解の士',
+    eventType: 'quiz_completed',
+    threshold: 8,
+  ),
+  CrossAppTitleDefinition(
+    id: '満点の賢者',
+    eventType: 'quiz_completed',
+    threshold: 10,
+  ),
 ];
 
 /// イベントタイプに応じたクロスアプリ称号を返す
@@ -103,6 +127,8 @@ const Map<String, int> kCrossAppCoinRewards = {
   'trophy_written': 60,
   'daily_mission_complete': 40,
   'pages_milestone': 70,
+  'election_completed': 120,
+  'quiz_completed': 60,
 };
 
 /// イベントタイプ → EXP報酬マッピング
@@ -114,4 +140,6 @@ const Map<String, int> kCrossAppExpRewards = {
   'trophy_written': 250,
   'daily_mission_complete': 150,
   'pages_milestone': 200,
+  'election_completed': 400,
+  'quiz_completed': 150,
 };

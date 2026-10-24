@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-/// tsundoku-quest から送られてくる報酬イベント
+/// tsundoku-quest / election-game から送られてくる報酬イベント
 ///
 /// JSONL の1行1イベント。event_id で冪等性を保証。
 class CrossAppRewardEvent {
@@ -20,6 +20,7 @@ class CrossAppRewardEvent {
 
   /// 既知のイベントタイプ一覧
   static const knownEventTypes = {
+    // tsundoku-quest 由来（7種）
     'book_completed',
     'reading_streak',
     'level_up',
@@ -27,6 +28,9 @@ class CrossAppRewardEvent {
     'trophy_written',
     'daily_mission_complete',
     'pages_milestone',
+    // election-game 由来（契約 v1・2種）
+    'election_completed',
+    'quiz_completed',
   };
 
   factory CrossAppRewardEvent.fromJson(Map<String, dynamic> json) {

@@ -2,7 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rpg_todo/features/crossapp/domain/cross_app_title_collection.dart';
 import 'package:rpg_todo/features/crossapp/domain/cross_app_title_definition.dart';
 
-/// 12件定義から期待される称号ID（定義順）
+/// 15件定義から期待される称号ID（定義順）
 const _allTitleIds = <String>[
   '読書家の卵',
   '書庫の冒険者',
@@ -15,6 +15,10 @@ const _allTitleIds = <String>[
   '知の航海者',
   'ページを征く者',
   '万頁の読破者',
+  '初当選',
+  '三選',
+  '八問正解の士',
+  '満点の賢者',
 ];
 
 void main() {
@@ -35,20 +39,22 @@ void main() {
   });
 
   group('kCrossAppEventTypeLabels', () {
-    test('4つのイベント種別ラベルを持つ', () {
+    test('6つのイベント種別ラベルを持つ', () {
       expect(kCrossAppEventTypeLabels['book_completed'], '読了冊数');
       expect(kCrossAppEventTypeLabels['reading_streak'], '連続読書日数');
       expect(kCrossAppEventTypeLabels['xp_milestone'], '獲得XP');
       expect(kCrossAppEventTypeLabels['pages_milestone'], '読了ページ数');
-      expect(kCrossAppEventTypeLabels.length, 4);
+      expect(kCrossAppEventTypeLabels['election_completed'], '当選回数');
+      expect(kCrossAppEventTypeLabels['quiz_completed'], 'クイズ正解数');
+      expect(kCrossAppEventTypeLabels.length, 6);
     });
   });
 
   group('CrossAppTitleService.build', () {
-    test('ownedTitles が空でも全11件が定義順で並ぶ', () {
+    test('ownedTitles が空でも全15件が定義順で並ぶ', () {
       final collection = service.build(ownedTitles: const []);
 
-      expect(collection.total, 11);
+      expect(collection.total, 15);
       expect(collection.total, kCrossAppTitles.length);
       expect(
         collection.entries.map((e) => e.id).toList(),
@@ -60,15 +66,15 @@ void main() {
       final collection = service.build(ownedTitles: const []);
 
       expect(collection.earnedCount, 0);
-      expect(collection.unearnedCount, 11);
+      expect(collection.unearnedCount, 15);
       expect(collection.achievementRatio, 0.0);
       expect(collection.earned, isEmpty);
     });
 
-    test('全獲得なら earnedCount 11、achievementRatio 1.0', () {
+    test('全獲得なら earnedCount 15、achievementRatio 1.0', () {
       final collection = service.build(ownedTitles: _allTitleIds);
 
-      expect(collection.earnedCount, 11);
+      expect(collection.earnedCount, 15);
       expect(collection.unearnedCount, 0);
       expect(collection.achievementRatio, 1.0);
       expect(collection.unearned, isEmpty);
@@ -80,7 +86,7 @@ void main() {
       );
 
       expect(collection.earnedCount, 1);
-      expect(collection.total, 11);
+      expect(collection.total, 15);
       expect(collection.entryFor('存在しない称号'), isNull);
     });
 
@@ -90,7 +96,7 @@ void main() {
       );
 
       expect(collection.earnedCount, 1);
-      expect(collection.total, 11);
+      expect(collection.total, 15);
     });
 
     test('獲得済みの称号だけ isEarned が true になる', () {
@@ -241,7 +247,7 @@ void main() {
       expect(entry.conditionLabel, '通算 10,000ページ');
     });
 
-    test('conditionLabel: 4種すべてが単位付きで組み立てられる', () {
+    test('conditionLabel: 6種すべてが単位付きで組み立てられる', () {
       final labels = <String, String>{};
       for (final entry in service.build(ownedTitles: const []).entries) {
         labels[entry.definition.eventType] ??= entry.conditionLabel;
@@ -251,10 +257,12 @@ void main() {
       expect(labels['reading_streak'], '連続 7日');
       expect(labels['xp_milestone'], 'XP 1,000');
       expect(labels['pages_milestone'], '通算 1,000ページ');
-      expect(labels.length, 4);
+      expect(labels['election_completed'], '当選 1回');
+      expect(labels['quiz_completed'], '正解 8問');
+      expect(labels.length, 6);
     });
 
-    test('eventTypeLabel: 4種のイベント種別を日本語化する', () {
+    test('eventTypeLabel: 6種のイベント種別を日本語化する', () {
       final labels = <String, String>{};
       for (final entry in service.build(ownedTitles: const []).entries) {
         labels[entry.definition.eventType] ??= entry.eventTypeLabel;
@@ -264,6 +272,8 @@ void main() {
       expect(labels['reading_streak'], '連続読書日数');
       expect(labels['xp_milestone'], '獲得XP');
       expect(labels['pages_milestone'], '読了ページ数');
+      expect(labels['election_completed'], '当選回数');
+      expect(labels['quiz_completed'], 'クイズ正解数');
     });
 
     test('eventTypeLabel: 未知のイベント種別は eventType をそのまま返す', () {
@@ -298,24 +308,25 @@ void main() {
         ownedTitles: const ['読書家の卵', '書庫の冒険者', '知の探究者'],
       );
 
-      expect(collection.total, 11);
+      expect(collection.total, 15);
       expect(collection.earnedCount, 3);
-      expect(collection.unearnedCount, 8);
-      expect(collection.earnedCount + collection.unearnedCount, collection.total);
+      expect(collection.unearnedCount, 12);
+      expect(
+          collection.earnedCount + collection.unearnedCount, collection.total);
     });
 
-    test('summaryLabel: 獲得 3 / 11', () {
+    test('summaryLabel: 獲得 3 / 15', () {
       final collection = service.build(
         ownedTitles: const ['読書家の卵', '書庫の冒険者', '知の探究者'],
       );
 
-      expect(collection.summaryLabel, '獲得 3 / 11');
+      expect(collection.summaryLabel, '獲得 3 / 15');
     });
 
-    test('summaryLabel: 全未獲得は 獲得 0 / 11', () {
+    test('summaryLabel: 全未獲得は 獲得 0 / 15', () {
       expect(
         service.build(ownedTitles: const []).summaryLabel,
-        '獲得 0 / 11',
+        '獲得 0 / 15',
       );
     });
 
@@ -403,9 +414,9 @@ void main() {
     test('unearned は未獲得のみを定義順で返す', () {
       final collection = service.build(ownedTitles: const ['読書家の卵']);
 
-      expect(collection.unearned.length, 10);
+      expect(collection.unearned.length, 14);
       expect(collection.unearned.first.id, '書庫の冒険者');
-      expect(collection.unearned.last.id, '万頁の読破者');
+      expect(collection.unearned.last.id, '満点の賢者');
     });
 
     test('entryFor は一致する entry を返す', () {
@@ -424,14 +435,21 @@ void main() {
       expect(collection.entryFor('存在しない称号'), isNull);
     });
 
-    test('groups は4イベント種別を初出順で返す', () {
+    test('groups は6イベント種別を初出順で返す', () {
       final collection = service.build(ownedTitles: const []);
       final groups = collection.groups;
 
-      expect(groups.length, 4);
+      expect(groups.length, 6);
       expect(
         groups.map((g) => g.eventType).toList(),
-        ['book_completed', 'reading_streak', 'xp_milestone', 'pages_milestone'],
+        [
+          'book_completed',
+          'reading_streak',
+          'xp_milestone',
+          'pages_milestone',
+          'election_completed',
+          'quiz_completed',
+        ],
       );
     });
 
@@ -440,7 +458,7 @@ void main() {
 
       expect(
         groups.map((g) => g.label).toList(),
-        ['読了冊数', '連続読書日数', '獲得XP', '読了ページ数'],
+        ['読了冊数', '連続読書日数', '獲得XP', '読了ページ数', '当選回数', 'クイズ正解数'],
       );
     });
 
@@ -518,7 +536,7 @@ void main() {
       final filtered = collection.filter(CrossAppTitleFilter.all);
 
       expect(filtered.total, collection.total);
-      expect(filtered.entries.length, 11);
+      expect(filtered.entries.length, 15);
       expect(filtered.earnedCount, 1);
     });
 
@@ -535,16 +553,16 @@ void main() {
         filtered.entries.map((e) => e.id).toList(),
         ['読書家の卵', '知の探究者'],
       );
-      expect(collection.total, 11); // 元は不変
+      expect(collection.total, 15); // 元は不変
     });
 
     test('unearned は未獲得のみ・total は未獲得数', () {
       final collection = service.build(ownedTitles: const ['読書家の卵']);
       final filtered = collection.filter(CrossAppTitleFilter.unearned);
 
-      expect(filtered.total, 10);
+      expect(filtered.total, 14);
       expect(filtered.earnedCount, 0);
-      expect(filtered.unearnedCount, 10);
+      expect(filtered.unearnedCount, 14);
       expect(filtered.entries.any((e) => e.id == '読書家の卵'), isFalse);
     });
 
@@ -569,7 +587,7 @@ void main() {
       final sorted = collection.sortedByEarnedFirst;
 
       expect(sorted.take(2).every((e) => e.isEarned), isTrue);
-      expect(sorted.length, 11);
+      expect(sorted.length, 15);
     });
 
     test('各群内は定義順を保つ', () {
