@@ -43,7 +43,7 @@ class AboutInfo {
 /// test/features/about/about_version_sync_test.dart が担保する。
 const kAboutInfo = AboutInfo._trusted(
   'RPGタスク',
-  '1.5.50+146',
+  '1.5.51+147',
   'horie.shunta@gmail.com',
   'https://yoppala.in/privacy',
   'クエストで人生を鍛える、冒険型タスク管理',
