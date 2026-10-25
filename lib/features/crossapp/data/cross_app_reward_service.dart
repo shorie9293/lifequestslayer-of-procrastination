@@ -22,7 +22,8 @@ abstract class ICrossAppRewardService {
 
 /// ファイルベースの [ICrossAppRewardService] 実装
 ///
-/// tsundoku-quest / election-game が書き出す共有ストレージの JSONL ファイルを読み込む。
+/// tsundoku-quest / election-game / book-review-app が書き出す
+/// 共有ストレージの JSONL ファイルを読み込む。
 /// [filePath] は主ファイル（後方互換のため単一指定APIを維持）、
 /// [additionalFilePaths] は追加で走査するファイル群。
 /// 冪等性は同一 Hive box の event_id で横断的に担保する。
@@ -35,13 +36,20 @@ class FileCrossAppRewardService implements ICrossAppRewardService {
   static const kDefaultElectionEventsPath =
       '/data/local/tmp/takamagahara_shared/election_reward_events.jsonl';
 
+  /// book-review-app が書き出す報酬イベント（契約 v1: book_completed）
+  static const kDefaultBookReviewEventsPath =
+      '/data/local/tmp/takamagahara_shared/book_review_reward_events.jsonl';
+
   final String filePath;
   final List<String> additionalFilePaths;
   final String hiveBoxName;
 
   const FileCrossAppRewardService({
     this.filePath = kDefaultTsundokuEventsPath,
-    this.additionalFilePaths = const [kDefaultElectionEventsPath],
+    this.additionalFilePaths = const [
+      kDefaultElectionEventsPath,
+      kDefaultBookReviewEventsPath,
+    ],
     this.hiveBoxName = 'cross_app_rewards',
   });
 
