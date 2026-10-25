@@ -50,7 +50,7 @@ jobs:
         run: flutter test --no-pub -j 2 test/domain/ test/features/auth/ test/features/guild/ test/features/undo/ test/features/habits/ test/features/reminder/ test/features/kozuchi/ test/features/player/ test/features/shared/ test/features/adventurer/ test/features/project/ test/features/settings/ test/features/streak_freeze/ test/features/about/
 
       - name: Run tests (shard 2/3)
-        run: flutter test --no-pub -j 1 test/features/battle/domain/ test/features/battle/data/ test/features/battle/battle_record_wiring_test.dart test/features/battle/presentation/ test/features/battle/viewmodels/ test/features/battle/battle_report_dialog_samurai_test.dart test/features/temple/ test/features/character_customization/ test/features/crossapp/ test/features/overview/ test/features/town/
+        run: flutter test --no-pub -j 1 test/features/battle/domain/ test/features/battle/data/ test/features/battle/battle_record_wiring_test.dart test/features/battle/presentation/ test/features/battle/viewmodels/ test/features/battle/battle_report_dialog_samurai_test.dart test/features/battle/enemy_catalog_wiring_test.dart test/features/battle/zanshin_dialog_test.dart test/features/temple/ test/features/character_customization/ test/features/crossapp/ test/features/overview/ test/features/town/ test/accessibility_semantics_test.dart test/core/infrastructure/deep_link_service_test.dart test/event_bus_test.dart test/feature_flags_test.dart test/player_view_model_missions_test.dart test/recurring_deadline_advance_test.dart
 
       - name: Run tests (shard 3/3)
         continue-on-error: true  # フレイキーテスト（Hive状態汚染）のため警告扱い

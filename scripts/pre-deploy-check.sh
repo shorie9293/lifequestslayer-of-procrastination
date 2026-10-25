@@ -57,7 +57,15 @@ flutter test --no-pub -j 1 \
   test/features/character_customization/ \
   test/features/crossapp/ \
   test/features/overview/ \
-  test/features/town/
+  test/features/town/ \
+  test/features/battle/enemy_catalog_wiring_test.dart \
+  test/features/battle/zanshin_dialog_test.dart \
+  test/accessibility_semantics_test.dart \
+  test/core/infrastructure/deep_link_service_test.dart \
+  test/event_bus_test.dart \
+  test/feature_flags_test.dart \
+  test/player_view_model_missions_test.dart \
+  test/recurring_deadline_advance_test.dart
 echo "✅ shard 2/3 passed"
 
 # --- Step 5: Test shard 3/3 (root-level tests + individual files) ---
