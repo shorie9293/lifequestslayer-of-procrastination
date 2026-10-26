@@ -45,6 +45,6 @@ const kAboutInfo = AboutInfo._trusted(
   'RPGタスク',
   '1.5.51+147',
   'horie.shunta@gmail.com',
-  'https://yoppala.in/privacy',
+  'https://www.yoppala.in/privacy',
   'クエストで人生を鍛える、冒険型タスク管理',
 );

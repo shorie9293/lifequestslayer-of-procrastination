@@ -62,7 +62,8 @@ void main() {
     });
 
     test('privacyPolicyUrl は yoppala.in のプライバシーポリシー', () {
-      expect(kAboutInfo.privacyPolicyUrl, 'https://yoppala.in/privacy');
+      // apex yoppala.in は A/AAAA を持たず名前解決不能。到達する正準は www。
+      expect(kAboutInfo.privacyPolicyUrl, 'https://www.yoppala.in/privacy');
     });
 
     test('version は pubspec.yaml と一致する（1.5.51+147）', () {
