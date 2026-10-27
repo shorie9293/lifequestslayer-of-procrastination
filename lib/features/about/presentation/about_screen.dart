@@ -1,15 +1,54 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:rpg_todo/features/about/domain/about_info.dart';
+import 'package:rpg_todo/features/about/domain/external_url_opener.dart';
 import 'package:rpg_todo/features/about/presentation/about_app_keys.dart';
+import 'package:rpg_todo/features/about/presentation/external_url_launcher.dart';
 
 /// 「アプリについて」画面。
-/// 外部URLを開く通信は一切しない（url_launcher不使用）。
-/// URL・メールアドレスはダイアログ表示＋クリップボードコピーのみ。
+///
+/// 暗黙の外部通信はせず、ユーザーのタップ時のみ外部アプリへ渡す。
+/// プライバシーポリシーと問い合わせは [ExternalUrlOpener] 越しに開き、
+/// 開けなかった場合（false・例外・スキーム無し）は従来の
+/// コピー導線（ダイアログ表示＋クリップボード）へ退避する。
 class AboutScreen extends StatelessWidget {
-  const AboutScreen({super.key, this.info = kAboutInfo});
+  const AboutScreen({
+    super.key,
+    this.info = kAboutInfo,
+    this.clipboardWriter = _defaultClipboardWriter,
+    this.urlOpener = launchExternalUrl,
+  });
 
   final AboutInfo info;
+
+  /// クリップボード書き込み口（試練ではインメモリ実装を注入する）。
+  final Future<void> Function(String value) clipboardWriter;
+
+  /// 外部URLを開く口（試練ではフェイクを注入する）。
+  final ExternalUrlOpener urlOpener;
+
+  static Future<void> _defaultClipboardWriter(String value) {
+    return Clipboard.setData(ClipboardData(text: value));
+  }
+
+  /// 外部アプリで開く。開けなければ（false・例外）コピー導線へ退避する。
+  Future<void> _openOrCopy(
+    BuildContext context, {
+    required Uri? uri,
+    required String title,
+    required String value,
+  }) async {
+    var opened = false;
+    if (uri != null) {
+      try {
+        opened = await urlOpener(uri);
+      } catch (_) {
+        opened = false;
+      }
+    }
+    if (opened || !context.mounted) return;
+    await _showCopyDialog(context, title: title, value: value);
+  }
 
   Future<void> _showCopyDialog(
     BuildContext context, {
@@ -27,7 +66,7 @@ class AboutScreen extends StatelessWidget {
             onPressed: () async {
               // クリップボードは環境により失敗し得るため握りつぶさず通知のみ。
               try {
-                await Clipboard.setData(ClipboardData(text: value));
+                await clipboardWriter(value);
                 if (dialogContext.mounted) {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
                     const SnackBar(content: Text('コピーしました')),
@@ -96,10 +135,11 @@ class AboutScreen extends StatelessWidget {
           ListTile(
             key: AboutAppKeys.privacyTile,
             title: const Text('プライバシーポリシー'),
-            subtitle: const Text('URLを表示してコピー'),
+            subtitle: const Text('タップでブラウザ表示（開けなければコピー）'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showCopyDialog(
+            onTap: () => _openOrCopy(
               context,
+              uri: externalUri(info.privacyPolicyUrl),
               title: 'プライバシーポリシー',
               value: info.privacyPolicyUrl,
             ),
@@ -107,10 +147,11 @@ class AboutScreen extends StatelessWidget {
           ListTile(
             key: AboutAppKeys.contactTile,
             title: const Text('問い合わせ'),
-            subtitle: const Text('メールアドレスを表示してコピー'),
+            subtitle: const Text('タップでメール作成／開けなければコピー'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: () => _showCopyDialog(
+            onTap: () => _openOrCopy(
               context,
+              uri: mailtoUri(info.contactEmail),
               title: '問い合わせ',
               value: info.contactEmail,
             ),

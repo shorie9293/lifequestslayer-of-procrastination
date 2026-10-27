@@ -28,7 +28,11 @@ void main() {
         return null;
       },
     );
-    await tester.pumpWidget(MaterialApp(home: AboutScreen(info: info)));
+    // 外部ブラウザは試練で撃てないため、opener は常に false を返すフェイクを注入し
+    // 従来のコピー導線（ダイアログ）を検証する。
+    await tester.pumpWidget(MaterialApp(
+      home: AboutScreen(info: info, urlOpener: (_) async => false),
+    ));
     await tester.pump();
   }
 
