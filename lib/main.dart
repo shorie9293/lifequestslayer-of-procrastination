@@ -34,6 +34,11 @@ import 'package:app_links/app_links.dart';
 import 'package:rpg_todo/core/infrastructure/app_lock_gate.dart';
 import 'package:rpg_todo/core/infrastructure/deep_link_service.dart';
 import 'package:rpg_todo/core/notification/notification_tap_router.dart';
+import 'package:rpg_todo/features/auto_backup/data/auto_backup_bootstrap.dart';
+import 'package:rpg_todo/features/temple/data/backup_storage.dart';
+import 'package:rpg_todo/domain/services/full_backup.dart';
+import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
+import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 
 /// ディープリンクナビゲーションのためのグローバルナビゲーターキー
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -214,6 +219,27 @@ void main() async {
       }
     });
   }
+
+  // ━━━ 起動時1日1回の自動バックアップ（世代3ローテーション）━━━
+  // 寺院の手動バックアップと同型（FullBackupService + HiveBackupStorage）で符号化し、
+  // scheduleAutoBackup が投げっぱなしで走らせるため初回描画はブロックしない。
+  // 24時間未満ならスキップ、失敗してもアプリは壊さない。
+  scheduleAutoBackup(
+    buildJson: () async {
+      final player = await getIt<IPlayerRepository>().loadPlayer();
+      if (player == null) {
+        throw StateError('プレイヤー未初期化のため自動バックアップを中止');
+      }
+      final tasks = await getIt<ITaskRepository>().loadTasks();
+      final boxes = await HiveBackupStorage().capture();
+      return FullBackupService().encode(
+        player: player,
+        tasks: tasks,
+        boxes: boxes,
+        exportedAt: DateTime.now(),
+      );
+    },
+  );
 }
 
 /// ディープリンクURLを解析し、該当導線に引き渡す。
