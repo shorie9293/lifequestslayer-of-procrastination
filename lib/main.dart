@@ -33,9 +33,16 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:app_links/app_links.dart';
 import 'package:rpg_todo/core/infrastructure/app_lock_gate.dart';
 import 'package:rpg_todo/core/infrastructure/deep_link_service.dart';
+import 'package:rpg_todo/core/notification/notification_tap_router.dart';
 
 /// ディープリンクナビゲーションのためのグローバルナビゲーターキー
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+/// 通知タップ → 該当画面遷移の配線（画面対応表は NotificationRoutes と一致）。
+final NotificationTapRouter notificationTapRouter = NotificationTapRouter(
+  navigatorKey: navigatorKey,
+  source: NotificationService(),
+);
 
 /// アプリ完全終了状態から起動した場合の初期ディープリンクを保持
 Uri? _pendingInitialDeepLink;
@@ -110,7 +117,12 @@ void main() async {
   bool notificationInitialized = false;
   try {
     final notificationService = NotificationService();
-    await notificationService.initialize();
+    // 通知タップの入口を router へ配線してから初期化する
+    // （起動前タップは service 側で保留され、初回フレーム後に取り出される）。
+    notificationTapRouter.attach();
+    await notificationService.initialize(
+      onRouteSelected: notificationTapRouter.handleRoute,
+    );
     notificationInitialized = true;
     debugPrint('[main] 通知サービスの初期化が完了しました');
   } catch (e) {
@@ -251,6 +263,9 @@ class _RPGTodoAppState extends State<RPGTodoApp> {
     if (pendingLink != null) {
       _handleDeepLink(pendingLink);
     }
+
+    // アプリ起動前にタップされた通知の遷移先を1度だけ取り出して遷移する。
+    notificationTapRouter.consumePendingRoute();
   }
 
   @override

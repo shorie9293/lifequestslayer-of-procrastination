@@ -4,7 +4,9 @@ import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzdata;
 import 'package:flutter/foundation.dart';
 
-class NotificationService {
+import 'package:rpg_todo/core/notification/notification_route_resolver.dart';
+
+class NotificationService implements NotificationRouteSource {
   static const _boxName = 'notification_settings';
   static const _keyEnabled = 'enabled';
   static const _keyMorningHour = 'morning_hour';
@@ -26,7 +28,45 @@ class NotificationService {
   factory NotificationService() => _instance;
   NotificationService._internal();
 
-  Future<void> initialize() async {
+  /// アプリ稼働中の通知タップ通知先（未配線なら null）。
+  void Function(ResolvedNotificationRoute)? _onRouteSelected;
+
+  @override
+  set onRouteSelected(void Function(ResolvedNotificationRoute)? handler) {
+    _onRouteSelected = handler;
+  }
+
+  /// アプリ起動前タップの保留分（[consumePendingRoute] で1度だけ取り出せる）。
+  final PendingNotificationRoute _pendingRoute = PendingNotificationRoute();
+
+  /// 保留中の遷移先（読み取りのみ）。
+  ResolvedNotificationRoute? get pendingRoute => _pendingRoute.pendingRoute;
+
+  @override
+  ResolvedNotificationRoute? consumePendingRoute() => _pendingRoute.consume();
+
+  /// 通知ペイロードを解決してタップ入口へ流す。
+  /// 配線済みなら即時通知、未配線なら保留する（取りこぼし防止）。
+  void _dispatchTap(String? payload) {
+    final route = NotificationRouteResolver.resolve(
+      payload,
+      allowedRoutes: NotificationRoutes.all,
+    );
+    if (route == null) return;
+    final handler = _onRouteSelected;
+    if (handler != null) {
+      handler(route);
+    } else {
+      _pendingRoute.hold(route);
+    }
+  }
+
+  Future<void> initialize({
+    void Function(ResolvedNotificationRoute)? onRouteSelected,
+  }) async {
+    if (onRouteSelected != null) {
+      _onRouteSelected = onRouteSelected;
+    }
     tzdata.initializeTimeZones();
 
     // 端末の実際のタイムゾーンオフセットを取得
@@ -70,8 +110,32 @@ class NotificationService {
         debugPrint(
           '[NotificationService] 通知タップ: id=${response.id}, payload=${response.payload}',
         );
+        _dispatchTap(response.payload);
       },
     );
+
+    // アプリ起動前にタップされていた場合の通知を拾う。
+    // Navigator 未生成のため即時遷移はせず、保留分として保持する
+    // （アプリ側が consumePendingRoute() で1度だけ取り出す）。
+    try {
+      final launchDetails = await _plugin.getNotificationAppLaunchDetails();
+      if (launchDetails?.didNotificationLaunchApp ?? false) {
+        final response = launchDetails!.notificationResponse;
+        debugPrint(
+          '[NotificationService] 起動経由の通知タップ: id=${response?.id}, payload=${response?.payload}',
+        );
+        final route = NotificationRouteResolver.resolve(
+          response?.payload,
+          allowedRoutes: NotificationRoutes.all,
+        );
+        if (route != null) {
+          _pendingRoute.hold(route);
+        }
+      }
+    } catch (e) {
+      // プラットフォーム未対応・試練環境等ではスキップ（起動は妨げない）。
+      debugPrint('[NotificationService] 起動経由の通知取得に失敗: $e');
+    }
 
     // Android 8+ 用に通知チャンネルを明示的に作成
     await _createNotificationChannels();
@@ -361,6 +425,7 @@ class NotificationService {
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
+      payload: NotificationRouteResolver.buildPayload(NotificationRoutes.guild),
     );
   }
 
@@ -429,6 +494,8 @@ class NotificationService {
         uiLocalNotificationDateInterpretation:
             UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+        payload:
+            NotificationRouteResolver.buildPayload(NotificationRoutes.temple),
       );
     }
   }
@@ -481,6 +548,7 @@ class NotificationService {
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
+      payload: NotificationRouteResolver.buildPayload(NotificationRoutes.guild),
     );
   }
 
@@ -513,6 +581,7 @@ class NotificationService {
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
+      payload: NotificationRouteResolver.buildPayload(NotificationRoutes.guild),
     );
   }
 
@@ -545,6 +614,7 @@ class NotificationService {
       uiLocalNotificationDateInterpretation:
           UILocalNotificationDateInterpretation.absoluteTime,
       matchDateTimeComponents: DateTimeComponents.time,
+      payload: NotificationRouteResolver.buildPayload(NotificationRoutes.guild),
     );
   }
 
@@ -594,6 +664,8 @@ class NotificationService {
         ),
         iOS: DarwinNotificationDetails(),
       ),
+      payload:
+          NotificationRouteResolver.buildPayload(NotificationRoutes.settings),
     );
   }
 
