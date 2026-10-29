@@ -66,8 +66,8 @@ void main() {
       expect(kAboutInfo.privacyPolicyUrl, 'https://www.yoppala.in/privacy');
     });
 
-    test('version は pubspec.yaml と一致する（1.5.54+150）', () {
-      expect(kAboutInfo.version, '1.5.54+150');
+    test('version は pubspec.yaml と一致する（1.5.55+151）', () {
+      expect(kAboutInfo.version, '1.5.55+151');
     });
 
     test('tagline が空でない', () {
