@@ -14,6 +14,9 @@ abstract interface class AutoBackupStore {
 
   /// [fileName] を削除する。
   Future<void> delete(String fileName);
+
+  /// [fileName] の本文を読む。存在しなければ null。
+  Future<String?> read(String fileName);
 }
 
 /// 試練用のメモリ内実装。
@@ -49,7 +52,8 @@ class InMemoryAutoBackupStore implements AutoBackupStore {
     _files.remove(fileName);
   }
 
-  /// 試練用: 保存内容を読み出す。
+  /// 保存内容を読み出す（試練用のメモリ実装）。
+  @override
   Future<String?> read(String fileName) async => _files[fileName]?.json;
 }
 
@@ -109,6 +113,19 @@ class FileAutoBackupStore implements AutoBackupStore {
     final dir = await _ensureDirectory();
     final file = File('${dir.path}${Platform.pathSeparator}$fileName');
     await file.writeAsString(json, flush: true);
+  }
+
+  @override
+  Future<String?> read(String fileName) async {
+    final dir = await _ensureDirectory();
+    final file = File('${dir.path}${Platform.pathSeparator}$fileName');
+    if (!await file.exists()) return null;
+    try {
+      return await file.readAsString();
+    } catch (e) {
+      debugPrint('[auto_backup] read 失敗: $fileName ($e)');
+      return null;
+    }
   }
 
   @override

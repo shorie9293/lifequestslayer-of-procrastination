@@ -178,4 +178,7 @@ class _ThrowingStore implements AutoBackupStore {
 
   @override
   Future<void> delete(String fileName) async {}
+
+  @override
+  Future<String?> read(String fileName) async => null;
 }
