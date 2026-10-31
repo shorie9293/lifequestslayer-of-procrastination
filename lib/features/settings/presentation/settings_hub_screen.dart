@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/infrastructure/app_lock_settings_screen.dart';
+import 'package:rpg_todo/core/crash/crash_log_screen.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/domain/services/full_backup.dart';
 import 'package:rpg_todo/features/about/presentation/about_app_keys.dart';
@@ -245,6 +246,8 @@ class SettingsHubScreen extends StatelessWidget {
                 ),
               ),
             ),
+          // 末尾追加: 不具合の報告（端末内クラッシュログの閲覧・コピー）
+          const CrashReportTile(),
         ],
       ),
     );

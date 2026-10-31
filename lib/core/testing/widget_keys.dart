@@ -418,4 +418,14 @@ class AppKeys {
   // ━━━ 振り返りの杜 ━━━
   static const Key reflectionGroveScreen = Key('screen_reflection_grove');
   static const Key reflectionGroveEntry = Key('btn_reflection_grove_entry');
+
+  // ━━━ 端末内クラッシュログ・エラー境界（適3） ━━━
+  static const Key crashBoundaryScreen = Key('screen_crash_boundary');
+  static const Key crashBoundaryReloadButton = Key('btn_crash_boundary_reload');
+  static const Key crashLogScreen = Key('screen_crash_log');
+  static const Key crashLogSummary = Key('txt_crash_log_summary');
+  static const Key crashLogList = Key('list_crash_log');
+  static const Key crashLogEmpty = Key('empty_crash_log');
+  static const Key crashLogCopyButton = Key('btn_crash_log_copy');
+  static const Key crashReportEntryFromSettings = Key('btn_crash_report_entry');
 }

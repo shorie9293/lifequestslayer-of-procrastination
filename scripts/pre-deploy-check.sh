@@ -41,7 +41,8 @@ flutter test --no-pub -j 2 \
   test/features/settings/ \
   test/features/streak_freeze/ \
   test/features/about/ \
-  test/core/notification/
+  test/core/notification/ \
+  test/core/crash/
 echo "✅ shard 1/3 passed"
 
 # --- Step 4: Test shard 2/3 (battle, temple, character_customization, etc.) ---

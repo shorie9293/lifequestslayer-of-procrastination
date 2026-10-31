@@ -32,6 +32,8 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:app_links/app_links.dart';
 import 'package:rpg_todo/core/infrastructure/app_lock_gate.dart';
+import 'package:rpg_todo/core/crash/crash_guard.dart';
+import 'package:rpg_todo/core/crash/crash_log_service.dart';
 import 'package:rpg_todo/core/infrastructure/deep_link_service.dart';
 import 'package:rpg_todo/core/notification/notification_tap_router.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_bootstrap.dart';
@@ -52,8 +54,26 @@ final NotificationTapRouter notificationTapRouter = NotificationTapRouter(
 /// アプリ完全終了状態から起動した場合の初期ディープリンクを保持
 Uri? _pendingInitialDeepLink;
 
-void main() async {
+/// アプリの起動。未捕捉例外はすべて端末内クラッシュログへ残す。
+///
+/// - ゾーン外（非同期の投げっぱなし）→ runZonedGuarded のハンドラ
+/// - Flutter フレームワーク内 / Platform → installCrashGuard（既存ハンドラへ合流）
+void main() {
+  runZonedGuarded(
+    () async {
+      await bootstrap();
+    },
+    (error, stack) {
+      crashLogger.record(error, stack, kind: 'zone');
+    },
+  );
+}
+
+Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // 未捕捉例外の受け皿（既存の Crashlytics / presentError へ合流させる）
+  installCrashGuard();
   await Hive.initFlutter();
 
   // ━━━ Firebase 運用監視基盤（Crashlytics クラッシュ検知 + Analytics KPI計測）━━━
@@ -185,6 +205,10 @@ void main() async {
   };
 
   // ━━━ エラー境界 設定完了 ━━━
+
+  // ①②③は既存ハンドラを上書きするため、この地点で受け皿を再装着して
+  // 「既存呼出＋端末内記録」の合流を保つ（既存の初期化順序は不変）。
+  installCrashGuard();
 
   // ━━━ アプリ間送客用ディープリンク受信基盤 ━━━
   // app://cross-reward?source=<送客元>&reward=<報酬タイプ>
