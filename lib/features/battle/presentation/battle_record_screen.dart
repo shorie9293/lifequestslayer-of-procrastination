@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/core/utils/load_state.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record_aggregation.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record_summary.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record_service.dart';
 import 'package:rpg_todo/features/battle/data/battle_record_repository.dart';
 import 'package:rpg_todo/features/battle/presentation/enemy_catalog_screen.dart';
+import 'package:rpg_todo/features/shared/widgets/load_state_views.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 
 /// 討伐戦績の俯瞰画面（改善提案 #56）。
@@ -30,7 +32,11 @@ class BattleRecordScreen extends StatefulWidget {
 class _BattleRecordScreenState extends State<BattleRecordScreen> {
   static const int _maxHistoryEntries = 50;
 
-  bool _loading = true;
+  /// 既存の空状態文言（不変）。
+  static const String _emptyMessage =
+      'まだ討伐戦績がありません。\nクエストを討伐すると記録されます。';
+
+  LoadState<List<BattleRecord>> _state = LoadState.loading();
   List<BattleRecord> _records = const [];
   // 0=すべて, 1=勝利のみ, 2=敗北のみ
   int _filter = 0;
@@ -41,21 +47,40 @@ class _BattleRecordScreenState extends State<BattleRecordScreen> {
     _load();
   }
 
-  Future<void> _load() async {
-    try {
-      final records = await widget.repository.load();
-      if (!mounted) return;
-      setState(() {
-        _records = records;
-        _loading = false;
-      });
-    } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        _records = const [];
-        _loading = false;
-      });
+  @override
+  void didUpdateWidget(covariant BattleRecordScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // リポジトリ差し替え時は読み直す（試練・配線切替用）。
+    if (!identical(oldWidget.repository, widget.repository)) {
+      _load();
     }
+  }
+
+  Future<void> _load() async {
+    LoadResult<List<BattleRecord>> result;
+    try {
+      result = await widget.repository.tryLoad();
+    } catch (error) {
+      result = LoadResult<List<BattleRecord>>.failure(
+        '討伐戦績を読み込めませんでした',
+        cause: error,
+      );
+    }
+    if (!mounted) return;
+    setState(() {
+      if (result.isSuccess) {
+        final records = result.valueOrNull ?? const <BattleRecord>[];
+        _records = records;
+        _state = records.isEmpty ? LoadState.empty() : LoadState.data(records);
+      } else {
+        // 失敗時は既存データを消さない（従来は空リストへ潰していた）。
+        _state = LoadState.error(
+          result.message ?? '討伐戦績を読み込めませんでした',
+          retryable: result.retryable,
+          cause: result.cause,
+        );
+      }
+    });
   }
 
   static String formatTimestamp(DateTime dt) {
@@ -101,48 +126,81 @@ class _BattleRecordScreenState extends State<BattleRecordScreen> {
           ),
         ],
       ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : _records.isEmpty
-              ? _buildEmpty()
-              : ListView(
-                  key: AppKeys.battleRecordHistoryList,
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    _buildSummaryCard(summary),
-                    const SizedBox(height: 12),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(child: _buildEnemyStatsSection()),
-                        const SizedBox(width: 8),
-                        Expanded(child: _buildMonthlyStatsSection()),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _buildFilterChips(),
-                    const SizedBox(height: 8),
-                    ...visible.map(_buildRecordTile),
-                  ],
-                ),
+      body: _buildBody(summary, visible),
     );
   }
 
-  Widget _buildEmpty() {
-    return Center(
-      child: Column(
-        key: AppKeys.battleRecordEmpty,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(Icons.history, size: 64, color: Colors.grey),
-          SizedBox(height: 16),
-          Text(
-            'まだ討伐戦績がありません。\nクエストを討伐すると記録されます。',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16, color: Colors.grey),
+  Widget _buildBody(BattleRecordSummary summary, List<BattleRecord> visible) {
+    if (_state.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_state.isError) {
+      final message = _state.message ?? '討伐戦績を読み込めませんでした';
+      final retry = _state.retryable ? _load : null;
+      if (_records.isEmpty) {
+        return LoadErrorView(message: message, onRetry: retry);
+      }
+      // 既存データは保持したまま、失敗を上部の帯で知らせる。
+      return Column(
+        children: [
+          Container(
+            key: const ValueKey('load_error_banner'),
+            width: double.infinity,
+            color: Colors.red.shade50,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.redAccent),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    message,
+                    style: const TextStyle(color: Colors.redAccent),
+                  ),
+                ),
+                if (retry != null)
+                  TextButton(
+                    key: const ValueKey('load_retry_button'),
+                    onPressed: retry,
+                    child: const Text('再試行'),
+                  ),
+              ],
+            ),
           ),
+          Expanded(child: _buildList(summary, visible)),
         ],
-      ),
+      );
+    }
+    if (_state.isEmpty) {
+      // 既存の空状態 Key と文言は不変に保つ。
+      return KeyedSubtree(
+        key: AppKeys.battleRecordEmpty,
+        child: const LoadEmptyView(message: _emptyMessage),
+      );
+    }
+    return _buildList(summary, visible);
+  }
+
+  Widget _buildList(BattleRecordSummary summary, List<BattleRecord> visible) {
+    return ListView(
+      key: AppKeys.battleRecordHistoryList,
+      padding: const EdgeInsets.all(16),
+      children: [
+        _buildSummaryCard(summary),
+        const SizedBox(height: 12),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: _buildEnemyStatsSection()),
+            const SizedBox(width: 8),
+            Expanded(child: _buildMonthlyStatsSection()),
+          ],
+        ),
+        const SizedBox(height: 12),
+        _buildFilterChips(),
+        const SizedBox(height: 8),
+        ...visible.map(_buildRecordTile),
+      ],
     );
   }
 

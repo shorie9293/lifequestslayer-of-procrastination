@@ -2,12 +2,19 @@ import 'dart:convert';
 import 'dart:math';
 
 import 'package:hive/hive.dart';
+import 'package:rpg_todo/core/utils/load_state.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record.dart';
 
 /// 討伐戦績（改善提案 #56）の永続化リポジトリ抽象。
 abstract class BattleRecordRepository {
   /// 全戦績を古い順（occurredAt 昇順・同時刻は id 昇順）で取得する。
+  ///
+  /// ⚠️ 後方互換のため温存。失敗は空リストへ潰れるため、失敗と0件を
+  /// 区別したい呼出側は [tryLoad] を使うこと。
   Future<List<BattleRecord>> load();
+
+  /// 失敗を「0件」に潰さず [LoadResult] で返す後方互換 API。
+  Future<LoadResult<List<BattleRecord>>> tryLoad();
 
   /// 戦績を1件追加する（同一 ID は上書き・500件上限で最古を削除）。
   Future<void> add(BattleRecord record);
@@ -78,6 +85,47 @@ class HiveBattleRecordRepository implements BattleRecordRepository {
   }
 
   @override
+  Future<LoadResult<List<BattleRecord>>> tryLoad() async {
+    final Box<String> box;
+    try {
+      box = await _getBox();
+    } catch (error) {
+      // 永続層を開けない = 失敗。0件として静かに見せない。
+      return LoadResult<List<BattleRecord>>.failure(
+        '討伐戦績の保存領域を開けませんでした',
+        cause: error,
+      );
+    }
+    try {
+      final records = <BattleRecord>[];
+      for (final raw in box.values) {
+        try {
+          final decoded = jsonDecode(raw);
+          if (decoded is! Map<String, dynamic>) continue;
+          records.add(BattleRecord.fromJson(decoded));
+        } catch (_) {
+          // 破損レコードは読み飛ばす（履歴全体を失わないため）
+        }
+      }
+      return LoadResult<List<BattleRecord>>.success(_sorted(records));
+    } catch (error) {
+      return LoadResult<List<BattleRecord>>.failure(
+        '討伐戦績を読み込めませんでした',
+        cause: error,
+      );
+    }
+  }
+
+  static List<BattleRecord> _sorted(List<BattleRecord> records) {
+    return records.toList()
+      ..sort((a, b) {
+        final byTime = a.occurredAt.compareTo(b.occurredAt);
+        if (byTime != 0) return byTime;
+        return a.id.compareTo(b.id);
+      });
+  }
+
+  @override
   Future<void> add(BattleRecord record) async {
     final box = await _getBoxOrNull();
     if (box == null) return;
@@ -134,6 +182,10 @@ class NoopBattleRecordRepository implements BattleRecordRepository {
   Future<List<BattleRecord>> load() async => const [];
 
   @override
+  Future<LoadResult<List<BattleRecord>>> tryLoad() async =>
+      LoadResult<List<BattleRecord>>.success(const []);
+
+  @override
   Future<void> add(BattleRecord record) async {}
 
   @override
@@ -154,6 +206,10 @@ class InMemoryBattleRecordRepository implements BattleRecordRepository {
       });
     return list;
   }
+
+  @override
+  Future<LoadResult<List<BattleRecord>>> tryLoad() async =>
+      LoadResult<List<BattleRecord>>.success(await load());
 
   @override
   Future<void> add(BattleRecord record) async {
