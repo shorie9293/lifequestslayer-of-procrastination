@@ -8,6 +8,7 @@ import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
 import 'package:rpg_todo/features/town/domain/building.dart';
 import 'package:rpg_todo/features/settings/presentation/settings_hub_screen.dart';
+import 'package:rpg_todo/features/account_deletion/presentation/production_account_deletion_builder.dart';
 import 'package:rpg_todo/features/adventurer/presentation/adventurer_chart_screen.dart';
 import 'package:rpg_todo/features/character_customization/presentation/equipment_tab.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
@@ -63,7 +64,12 @@ class TownScreen extends StatelessWidget {
               icon: const Icon(Icons.settings_outlined),
               tooltip: '設定',
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SettingsHubScreen()),
+                MaterialPageRoute(
+                  builder: (_) => SettingsHubScreen(
+                    accountDeletionScreenBuilder:
+                        buildProductionAccountDeletionScreen,
+                  ),
+                ),
               ),
             ),
             IconButton(

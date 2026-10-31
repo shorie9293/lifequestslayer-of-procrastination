@@ -5,6 +5,7 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/domain/services/full_backup.dart';
 import 'package:rpg_todo/features/about/presentation/about_app_keys.dart';
 import 'package:rpg_todo/features/about/presentation/about_screen.dart';
+import 'package:rpg_todo/features/account_deletion/presentation/account_deletion_app_keys.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_restorer_impl.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_sharer_impl.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_store.dart';
@@ -86,6 +87,7 @@ class SettingsHubScreen extends StatelessWidget {
     this.reminderScreenBuilder,
     this.streakFreezeScreenBuilder,
     this.reflectionGroveScreenBuilder,
+    this.accountDeletionScreenBuilder,
   });
 
   final WidgetBuilder? reminderScreenBuilder;
@@ -95,6 +97,13 @@ class SettingsHubScreen extends StatelessWidget {
 
   /// 振り返りの杜画面のビルダー（試練での注入用。未指定なら実画面）。
   final WidgetBuilder? reflectionGroveScreenBuilder;
+
+  /// アカウント削除画面のビルダー。
+  ///
+  /// **未指定（null）ならタイル自体を出さない** — 既存試練の後方互換と、
+  /// 認証基盤の無い環境での誤操作防止を兼ねる。本番は town_screen から
+  /// `buildProductionAccountDeletionScreen` を渡す。
+  final WidgetBuilder? accountDeletionScreenBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -223,6 +232,19 @@ class SettingsHubScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => _openAutoBackup(context),
           ),
+          // 末尾追加: アカウント削除（退会）。ビルダー未注入なら導線を出さない。
+          if (accountDeletionScreenBuilder != null)
+            ListTile(
+              key: AccountDeletionAppKeys.entryFromSettings,
+              title: const Text('アカウント削除'),
+              subtitle: const Text('退会して端末内のデータをすべて削除します'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: accountDeletionScreenBuilder!,
+                ),
+              ),
+            ),
         ],
       ),
     );

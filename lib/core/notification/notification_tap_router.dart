@@ -5,6 +5,7 @@ import 'package:rpg_todo/features/guild/presentation/guild_screen.dart';
 import 'package:rpg_todo/features/overview/presentation/screens/overview_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
 import 'package:rpg_todo/features/settings/presentation/settings_hub_screen.dart';
+import 'package:rpg_todo/features/account_deletion/presentation/production_account_deletion_builder.dart';
 import 'package:rpg_todo/features/temple/presentation/temple_screen.dart';
 import 'package:rpg_todo/features/town/presentation/town_screen.dart';
 
@@ -43,7 +44,9 @@ class NotificationTapRouter {
       case NotificationRoutes.reminder:
         return const ReminderSettingsScreen();
       case NotificationRoutes.settings:
-        return const SettingsHubScreen();
+        return SettingsHubScreen(
+          accountDeletionScreenBuilder: buildProductionAccountDeletionScreen,
+        );
       default:
         // 未知routeは既定画面のまま（何もしない）。
         return const SizedBox.shrink();
