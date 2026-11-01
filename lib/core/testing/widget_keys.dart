@@ -107,6 +107,7 @@ class AppKeys {
   static const Key templeSkillSlotDropdown = Key('dd_skill_slot');
   static const Key templeBackupButton = Key('btn_temple_backup');
   static const Key templeRestoreButton = Key('btn_temple_restore');
+  static const Key templeCsvExportButton = Key('btn_temple_csv_export');
 
   // ━━━ 街 ━━━
   static const Key townScreen = Key('screen_town');

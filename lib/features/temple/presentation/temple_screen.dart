@@ -36,7 +36,8 @@ class TempleScreen extends StatelessWidget {
     final maxSlots = JobSkill.maxSkillSlots(player.jobLevels);
 
     // Get current job's skills (unlocked/locked)
-    final currentJobSkills = JobSkill.values.where((s) => s.job == player.currentJob).toList();
+    final currentJobSkills =
+        JobSkill.values.where((s) => s.job == player.currentJob).toList();
 
     return Scaffold(
       key: AppKeys.templeScreen,
@@ -54,8 +55,7 @@ class TempleScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.help_outline),
             tooltip: '神託補佐（ヘルプ）',
-            onPressed: () =>
-                showHelpDialog(context, screen: HelpScreen.temple),
+            onPressed: () => showHelpDialog(context, screen: HelpScreen.temple),
           ),
         ],
       ),
@@ -204,7 +204,7 @@ class TempleScreen extends StatelessWidget {
             final isSlotFilled = index < equipped.length;
             final eqSkill = isSlotFilled ? equipped[index] : null;
             return _buildSlotRow(
-              context, viewModel, player, index, eqSkill, isSlotFilled);
+                context, viewModel, player, index, eqSkill, isSlotFilled);
           }),
           const SizedBox(height: 8),
           Container(
@@ -215,8 +215,7 @@ class TempleScreen extends StatelessWidget {
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline,
-                    size: 14, color: Colors.white38),
+                const Icon(Icons.info_outline, size: 14, color: Colors.white38),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -246,7 +245,8 @@ class TempleScreen extends StatelessWidget {
   ) {
     // Collect all unlockable skills from OTHER jobs (not current job)
     final allSkills = JobSkill.values.where((s) {
-      if (s.job == player.currentJob) return false; // Current job skills are always active
+      if (s.job == player.currentJob)
+        return false; // Current job skills are always active
       if (s.job == Job.adventurer) return false; // Ronin skills always active
       return (player.jobLevels[s.job] ?? 0) >= 1; // At least Lv1 to consider
     }).toList();
@@ -316,7 +316,9 @@ class TempleScreen extends StatelessWidget {
               ),
               child: const Text("常時発動",
                   style: TextStyle(
-                      color: Colors.amber, fontSize: 10, fontWeight: FontWeight.bold)),
+                      color: Colors.amber,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold)),
             ),
           if (isFilled)
             IconButton(
@@ -338,8 +340,7 @@ class TempleScreen extends StatelessWidget {
                 viewModel.equipSkill(skill);
                 viewModel.save();
               },
-              itemBuilder: (context) =>
-                  learnableSkills.map((skill) {
+              itemBuilder: (context) => learnableSkills.map((skill) {
                 return PopupMenuItem<JobSkill>(
                   value: skill,
                   child: Column(
@@ -352,8 +353,8 @@ class TempleScreen extends StatelessWidget {
                       ),
                       Text(
                         skill.description,
-                        style: const TextStyle(
-                            fontSize: 10, color: Colors.grey),
+                        style:
+                            const TextStyle(fontSize: 10, color: Colors.grey),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -385,7 +386,8 @@ class TempleScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.auto_awesome, color: Colors.tealAccent, size: 20),
+              const Icon(Icons.auto_awesome,
+                  color: Colors.tealAccent, size: 20),
               const SizedBox(width: 8),
               Text(
                 "${_jobDisplayName(player.currentJob)}のスキル (Lv.$currentJobLevel)",
@@ -400,7 +402,8 @@ class TempleScreen extends StatelessWidget {
           const SizedBox(height: 8),
           ...skills.map((skill) {
             final isUnlocked = currentJobLevel >= skill.requiredLevel;
-            final isMastered = skill.isMasterSkill && skill.isMastered(currentJobLevel);
+            final isMastered =
+                skill.isMasterSkill && skill.isMastered(currentJobLevel);
             return Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
               child: Row(
@@ -509,8 +512,8 @@ class TempleScreen extends StatelessWidget {
                   SizedBox(
                     width: 64,
                     child: Text(label,
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 12)),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 12)),
                   ),
                   Expanded(
                     child: LinearProgressIndicator(
@@ -563,8 +566,8 @@ class TempleScreen extends StatelessWidget {
                     Expanded(
                       child: Text(
                         '$treeLabel・${node.name}（${node.pointCost}pt）',
-                        style: const TextStyle(
-                            color: Colors.white, fontSize: 12),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 12),
                       ),
                     ),
                     Text(
@@ -601,79 +604,112 @@ class TempleScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.blueGrey.withValues(alpha: 0.5)),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: ElevatedButton.icon(
-              key: AppKeys.templeBackupButton,
-              icon: const Icon(Icons.backup, size: 20),
-              label: const Text('データバックアップ'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueGrey.withValues(alpha: 0.4),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  key: AppKeys.templeBackupButton,
+                  icon: const Icon(Icons.backup, size: 20),
+                  label: const Text('データバックアップ'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueGrey.withValues(alpha: 0.4),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () async {
+                    final taskVM = context.read<TaskViewModel>();
+                    final service = DataExportService();
+                    try {
+                      final json = await buildBackupJsonWithStorage(
+                        player: playerVM.player,
+                        tasks: taskVM.tasks,
+                        storage: _storageFactory(),
+                      );
+                      await service.exportStringToFile(json);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('バックアップを共有しました')),
+                        );
+                      }
+                    } catch (_) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('バックアップに失敗しました')),
+                        );
+                      }
+                    }
+                  },
+                ),
               ),
-              onPressed: () async {
-                final taskVM = context.read<TaskViewModel>();
-                final service = DataExportService();
-                try {
-                  final json = await buildBackupJsonWithStorage(
-                    player: playerVM.player,
-                    tasks: taskVM.tasks,
-                    storage: _storageFactory(),
-                  );
-                  await service.exportStringToFile(json);
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('バックアップを共有しました')),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  key: AppKeys.templeRestoreButton,
+                  icon: const Icon(Icons.restore, size: 20),
+                  label: const Text('データ復元'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal.withValues(alpha: 0.4),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () async {
+                    final playerVM = context.read<PlayerViewModel>();
+                    final taskVM = context.read<TaskViewModel>();
+                    final json =
+                        await DataExportService().importStringFromFile();
+                    if (json == null) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('復元に失敗しました')),
+                        );
+                      }
+                      return;
+                    }
+                    final ok = await applyRestore(
+                      jsonString: json,
+                      playerVM: playerVM,
+                      taskVM: taskVM,
+                      storage: _storageFactory(),
                     );
-                  }
-                } catch (_) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('バックアップに失敗しました')),
-                    );
-                  }
-                }
-              },
-            ),
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            ok ? 'データを復元しました' : '復元に失敗しました',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          Expanded(
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
             child: ElevatedButton.icon(
-              key: AppKeys.templeRestoreButton,
-              icon: const Icon(Icons.restore, size: 20),
-              label: const Text('データ復元'),
+              key: AppKeys.templeCsvExportButton,
+              icon: const Icon(Icons.table_view, size: 20),
+              label: const Text('クエストをCSVで書き出す'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal.withValues(alpha: 0.4),
+                backgroundColor: Colors.teal.withValues(alpha: 0.35),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
               onPressed: () async {
-                final playerVM = context.read<PlayerViewModel>();
                 final taskVM = context.read<TaskViewModel>();
-                final json = await DataExportService().importStringFromFile();
-                if (json == null) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('復元に失敗しました')),
-                    );
-                  }
-                  return;
-                }
-                final ok = await applyRestore(
-                  jsonString: json,
-                  playerVM: playerVM,
-                  taskVM: taskVM,
-                  storage: _storageFactory(),
-                );
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        ok ? 'データを復元しました' : '復元に失敗しました',
-                      ),
-                    ),
+                final messenger = ScaffoldMessenger.of(context);
+                try {
+                  await DataExportService().exportTasksCsvToFile(taskVM.tasks);
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('クエスト一覧をCSVで共有しました')),
+                  );
+                } catch (_) {
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('CSV書き出しに失敗しました')),
                   );
                 }
               },
@@ -730,6 +766,7 @@ class TempleScreen extends StatelessWidget {
         return '陰陽師';
     }
   }
+
   Widget _buildJobCard(
     BuildContext context,
     PlayerViewModel viewModel,
@@ -760,139 +797,142 @@ class TempleScreen extends StatelessWidget {
             SemanticTypes.button, 'job_${job.name}'),
         label: isUnlocked ? '$titleに転職する' : '$title（ロック中）',
         child: InkWell(
-        onTap: isUnlocked || isSelected
-            ? () {
-                if (!isSelected) {
-                  viewModel.changeJob(job);
-                  context.read<PlayerViewModel>().save();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("$title に転職しました！")),
-                  );
+          onTap: isUnlocked || isSelected
+              ? () {
+                  if (!isSelected) {
+                    viewModel.changeJob(job);
+                    context.read<PlayerViewModel>().save();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text("$title に転職しました！")),
+                    );
+                  }
                 }
-              }
-            : null,
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isUnlocked
-                          ? color.withValues(alpha: 0.1)
-                          : Colors.grey.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
+              : null,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: isUnlocked
+                            ? color.withValues(alpha: 0.1)
+                            : Colors.grey.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon,
+                          size: 32, color: isUnlocked ? color : Colors.grey),
                     ),
-                    child: Icon(icon,
-                        size: 32, color: isUnlocked ? color : Colors.grey),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                title,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: isUnlocked
-                                      ? (isSelected ? color : Colors.white)
-                                      : Colors.grey,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  title,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: isUnlocked
+                                        ? (isSelected ? color : Colors.white)
+                                        : Colors.grey,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text("Lv.$level",
-                                style: const TextStyle(color: Colors.white)),
-                            if (isMastered) ...[
                               const SizedBox(width: 8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                    color: Colors.amber,
-                                    borderRadius: BorderRadius.circular(4)),
-                                child: const Text("MASTER",
-                                    style: TextStyle(
-                                        color: Colors.black,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 10)),
-                              )
-                            ]
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          description,
-                          style: TextStyle(
-                              color: isUnlocked ? Colors.white70 : Colors.grey),
-                        ),
-                        if (!isUnlocked)
-                          Text(
-                            (player.jobLevels[Job.adventurer] ?? 1) < 10
-                                ? '浪人Lv.10 解放'
-                                : '現在の職業でLv.10 解放',
-                            style: const TextStyle(
-                                color: Colors.redAccent,
-                                fontWeight: FontWeight.bold),
+                              Text("Lv.$level",
+                                  style: const TextStyle(color: Colors.white)),
+                              if (isMastered) ...[
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                      color: Colors.amber,
+                                      borderRadius: BorderRadius.circular(4)),
+                                  child: const Text("MASTER",
+                                      style: TextStyle(
+                                          color: Colors.black,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 10)),
+                                )
+                              ]
+                            ],
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            description,
+                            style: TextStyle(
+                                color:
+                                    isUnlocked ? Colors.white70 : Colors.grey),
+                          ),
+                          if (!isUnlocked)
+                            Text(
+                              (player.jobLevels[Job.adventurer] ?? 1) < 10
+                                  ? '浪人Lv.10 解放'
+                                  : '現在の職業でLv.10 解放',
+                              style: const TextStyle(
+                                  color: Colors.redAccent,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                        ],
+                      ),
+                    ),
+                    if (isSelected) Icon(Icons.check_circle, color: color),
+                    if (!isSelected && !isUnlocked)
+                      const Icon(Icons.lock, color: Colors.grey),
+                  ],
+                ),
+                // Skill Toggle for Mastered Jobs (if not current job)
+                if (isMastered && !isSelected && job != Job.adventurer) ...[
+                  const Divider(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text("スキル継承 (ON/OFF)"),
+                      SemanticHelper.toggle(
+                        testId: SemanticHelper.createTestId(
+                            SemanticTypes.toggle, 'skill_${job.name}'),
+                        value: isSkillActive,
+                        onChanged: (val) {
+                          viewModel.toggleSkill(job);
+                          context.read<PlayerViewModel>().save();
+                        },
+                        child: Switch(
+                          key: AppKeys.templeSkillToggle,
+                          value: isSkillActive,
+                          onChanged: (val) {
+                            viewModel.toggleSkill(job);
+                            context.read<PlayerViewModel>().save();
+                          },
+                          activeColor: color,
+                        ),
+                      )
+                    ],
+                  )
+                ],
+                if (isMastered && job == Job.adventurer && !isSelected) ...[
+                  const Divider(),
+                  const Row(
+                    children: [
+                      Icon(Icons.star, size: 16, color: Colors.amber),
+                      SizedBox(width: 4),
+                      Text("常時スキル発動中 (ランク・枠数)",
+                          style: TextStyle(color: Colors.grey))
+                    ],
+                  )
+                ]
               ],
             ),
           ),
-          if (isSelected) Icon(Icons.check_circle, color: color),
-                  if (!isSelected && !isUnlocked)
-                    const Icon(Icons.lock, color: Colors.grey),
-                ],
-              ),
-              // Skill Toggle for Mastered Jobs (if not current job)
-              if (isMastered && !isSelected && job != Job.adventurer) ...[
-                const Divider(),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text("スキル継承 (ON/OFF)"),
-                    SemanticHelper.toggle(
-                      testId: SemanticHelper.createTestId(
-                          SemanticTypes.toggle, 'skill_${job.name}'),
-                      value: isSkillActive,
-                      onChanged: (val) {
-                        viewModel.toggleSkill(job); context.read<PlayerViewModel>().save();
-                      },
-                      child: Switch(
-                      key: AppKeys.templeSkillToggle,
-                      value: isSkillActive,
-                      onChanged: (val) {
-                        viewModel.toggleSkill(job); context.read<PlayerViewModel>().save();
-                      },
-                      activeColor: color,
-                    ),
-                    )
-                  ],
-                )
-              ],
-              if (isMastered && job == Job.adventurer && !isSelected) ...[
-                const Divider(),
-                const Row(
-                  children: [
-                    Icon(Icons.star, size: 16, color: Colors.amber),
-                    SizedBox(width: 4),
-                    Text("常時スキル発動中 (ランク・枠数)",
-                        style: TextStyle(color: Colors.grey))
-                  ],
-                )
-              ]
-            ],
-          ),
         ),
-      ),
       ),
     );
   }

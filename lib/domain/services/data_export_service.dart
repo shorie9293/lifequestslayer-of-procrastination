@@ -7,6 +7,7 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/domain/services/csv_export_service.dart';
 
 /// JSONを介したデータのエクスポート/インポートを担当するサービス。
 ///
@@ -71,6 +72,26 @@ class DataExportService {
     await Share.shareXFiles(
       [XFile(file.path)],
       text: 'RPG Task 全データバックアップ',
+    );
+  }
+
+  /// クエスト一覧を UTF-8 BOM 付き CSV として一時ファイルに書き出し、
+  /// share_plus で共有する。
+  ///
+  /// BOM は文字列ではなくバイト列（0xEF,0xBB,0xBF）として先頭に固定するため、
+  /// [csvBytes] を [File.writeAsBytes] で書く。
+  Future<void> exportTasksCsvToFile(List<Task> tasks) async {
+    final csv = exportTasksCsv(tasks);
+    final dir = await getTemporaryDirectory();
+    final now = DateTime.now();
+    final stamp = '${now.year.toString().padLeft(4, '0')}'
+        '${now.month.toString().padLeft(2, '0')}'
+        '${now.day.toString().padLeft(2, '0')}';
+    final file = File('${dir.path}/rpg_quests_$stamp.csv');
+    await file.writeAsBytes(csvBytes(csv), flush: true);
+    await Share.shareXFiles(
+      [XFile(file.path, mimeType: 'text/csv')],
+      text: 'RPG Task クエスト一覧',
     );
   }
 
