@@ -45,11 +45,14 @@ void main() {
     await Hive.openBox<String>('practice_logs');
   });
 
-  testWidgets('AppBar バージョン標識が v1.5.60+156 に同期している', (tester) async {
+  testWidgets('AppBar バージョン標識が pubspec.yaml と同期している', (tester) async {
     final vms = createViewModels();
     await pumpGuildScreen(
         tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
-    expect(find.text('v1.5.60+156'), findsOneWidget);
+    final pubspec = File('pubspec.yaml').readAsStringSync();
+    final version =
+        RegExp(r'^version:\s*(\S+)', multiLine: true).firstMatch(pubspec)!.group(1);
+    expect(find.text('v$version'), findsOneWidget);
   });
 
   testWidgets('⋯メニューから勤行の定型へ遷移できる', (tester) async {

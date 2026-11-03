@@ -27,9 +27,11 @@ void main() {
     );
   });
 
-  test('pubspec.yaml は crypto 依存と新版数 1.5.60+156 を持つ', () {
+  test('pubspec.yaml は crypto 依存とセマンティックな版数を持つ', () {
     final pubspec = File('pubspec.yaml').readAsStringSync();
     expect(pubspec, contains('crypto: ^3.0.7'));
-    expect(pubspec, contains('version: 1.5.60+156'));
+    // 版数の直書きは毎リリースで試練を落とすため、形式だけを検証する
+    // （pubspec と表示の一致は about_version_sync_test が担保）。
+    expect(pubspec, matches(RegExp(r'^version: \d+\.\d+\.\d+\+\d+$', multiLine: true)));
   });
 }

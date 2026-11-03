@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rpg_todo/features/about/domain/about_info.dart';
 
@@ -66,8 +68,12 @@ void main() {
       expect(kAboutInfo.privacyPolicyUrl, 'https://www.yoppala.in/privacy');
     });
 
-    test('version は pubspec.yaml と一致する（1.5.60+156）', () {
-      expect(kAboutInfo.version, '1.5.60+156');
+    test('version は pubspec.yaml と一致する', () {
+      // 版数を直書きすると毎リリースで試練が落ちるため、pubspec から読む。
+      final pubspec = File('pubspec.yaml').readAsStringSync();
+      final version =
+          RegExp(r'^version:\s*(\S+)', multiLine: true).firstMatch(pubspec)!.group(1);
+      expect(kAboutInfo.version, version);
     });
 
     test('tagline が空でない', () {
