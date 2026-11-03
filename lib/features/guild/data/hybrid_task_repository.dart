@@ -1,12 +1,13 @@
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
+import 'package:rpg_todo/domain/repositories/i_task_deletion_repository.dart';
 import 'package:rpg_todo/core/logging/app_logger.dart';
 
 /// Hive（ローカル）と Supabase（クラウド）の二重書き込みハイブリッドリポジトリ。
 /// Hiveをプライマリ、Supabaseをセカンダリとする。
 /// - 読み込み: Hiveから読み込み → 非同期でSupabaseとマージ（新しい方を優先）
 /// - 書き込み: Hiveに保存 → 成功後、非同期でSupabaseにも保存（失敗は無視）
-class HybridTaskRepository implements ITaskRepository {
+class HybridTaskRepository implements ITaskRepository, ITaskDeletionRepository {
   final ITaskRepository _hiveRepo;
   final ITaskRepository _supabaseRepo;
 
@@ -103,6 +104,23 @@ class HybridTaskRepository implements ITaskRepository {
     _supabaseRepo.saveTasks(tasks).catchError((e) {
       appLog.warn('[HybridTaskRepo] Supabase save failed (offline): $e');
     });
+  }
+
+  @override
+  Future<void> deleteTasks(List<String> ids) async {
+    if (ids.isEmpty) return;
+    final hive = _hiveRepo;
+    if (hive is ITaskDeletionRepository) {
+      await (hive as ITaskDeletionRepository).deleteTasks(ids);
+    }
+    final cloud = _supabaseRepo;
+    if (cloud is ITaskDeletionRepository) {
+      try {
+        await (cloud as ITaskDeletionRepository).deleteTasks(ids);
+      } catch (e) {
+        appLog.warn('[HybridTaskRepo] Supabase delete failed (offline): $e');
+      }
+    }
   }
 
   @override

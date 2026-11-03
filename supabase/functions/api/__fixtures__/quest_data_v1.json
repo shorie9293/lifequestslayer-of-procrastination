@@ -1,0 +1,23 @@
+{
+  "_comment": "Edge Function (supabase/functions/api/index.ts) が rpg_tasks.data に書く形の見本。アプリの Task.fromJson がこの形を読めることを試練で担保する（test/features/api/quest_payload_contract_test.dart）。",
+  "id": "3f9a1c2e-7b4d-4e8f-9a0b-1c2d3e4f5a6b",
+  "title": "確定申告の書類を揃える",
+  "status": "inGuild",
+  "isCompleted": false,
+  "rank": "A",
+  "repeatInterval": "none",
+  "repeatWeekdays": [],
+  "lastCompletedAt": null,
+  "subTasks": [
+    { "title": "源泉徴収票を印刷", "isCompleted": false }
+  ],
+  "targetTimeMinutes": 60,
+  "activeAt": null,
+  "deadline": "2026-11-10T17:00:00",
+  "repeatAfterDays": null,
+  "tags": ["手続き", "API"],
+  "cancelledAt": null,
+  "enemyAssetPath": null,
+  "enemyXpMultiplier": 1.0,
+  "updatedAt": "2026-11-03T03:30:00.000Z"
+}

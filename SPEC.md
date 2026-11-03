@@ -71,6 +71,20 @@
 - iOS はビルド設定のみで配信対象外（Android が本線）。
 - 同期は last-write-wins。競合解決のUIは無い。
 
+## 10. API v1（クエスト投入の正門）
+
+外部（AIエージェント・自動化ツール）からクエストを追加する唯一の入口。
+`supabase/functions/api/index.ts`（Supabase Edge Functions）。
+
+- エンドポイント: `POST https://<project-ref>.supabase.co/functions/v1/api/v1/quests`
+- 認証: `Authorization: Bearer lq_...`（`api_tokens` 表に SHA-256 ハッシュのみ保存。平文は発行時1回だけ表示）
+- 公開項目: `id`（任意・冪等キー）/ `title`（必須1〜200字）/ `deadline` / `targetTimeMinutes`（5〜1440）/ `rank`（S,A,B。省略時は見積から自動判定）/ `tags`（最大10・`API` を自動付与）/ `subTasks`（最大50）
+- サーバが固定する値: `status = inGuild`・`isCompleted = false`・`repeatInterval = none`。受注はアプリ内で行う
+- `deadline` は **JST naive**（`2026-11-10T17:00:00`）で保存する。オフセット付きで渡された場合はサーバがJSTへ正規化する（アプリはローカルnaive前提で表示するため、UTCで保存すると9時間ズレる）
+- 冪等性: 同一 `id`・同一内容 → 200／同一 `id`・異なる内容 → 409
+- エラー: `{ "error": { "code": ..., "message": ... } }`（401/403/409/422/429）
+- **必須キーの完全性**: `Task.fromJson` は `status`/`isCompleted`/`rank`/`repeatInterval` を非nullで読む。1キーでも欠けるとアプリの全件読込が失敗するため、`supabase/functions/api/__fixtures__/quest_data_v1.json` を契約フィクスチャとして `test/features/api/quest_payload_contract_test.dart` で固定している。API の出力形を変えるときは必ずこの試練を通すこと。
+
 ## 9. カレンダー連携（`features/calendar_link`）
 - 目的: 端末カレンダー（Google アカウント同期分を含む）の予定をクエストとして取り込む。
 - 経路: `CalendarImportScreen` → `CalendarGateway`（抽象） → `MethodChannel('com.shorie.lifequest/calendar')` → `CalendarBridge.kt`（CalendarContract 読み取り）。

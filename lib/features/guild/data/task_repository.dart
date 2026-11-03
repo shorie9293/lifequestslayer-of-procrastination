@@ -1,11 +1,12 @@
 import 'package:hive/hive.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
+import 'package:rpg_todo/domain/repositories/i_task_deletion_repository.dart';
 import 'package:injectable/injectable.dart';
 import 'package:rpg_todo/core/logging/app_logger.dart';
 
 @LazySingleton(as: ITaskRepository)
-class TaskRepository implements ITaskRepository {
+class TaskRepository implements ITaskRepository, ITaskDeletionRepository {
   static const String boxName = 'tasksBox';
   static const String _backupBoxName = 'tasksBox_backup';
 
@@ -133,6 +134,14 @@ class TaskRepository implements ITaskRepository {
 
     // 保存成功後、バックアップをクリア
     try { await backup.clear(); } catch (_) {}
+  }
+
+  @override
+  Future<void> deleteTasks(List<String> ids) async {
+    if (ids.isEmpty) return;
+    final box = await _getBox();
+    await box.deleteAll(ids);
+    await box.flush();
   }
 
   @override
