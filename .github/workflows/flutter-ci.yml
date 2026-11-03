@@ -16,6 +16,10 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
+        with:
+          # gitleaks-action は HEAD^..HEAD の範囲を走査するため、shallow clone だと
+          # 親コミットが無く "failed to scan Git repository (stderr is not empty)" で落ちる。
+          fetch-depth: 0
 
       - name: 🔒 Secret scan (gitleaks)
         uses: gitleaks/gitleaks-action@v2
