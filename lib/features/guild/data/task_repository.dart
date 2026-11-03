@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:injectable/injectable.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 
 @LazySingleton(as: ITaskRepository)
 class TaskRepository implements ITaskRepository {
@@ -65,13 +65,13 @@ class TaskRepository implements ITaskRepository {
       return tasks;
     } catch (e) {
       // v1.3: 破損時にバックアップから復元を試みる
-      debugPrint(
+      appLog.warn(
           'TaskRepository: Load failed, attempting backup restore: $e');
       try {
         final backup = await _getBackupBox();
         final keys = backup.get('keys');
         if (keys is List && keys.isNotEmpty) {
-          debugPrint(
+          appLog.debug(
               'TaskRepository: Restoring ${keys.length} keys from backup');
           box = await _getBox();
           await box.clear();
@@ -85,7 +85,7 @@ class TaskRepository implements ITaskRepository {
         await backup.clear();
         return box.values.toList();
       } catch (_) {
-        debugPrint('TaskRepository: Backup restore failed, returning empty');
+        appLog.warn('TaskRepository: Backup restore failed, returning empty');
         return [];
       }
     }

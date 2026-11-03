@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 
 /// Hive（ローカル）と Supabase（クラウド）の二重書き込みハイブリッドリポジトリ。
 /// Hiveをプライマリ、Supabaseをセカンダリとする。
@@ -25,7 +25,7 @@ class HybridTaskRepository implements ITaskRepository {
     try {
       await _syncFromSupabase(tasks).timeout(const Duration(seconds: 5));
     } catch (e) {
-      debugPrint('[HybridTaskRepo] Sync timeout, using local data: $e');
+      appLog.warn('[HybridTaskRepo] Sync timeout, using local data: $e');
     }
 
     // マージ後の最新データをHiveから再読み込み
@@ -75,10 +75,10 @@ class HybridTaskRepository implements ITaskRepository {
       if (localWins.isNotEmpty || _hasLocalOnly(localTasks, remoteTasks)) {
         await _supabaseRepo.saveTasks(mergedList);
       }
-      debugPrint(
+      appLog.debug(
           '[HybridTaskRepo] Synced: local=${localTasks.length} → merged=${mergedList.length}, localWins=${localWins.length}');
     } catch (e) {
-      debugPrint('[HybridTaskRepo] Sync failed (offline): $e');
+      appLog.warn('[HybridTaskRepo] Sync failed (offline): $e');
     }
   }
 
@@ -101,7 +101,7 @@ class HybridTaskRepository implements ITaskRepository {
 
     // セカンダリ: Supabaseに非同期保存（失敗は無視）
     _supabaseRepo.saveTasks(tasks).catchError((e) {
-      debugPrint('[HybridTaskRepo] Supabase save failed (offline): $e');
+      appLog.warn('[HybridTaskRepo] Supabase save failed (offline): $e');
     });
   }
 

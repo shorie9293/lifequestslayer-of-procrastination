@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 
 /// Supabase上のプレイヤーデータを管理するリポジトリ。
 /// [IPlayerRepository] インターフェースを実装し、JSONBカラムにPlayerを格納する。
@@ -20,7 +20,7 @@ class SupabasePlayerRepository implements IPlayerRepository {
   Future<Player?> loadPlayer() async {
     final userId = _userId;
     if (userId == null) {
-      debugPrint('[SupabasePlayerRepo] loadPlayer skipped: not signed in');
+      appLog.debug('[SupabasePlayerRepo] loadPlayer skipped: not signed in');
       return null;
     }
     try {
@@ -34,7 +34,7 @@ class SupabasePlayerRepository implements IPlayerRepository {
 
       return Player.fromJson(response['data'] as Map<String, dynamic>);
     } catch (e) {
-      debugPrint('[SupabasePlayerRepo] loadPlayer failed: $e');
+      appLog.warn('[SupabasePlayerRepo] loadPlayer failed: $e');
       return null;
     }
   }
@@ -43,7 +43,7 @@ class SupabasePlayerRepository implements IPlayerRepository {
   Future<void> savePlayer(Player player) async {
     final userId = _userId;
     if (userId == null) {
-      debugPrint('[SupabasePlayerRepo] savePlayer skipped: not signed in');
+      appLog.debug('[SupabasePlayerRepo] savePlayer skipped: not signed in');
       return;
     }
     try {
@@ -53,7 +53,7 @@ class SupabasePlayerRepository implements IPlayerRepository {
         'updated_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {
-      debugPrint('[SupabasePlayerRepo] savePlayer failed: $e');
+      appLog.warn('[SupabasePlayerRepo] savePlayer failed: $e');
     }
   }
 

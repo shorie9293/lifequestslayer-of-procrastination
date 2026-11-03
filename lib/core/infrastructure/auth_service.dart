@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 
 /// Google ネイティブ認証 → Supabase セッション確立を担うサービス。
 ///
@@ -51,7 +51,7 @@ class AuthService {
     try {
       await GoogleSignIn.instance.signOut();
     } catch (e) {
-      debugPrint('[AuthService] GoogleSignIn signOut failed: $e');
+      appLog.warn('[AuthService] GoogleSignIn signOut failed: $e');
     }
     await _supabase.auth.signOut();
   }

@@ -32,6 +32,7 @@ import 'package:rpg_todo/features/guild/data/hybrid_task_repository.dart';
 import 'package:rpg_todo/features/shared/data/hybrid_player_repository.dart';
 import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
 import 'package:rpg_todo/core/infrastructure/auth_service.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 
 import 'injection.config.dart';
 
@@ -62,18 +63,18 @@ void configureDependencies() {
                 SupabasePlayerRepository(Supabase.instance.client),
           ));
 
-      debugPrint('[DI] ✅ Supabaseハイブリッドリポジトリに切替完了');
+      appLog.debug('[DI] ✅ Supabaseハイブリッドリポジトリに切替完了');
     } catch (e) {
-      debugPrint('[DI] ⚠️ ハイブリッド切替失敗（Hiveのみ継続）: $e');
+      appLog.warn('[DI] ⚠️ ハイブリッド切替失敗（Hiveのみ継続）: $e');
     }
 
     // Google認証サービス（Supabaseクライアント注入）
     try {
       getIt.registerLazySingleton<AuthService>(
           () => AuthService(Supabase.instance.client));
-      debugPrint('[DI] ✅ AuthService登録完了');
+      appLog.debug('[DI] ✅ AuthService登録完了');
     } catch (e) {
-      debugPrint('[DI] ⚠️ AuthService登録失敗: $e');
+      appLog.warn('[DI] ⚠️ AuthService登録失敗: $e');
     }
   }
 
@@ -149,26 +150,21 @@ Future<void> initializeViewModels() async {
   final playerRepo = getIt<IPlayerRepository>();
 
   try {
-    // ignore: avoid_print
-    print('[DI] Before missions: Lv.${playerVM.player.level}, coins=${playerVM.player.coins}');
+    appLog.debug('[DI] Before missions: Lv.${playerVM.player.level}, coins=${playerVM.player.coins}');
 
     // ★ v1.6: デシリアライズ失敗時は旧データを上書きしない
     if (playerRepo.loadFailedDueToCorruption) {
-      // ignore: avoid_print
-      print('[DI] ⚠️ Player data corruption detected — SKIPPING save to preserve backup data');
+      appLog.warn('[DI] ⚠️ Player data corruption detected — SKIPPING save to preserve backup data');
       // ミッション処理もスキップ（デフォルトPlayerに対して実行する意味がない）
-      // ignore: avoid_print
-      print('[DI] User should see "data recovery needed" message on next UI');
+      appLog.debug('[DI] User should see "data recovery needed" message on next UI');
     } else {
       playerVM.checkAndResetMissions(DateTime.now(), login: true);
-      // ignore: avoid_print
-      print('[DI] After missions: Lv.${playerVM.player.level}, coins=${playerVM.player.coins}');
+      appLog.debug('[DI] After missions: Lv.${playerVM.player.level}, coins=${playerVM.player.coins}');
       await playerVM.save();
-      // ignore: avoid_print
-      print('[DI] Player saved after missions');
+      appLog.debug('[DI] Player saved after missions');
     }
   } catch (e, s) {
-    debugPrint('[DI] missions error: $e\n$s');
+    appLog.warn('[DI] missions error: $e\n$s');
   }
 
   try {
@@ -176,14 +172,14 @@ Future<void> initializeViewModels() async {
       onPause: () async {
         await _safeSave(playerVM, 'player');
         await _safeSave(taskVM, 'task');
-        await townVM.save().catchError((e) => debugPrint('[DI] town save failed: $e'));
+        await townVM.save().catchError((e) => appLog.warn('[DI] town save failed: $e'));
       },
       onResume: () async {
         // フォアグラウンド復帰時にSupabaseから最新データを同期
         await taskVM.load();
         await playerVM.load();
         townVM.initialize();
-        debugPrint('[DI] 🔄 Supabase同期完了 (onResume)');
+        appLog.debug('[DI] 🔄 Supabase同期完了 (onResume)');
       },
     ));
   } catch (_) {}
@@ -191,7 +187,7 @@ Future<void> initializeViewModels() async {
   try {
     taskVM.autoDeployTodaysTasks();
   } catch (e, s) {
-    debugPrint('[DI] autoDeploy error: $e\n$s');
+    appLog.warn('[DI] autoDeploy error: $e\n$s');
   }
 
   // クロスアプリ報酬の処理（起動時に一度だけ・ベストエフォート）
@@ -203,12 +199,12 @@ Future<void> _safeSave(ChangeNotifier vm, String label) async {
     // ★ v1.6: corruption時は旧データを上書きしない
     final repo = getIt<IPlayerRepository>();
     if (repo.loadFailedDueToCorruption) {
-      debugPrint('[DI] Skipping $label save (corruption detected)');
+      appLog.warn('[DI] Skipping $label save (corruption detected)');
       return;
     }
-    await vm.save().catchError((e) => debugPrint('[DI] $label save failed: $e'));
+    await vm.save().catchError((e) => appLog.warn('[DI] $label save failed: $e'));
   } else if (vm is TaskViewModel) {
-    await vm.save().catchError((e) => debugPrint('[DI] $label save failed: $e'));
+    await vm.save().catchError((e) => appLog.warn('[DI] $label save failed: $e'));
   }
 }
 

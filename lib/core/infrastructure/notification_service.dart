@@ -1,10 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest_all.dart' as tzdata;
-import 'package:flutter/foundation.dart';
 
 import 'package:rpg_todo/core/notification/notification_route_resolver.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 
 class NotificationService implements NotificationRouteSource {
   static const _boxName = 'notification_settings';
@@ -73,8 +74,8 @@ class NotificationService implements NotificationRouteSource {
     final deviceOffset = DateTime.now().timeZoneOffset;
     final tzLocalOffset = tz.TZDateTime.now(tz.local).timeZoneOffset;
 
-    debugPrint('[NotificationService] 端末オフセット: $deviceOffset');
-    debugPrint(
+    appLog.debug('[NotificationService] 端末オフセット: $deviceOffset');
+    appLog.debug(
         '[NotificationService] tz.local: ${tz.local.name} (offset: $tzLocalOffset)');
 
     // tz.local が端末の実際のオフセットと一致しない場合、
@@ -82,19 +83,19 @@ class NotificationService implements NotificationRouteSource {
     if (deviceOffset != tzLocalOffset) {
       final correctTzName = _findTimezoneByOffset(deviceOffset);
       if (correctTzName != null) {
-        debugPrint(
+        appLog.debug(
             '[NotificationService] タイムゾーンを上書き: ${tz.local.name} → $correctTzName');
         tz.setLocalLocation(tz.getLocation(correctTzName));
       } else {
-        debugPrint(
+        appLog.debug(
             '[NotificationService] 警告: オフセット $deviceOffset に一致するタイムゾーンが見つかりません');
       }
     } else {
-      debugPrint('[NotificationService] タイムゾーンは正しいです: ${tz.local.name}');
+      appLog.debug('[NotificationService] タイムゾーンは正しいです: ${tz.local.name}');
     }
 
-    debugPrint('[NotificationService] 使用タイムゾーン: ${tz.local.name}');
-    debugPrint('[NotificationService] 現在時刻: ${tz.TZDateTime.now(tz.local)}');
+    appLog.debug('[NotificationService] 使用タイムゾーン: ${tz.local.name}');
+    appLog.debug('[NotificationService] 現在時刻: ${tz.TZDateTime.now(tz.local)}');
 
     const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     const darwin = DarwinInitializationSettings(
@@ -107,7 +108,7 @@ class NotificationService implements NotificationRouteSource {
     await _plugin.initialize(
       settings,
       onDidReceiveNotificationResponse: (response) {
-        debugPrint(
+        appLog.debug(
           '[NotificationService] 通知タップ: id=${response.id}, payload=${response.payload}',
         );
         _dispatchTap(response.payload);
@@ -121,7 +122,7 @@ class NotificationService implements NotificationRouteSource {
       final launchDetails = await _plugin.getNotificationAppLaunchDetails();
       if (launchDetails?.didNotificationLaunchApp ?? false) {
         final response = launchDetails!.notificationResponse;
-        debugPrint(
+        appLog.debug(
           '[NotificationService] 起動経由の通知タップ: id=${response?.id}, payload=${response?.payload}',
         );
         final route = NotificationRouteResolver.resolve(
@@ -134,7 +135,7 @@ class NotificationService implements NotificationRouteSource {
       }
     } catch (e) {
       // プラットフォーム未対応・試練環境等ではスキップ（起動は妨げない）。
-      debugPrint('[NotificationService] 起動経由の通知取得に失敗: $e');
+      appLog.warn('[NotificationService] 起動経由の通知取得に失敗: $e');
     }
 
     // Android 8+ 用に通知チャンネルを明示的に作成
@@ -196,7 +197,7 @@ class NotificationService implements NotificationRouteSource {
       ),
     );
 
-    debugPrint('[NotificationService] 通知チャンネルを作成しました');
+    appLog.debug('[NotificationService] 通知チャンネルを作成しました');
   }
 
   Future<bool> requestPermission() async {
@@ -204,7 +205,7 @@ class NotificationService implements NotificationRouteSource {
         AndroidFlutterLocalNotificationsPlugin>();
     if (android != null) {
       final granted = await android.requestNotificationsPermission();
-      debugPrint('[NotificationService] 通知権限: $granted');
+      appLog.debug('[NotificationService] 通知権限: $granted');
       return granted ?? false;
     }
     final ios = _plugin.resolvePlatformSpecificImplementation<
@@ -294,10 +295,10 @@ class NotificationService implements NotificationRouteSource {
       final canSchedule = await android
           .canScheduleExactNotifications()
           .timeout(const Duration(seconds: 2));
-      debugPrint('[NotificationService] SCHEDULE_EXACT_ALARM 権限: $canSchedule');
+      appLog.debug('[NotificationService] SCHEDULE_EXACT_ALARM 権限: $canSchedule');
       return canSchedule ?? false;
     } catch (e) {
-      debugPrint('[NotificationService] SCHEDULE_EXACT_ALARM 確認エラー: $e');
+      appLog.warn('[NotificationService] SCHEDULE_EXACT_ALARM 確認エラー: $e');
       return false;
     }
   }
@@ -307,10 +308,10 @@ class NotificationService implements NotificationRouteSource {
   Future<AndroidScheduleMode> _getScheduleMode() async {
     final canExact = await canScheduleExactAlarms();
     if (canExact) {
-      debugPrint('[NotificationService] exact モードを使用します');
+      appLog.debug('[NotificationService] exact モードを使用します');
       return AndroidScheduleMode.exactAllowWhileIdle;
     }
-    debugPrint('[NotificationService] inexact モードにフォールバックします');
+    appLog.debug('[NotificationService] inexact モードにフォールバックします');
     return AndroidScheduleMode.inexactAllowWhileIdle;
   }
 
@@ -357,7 +358,7 @@ class NotificationService implements NotificationRouteSource {
       await _plugin.cancel(_eveningId);
     }
 
-    debugPrint('[NotificationService] 通知をスケジュールしました'
+    appLog.debug('[NotificationService] 通知をスケジュールしました'
         '（朝: ${morningEnabled ? "ON" : "OFF"}, 昼: ${noonEnabled ? "ON" : "OFF"}, 夜: ${eveningEnabled ? "ON" : "OFF"}）');
   }
 
@@ -367,7 +368,7 @@ class NotificationService implements NotificationRouteSource {
     await _plugin.cancel(_eveningId);
     await _plugin.cancel(_deadlineReminderId);
     await _plugin.cancel(_testNotificationId);
-    debugPrint('[NotificationService] 全ての通知をキャンセルしました');
+    appLog.debug('[NotificationService] 全ての通知をキャンセルしました');
   }
 
   // --- 締切リマインド（通知ID 200） ---
@@ -404,7 +405,7 @@ class NotificationService implements NotificationRouteSource {
       );
     }
 
-    debugPrint('[NotificationService] 締切リマインドをスケジュール: '
+    appLog.debug('[NotificationService] 締切リマインドをスケジュール: '
         '$hour:$minute → $scheduledDate (mode: $scheduleMode)');
     await _plugin.zonedSchedule(
       _deadlineReminderId,
@@ -432,7 +433,7 @@ class NotificationService implements NotificationRouteSource {
   /// 締切リマインドの予約を取り消す。
   Future<void> cancelDeadlineReminder() async {
     await _plugin.cancel(_deadlineReminderId);
-    debugPrint('[NotificationService] 締切リマインドをキャンセルしました');
+    appLog.debug('[NotificationService] 締切リマインドをキャンセルしました');
   }
 
   // --- 勤行リマインダー（通知ID 100..106 = 曜日1..7） ---
@@ -472,7 +473,7 @@ class NotificationService implements NotificationRouteSource {
         continue;
       }
       final scheduledDate = _nextInstanceOfWeekday(weekday, hour, minute);
-      debugPrint(
+      appLog.debug(
         '[NotificationService] 勤行リマインダーをスケジュール: 曜日=$weekday $hour:$minute → $scheduledDate (mode: $scheduleMode)',
       );
       await _plugin.zonedSchedule(
@@ -505,7 +506,7 @@ class NotificationService implements NotificationRouteSource {
     for (var weekday = 1; weekday <= 7; weekday++) {
       await _plugin.cancel(_practiceReminderBaseId + weekday);
     }
-    debugPrint('[NotificationService] 勤行リマインダーをキャンセルしました');
+    appLog.debug('[NotificationService] 勤行リマインダーをキャンセルしました');
   }
 
   /// 次に来る [weekday]（1=月..7=日）の [hour]:[minute] を返す。
@@ -526,7 +527,7 @@ class NotificationService implements NotificationRouteSource {
   }) async {
     await _plugin.cancel(_morningId);
     final scheduledDate = _nextInstanceOfTime(hour, minute);
-    debugPrint(
+    appLog.debug(
       '[NotificationService] 朝の通知をスケジュール: $hour:$minute → $scheduledDate (mode: $scheduleMode)',
     );
     await _plugin.zonedSchedule(
@@ -559,7 +560,7 @@ class NotificationService implements NotificationRouteSource {
   }) async {
     await _plugin.cancel(_eveningId);
     final scheduledDate = _nextInstanceOfTime(hour, minute);
-    debugPrint(
+    appLog.debug(
       '[NotificationService] 夜の通知をスケジュール: $hour:$minute → $scheduledDate (mode: $scheduleMode)',
     );
     await _plugin.zonedSchedule(
@@ -592,7 +593,7 @@ class NotificationService implements NotificationRouteSource {
   }) async {
     await _plugin.cancel(_noonId);
     final scheduledDate = _nextInstanceOfTime(hour, minute);
-    debugPrint(
+    appLog.debug(
       '[NotificationService] 昼の通知をスケジュール: $hour:$minute → $scheduledDate (mode: $scheduleMode)',
     );
     await _plugin.zonedSchedule(
@@ -626,9 +627,9 @@ class NotificationService implements NotificationRouteSource {
     if (android == null) return;
     try {
       await android.requestNotificationsPermission();
-      debugPrint('[NotificationService] アプリ設定画面を開きました');
+      appLog.debug('[NotificationService] アプリ設定画面を開きました');
     } catch (e) {
-      debugPrint('[NotificationService] アプリ設定画面を開けませんでした: $e');
+      appLog.debug('[NotificationService] アプリ設定画面を開けませんでした: $e');
     }
   }
 
@@ -640,16 +641,16 @@ class NotificationService implements NotificationRouteSource {
     if (android == null) return;
     try {
       await android.requestExactAlarmsPermission();
-      debugPrint('[NotificationService] 正確なアラーム設定画面を開きました');
+      appLog.debug('[NotificationService] 正確なアラーム設定画面を開きました');
     } catch (e) {
-      debugPrint('[NotificationService] 正確なアラーム設定画面を開けませんでした: $e');
+      appLog.debug('[NotificationService] 正確なアラーム設定画面を開けませんでした: $e');
     }
   }
 
   /// テスト通知を即座に送信する。
   /// 通知機能が正しく動作しているか確認するために使用する。
   Future<void> sendTestNotification() async {
-    debugPrint('[NotificationService] テスト通知を送信します');
+    appLog.debug('[NotificationService] テスト通知を送信します');
     await _plugin.show(
       _testNotificationId,
       '🔔 テスト通知',

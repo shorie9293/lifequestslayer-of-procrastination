@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_policy.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 
 /// 自動バックアップの保存先抽象。
 abstract interface class AutoBackupStore {
@@ -102,7 +102,7 @@ class FileAutoBackupStore implements AutoBackupStore {
         final stat = await entity.stat();
         entries.add(AutoBackupEntry(fileName: name, createdAt: stat.modified));
       } catch (e) {
-        debugPrint('[auto_backup] stat 失敗: $name ($e)');
+        appLog.warn('[auto_backup] stat 失敗: $name ($e)');
       }
     }
     return entries;
@@ -123,7 +123,7 @@ class FileAutoBackupStore implements AutoBackupStore {
     try {
       return await file.readAsString();
     } catch (e) {
-      debugPrint('[auto_backup] read 失敗: $fileName ($e)');
+      appLog.warn('[auto_backup] read 失敗: $fileName ($e)');
       return null;
     }
   }

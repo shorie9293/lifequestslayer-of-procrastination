@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_store.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_policy.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_presenter.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_restorer.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 
 /// 自動バックアップ復元の本番アダプタ。
 ///
@@ -53,7 +53,7 @@ class AutoBackupRestorerImpl implements AutoBackupRestorer {
         safetyFileName: safetyFileName,
       );
     } catch (e) {
-      debugPrint('[auto_backup] 復元失敗: $e');
+      appLog.warn('[auto_backup] 復元失敗: $e');
       return AutoBackupRestoreResult(ok: false, message: '復元に失敗しました: $e');
     }
   }

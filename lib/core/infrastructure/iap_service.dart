@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:injectable/injectable.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 
 /// Play Console に登録する商品ID（消耗型）
 const kGemProducts = <String, int>{
@@ -51,7 +52,7 @@ class IAPService extends ChangeNotifier {
     try {
       _iap = InAppPurchase.instance;
     } catch (e) {
-      debugPrint('IAPService: InAppPurchase unavailable (test/unsupported): $e');
+      appLog.warn('IAPService: InAppPurchase unavailable (test/unsupported): $e');
       _available = false;
       _loading = false;
       notifyListeners();
@@ -106,7 +107,7 @@ class IAPService extends ChangeNotifier {
             try {
               await _pendingBox?.put(_kPendingKey, _pendingGems);
             } catch (e) {
-              debugPrint('IAPService: Failed to persist pending gems: $e');
+              appLog.warn('IAPService: Failed to persist pending gems: $e');
               // メモリ上の _pendingGems は保持。次回 consumePendingGems() で付与される
             }
             notifyListeners();

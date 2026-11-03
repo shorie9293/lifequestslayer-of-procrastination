@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 
 /// Supabase上のクエストデータを管理するリポジトリ。
 /// [ITaskRepository] インターフェースを実装し、JSONBカラムにTaskを格納する。
@@ -17,7 +17,7 @@ class SupabaseTaskRepository implements ITaskRepository {
   Future<List<Task>> loadTasks() async {
     final userId = _userId;
     if (userId == null) {
-      debugPrint('[SupabaseTaskRepo] loadTasks skipped: not signed in');
+      appLog.debug('[SupabaseTaskRepo] loadTasks skipped: not signed in');
       return [];
     }
     try {
@@ -30,7 +30,7 @@ class SupabaseTaskRepository implements ITaskRepository {
         return Task.fromJson(row['data'] as Map<String, dynamic>);
       }).toList();
     } catch (e) {
-      debugPrint('[SupabaseTaskRepo] loadTasks failed: $e');
+      appLog.warn('[SupabaseTaskRepo] loadTasks failed: $e');
       return [];
     }
   }
@@ -39,7 +39,7 @@ class SupabaseTaskRepository implements ITaskRepository {
   Future<void> saveTasks(List<Task> tasks) async {
     final userId = _userId;
     if (userId == null) {
-      debugPrint('[SupabaseTaskRepo] saveTasks skipped: not signed in');
+      appLog.debug('[SupabaseTaskRepo] saveTasks skipped: not signed in');
       return;
     }
     try {
@@ -56,7 +56,7 @@ class SupabaseTaskRepository implements ITaskRepository {
         await _client.from('rpg_tasks').delete().eq('id', id);
       }
       if (deletedIds.isNotEmpty) {
-        debugPrint(
+        appLog.debug(
             '[SupabaseTaskRepo] Deleted ${deletedIds.length} removed tasks');
       }
 
@@ -72,7 +72,7 @@ class SupabaseTaskRepository implements ITaskRepository {
         await _client.from('rpg_tasks').upsert(rows);
       }
     } catch (e) {
-      debugPrint('[SupabaseTaskRepo] saveTasks failed: $e');
+      appLog.warn('[SupabaseTaskRepo] saveTasks failed: $e');
     }
   }
 

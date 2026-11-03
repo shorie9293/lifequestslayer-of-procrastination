@@ -1,6 +1,6 @@
-import 'package:flutter/foundation.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 
 /// Hive（ローカル）と Supabase（クラウド）の二重書き込みハイブリッドリポジトリ。
 /// Hiveをプライマリ、Supabaseをセカンダリとする。
@@ -26,7 +26,7 @@ class HybridPlayerRepository implements IPlayerRepository {
     try {
       await _syncFromSupabase(player).timeout(const Duration(seconds: 5));
     } catch (e) {
-      debugPrint('[HybridPlayerRepo] Sync timeout, using local data: $e');
+      appLog.warn('[HybridPlayerRepo] Sync timeout, using local data: $e');
     }
 
     // マージ後の最新データをHiveから再読み込み
@@ -57,10 +57,10 @@ class HybridPlayerRepository implements IPlayerRepository {
       // 採用した方を Hive と Supabase の両方に書き込む（整合を保つ）
       await _hiveRepo.savePlayer(winner);
       await _supabaseRepo.savePlayer(winner);
-      debugPrint(
+      appLog.debug(
           '[HybridPlayerRepo] Synced (Lv.${winner.level}, coins=${winner.coins})');
     } catch (e) {
-      debugPrint('[HybridPlayerRepo] Sync failed (offline): $e');
+      appLog.warn('[HybridPlayerRepo] Sync failed (offline): $e');
     }
   }
 
@@ -75,7 +75,7 @@ class HybridPlayerRepository implements IPlayerRepository {
 
     // セカンダリ: Supabaseに非同期保存（失敗は無視）
     _supabaseRepo.savePlayer(stamped).catchError((e) {
-      debugPrint('[HybridPlayerRepo] Supabase save failed (offline): $e');
+      appLog.warn('[HybridPlayerRepo] Supabase save failed (offline): $e');
     });
   }
 
