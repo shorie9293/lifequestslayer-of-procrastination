@@ -191,6 +191,22 @@ class TaskViewModel extends ChangeNotifier {
     _autoSave();
   }
 
+  /// カレンダー取り込みで生成済みのクエストを登録する。
+  ///
+  /// ID・期限・見積は [CalendarImportService] が決めているため、ここでは
+  /// 敵グラフィックの割当と保存だけを行う。
+  void addImportedTasks(List<Task> imported) {
+    if (imported.isEmpty) return;
+    for (final task in imported) {
+      final enemyEntry = EnemyAssetService.randomEntryForRank(task.rank);
+      task.enemyAssetPath = enemyEntry.assetPath;
+      task.enemyXpMultiplier = enemyEntry.xpMultiplier;
+      _tasks.add(task);
+    }
+    notifyListeners();
+    _autoSave();
+  }
+
   void addTasks(List<String> titles, QuestRank rank) {
     for (final title in titles) {
       final enemyEntry = EnemyAssetService.randomEntryForRank(rank);

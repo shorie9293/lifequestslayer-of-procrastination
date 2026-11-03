@@ -11,7 +11,14 @@
 - 代替案: プロンプトで毎回指示 → 長文化・漏れ・版管理不能で却下。
 - 根拠: `AGENTS.md`, `SPEC.md`, `docs/muse-operations.md`
 
-## 2026-10-xx 永続化は Hive を継続（Isar へ移行しない）
+## 2026-11-03 カレンダー連携は「端末カレンダー読み取り」を第一弾とする
+- 判断: Google Calendar API + OAuth ではなく、Android の CalendarContract を抽象ゲートウェイ越しに読む。
+- 理由: 機密スコープの OAuth は公開アプリで Google の審査が必要（数週間）。端末カレンダーは Google アカウントの予定も端末同期経由で読め、審査不要でオフラインでも動く。
+- 代替案: OAuth API 直結 → 第二弾に保留（サーバ側同期が必要になった時点で再評価）。
+- 制約: Android のみ。`READ_CALENDAR` 権限と Play Console のデータセーフティ申告が必要。書き込みは既存 .ics 共有が担う。
+- 根拠: `lib/features/calendar_link/`, `android/app/src/main/kotlin/com/shorie/lifequest/CalendarBridge.kt`
+
+## 2026-11-03 永続化は Hive を継続（Isar へ移行しない）
 - 判断: 既存の Hive スキーマを維持する。
 - 理由: 評価の結論として移行コストが便益を上回る。
 - 根拠: `docs/hive_to_isar_evaluation.md` 四章

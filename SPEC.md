@@ -67,6 +67,19 @@
 - リリース前は `bash scripts/pre-deploy-check.sh`（analyze＋3シャード）が緑であること。
 
 ## 8. 未実装／既知の制約
-- Google カレンダーとの**双方向連携**は未実装（現状は .ics 書き出しのみ）。
+- Google カレンダーとの連携は**取り込み（読み取り）のみ**。書き込みは .ics 共有（`calendar_export`）が担う。
 - iOS はビルド設定のみで配信対象外（Android が本線）。
 - 同期は last-write-wins。競合解決のUIは無い。
+
+## 9. カレンダー連携（`features/calendar_link`）
+- 目的: 端末カレンダー（Google アカウント同期分を含む）の予定をクエストとして取り込む。
+- 経路: `CalendarImportScreen` → `CalendarGateway`（抽象） → `MethodChannel('com.shorie.lifequest/calendar')` → `CalendarBridge.kt`（CalendarContract 読み取り）。
+- 変換規則（`CalendarImportService`）:
+  - 期間: 今日 / 3日以内 / 7日以内（今日を1日目とする）
+  - 除外: タイトル空・期間外・既存クエストと「題名（正規化）＋日付」が一致・予定同士の重複
+  - 期限: 時刻付き＝開始時刻／終日＝その日 23:59
+  - 見積: 時刻付き＝所要分（5分未満は None）／終日＝None
+  - ランク: 90分以上 S／45分以上 A／それ未満 B
+  - 札: `カレンダー`（出所の識別。重複判定には使わない）
+- 取り込んだクエストは `inGuild`（寄合所に未受注で並ぶ）。勝手に受注しない。
+- 非対応基盤（Web/Desktop/iOS）では `UnsupportedCalendarGateway` が「使えない」を返し、画面は理由を表示する。
