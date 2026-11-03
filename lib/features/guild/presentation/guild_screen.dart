@@ -29,6 +29,7 @@ import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_keys.dart
 import 'package:rpg_todo/features/guild/presentation/quest_streak_keys.dart' as qAppKeys;
 import 'package:rpg_todo/features/guild/presentation/quest_streak_screen.dart';
 import 'package:rpg_todo/features/calendar_export/presentation/calendar_export_screen.dart';
+import 'package:rpg_todo/features/calendar_link/presentation/calendar_import_screen.dart';
 import 'package:rpg_todo/features/undo/domain/undo_buffer.dart';
 import 'package:rpg_todo/features/undo/presentation/undo_snack_bar.dart';
 import 'package:rpg_todo/core/di/injection.dart';
@@ -836,6 +837,15 @@ class _GuildScreenState extends State<GuildScreen> {
                       ),
                     ),
                   );
+                case 'calendar_import':
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CalendarImportScreen(
+                        tasksOverride: taskVM.guildTasks,
+                        onImport: taskVM.addImportedTasks,
+                      ),
+                    ),
+                  );
               }
             },
             itemBuilder: (context) => [
@@ -968,6 +978,22 @@ class _GuildScreenState extends State<GuildScreen> {
                       Icon(Icons.event_available, color: Colors.black54),
                       SizedBox(width: 8),
                       Text('カレンダー書き出し'),
+                    ],
+                  ),
+                ),
+              ),
+              PopupMenuItem(
+                value: 'calendar_import',
+                key: AppKeys.guildCalendarImportEntry,
+                child: SemanticHelper.interactive(
+                  testId: SemanticHelper.createTestId(
+                      SemanticTypes.button, 'calendar_import'),
+                  label: 'カレンダーから取り込む',
+                  child: Row(
+                    children: const [
+                      Icon(Icons.event_note, color: Colors.black54),
+                      SizedBox(width: 8),
+                      Text('カレンダーから取り込む'),
                     ],
                   ),
                 ),

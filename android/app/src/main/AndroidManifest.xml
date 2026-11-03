@@ -8,6 +8,8 @@
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- カレンダー連携: 端末カレンダーの予定をクエストとして取り込む（読み取りのみ） -->
+    <uses-permission android:name="android.permission.READ_CALENDAR"/>
     <application
         android:label="LifeQuest"
         android:name="${applicationName}"

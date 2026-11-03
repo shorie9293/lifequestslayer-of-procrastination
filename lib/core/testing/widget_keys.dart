@@ -289,6 +289,9 @@ class AppKeys {
   // ━━━ クエスト期限のカレンダー書き出し (.ics) ━━━
   static const Key guildCalendarExportEntry = Key('btn_guild_calendar_export');
 
+  // ━━━ カレンダーから取り込み（Google カレンダー連携） ━━━
+  static const Key guildCalendarImportEntry = Key('btn_guild_calendar_import');
+
   // ━━━ 職業チップ＋スキルプルダウン ━━━
   static const Key guildJobChip = Key('chip_guild_job');
   static Key guildJobSkillItem(JobSkill skill) =>
