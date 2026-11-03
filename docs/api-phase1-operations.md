@@ -23,7 +23,9 @@ WHERE table_schema = 'public' AND table_name = 'api_tokens';
 ### 1-2. 関数のデプロイ
 ```bash
 cd ~/Takamagahara/utsushiyo/rpg-task
-supabase functions deploy api --project-ref kxklkgxpjwddufjccvoj
+# --no-verify-jwt は必須。`lq_...` は Supabase JWT ではないため、
+# 既定のJWT検証だと関数に到達せず全リクエストが401になる。
+supabase functions deploy api --project-ref kxklkgxpjwddufjccvoj --no-verify-jwt
 ```
 `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` は Edge Functions の既定シークレットとして自動注入される（追加設定不要）。
 
