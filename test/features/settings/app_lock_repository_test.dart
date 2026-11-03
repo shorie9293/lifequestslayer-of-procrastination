@@ -1,7 +1,5 @@
-import 'dart:convert';
 import 'dart:io';
 
-import 'package:crypto/crypto.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
 import 'package:rpg_todo/core/infrastructure/app_lock_repository.dart';
@@ -21,11 +19,12 @@ void main() {
       expect(repo.verifyPasscode('0000'), isFalse);
     });
 
-    test('パスコードは salt rpg-app-lock: + sha256 で保存される', () async {
+    test('パスコードは v2 形式（反復ハッシュ + ランダムsalt）で保存される', () async {
       await repo.setPasscode('1234');
-      final expected =
-          sha256.convert(utf8.encode('rpg-app-lock:1234')).toString();
-      expect(repo.getPasscodeHash(), expected);
+      expect(
+        repo.getPasscodeHash(),
+        matches(RegExp(r'^v2:1200:[0-9a-f]{32}:[0-9a-f]{64}$')),
+      );
       expect(repo.verifyPasscode('1234'), isTrue);
       expect(repo.verifyPasscode('1235'), isFalse);
     });
@@ -68,8 +67,25 @@ void main() {
       await repo.setPasscode('9876');
       expect(repo.verifyPasscode('9876'), isTrue);
       expect(repo.verifyPasscode('9875'), isFalse);
-      expect(repo.getPasscodeHash(),
-          sha256.convert(utf8.encode('rpg-app-lock:9876')).toString());
+      expect(
+        repo.getPasscodeHash(),
+        matches(RegExp(r'^v2:1200:[0-9a-f]{32}:[0-9a-f]{64}$')),
+      );
+    });
+
+    test('試行回数・ロックアウト・猶予の往復', () async {
+      final until = DateTime(2026, 1, 1, 9, 0, 30);
+      await repo.setRelockGraceSeconds(60);
+      await repo.setFailedAttempts(7);
+      await repo.setLockedUntil(until);
+      expect(repo.getRelockGraceSeconds(), 60);
+      expect(repo.getFailedAttempts(), 7);
+      expect(repo.getLockedUntil(), until);
+
+      await repo.resetAttempts();
+      expect(repo.getFailedAttempts(), 0);
+      expect(repo.getLockedUntil(), isNull);
+      expect(repo.getRelockGraceSeconds(), 60);
     });
 
     test('enabled / method 往復', () async {

@@ -72,4 +72,25 @@ void main() {
     expect(repo.isEnabled(), isFalse);
     expect(repo.getPasscodeHash(), isNull);
   });
+
+  testWidgets('有効時: 復帰時再施錠の猶予を選択して永続化できる', (tester) async {
+    await pumpScreen(tester);
+    await tester.enterText(find.byKey(AppKeys.appLockPasscodeField), '1234');
+    await tester.enterText(
+        find.byKey(AppKeys.appLockConfirmPasscodeField), '1234');
+    await tester.tap(find.byKey(AppKeys.appLockEnableButton));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(AppKeys.appLockGraceDropdown), findsOneWidget);
+    // 既定は「即時」（0秒）
+    expect(repo.getRelockGraceSeconds(), 0);
+
+    await tester.tap(find.byKey(AppKeys.appLockGraceDropdown));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('復帰時に再施錠: 1分').last);
+    await tester.pumpAndSettle();
+
+    expect(repo.getRelockGraceSeconds(), 60);
+    expect(find.text('復帰時に再施錠: 1分'), findsOneWidget);
+  });
 }
