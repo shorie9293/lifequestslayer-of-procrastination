@@ -4,6 +4,8 @@ import 'package:uuid/uuid.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
+import 'package:rpg_todo/domain/repositories/i_task_deletion_repository.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 import 'package:rpg_todo/features/shared/domain/task_completion_service.dart';
 import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
 import 'package:rpg_todo/core/utils/date_utils.dart';
@@ -262,6 +264,13 @@ class TaskViewModel extends ChangeNotifier {
   void deleteTask(String id) {
     _tasks.removeWhere((t) => t.id == id);
     notifyListeners();
+    // 差分削除は廃止したため、クラウド側の削除は明示的に伝える。
+    final repo = _taskRepository;
+    if (repo is ITaskDeletionRepository) {
+      (repo as ITaskDeletionRepository).deleteTasks(<String>[id]).catchError((Object e) {
+        appLog.warn('[TaskVM] deleteTasks failed: $e');
+      });
+    }
     _autoSave();
   }
 
