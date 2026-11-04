@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:rpg_todo/core/input/guarded_dialog.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/core/haptics.dart';
 import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
@@ -112,7 +113,14 @@ class _JobSkillChip extends StatelessWidget {
           MaterialPageRoute(builder: (_) => const TempleScreen()),
         );
       case JobSkillActionKind.openCreateTaskDialog:
-        showDialog(context: context, builder: (_) => const CreateTaskDialog());
+        {
+          final key = GlobalKey<CreateTaskDialogState>();
+          showGuardedDialog<void>(
+            context: context,
+            isDirty: () => key.currentState?.isDirty ?? false,
+            builder: (_) => CreateTaskDialog(key: key),
+          );
+        }
       case JobSkillActionKind.passiveAlwaysOn:
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('${skill.displayName}: ${skill.description}（常時効果中）')),
@@ -221,13 +229,20 @@ class _GuildScreenState extends State<GuildScreen> {
 
   Color _getRankColor(QuestRank rank) => RankColors.forRank(rank);
 
+  /// 入力途中の長文を誤タップ・戻る操作で失わないよう、確認付きで開く。
+  Future<void> _openGuardedTaskDialog(BuildContext context, {Task? task}) {
+    final key = GlobalKey<CreateTaskDialogState>();
+    return showGuardedDialog<void>(
+      context: context,
+      isDirty: () => key.currentState?.isDirty ?? false,
+      builder: (_) => CreateTaskDialog(key: key, task: task),
+    );
+  }
+
   void _showCreateTaskDialog(BuildContext context) {
     if (_isDialogOpen) return;
     _isDialogOpen = true;
-    showDialog(
-      context: context,
-      builder: (context) => const CreateTaskDialog(),
-    ).then((_) => _isDialogOpen = false);
+    _openGuardedTaskDialog(context).then((_) => _isDialogOpen = false);
   }
 
   Future<void> _showOracleLinkDialog(BuildContext context) async {
@@ -306,10 +321,8 @@ class _GuildScreenState extends State<GuildScreen> {
   void _showEditTaskDialog(BuildContext context, Task task) {
     if (_isDialogOpen) return;
     _isDialogOpen = true;
-    showDialog(
-      context: context,
-      builder: (context) => CreateTaskDialog(task: task),
-    ).then((_) => _isDialogOpen = false);
+    _openGuardedTaskDialog(context, task: task)
+        .then((_) => _isDialogOpen = false);
   }
 
   /// 微睡みの加護: 確認ダイアログ → 期限を1日延ばす（Monk Lv5 解放時のみ導線が出る）。
@@ -730,7 +743,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.62+158", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.63+159", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [

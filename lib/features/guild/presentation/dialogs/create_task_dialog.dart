@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rpg_todo/core/input/unsaved_changes.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/domain/difficulty_estimator.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
@@ -16,10 +17,19 @@ class CreateTaskDialog extends StatefulWidget {
   const CreateTaskDialog({super.key, this.task});
 
   @override
-  State<CreateTaskDialog> createState() => _CreateTaskDialogState();
+  State<CreateTaskDialog> createState() => CreateTaskDialogState();
 }
 
-class _CreateTaskDialogState extends State<CreateTaskDialog> {
+/// ダイアログの状態（破棄確認のため、未保存の変更を外から問い合わせられる）。
+class CreateTaskDialogState extends State<CreateTaskDialog> {
+  late final String _initialTitle;
+  late final String _initialTargetTime;
+  late final DateTime? _initialDeadline;
+  late final QuestRank _initialRank;
+  late final RepeatInterval _initialRepeat;
+  late final List<int> _initialWeekdays;
+  late final List<String> _initialSubTasks;
+  late final String? _initialProject;
   late final TextEditingController _titleController;
   late QuestRank _selectedRank;
   late RepeatInterval _selectedRepeat;
@@ -52,6 +62,15 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     _targetTimeController =
         TextEditingController(text: t?.targetTimeMinutes?.toString() ?? "");
     _deadline = t?.deadline;
+    _initialTitle = _titleController.text;
+    _initialTargetTime = _targetTimeController.text;
+    _initialDeadline = _deadline;
+    _initialRank = _selectedRank;
+    _initialRepeat = _selectedRepeat;
+    _initialWeekdays = List<int>.from(_selectedWeekdays);
+    _initialSubTasks =
+        _subTasks.map((s) => '${s.title}\u0000${s.isCompleted}').toList();
+    _initialProject = _selectedProject;
     _updateEstimate();
     _titleController.addListener(_updateEstimate);
   }
@@ -66,6 +85,40 @@ class _CreateTaskDialogState extends State<CreateTaskDialog> {
     setState(() {
       _estimatedMinutes = taskVM.estimateMinutes(title, _selectedRank);
     });
+  }
+
+  /// 未保存の変更があるか（空白差のみは未変更）。
+  ///
+  /// 誤タップ・戻る操作で長文が黙って消えるのを防ぐため、閉じる前に問い合わせる。
+  bool get isDirty {
+    if (UnsavedChangesGuard.isDirty(_initialTitle, _titleController.text)) {
+      return true;
+    }
+    if (UnsavedChangesGuard.isDirty(
+        _initialTargetTime, _targetTimeController.text)) {
+      return true;
+    }
+    if (_initialDeadline != _deadline) return true;
+    if (_initialRank != _selectedRank) return true;
+    if (_initialRepeat != _selectedRepeat) return true;
+    if (_initialProject != _selectedProject) return true;
+    if (!_sameInts(_initialWeekdays, _selectedWeekdays)) return true;
+    final currentSubTasks = _subTasks
+        .map((s) => '${s.title}\u0000${s.isCompleted}')
+        .toList();
+    if (currentSubTasks.length != _initialSubTasks.length) return true;
+    for (var i = 0; i < currentSubTasks.length; i++) {
+      if (currentSubTasks[i] != _initialSubTasks[i]) return true;
+    }
+    return false;
+  }
+
+  static bool _sameInts(List<int> a, List<int> b) {
+    if (a.length != b.length) return false;
+    for (var i = 0; i < a.length; i++) {
+      if (a[i] != b[i]) return false;
+    }
+    return true;
   }
 
   @override
