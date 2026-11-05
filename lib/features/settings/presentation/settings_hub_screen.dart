@@ -9,8 +9,10 @@ import 'package:rpg_todo/features/about/presentation/about_screen.dart';
 import 'package:rpg_todo/features/account_deletion/presentation/account_deletion_app_keys.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_restorer_impl.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_sharer_impl.dart';
+import 'package:rpg_todo/features/auto_backup/data/auto_backup_status_store.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_store.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_policy.dart';
+import 'package:rpg_todo/features/auto_backup/domain/auto_backup_status.dart';
 import 'package:rpg_todo/features/auto_backup/presentation/auto_backup_app_keys.dart';
 import 'package:rpg_todo/features/auto_backup/presentation/auto_backup_screen.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
@@ -69,6 +71,7 @@ void _openAutoBackup(BuildContext context) {
         store: store,
         restorer: restorer,
         sharer: const AutoBackupSharerImpl(),
+        statusStore: FileAutoBackupStatusStore(),
         onBackupNow: () async {
           final json = await buildCurrentJson();
           await store.write(
@@ -89,6 +92,7 @@ class SettingsHubScreen extends StatelessWidget {
     this.streakFreezeScreenBuilder,
     this.reflectionGroveScreenBuilder,
     this.accountDeletionScreenBuilder,
+    this.autoBackupStatusStore,
   });
 
   final WidgetBuilder? reminderScreenBuilder;
@@ -105,6 +109,33 @@ class SettingsHubScreen extends StatelessWidget {
   /// 認証基盤の無い環境での誤操作防止を兼ねる。本番は town_screen から
   /// `buildProductionAccountDeletionScreen` を渡す。
   final WidgetBuilder? accountDeletionScreenBuilder;
+
+  /// 自動バックアップの成否の読み出し元。
+  ///
+  /// 未指定なら従来どおりの説明文のみ（後方互換）。指定すると、連続失敗が
+  /// 閾値以上なら警告文言と警告アイコンに切り替える。
+  final AutoBackupStatusStore? autoBackupStatusStore;
+
+  /// 自動バックアップの導線1行。
+  ///
+  /// [autoBackupStatusStore] 未注入なら従来の説明文のみ（後方互換）、
+  /// 注入時は連続失敗を読み出して警告文言へ切り替える。
+  Widget _autoBackupTile(BuildContext context) {
+    final store = autoBackupStatusStore;
+    if (store == null) {
+      return ListTile(
+        key: AutoBackupKeys.entryFromSettings,
+        title: const Text('自動バックアップ'),
+        subtitle: const Text('保存済みバックアップの閲覧・復元・共有'),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: () => _openAutoBackup(context),
+      );
+    }
+    return _AutoBackupStatusTile(
+      statusStore: store,
+      onTap: () => _openAutoBackup(context),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -226,13 +257,7 @@ class SettingsHubScreen extends StatelessWidget {
             ),
           ),
           // 末尾追加: 自動バックアップの閲覧・復元・共有
-          ListTile(
-            key: AutoBackupKeys.entryFromSettings,
-            title: const Text('自動バックアップ'),
-            subtitle: const Text('保存済みバックアップの閲覧・復元・共有'),
-            trailing: const Icon(Icons.chevron_right),
-            onTap: () => _openAutoBackup(context),
-          ),
+          _autoBackupTile(context),
           // 末尾追加: アカウント削除（退会）。ビルダー未注入なら導線を出さない。
           if (accountDeletionScreenBuilder != null)
             ListTile(
@@ -250,6 +275,67 @@ class SettingsHubScreen extends StatelessWidget {
           const CrashReportTile(),
         ],
       ),
+    );
+  }
+}
+
+/// 自動バックアップの状態を読み出して導線を組み立てる小さな器。
+///
+/// 設定ハブ自体は StatelessWidget のままにし、非同期の読み出しだけを
+/// この子へ閉じ込める。連続失敗が閾値以上なら警告文言＋警告アイコン。
+class _AutoBackupStatusTile extends StatefulWidget {
+  const _AutoBackupStatusTile({
+    required this.statusStore,
+    required this.onTap,
+  });
+
+  final AutoBackupStatusStore statusStore;
+  final VoidCallback onTap;
+
+  @override
+  State<_AutoBackupStatusTile> createState() => _AutoBackupStatusTileState();
+}
+
+class _AutoBackupStatusTileState extends State<_AutoBackupStatusTile> {
+  AutoBackupStatus? _status;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    AutoBackupStatus? status;
+    try {
+      status = await widget.statusStore.read();
+    } catch (_) {
+      status = null;
+    }
+    if (!mounted) return;
+    setState(() => _status = status);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final degraded = _status?.isDegraded == true;
+    return ListTile(
+      key: AutoBackupKeys.entryFromSettings,
+      leading: degraded
+          ? Icon(
+              Icons.warning_amber_outlined,
+              color: Theme.of(context).colorScheme.error,
+            )
+          : null,
+      title: const Text('自動バックアップ'),
+      subtitle: Text(
+        degraded
+            ? '自動バックアップに失敗しています'
+                '（${_status!.consecutiveFailures}回連続）'
+            : '保存済みバックアップの閲覧・復元・共有',
+      ),
+      trailing: const Icon(Icons.chevron_right),
+      onTap: widget.onTap,
     );
   }
 }

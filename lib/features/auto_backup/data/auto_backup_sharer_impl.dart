@@ -16,9 +16,11 @@ class AutoBackupSharerImpl implements AutoBackupSharer {
     final safeName = fileName.isEmpty ? 'auto_backup.json' : fileName;
     final file = File('${dir.path}${Platform.pathSeparator}$safeName');
     await file.writeAsString(json, flush: true);
-    await Share.shareXFiles(
-      [XFile(file.path)],
-      text: 'RPG Task バックアップ $safeName',
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(file.path)],
+        text: 'RPG Task バックアップ $safeName',
+      ),
     );
   }
 }

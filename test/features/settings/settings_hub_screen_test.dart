@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/auto_backup/data/auto_backup_status_store.dart';
+import 'package:rpg_todo/features/auto_backup/domain/auto_backup_status.dart';
+import 'package:rpg_todo/features/auto_backup/presentation/auto_backup_app_keys.dart';
 import 'package:rpg_todo/features/settings/presentation/settings_hub_screen.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
@@ -126,4 +129,77 @@ void main() {
 
     expect(find.byKey(const Key('dummy_reminder')), findsOneWidget);
   });
+
+  group('自動バックアップ失敗の可視化', () {
+    testWidgets('statusStore 未注入なら従来の説明文（後方互換）', (tester) async {
+      await tester.pumpWidget(wrap(const SettingsHubScreen()));
+      await tester.pump();
+
+      expect(find.byKey(AutoBackupKeys.entryFromSettings), findsOneWidget);
+      expect(find.text('保存済みバックアップの閲覧・復元・共有'), findsOneWidget);
+      expect(find.textContaining('自動バックアップに失敗しています'), findsNothing);
+    });
+
+    testWidgets('連続失敗が閾値未満なら通常の説明文', (tester) async {
+      final statusStore = InMemoryAutoBackupStatusStore(
+        AutoBackupStatus.initial.recordFailure(
+          DateTime(2026, 10, 29, 7, 12),
+          StateError('1回だけ失敗'),
+        ),
+      );
+      await tester.pumpWidget(wrap(SettingsHubScreen(
+        autoBackupStatusStore: statusStore,
+      )));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.text('保存済みバックアップの閲覧・復元・共有'), findsOneWidget);
+      expect(find.textContaining('失敗しています'), findsNothing);
+    });
+
+    testWidgets('連続失敗が閾値以上なら警告文言と警告アイコン', (tester) async {
+      var status = AutoBackupStatus.initial;
+      for (var i = 0; i < AutoBackupStatus.degradedThreshold; i++) {
+        status = status.recordFailure(
+          DateTime(2026, 10, 29, 7, 12).add(Duration(hours: i)),
+          StateError('失敗$i'),
+        );
+      }
+      final statusStore = InMemoryAutoBackupStatusStore(status);
+      await tester.pumpWidget(wrap(SettingsHubScreen(
+        autoBackupStatusStore: statusStore,
+      )));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(
+        find.textContaining('自動バックアップに失敗しています'),
+        findsOneWidget,
+      );
+      expect(
+        find.textContaining('${AutoBackupStatus.degradedThreshold}回連続'),
+        findsOneWidget,
+      );
+      expect(find.byIcon(Icons.warning_amber_outlined), findsOneWidget);
+    });
+
+    testWidgets('状態の読み出しが例外でも設定ハブは壊れない', (tester) async {
+      await tester.pumpWidget(wrap(SettingsHubScreen(
+        autoBackupStatusStore: _ThrowingStatusStore(),
+      )));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.byKey(AutoBackupKeys.entryFromSettings), findsOneWidget);
+      expect(find.text('保存済みバックアップの閲覧・復元・共有'), findsOneWidget);
+    });
+  });
+}
+
+class _ThrowingStatusStore implements AutoBackupStatusStore {
+  @override
+  Future<AutoBackupStatus?> read() async => throw StateError('読めない');
+
+  @override
+  Future<void> write(AutoBackupStatus status) async {}
 }

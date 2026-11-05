@@ -1,4 +1,5 @@
 import 'package:flutter/widgets.dart';
+import 'package:rpg_todo/core/testing/widget_keys.dart';
 
 /// 自動バックアップ画面の Key 集約。
 class AutoBackupKeys {
@@ -12,6 +13,15 @@ class AutoBackupKeys {
   static const Key confirmRestoreButton = Key('btn_auto_backup_restore_confirm');
   static const Key cancelRestoreButton = Key('btn_auto_backup_restore_cancel');
   static const Key confirmDialog = Key('dlg_auto_backup_restore');
+
+  /// 最終成功時刻の表示（正本は [AppKeys]）。
+  static const Key lastSuccess = AppKeys.autoBackupLastSuccess;
+
+  /// 失敗バナー（正本は [AppKeys]）。
+  static const Key failureBanner = AppKeys.autoBackupFailureBanner;
+
+  /// バナー内の再試行ボタン（正本は [AppKeys]）。
+  static const Key retryButton = AppKeys.autoBackupRetry;
 
   /// 一覧行（[index] は新しい順）。
   static Key row(int index) => Key('tile_auto_backup_$index');

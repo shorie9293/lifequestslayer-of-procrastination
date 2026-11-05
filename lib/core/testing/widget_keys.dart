@@ -109,6 +109,11 @@ class AppKeys {
   static const Key templeRestoreButton = Key('btn_temple_restore');
   static const Key templeCsvExportButton = Key('btn_temple_csv_export');
 
+  // ━━━ 自動バックアップの状態表示（失敗の可視化） ━━━
+  static const Key autoBackupLastSuccess = Key('txt_auto_backup_last_success');
+  static const Key autoBackupFailureBanner = Key('banner_auto_backup_failure');
+  static const Key autoBackupRetry = Key('btn_auto_backup_retry');
+
   // ━━━ 街 ━━━
   static const Key townScreen = Key('screen_town');
   static const Key townCoinBalance = Key('txt_coin_balance');

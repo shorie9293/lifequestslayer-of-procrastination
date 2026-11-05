@@ -1,9 +1,11 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rpg_todo/features/auto_backup/data/auto_backup_status_store.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_store.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_policy.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_service.dart';
+import 'package:rpg_todo/features/auto_backup/domain/auto_backup_status.dart';
 
 void main() {
   late DateTime clock;
@@ -116,6 +118,100 @@ void main() {
     expect(await store.read('manual_backup.json'), '{"manual":true}');
   });
 
+  group('状態の記録（失敗の可視化）', () {
+    late InMemoryAutoBackupStatusStore statusStore;
+
+    setUp(() {
+      statusStore = InMemoryAutoBackupStatusStore();
+    });
+
+    AutoBackupService buildWithStatus() => AutoBackupService(
+          store: store,
+          now: () => clock,
+          statusStore: statusStore,
+        );
+
+    test('成功を状態へ記録する', () async {
+      final result = await buildWithStatus().run(buildJsonOk);
+      expect(result.ran, isTrue);
+      expect(result.error, isNull);
+
+      final status = await statusStore.read();
+      expect(status, isNotNull);
+      expect(status!.lastSuccessAt, clock);
+      expect(status.lastAttemptAt, clock);
+      expect(status.consecutiveFailures, 0);
+      expect(status.hasFailed, isFalse);
+    });
+
+    test('失敗を理由つきで状態へ記録する', () async {
+      final result = await buildWithStatus()
+          .run(() async => throw StateError('壊れた'));
+      expect(result.ran, isFalse);
+
+      final status = await statusStore.read();
+      expect(status!.consecutiveFailures, 1);
+      expect(status.hasFailed, isTrue);
+      expect(status.lastError, contains('壊れた'));
+      expect(status.lastSuccessAt, isNull);
+    });
+
+    test('失敗が続くと連続回数が積み上がり劣化判定に達する', () async {
+      final service = buildWithStatus();
+      for (var i = 0; i < AutoBackupStatus.degradedThreshold; i++) {
+        await service.run(() async => throw StateError('失敗$i'));
+        clock = clock.add(const Duration(hours: 1));
+      }
+
+      final status = await statusStore.read();
+      expect(status!.consecutiveFailures, AutoBackupStatus.degradedThreshold);
+      expect(status.isDegraded, isTrue);
+    });
+
+    test('成功で連続失敗が0へ戻る', () async {
+      final service = buildWithStatus();
+      await service.run(() async => throw StateError('1回目'));
+      clock = clock.add(const Duration(hours: 1));
+      final result = await service.run(buildJsonOk);
+      expect(result.ran, isTrue);
+
+      final status = await statusStore.read();
+      expect(status!.consecutiveFailures, 0);
+      expect(status.hasFailed, isFalse);
+      expect(status.lastSuccessAt, clock);
+    });
+
+    test('スキップ時は状態を書き換えない', () async {
+      await buildWithStatus().run(buildJsonOk);
+      final before = await statusStore.read();
+
+      clock = clock.add(const Duration(hours: 1));
+      final result = await buildWithStatus().run(buildJsonOk);
+      expect(result.ran, isFalse);
+
+      final after = await statusStore.read();
+      expect(after!.lastSuccessAt, before!.lastSuccessAt);
+      expect(after.consecutiveFailures, 0);
+    });
+
+    test('状態の保存が失敗しても本体は成功する', () async {
+      final service = AutoBackupService(
+        store: store,
+        now: () => clock,
+        statusStore: _ThrowingStatusStore(),
+      );
+      final result = await service.run(buildJsonOk);
+      expect(result.ran, isTrue);
+      expect(result.error, isNull);
+      expect((await store.list()).length, 1);
+    });
+
+    test('loadStatus は記録先が無ければ null', () async {
+      expect(await buildService().loadStatus(), isNull);
+      expect(await buildWithStatus().loadStatus(), isNull);
+    });
+  });
+
   group('FileAutoBackupStore', () {
     late Directory tmp;
 
@@ -167,6 +263,16 @@ void main() {
       );
     });
   });
+}
+
+/// 読み書きが必ず失敗する状態ストア（本体を巻き込まないことの確認用）。
+class _ThrowingStatusStore implements AutoBackupStatusStore {
+  @override
+  Future<AutoBackupStatus?> read() async => throw StateError('読めない');
+
+  @override
+  Future<void> write(AutoBackupStatus status) async =>
+      throw StateError('書けない');
 }
 
 class _ThrowingStore implements AutoBackupStore {

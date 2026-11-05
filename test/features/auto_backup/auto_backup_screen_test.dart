@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rpg_todo/features/auto_backup/data/auto_backup_status_store.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_store.dart';
+import 'package:rpg_todo/features/auto_backup/domain/auto_backup_status.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_restorer.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_sharer.dart';
 import 'package:rpg_todo/features/auto_backup/presentation/auto_backup_app_keys.dart';
@@ -48,6 +50,7 @@ void main() {
     AutoBackupRestorer? restorer,
     AutoBackupSharer? sharer,
     Future<void> Function()? onBackupNow,
+    AutoBackupStatusStore? statusStore,
   }) async {
     await tester.pumpWidget(MaterialApp(
       home: AutoBackupScreen(
@@ -55,6 +58,7 @@ void main() {
         restorer: restorer,
         sharer: sharer,
         onBackupNow: onBackupNow,
+        statusStore: statusStore,
         now: () => clock,
       ),
     ));
@@ -175,4 +179,115 @@ void main() {
     expect(calls, 1);
     expect(find.text('auto_backup_20261030.json'), findsOneWidget);
   });
+
+  group('失敗の可視化', () {
+    testWidgets('statusStore 未注入なら状態表示を出さない（後方互換）', (tester) async {
+      await pumpScreen(tester);
+
+      expect(find.byKey(AutoBackupKeys.lastSuccess), findsNothing);
+      expect(find.byKey(AutoBackupKeys.failureBanner), findsNothing);
+    });
+
+    testWidgets('成功済みなら最終成功の1行を出す', (tester) async {
+      final statusStore = InMemoryAutoBackupStatusStore(
+        AutoBackupStatus.initial.recordSuccess(DateTime(2026, 10, 29, 7, 12)),
+      );
+      await pumpScreen(tester, statusStore: statusStore);
+
+      expect(find.byKey(AutoBackupKeys.lastSuccess), findsOneWidget);
+      expect(find.textContaining('最終成功'), findsOneWidget);
+      expect(find.byKey(AutoBackupKeys.failureBanner), findsNothing);
+    });
+
+    testWidgets('失敗時は理由つきバナーと最終成功を併記する', (tester) async {
+      final statusStore = InMemoryAutoBackupStatusStore(
+        AutoBackupStatus.initial
+            .recordSuccess(DateTime(2026, 10, 27, 7, 12))
+            .recordFailure(DateTime(2026, 10, 29, 7, 12), StateError('保存先が読めない')),
+      );
+      await pumpScreen(tester, statusStore: statusStore);
+
+      expect(find.byKey(AutoBackupKeys.failureBanner), findsOneWidget);
+      expect(find.textContaining('自動バックアップに失敗しています'), findsOneWidget);
+      expect(find.textContaining('保存先が読めない'), findsOneWidget);
+      // 最終成功は失敗後も保持される
+      expect(find.byKey(AutoBackupKeys.lastSuccess), findsOneWidget);
+    });
+
+    testWidgets('未試行かつバックアップ0件なら空状態文言を出す', (tester) async {
+      final emptyStore = InMemoryAutoBackupStore(now: () => clock);
+      final statusStore = InMemoryAutoBackupStatusStore(AutoBackupStatus.initial);
+      await tester.pumpWidget(MaterialApp(
+        home: AutoBackupScreen(
+          store: emptyStore,
+          statusStore: statusStore,
+          now: () => clock,
+        ),
+      ));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.byKey(AutoBackupKeys.empty), findsOneWidget);
+      expect(find.byKey(AutoBackupKeys.failureBanner), findsNothing);
+    });
+
+    testWidgets('未試行だが失敗扱いなら空状態文言を出さない', (tester) async {
+      final emptyStore = InMemoryAutoBackupStore(now: () => clock);
+      final statusStore = InMemoryAutoBackupStatusStore(
+        AutoBackupStatus.initial
+            .recordFailure(DateTime(2026, 10, 29, 7, 12), StateError('初回から失敗')),
+      );
+      await tester.pumpWidget(MaterialApp(
+        home: AutoBackupScreen(
+          store: emptyStore,
+          statusStore: statusStore,
+          now: () => clock,
+        ),
+      ));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.byKey(AutoBackupKeys.empty), findsNothing);
+      expect(find.byKey(AutoBackupKeys.failureBanner), findsOneWidget);
+    });
+
+    testWidgets('バナーの再試行ボタンで実行し状態が更新される', (tester) async {
+      final statusStore = InMemoryAutoBackupStatusStore(
+        AutoBackupStatus.initial
+            .recordFailure(DateTime(2026, 10, 28, 7, 12), StateError('前回失敗')),
+      );
+      var calls = 0;
+      await pumpScreen(tester, statusStore: statusStore, onBackupNow: () async {
+        calls++;
+        await statusStore.write(
+          AutoBackupStatus.initial.recordSuccess(DateTime(2026, 10, 29, 7, 12)),
+        );
+      });
+
+      expect(find.byKey(AutoBackupKeys.failureBanner), findsOneWidget);
+      await tester.tap(find.byKey(AutoBackupKeys.retryButton));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(calls, 1);
+      expect(find.byKey(AutoBackupKeys.failureBanner), findsNothing);
+      expect(find.byKey(AutoBackupKeys.lastSuccess), findsOneWidget);
+    });
+
+    testWidgets('状態の読み出しが例外でも画面は壊れない', (tester) async {
+      await pumpScreen(tester, statusStore: _ThrowingStatusStore());
+
+      expect(find.byKey(AutoBackupKeys.list), findsOneWidget);
+      expect(find.byKey(AutoBackupKeys.failureBanner), findsNothing);
+      expect(find.text('auto_backup_20261029.json'), findsOneWidget);
+    });
+  });
+}
+
+class _ThrowingStatusStore implements AutoBackupStatusStore {
+  @override
+  Future<AutoBackupStatus?> read() async => throw StateError('読めない');
+
+  @override
+  Future<void> write(AutoBackupStatus status) async {}
 }
