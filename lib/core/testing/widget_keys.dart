@@ -382,6 +382,11 @@ class AppKeys {
   static const Key appLockSettingsScreen = Key('screen_app_lock_settings');
   static const Key appLockSettingsTile = Key('tile_settings_app_lock');
   static const Key appLockGraceDropdown = Key('ddl_app_lock_grace');
+  static const Key appLockForgotButton = Key('btn_app_lock_forgot');
+  static const Key appLockRecoveryConfirmField =
+      Key('txt_app_lock_recovery_confirm');
+  static const Key appLockRecoveryConfirmButton =
+      Key('btn_app_lock_recovery_confirm');
 
   // ━━━ 締切リマインド（期限間近クエストの通知） ━━━
   static const Key deadlineReminderSettingsScreen =

@@ -6,6 +6,8 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'app_lock_repository.dart';
 import 'app_lock_service.dart';
 import 'lock_attempt_policy.dart';
+import 'lock_recovery_policy.dart';
+import 'lock_recovery_service.dart';
 import 'lock_reload_policy.dart';
 
 /// アプリロック有効時に全UIを隠すゲートWidget。
@@ -21,12 +23,16 @@ class AppLockGate extends StatefulWidget {
   /// 試練用の猶予上書き（既定はリポジトリの保存値）。
   final Duration? graceOverride;
 
+  /// パスコード忘却時の回復役。未注入時は本番実装を生成する。
+  final LockRecoveryService? recoveryService;
+
   const AppLockGate({
     super.key,
     required this.unlockedBuilder,
     this.repository,
     this.now,
     this.graceOverride,
+    this.recoveryService,
   });
 
   @override
@@ -36,6 +42,7 @@ class AppLockGate extends StatefulWidget {
 class _AppLockGateState extends State<AppLockGate>
     with WidgetsBindingObserver {
   AppLockService? _service;
+  LockRecoveryService? _recovery;
   bool _initialized = false;
   bool _locked = false;
   bool _obscure = true;
@@ -57,18 +64,23 @@ class _AppLockGateState extends State<AppLockGate>
 
   Future<void> _init() async {
     AppLockService? service;
+    LockRecoveryService? recovery;
     var grace = Duration.zero;
     try {
       final repo = widget.repository ?? HiveAppLockRepository();
       service = AppLockService(repo, now: widget.now ?? DateTime.now);
       service.isLocked;
       grace = service.relockGrace;
+      recovery = widget.recoveryService ??
+          LockRecoveryService.production(service);
     } catch (_) {
       service = null; // fail-open
+      recovery = null;
     }
     if (!mounted) return;
     setState(() {
       _service = service;
+      _recovery = recovery;
       _locked = service?.isLocked ?? false;
       _initialized = true;
       _grace = widget.graceOverride ?? grace;
@@ -131,6 +143,53 @@ class _AppLockGateState extends State<AppLockGate>
     _codeController.clear();
   }
 
+  /// パスコード忘却時: 二段確認 → 回復（バックアップ試行 → 解除 → 初期化）。
+  Future<void> _openRecoveryDialog() async {
+    final recovery = _recovery;
+    if (recovery == null) return;
+    final input = await showDialog<String>(
+      context: context,
+      builder: (ctx) => const _RecoveryConfirmDialog(),
+    );
+    if (input == null) return;
+    if (!mounted) return;
+
+    final result = await recovery.recover(confirmation: input);
+    if (!mounted) return;
+    if (result.success) {
+      setState(() {
+        _locked = false;
+        _error = null;
+        _codeController.clear();
+      });
+    } else {
+      setState(() => _error = result.reason);
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(_recoveryMessage(result))),
+    );
+  }
+
+  String _recoveryMessage(LockRecoveryResult result) {
+    final buffer = StringBuffer(
+      result.success ? 'ロックを解除しました。' : 'ロックの解除に失敗しました。',
+    );
+    if (!result.success) {
+      final reason = result.reason;
+      if (reason != null) buffer.write('（$reason）');
+      return buffer.toString();
+    }
+    if (result.backupFailed) {
+      buffer.write(' バックアップの書き出しに失敗しました。');
+    } else if (result.backupPath != null) {
+      buffer.write(' バックアップを保存しました: ${result.backupPath}');
+    } else {
+      buffer.write(' バックアップ対象が無いため書き出しを省略しました。');
+    }
+    buffer.write(result.dataWiped ? ' データを初期化しました。' : ' データの初期化に失敗しました。');
+    return buffer.toString();
+  }
+
   @override
   Widget build(BuildContext context) {
     if (!_initialized) {
@@ -191,10 +250,71 @@ class _AppLockGateState extends State<AppLockGate>
                 onPressed: lockedOut ? null : _submit,
                 child: const Text('解除'),
               ),
+              TextButton(
+                key: AppKeys.appLockForgotButton,
+                onPressed: _recovery == null ? null : _openRecoveryDialog,
+                child: const Text('パスコードをお忘れですか？'),
+              ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// 回復の二段確認ダイアログ。入力欄の寿命を自身で管理する
+/// （showDialog の pop アニメーション中に controller が破棄されると
+/// 「used after being disposed」になるため、StatefulWidget に閉じ込める）。
+class _RecoveryConfirmDialog extends StatefulWidget {
+  const _RecoveryConfirmDialog();
+
+  @override
+  State<_RecoveryConfirmDialog> createState() => _RecoveryConfirmDialogState();
+}
+
+class _RecoveryConfirmDialogState extends State<_RecoveryConfirmDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text(LockRecoveryPolicy.warningTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(LockRecoveryPolicy.warningBody),
+            const SizedBox(height: 16),
+            TextField(
+              key: AppKeys.appLockRecoveryConfirmField,
+              controller: _controller,
+              autofocus: true,
+              decoration: const InputDecoration(
+                labelText: LockRecoveryPolicy.confirmationLabel,
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('やめる'),
+        ),
+        FilledButton(
+          key: AppKeys.appLockRecoveryConfirmButton,
+          onPressed: () => Navigator.of(context).pop(_controller.text),
+          child: const Text('初期化して解除'),
+        ),
+      ],
     );
   }
 }
