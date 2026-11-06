@@ -1,3 +1,4 @@
+import 'package:rpg_todo/core/text/kana_fold.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/domain/guild_quest_query.dart';
 import 'package:rpg_todo/features/guild/domain/quest_tag_service.dart';
@@ -23,13 +24,20 @@ class GuildQuestQueryService {
     return sb.toString().toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
   }
 
+  /// 検索用の正規化: [normalize] にかな表記ゆれ吸収（[foldKana]）を重ねる。
+  /// ひらがな/カタカナ/半角カナを全角カタカナへ寄せる。
+  /// 既存の [normalize] の戻り値は変えない（比較の厳密性を保つため）。
+  static String normalizeForSearch(String input) => foldKana(normalize(input));
+
   /// クエスト名 か いずれかの札（タグ） に検索語を含む（正規化後の部分一致）。
+  /// 検索語・対象の双方を [normalizeForSearch] で正規化するため、
+  /// 「まにふぇすと」「ﾏﾆﾌｪｽﾄ」でも「マニフェスト」の札に当たる。
   /// 空/空白のみの検索語なら true。
   static bool matchesText(Task task, String query) {
-    final q = normalize(query);
+    final q = normalizeForSearch(query);
     if (q.isEmpty) return true;
-    if (normalize(task.title).contains(q)) return true;
-    return task.tags.any((tag) => normalize(tag).contains(q));
+    if (normalizeForSearch(task.title).contains(q)) return true;
+    return task.tags.any((tag) => normalizeForSearch(tag).contains(q));
   }
 
   /// 状態で絞り込む判定（statuses が空なら true）。該当述語の OR。
