@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/input/unsaved_changes.dart';
+import 'package:rpg_todo/core/text/japanese_number.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/domain/difficulty_estimator.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
@@ -192,7 +193,7 @@ class CreateTaskDialogState extends State<CreateTaskDialog> {
       _selectedWeekdays.add(DateTime.now().weekday);
     }
 
-    int? targetTime = int.tryParse(_targetTimeController.text);
+    int? targetTime = JapaneseNumber.tryParseInt(_targetTimeController.text);
 
     final gameVM = Provider.of<GameViewModel>(context, listen: false);
     if (widget.task == null) {

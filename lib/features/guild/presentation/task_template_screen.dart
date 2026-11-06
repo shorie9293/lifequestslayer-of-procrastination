@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/core/text/japanese_number.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/data/task_template_repository.dart';
@@ -415,7 +416,7 @@ class _TemplateEditDialogState extends State<_TemplateEditDialog> {
       setState(() => _errorText = problems.first);
       return;
     }
-    int? targetTime = int.tryParse(_targetTimeController.text);
+    int? targetTime = JapaneseNumber.tryParseInt(_targetTimeController.text);
     if (targetTime != null && targetTime < 0) targetTime = null;
     if (_repeat == RepeatInterval.weekly && _weekdays.isEmpty) {
       _weekdays = [DateTime.now().weekday];

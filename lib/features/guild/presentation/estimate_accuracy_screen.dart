@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 import 'package:rpg_todo/core/di/injection.dart';
+import 'package:rpg_todo/core/text/japanese_number.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/data/task_time_record_repository.dart';
 import 'package:rpg_todo/features/guild/domain/estimate_accuracy.dart';
@@ -302,8 +303,8 @@ class _RecordDialogState extends State<_RecordDialog> {
       setState(() => _error = 'クエストを選択してください');
       return;
     }
-    final estimated = int.tryParse(_estimatedController.text.trim());
-    final actual = int.tryParse(_actualController.text.trim());
+    final estimated = JapaneseNumber.tryParseInt(_estimatedController.text);
+    final actual = JapaneseNumber.tryParseInt(_actualController.text);
     if (estimated == null || estimated <= 0 || actual == null || actual <= 0) {
       setState(() => _error = '見積もり・実績は1以上の整数で入力してください');
       return;

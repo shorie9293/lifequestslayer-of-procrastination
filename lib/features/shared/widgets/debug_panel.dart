@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:rpg_todo/core/text/japanese_number.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
@@ -40,7 +41,7 @@ class _DebugPanelState extends State<DebugPanel> {
   }
 
   void _setCoins() {
-    final v = int.tryParse(_coinCtrl.text);
+    final v = JapaneseNumber.tryParseInt(_coinCtrl.text);
     if (v != null) {
       context.read<PlayerViewModel>().debugSetCoins(v);
       _coinCtrl.text = context.read<PlayerViewModel>().player.coins.toString();
@@ -48,7 +49,7 @@ class _DebugPanelState extends State<DebugPanel> {
   }
 
   void _setGems() {
-    final v = int.tryParse(_gemCtrl.text);
+    final v = JapaneseNumber.tryParseInt(_gemCtrl.text);
     if (v != null) {
       context.read<PlayerViewModel>().debugSetGems(v);
       _gemCtrl.text = context.read<PlayerViewModel>().player.gems.toString();

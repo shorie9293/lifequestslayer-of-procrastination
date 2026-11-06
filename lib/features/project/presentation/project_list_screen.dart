@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rpg_todo/core/text/japanese_number.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
@@ -278,7 +279,7 @@ class _ProjectRow extends StatelessWidget {
 int? _parseBonus(String raw) {
   final trimmed = raw.trim();
   if (trimmed.isEmpty) return 0;
-  final v = int.tryParse(trimmed);
+  final v = JapaneseNumber.tryParseInt(trimmed);
   if (v == null || v < 0) return null;
   return v;
 }
