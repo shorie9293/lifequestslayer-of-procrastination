@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
@@ -10,7 +12,7 @@ void main() {
     late TaskCompletionService service;
 
     setUp(() {
-      service = TaskCompletionService();
+      service = TaskCompletionService(rng: _NoRareDropRandom());
       // テスト用のクイズデータをセット
       QuizService.setQuestions([
         const QuizQuestion(
@@ -343,7 +345,7 @@ void main() {
     late TaskCompletionService service;
 
     setUp(() {
-      service = TaskCompletionService();
+      service = TaskCompletionService(rng: _NoRareDropRandom());
       QuizService.setQuestions([]);
       QuizService.probability = 0.0;
     });
@@ -450,4 +452,19 @@ void main() {
       expect(task.status, TaskStatus.inGuild);
     });
   });
+}
+
+/// レアドロップを必ず落選させる Random。
+///
+/// 実 Random を素で使うと 2%（レベル1の dropChance）で当選し、
+/// 期限切れ半減の期待値が 15 文から 90 文へ化ける＝確率的に赤化する時限爆弾。
+class _NoRareDropRandom implements Random {
+  @override
+  double nextDouble() => 0.99;
+
+  @override
+  int nextInt(int max) => 0;
+
+  @override
+  bool nextBool() => false;
 }
