@@ -5,6 +5,8 @@ import 'package:rpg_todo/domain/services/fatigue_service.dart';
 import 'package:rpg_todo/domain/services/title_service.dart';
 import 'package:rpg_todo/domain/services/skill_effect_service.dart';
 import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
+import 'package:rpg_todo/features/battle/domain/battle_tactic.dart';
+import 'package:rpg_todo/features/battle/domain/battle_outcome_calculator.dart';
 import 'package:rpg_todo/features/battle/data/quiz_data.dart';
 
 /// クエスト完了時の計算結果
@@ -83,6 +85,7 @@ class TaskCompletionService {
     required bool hasShownFatiguePopupToday,
     required bool knowledgeQuestEnabled,
     List<Task>? allTasks,
+    BattleTactic? tactic,
   }) {
     // Mystic Lv1: 分割の理 — サブクエスト完了チェック
     if (player.isSkillEquipped(JobSkill.mysticSubtask) && task.subTasks.isNotEmpty) {
@@ -242,6 +245,15 @@ class TaskCompletionService {
         coinsGained += rareBonus;
         bonusMessages.add("✨ レアドロップ発見！！ +$rareBonus文");
       }
+    }
+
+    // 戦術補正（改善提案#219）: 攻撃/防御/スキルの選択を報酬へ実際に反映する。
+    // 補正値は BattleOutcomeCalculator の表引き1箇所に閉じる（倍率はここで一度だけ適用）。
+    final tacticMessage = BattleOutcomeCalculator.effectFor(tactic).message;
+    if (tacticMessage.isNotEmpty) {
+      expGain = BattleOutcomeCalculator.expFor(expGain, tactic);
+      coinsGained = BattleOutcomeCalculator.coinsFor(coinsGained, tactic);
+      bonusMessages.add(tacticMessage);
     }
 
     // カウント更新（純粋化: copyWithで一括更新）

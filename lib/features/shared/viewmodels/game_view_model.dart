@@ -13,6 +13,7 @@ import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/battle/domain/battle_tactic.dart';
 import 'package:rpg_todo/features/shared/viewmodels/theme_view_model.dart';
 import 'package:rpg_todo/features/kozuchi/domain/kozuchi_quest_model.dart';
 import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
@@ -152,10 +153,11 @@ class GameViewModel extends ChangeNotifier with WidgetsBindingObserver {
   void changeJob(Job j) { _playerVM.changeJob(j, debugMode: _settingsVM.isDebugMode); _save(); }
   void toggleSkill(Job j) { _playerVM.toggleSkill(j, debugMode: _settingsVM.isDebugMode); _save(); }
 
-  Map<String, dynamic>? completeTask(String id) {
+  Map<String, dynamic>? completeTask(String id, {BattleTactic? tactic}) {
     final result = _taskVM.completeTask(id,
         knowledgeQuestEnabled: _settingsVM.isKnowledgeQuestEnabled,
-        debugMode: _settingsVM.isDebugMode);
+        debugMode: _settingsVM.isDebugMode,
+        tactic: tactic);
     if (result != null) {
       // 町にXPを付与（クエストランクに応じた量）
       if (_townVM != null) {

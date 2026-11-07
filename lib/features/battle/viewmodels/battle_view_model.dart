@@ -4,19 +4,10 @@ import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/battle/domain/battle_phase.dart';
 import 'package:rpg_todo/features/battle/domain/combo_system.dart';
 
-/// 戦術の選択肢。
-///
-/// v2.1 戦術選択UI: 「⚔️攻撃」「🛡️防御」「✨スキル」の3択。
-enum BattleTactic {
-  /// 通常攻撃 — 標準的な討伐。
-  attack,
-
-  /// 防御 — サブクエスト未完了でも経験値半減で撤退可能。
-  defend,
-
-  /// スキル — ジョブスキルに応じた特殊効果（v2.1スキルツリー連動）。
-  skill,
-}
+/// 戦術の選択肢（[BattleTactic]）は domain 層へ移設した。
+/// 既存の import を壊さないよう、ここから再公開する。
+import 'package:rpg_todo/features/battle/domain/battle_tactic.dart';
+export 'package:rpg_todo/features/battle/domain/battle_tactic.dart';
 
 /// 戦闘結果の要約。
 ///

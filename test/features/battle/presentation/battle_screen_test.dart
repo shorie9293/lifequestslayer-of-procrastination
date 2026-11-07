@@ -11,6 +11,7 @@ import 'package:rpg_todo/features/battle/domain/battle_audio_service.dart';
 import 'package:rpg_todo/domain/models/battle_state.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/domain/models/skill_slot.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
@@ -655,6 +656,67 @@ void main() {
       await tester.tap(find.byTooltip('効果音をつける'));
       await tester.pump();
       expect(find.byTooltip('効果音を消す'), findsOneWidget);
+    });
+  });
+
+  // ━━━ 改善提案#219: 戦術選択が討伐報酬へ実際に作用する（配線探針） ━━━
+  // 「攻撃/防御/スキル」が装飾でないことを、画面→GameViewModel→TaskViewModel→
+  // TaskCompletionService の合成で撃つ。数値の差はサービス層の試練で固定済ゆえ、
+  // ここでは「選んだ戦術の補正メッセージが戦果報告書に載る」ことを以て配線を実証する。
+  group('改善提案#219 戦術が討伐報酬に反映される（配線探針）', () {
+    Future<void> runTactic(
+      WidgetTester tester, {
+      required String tacticLabel,
+      required String expectedFragment,
+    }) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+        vms.player.player.jobLevels[vms.player.player.currentJob] = 2;
+        // スキルボタンを有効化する（装備スキル0件だとスキル戦術は押せない）
+        vms.player.player.equippedSkills
+            .add(EquippedSkill(skill: JobSkill.mysticTags));
+        vms.task.addTask('戦術配線テスト', rank: QuestRank.B);
+        final taskId = vms.task.tasks.first.id;
+        vms.task.acceptTask(taskId);
+      });
+
+      await pumpBattleScreen(tester,
+          taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      final taskTitle = find.text('[B] 戦術配線テスト');
+      expect(taskTitle, findsOneWidget);
+      await tester.tap(taskTitle);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      await tester.tap(find.byTooltip('討つ！'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      final tacticButton = find.text(tacticLabel);
+      expect(tacticButton, findsOneWidget);
+      await tester.tap(tacticButton);
+      await tester.pump();
+      for (var i = 0; i < 10; i++) {
+        await tester.pump(const Duration(milliseconds: 300));
+      }
+
+      expect(find.textContaining(expectedFragment), findsWidgets,
+          reason: '$tacticLabel を選んだのに補正メッセージが出ていない');
+    }
+
+    testWidgets('攻撃を選ぶと「攻撃の型」の補正が戦果報告書に載る', (tester) async {
+      await runTactic(tester, tacticLabel: '攻撃', expectedFragment: '攻撃の型');
+    });
+
+    testWidgets('防御を選ぶと「防御の型」の補正が戦果報告書に載る', (tester) async {
+      await runTactic(tester, tacticLabel: '防御', expectedFragment: '防御の型');
+    });
+
+    testWidgets('スキルを選ぶと「スキルの型」の補正が戦果報告書に載る', (tester) async {
+      await runTactic(tester, tacticLabel: 'スキル', expectedFragment: 'スキルの型');
     });
   });
 }

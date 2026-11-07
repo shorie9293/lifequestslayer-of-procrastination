@@ -8,6 +8,7 @@ import 'package:rpg_todo/domain/repositories/i_task_deletion_repository.dart';
 import 'package:rpg_todo/core/logging/app_logger.dart';
 import 'package:rpg_todo/features/shared/domain/task_completion_service.dart';
 import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
+import 'package:rpg_todo/features/battle/domain/battle_tactic.dart';
 import 'package:rpg_todo/core/utils/date_utils.dart';
 import 'package:rpg_todo/features/kozuchi/domain/kozuchi_quest_model.dart';
 import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
@@ -370,7 +371,9 @@ class TaskViewModel extends ChangeNotifier {
 
   /// クエスト完了。戻り値は完了結果のマップ
   Map<String, dynamic>? completeTask(String id,
-      {bool knowledgeQuestEnabled = true, bool debugMode = false}) {
+      {bool knowledgeQuestEnabled = true,
+      bool debugMode = false,
+      BattleTactic? tactic}) {
     if (_completing.contains(id)) return null;
     _completing.add(id);
     final i = _tasks.indexWhere((t) => t.id == id);
@@ -382,7 +385,8 @@ class TaskViewModel extends ChangeNotifier {
         task: _tasks[i],
         player: _playerVM.player,
         hasShownFatiguePopupToday: false, // handled by caller
-        knowledgeQuestEnabled: knowledgeQuestEnabled);
+        knowledgeQuestEnabled: knowledgeQuestEnabled,
+        tactic: tactic);
     if (r == null) {
       _completing.remove(id);
       return null;

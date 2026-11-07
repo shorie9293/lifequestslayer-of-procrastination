@@ -153,24 +153,23 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
   }
 
   /// 戦術が選択された時の処理。
-  /// [action] に応じた補正を行った後、既存の討伐フローを実行する。
+  /// [action] に応じた補正（EXP・コイン倍率）を討伐報酬へ反映する。
   void _onActionSelected(BattleAction action) {
     final taskId = _taskInCombat;
     if (taskId == null) return;
 
     // 戦術をBattleViewModelに登録
-    _battleVM.selectTactic(_mapActionToTactic(action));
+    final tactic = _mapActionToTactic(action);
+    _battleVM.selectTactic(tactic);
 
     // 戦術選択UIを閉じる
     setState(() {
       _taskInCombat = null;
     });
 
-    // TODO(v2.1): actionに応じたEXP/討伐成功率補正をTaskViewModelに反映する。
-    // 現時点ではアクション選択UIのみ実装。討伐フローは既存のまま。
-    // 例: attack → 標準, defend → EXP * 0.7 + 討伐成功率UP, skill → 装備スキル効果発動
-
-    _completeTask(context, taskId);
+    // 改善提案#219: 戦術（攻撃/防御/スキル）を討伐報酬へ実際に反映する。
+    // 倍率の表引きは BattleOutcomeCalculator（純粋層）に閉じ、ここは配線のみ。
+    _completeTask(context, taskId, tactic: tactic);
   }
 
   /// [BattleAction] を [BattleTactic] に変換する。
@@ -185,7 +184,8 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
     }
   }
 
-  void _completeTask(BuildContext context, String taskId) {
+  void _completeTask(BuildContext context, String taskId,
+      {BattleTactic? tactic}) {
     // M4禍津対策: 連打ガード。同一クエストの二重実行を防止する。
     if (_completingTaskIds.contains(taskId)) return;
     _completingTaskIds.add(taskId);
@@ -214,7 +214,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
       }
     }
 
-    final result = gameVM.completeTask(taskId);
+    final result = gameVM.completeTask(taskId, tactic: tactic);
 
     if (result == null) {
       // 討伐失敗 → BattleViewModelに敗北を通知 + SFX再生
