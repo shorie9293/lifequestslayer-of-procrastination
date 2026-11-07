@@ -21,6 +21,7 @@ import 'package:rpg_todo/features/habits/presentation/screens/habit_calendar_scr
 import 'package:rpg_todo/features/reminder/presentation/quiet_hours_settings_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_bulk_action_screen.dart';
+import 'package:rpg_todo/features/guild/data/guild_quest_query_preferences.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_quest_search_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/task_template_screen.dart';
 import 'package:rpg_todo/features/guild/domain/quest_snooze_service.dart';
@@ -743,7 +744,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.68+164", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.69+165", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -764,6 +765,8 @@ class _GuildScreenState extends State<GuildScreen> {
             onPressed: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (searchContext) => GuildQuestSearchScreen(
+                  queryPreferences:
+                      const SharedPreferencesGuildQuestQueryPreferencesStore(),
                   onTagsSaved: (task, tags) => searchContext
                       .read<TaskViewModel>()
                       .setTaskTags(task.id, tags),

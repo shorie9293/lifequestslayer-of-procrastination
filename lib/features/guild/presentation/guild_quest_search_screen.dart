@@ -2,6 +2,11 @@
 //
 // ドメイン層 GuildQuestQuery / GuildQuestQueryService に全ロジックを委譲する
 // 薄いプレゼンテーション層。tasksOverride / now は試練（テスト）用の注入点。
+//
+// 検索条件（検索語・絞り込み・並び順）の永続化は queryPreferences 注入時のみ有効。
+// 未注入なら従来どおりメモリ内の状態だけで動く。
+
+import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +14,7 @@ import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/features/guild/data/guild_quest_query_preferences.dart';
 import 'package:rpg_todo/features/guild/domain/guild_quest_query.dart';
 import 'package:rpg_todo/features/guild/domain/guild_quest_query_service.dart';
 import 'package:rpg_todo/features/guild/domain/quest_tag_service.dart';
@@ -22,6 +28,7 @@ class GuildQuestSearchScreen extends StatefulWidget {
     this.tasksOverride,
     this.now,
     this.onTagsSaved,
+    this.queryPreferences,
   });
 
   /// 試練用: Provider なしでクエスト一覧を注入できる
@@ -33,6 +40,9 @@ class GuildQuestSearchScreen extends StatefulWidget {
   /// 札（タグ）編集の保存先。null なら札編集導線を出さない。
   final void Function(Task task, List<String> tags)? onTagsSaved;
 
+  /// 検索条件の保存先。null なら永続化しない（従来の挙動）。
+  final GuildQuestQueryPreferencesStore? queryPreferences;
+
   @override
   State<GuildQuestSearchScreen> createState() => _GuildQuestSearchScreenState();
 }
@@ -40,9 +50,59 @@ class GuildQuestSearchScreen extends StatefulWidget {
 class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
   GuildQuestQuery _query = const GuildQuestQuery();
 
+  /// 検索語の編集コントローラ（復元時に保存済みの検索語を流し込む）
+  final TextEditingController _textController = TextEditingController();
+
+  /// 利用者が一度でも条件を触ったか。復元の遅延到着で入力を潰さないための番人。
+  bool _userTouched = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final store = widget.queryPreferences;
+    if (store != null) {
+      unawaited(_restore(store));
+    }
+  }
+
+  @override
+  void dispose() {
+    // 検索語は確定（onSubmitted）まで書かないため、画面を閉じる時に一度だけ保存する
+    _persist();
+    _textController.dispose();
+    super.dispose();
+  }
+
+  /// 保存済み条件を復元する。利用者が先に触っていたら上書きしない。
+  Future<void> _restore(GuildQuestQueryPreferencesStore store) async {
+    final loaded = await store.load();
+    if (!mounted || loaded == null) return;
+    if (_userTouched) return;
+    setState(() {
+      _query = loaded;
+      _applyTextToController(loaded.text);
+    });
+  }
+
+  void _applyTextToController(String text) {
+    if (_textController.text == text) return;
+    _textController.value = TextEditingValue(
+      text: text,
+      selection: TextSelection.collapsed(offset: text.length),
+    );
+  }
+
+  /// 現在の条件を投げっぱなしで保存する（失敗しても検索は続く）。
+  void _persist() {
+    final store = widget.queryPreferences;
+    if (store == null) return;
+    unawaited(store.save(_query).catchError((Object _) {}));
+  }
+
   Color _rankColor(QuestRank rank) => RankColors.forRank(rank);
 
   void _toggleStatus(GuildQuestStatusFilter f) {
+    _userTouched = true;
     setState(() {
       final next = Set<GuildQuestStatusFilter>.of(_query.statuses);
       if (!next.add(f)) {
@@ -50,9 +110,11 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
       }
       _query = _query.copyWith(statuses: next);
     });
+    _persist();
   }
 
   void _toggleRank(QuestRank r) {
+    _userTouched = true;
     setState(() {
       final next = Set<QuestRank>.of(_query.ranks);
       if (!next.add(r)) {
@@ -60,10 +122,12 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
       }
       _query = _query.copyWith(ranks: next);
     });
+    _persist();
   }
 
   /// 札（タグ）の選択トグル。選択は OR（QuestTagService.matchesTags の意味論）。
   void _toggleTag(String tag) {
+    _userTouched = true;
     setState(() {
       final next = Set<String>.of(_query.tags);
       if (!next.add(tag)) {
@@ -71,6 +135,7 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
       }
       _query = _query.copyWith(tags: next);
     });
+    _persist();
   }
 
   /// 札編集ダイアログを開く。onTagsSaved 未注入（試練の後方互換）なら何もしない。
@@ -108,6 +173,7 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
             padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
             child: TextField(
               key: AppKeys.guildQuestSearchField,
+              controller: _textController,
               decoration: InputDecoration(
                 hintText: 'クエスト名・タグで検索',
                 prefixIcon: const Icon(Icons.search),
@@ -116,13 +182,21 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
                         key: AppKeys.guildQuestSearchClear,
                         icon: const Icon(Icons.clear),
                         onPressed: () {
+                          _userTouched = true;
+                          _textController.clear();
                           setState(() => _query = _query.copyWith(text: ''));
                         },
                       )
                     : null,
               ),
               onChanged: (value) {
+                // 検索語は1文字ごとには保存しない（確定時と閉じる時のみ）
+                _userTouched = true;
                 setState(() => _query = _query.copyWith(text: value));
+              },
+              onSubmitted: (_) {
+                _userTouched = true;
+                _persist();
               },
             ),
           ),
@@ -180,7 +254,9 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
                   key: AppKeys.guildQuestSortMenu,
                   tooltip: '並び替え',
                   onSelected: (order) {
+                    _userTouched = true;
                     setState(() => _query = _query.copyWith(sortOrder: order));
+                    _persist();
                   },
                   itemBuilder: (context) => [
                     for (final order in GuildQuestSortOrder.values)
@@ -204,7 +280,10 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
                   icon: const Icon(Icons.restart_alt),
                   tooltip: '絞り込みを解除',
                   onPressed: () {
+                    _userTouched = true;
+                    _textController.clear();
                     setState(() => _query = const GuildQuestQuery());
+                    _persist();
                   },
                 ),
               ],
