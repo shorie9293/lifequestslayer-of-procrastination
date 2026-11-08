@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/core/infrastructure/shared_file_store.dart';
+import 'package:rpg_todo/features/crossapp/data/cross_app_reward_service.dart';
 import 'package:rpg_todo/features/crossapp/data/cross_app_settings_repository.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -33,6 +35,23 @@ class _TsundokuIdentityLinkDialogState
     super.dispose();
   }
 
+  /// 共有フォルダを選んでもらう（初回だけ・以後は自動）。
+  Future<void> _chooseFolder() async {
+    final store = SharedFileStore.instance;
+    final ok = await store.chooseDirectory();
+    if (!mounted) return;
+    crossAppLinkStatus.value = crossAppLinkStatus.value.copyWith(
+      sharedFolderReady: ok,
+      clearError: ok,
+      lastError: ok ? null : '共有フォルダが選ばれていません',
+    );
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(ok ? '共有フォルダを設定しました' : '共有フォルダの設定に失敗しました'),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -51,6 +70,15 @@ class _TsundokuIdentityLinkDialogState
             'tsundoku-quest アプリのユーザーID（先頭8文字）を入力してください。\n\n'
             '連携すると、読書の進捗に応じて rpg-task 内で称号や報酬を獲得できます。',
             style: TextStyle(fontSize: 13, color: Colors.white70),
+          ),
+          const SizedBox(height: 12),
+          // 共有フォルダの状態（最終送信/最終受信/失敗）を1つの状態から表示
+          ValueListenableBuilder<CrossAppLinkStatus>(
+            valueListenable: crossAppLinkStatus,
+            builder: (context, status, _) => _SharedStorageStatusBlock(
+              status: status,
+              onChoose: _chooseFolder,
+            ),
           ),
           const SizedBox(height: 16),
           SemanticHelper.textField(
@@ -141,6 +169,84 @@ class _TsundokuIdentityLinkDialogState
     return showDialog<String>(
       context: context,
       builder: (_) => TsundokuIdentityLinkDialog(currentUserId: currentUserId),
+    );
+  }
+}
+
+/// 共有フォルダの状態表示（最終送信/最終受信/失敗）。
+///
+/// 判定材料と表示材料は**同じ状態オブジェクト**から取る（表示と判定の分裂を防ぐ）。
+class _SharedStorageStatusBlock extends StatelessWidget {
+  const _SharedStorageStatusBlock({
+    required this.status,
+    required this.onChoose,
+  });
+
+  final CrossAppLinkStatus status;
+  final Future<void> Function() onChoose;
+
+  String _fmt(DateTime? t) {
+    if (t == null) return '—';
+    final local = t.toLocal();
+    String two(int v) => v.toString().padLeft(2, '0');
+    return '${local.month}/${local.day} '
+        '${two(local.hour)}:${two(local.minute)}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final color = status.isHealthy ? Colors.greenAccent : Colors.orangeAccent;
+    final label = status.sharedFolderReady ? '共有フォルダ: 設定済み' : '共有フォルダ: 未設定';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                status.isHealthy ? Icons.check_circle : Icons.error_outline,
+                size: 16,
+                color: color,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(fontSize: 12, color: color),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '最終送信: ${_fmt(status.lastSentAt)}　最終受信: ${_fmt(status.lastReceivedAt)}',
+            style: const TextStyle(fontSize: 11, color: Colors.white54),
+          ),
+          if (status.lastError != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              '直近の失敗: ${status.lastError}',
+              style: const TextStyle(fontSize: 11, color: Colors.redAccent),
+            ),
+          ],
+          if (!status.sharedFolderReady)
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => onChoose(),
+                child: const Text('共有フォルダを選ぶ'),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
