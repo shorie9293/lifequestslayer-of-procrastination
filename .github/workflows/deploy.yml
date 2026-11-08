@@ -67,14 +67,14 @@ jobs:
           beforeSettings { settings ->
               settings.pluginManagement.repositories {
                   maven { url 'https://repo1.maven.org/maven2' }
+                  gradlePluginPortal()
+                  google()
+                  mavenCentral()
               }
               settings.dependencyResolutionManagement.repositories {
                   maven { url 'https://repo1.maven.org/maven2' }
-              }
-          }
-          allprojects {
-              repositories {
-                  maven { url 'https://repo1.maven.org/maven2' }
+                  google()
+                  mavenCentral()
               }
           }
           EOF
