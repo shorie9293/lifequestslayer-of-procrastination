@@ -398,11 +398,22 @@ class TaskViewModel extends ChangeNotifier {
     _playerVM.save(); // player の変更も永続化
     _autoSave();
     // kozuchi 連携: 討伐イベントを共有ストレージへ書き出し（ベストエフォート）
-    _enemyDefeatExporter?.exportEnemyDefeat(
-      taskTitle: _tasks[i].title,
-      questRank: _tasks[i].rank.name,
-      baseExp: r.expGain,
-    );
+    // 失敗しても討伐の本処理は止めないが、黙って捨てず連携状態へ残す。
+    _enemyDefeatExporter
+        ?.exportEnemyDefeat(
+          taskTitle: _tasks[i].title,
+          questRank: _tasks[i].rank.name,
+          baseExp: r.expGain,
+        )
+        .then((_) {
+          crossAppLinkStatus.value =
+              crossAppLinkStatus.value.copyWith(lastSentAt: DateTime.now());
+        })
+        .catchError((Object e) {
+          crossAppLinkStatus.value =
+              crossAppLinkStatus.value.copyWith(lastError: e.toString());
+          debugPrint('[TaskVM] enemy defeat export failed: $e');
+        });
     // 勤行の日別履歴ログ（道標§五 #50）: 完遂1件を記録（ベストエフォート）
     _practiceLogRepository
         ?.record()

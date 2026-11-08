@@ -63,24 +63,23 @@ void main() {
       );
     }
 
-    test('既定の追加読み取り先に book-review の JSONL が含まれる', () {
+    test('既定の走査先に book-review の JSONL が含まれる', () {
       const service = FileCrossAppRewardService();
       expect(
-        service.additionalFilePaths,
-        contains(FileCrossAppRewardService.kDefaultBookReviewEventsPath),
+        service.allFileNames,
+        contains(FileCrossAppRewardService.kDefaultBookReviewEventsFile),
       );
       expect(
-        service.additionalFilePaths,
-        contains('/data/local/tmp/takamagahara_shared/'
-            'book_review_reward_events.jsonl'),
+        service.allFileNames,
+        contains('book_review_reward_events.jsonl'),
       );
     });
 
-    test('既定の追加読み取り先に election の JSONL も維持されている', () {
+    test('既定の走査先に election の JSONL も維持されている', () {
       const service = FileCrossAppRewardService();
       expect(
-        service.additionalFilePaths,
-        contains(FileCrossAppRewardService.kDefaultElectionEventsPath),
+        service.allFileNames,
+        contains(FileCrossAppRewardService.kDefaultElectionEventsFile),
       );
     });
 

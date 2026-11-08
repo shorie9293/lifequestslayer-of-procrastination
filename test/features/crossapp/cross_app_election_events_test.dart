@@ -188,12 +188,11 @@ void main() {
       );
     }
 
-    test('既定の追加読み取り先に election の JSONL が含まれる', () {
+    test('既定の走査先に election の JSONL が含まれる', () {
       const service = FileCrossAppRewardService();
       expect(
-        service.additionalFilePaths,
-        contains(
-            '/data/local/tmp/takamagahara_shared/election_reward_events.jsonl'),
+        service.allFileNames,
+        contains('election_reward_events.jsonl'),
       );
     });
 

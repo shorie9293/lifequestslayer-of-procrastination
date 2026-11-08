@@ -1,8 +1,47 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
+import 'package:rpg_todo/core/infrastructure/shared_file_store.dart';
 import 'package:rpg_todo/features/crossapp/domain/cross_app_reward_event.dart';
 import 'package:rpg_todo/features/crossapp/domain/cross_app_title_definition.dart';
+
+/// 連携（クロスアプリ受け渡し）の状態。連携画面はこの1つを表示すればよい。
+class CrossAppLinkStatus {
+  const CrossAppLinkStatus({
+    this.lastSentAt,
+    this.lastReceivedAt,
+    this.lastError,
+    this.sharedFolderReady = false,
+  });
+
+  final DateTime? lastSentAt;
+  final DateTime? lastReceivedAt;
+  final String? lastError;
+  final bool sharedFolderReady;
+
+  bool get isHealthy => lastError == null && sharedFolderReady;
+
+  CrossAppLinkStatus copyWith({
+    DateTime? lastSentAt,
+    DateTime? lastReceivedAt,
+    String? lastError,
+    bool? sharedFolderReady,
+    bool clearError = false,
+  }) {
+    return CrossAppLinkStatus(
+      lastSentAt: lastSentAt ?? this.lastSentAt,
+      lastReceivedAt: lastReceivedAt ?? this.lastReceivedAt,
+      lastError: clearError ? null : (lastError ?? this.lastError),
+      sharedFolderReady: sharedFolderReady ?? this.sharedFolderReady,
+    );
+  }
+}
+
+/// 連携状態の通知口（連携画面が listen する）。
+final ValueNotifier<CrossAppLinkStatus> crossAppLinkStatus =
+    ValueNotifier<CrossAppLinkStatus>(const CrossAppLinkStatus());
 
 /// クロスアプリ報酬サービスのインターフェース
 ///
@@ -28,39 +67,54 @@ abstract class ICrossAppRewardService {
 /// [additionalFilePaths] は追加で走査するファイル群。
 /// 冪等性は同一 Hive box の event_id で横断的に担保する。
 class FileCrossAppRewardService implements ICrossAppRewardService {
-  /// tsundoku-quest が書き出す報酬イベント
-  static const kDefaultTsundokuEventsPath =
-      '/data/local/tmp/takamagahara_shared/tsundoku_reward_events.jsonl';
+  /// tsundoku-quest が書き出す報酬イベント（契約: ファイル名）
+  static const String kDefaultTsundokuEventsFile =
+      SharedCrossAppFiles.tsundokuRewardEvents;
 
   /// election-game が書き出す報酬イベント（契約 v1）
-  static const kDefaultElectionEventsPath =
-      '/data/local/tmp/takamagahara_shared/election_reward_events.jsonl';
+  static const String kDefaultElectionEventsFile =
+      SharedCrossAppFiles.electionRewardEvents;
 
   /// book-review-app が書き出す報酬イベント（契約 v1: book_completed）
-  static const kDefaultBookReviewEventsPath =
-      '/data/local/tmp/takamagahara_shared/book_review_reward_events.jsonl';
+  static const String kDefaultBookReviewEventsFile =
+      SharedCrossAppFiles.bookReviewRewardEvents;
 
-  final String filePath;
+  /// 走査する既定のファイル名一覧（順序は互換維持）
+  static const List<String> kDefaultEventFiles = <String>[
+    kDefaultTsundokuEventsFile,
+    kDefaultElectionEventsFile,
+    kDefaultBookReviewEventsFile,
+  ];
+
+  /// 試練用の明示パス。null なら共有ストア（SharedFileStore）経由。
+  final String? filePath;
   final List<String> additionalFilePaths;
   final String hiveBoxName;
 
   const FileCrossAppRewardService({
-    this.filePath = kDefaultTsundokuEventsPath,
-    this.additionalFilePaths = const [
-      kDefaultElectionEventsPath,
-      kDefaultBookReviewEventsPath,
-    ],
+    this.filePath,
+    this.additionalFilePaths = const [],
     this.hiveBoxName = 'cross_app_rewards',
   });
 
-  /// 走査対象の全パス（主ファイル + 追加ファイル・重複除去）
+  /// 走査対象の全パス（試練モード: [filePath] を明示した場合のみ）
   List<String> get allFilePaths {
     final paths = <String>[];
     for (final path in [filePath, ...additionalFilePaths]) {
-      if (path.isEmpty) continue;
+      if (path == null || path.isEmpty) continue;
       if (!paths.contains(path)) paths.add(path);
     }
     return paths;
+  }
+
+  /// 走査対象のファイル名（本番モード: 共有ストア経由）
+  List<String> get allFileNames {
+    final names = <String>[];
+    for (final name in [filePath, ...additionalFilePaths]) {
+      if (name == null || name.isEmpty) continue;
+      if (!names.contains(name)) names.add(name);
+    }
+    return names.isEmpty ? kDefaultEventFiles : names;
   }
 
   @override
@@ -74,50 +128,86 @@ class FileCrossAppRewardService implements ICrossAppRewardService {
     }
 
     try {
-      // 存在するファイルのみを走査対象にする
-      final existingPaths = <String>[];
-      for (final path in allFilePaths) {
-        if (await File(path).exists()) {
-          existingPaths.add(path);
-        }
+      if (filePath != null) {
+        await _processPaths(linkedUserId, rewards);
+      } else {
+        await _processStore(linkedUserId, rewards);
       }
-      if (existingPaths.isEmpty) {
-        return rewards;
-      }
-
-      final box = await _openBox();
-      final consumedIds = _getConsumedIds(box);
-
-      for (final path in existingPaths) {
-        await _consumeFile(
-          path: path,
-          linkedUserId: linkedUserId,
-          box: box,
-          consumedIds: consumedIds,
-          rewards: rewards,
-        );
-      }
-    } catch (_) {
-      // ファイル読み込みエラー等はすべて無視して空を返す
+      crossAppLinkStatus.value = crossAppLinkStatus.value.copyWith(
+        lastReceivedAt: DateTime.now(),
+        clearError: true,
+      );
+    } on SharedStorageException catch (e) {
+      // 握りつぶさず、連携画面が読める状態として残す。
+      crossAppLinkStatus.value = crossAppLinkStatus.value.copyWith(
+        lastError: e.toString(),
+      );
     }
 
     return rewards;
   }
 
-  /// 1ファイル分の JSONL を走査し、未処理イベントを報酬へ変換する。
-  Future<void> _consumeFile({
-    required String path,
-    required String linkedUserId,
-    required Box box,
-    required Set<String> consumedIds,
-    required List<CrossAppReward> rewards,
-  }) async {
-    List<String> lines;
-    try {
-      lines = await File(path).readAsLines();
-    } catch (_) {
-      return; // 読めないファイルはスキップして次のファイルへ
+  /// 試練モード: 明示パスのファイルを走査する（従来の契約をそのまま保持）。
+  Future<void> _processPaths(
+    String linkedUserId,
+    List<CrossAppReward> rewards,
+  ) async {
+    final existingPaths = <String>[];
+    for (final path in allFilePaths) {
+      if (await File(path).exists()) {
+        existingPaths.add(path);
+      }
     }
+    if (existingPaths.isEmpty) return;
+
+    final box = await _openBox();
+    final consumedIds = _getConsumedIds(box);
+
+    for (final path in existingPaths) {
+      final lines = await File(path).readAsLines();
+      await _consumeLines(lines, linkedUserId, box, consumedIds, rewards);
+    }
+  }
+
+  /// 本番モード: 共有ストア（Android 実機では SAF の共有フォルダ）を走査する。
+  Future<void> _processStore(
+    String linkedUserId,
+    List<CrossAppReward> rewards,
+  ) async {
+    final store = SharedFileStore.instance;
+    final ready = await store.ensureDirectory();
+    if (!ready) {
+      crossAppLinkStatus.value = crossAppLinkStatus.value.copyWith(
+        sharedFolderReady: false,
+        lastError: '共有フォルダが未設定です（連携機能は停止中）',
+      );
+      return;
+    }
+
+    final box = await _openBox();
+    final consumedIds = _getConsumedIds(box);
+
+    for (final name in allFileNames) {
+      final content = await store.readString(name);
+      if (content == null || content.trim().isEmpty) continue;
+      await _consumeLines(
+        const LineSplitter().convert(content),
+        linkedUserId,
+        box,
+        consumedIds,
+        rewards,
+      );
+    }
+  }
+
+  /// JSONL の行群を走査し、未処理イベントを報酬へ変換する。
+  Future<void> _consumeLines(
+    List<String> lines,
+    String linkedUserId,
+    Box box,
+    Set<String> consumedIds,
+    List<CrossAppReward> rewards,
+  ) async {
 
     for (final line in lines) {
       try {

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:rpg_todo/core/infrastructure/shared_file_store.dart';
 import 'package:rpg_todo/features/crossapp/domain/enemy_defeat_event.dart';
 
 /// rpg-task の敵討伐イベントを共有ストレージへ書き出すエクスポーター
@@ -32,23 +33,25 @@ abstract class IRpgEnemyDefeatExporter {
   });
 }
 
-/// ファイルベースの [IRpgEnemyDefeatExporter] 実装
+/// [IRpgEnemyDefeatExporter] の実装。
+///
+/// 保存先は [SharedFileStore] が解決する（Android 実機では SAF の共有フォルダ）。
+/// [filePath] を明示した場合のみ、そのパスへ直接書く（試練用の後方互換）。
 class RpgEnemyDefeatExporter implements IRpgEnemyDefeatExporter {
-  /// 出力先ファイルパス（単一JSON側）
-  final String filePath;
+  /// 試練用の明示パス（単一JSON側）。null なら共有ストア経由。
+  final String? filePath;
 
   /// 時刻供給（試練で決定的にするため注入可能）
   final DateTime Function() clock;
 
   const RpgEnemyDefeatExporter({
-    this.filePath =
-        '/data/local/tmp/takamagahara_shared/rpg_enemy_defeat_events.json',
+    this.filePath,
     this.clock = DateTime.now,
   });
 
   /// 追記専用 jsonl のパス。`.json` 拡張子を `.jsonl` に置換して導出する。
-  String get jsonlPath => filePath.toLowerCase().endsWith('.json')
-      ? '${filePath.substring(0, filePath.length - 5)}.jsonl'
+  String get jsonlPath => filePath!.toLowerCase().endsWith('.json')
+      ? '${filePath!.substring(0, filePath!.length - 5)}.jsonl'
       : '$filePath.jsonl';
 
   @override
@@ -65,9 +68,18 @@ class RpgEnemyDefeatExporter implements IRpgEnemyDefeatExporter {
       timestamp: timestamp ?? formatTimestamp(clock()),
     );
 
+    if (filePath != null) {
+      await _writeToFile(event);
+      return;
+    }
+    await _writeToStore(event);
+  }
+
+  /// 試練用: 明示パスへの直書き（従来の契約をそのまま保持）。
+  Future<void> _writeToFile(Map<String, dynamic> event) async {
     // A: 直近1件の単一JSON（上書き）
     try {
-      final file = File(filePath);
+      final file = File(filePath!);
       await file.parent.create(recursive: true);
       await file.writeAsString(jsonEncode(event), flush: true);
     } catch (_) {
@@ -84,5 +96,26 @@ class RpgEnemyDefeatExporter implements IRpgEnemyDefeatExporter {
     } catch (_) {
       // 同上。追記失敗も討伐本処理を妨げない。
     }
+  }
+
+  /// 本番: 共有ストア経由（Android 実機では SAF の共有フォルダ）。
+  ///
+  /// 書込失敗は**握りつぶさず** [SharedStorageException] として伝える。
+  /// 呼び出し側（討伐の本処理）はこの例外を「連携失敗」として記録し、
+  /// 討伐そのものは止めない。
+  Future<void> _writeToStore(Map<String, dynamic> event) async {
+    final store = SharedFileStore.instance;
+
+    // A: 直近1件の単一JSON（上書き）
+    await store.writeString(
+      SharedCrossAppFiles.rpgEnemyDefeatJson,
+      jsonEncode(event),
+    );
+
+    // B: 追記専用 jsonl（1行1コンパクトJSON）
+    await store.appendLine(
+      SharedCrossAppFiles.rpgEnemyDefeatJsonl,
+      encodeEventLine(event),
+    );
   }
 }

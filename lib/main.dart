@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
 import 'dart:ui';
 import 'dart:async';
 import 'package:provider/provider.dart';
@@ -16,11 +17,13 @@ import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
 import 'package:rpg_todo/core/di/injection.dart';
 import 'package:rpg_todo/features/auth/presentation/auth_gate.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/core/infrastructure/notification_service.dart';
+import 'package:rpg_todo/core/infrastructure/shared_file_store.dart';
 import 'package:rpg_todo/features/reminder/infrastructure/deadline_reminder_coordinator.dart';
 import 'package:rpg_todo/features/reminder/infrastructure/hive_quiet_hours_repository.dart';
 import 'package:rpg_todo/core/infrastructure/iap_service.dart';
@@ -128,6 +131,25 @@ Future<void> bootstrap() async {
   // ━━━ DI 初期化 ━━━
   // configureDependencies() はVMシングルトン登録のみ（データロードはしない）。
   // 実データのロード（initializeViewModels）はGoogleログイン後にAuthGateが行う。
+  // ━━━ 共有ストレージ（現世をまたぐ受け渡し）の初期化 ━━━
+  // Android 実機では SAF（Storage Access Framework）の共有フォルダを使う。
+  // フォルダ未選択でも起動は妨げない（連携画面から選んでもらう）。
+  try {
+    if (Platform.isAndroid) {
+      SharedFileStore.configure(AndroidSharedFileStore());
+    } else {
+      final dir = await getApplicationDocumentsDirectory();
+      SharedFileStore.configure(
+        FileSharedFileStore(Directory('${dir.path}/takamagahara_shared')),
+      );
+    }
+    final ready = await SharedFileStore.instance.ensureDirectory();
+    debugPrint(
+        '[main] 共有ストレージ: ${ready ? '準備OK' : '未設定（連携機能は停止中）'}');
+  } catch (e) {
+    debugPrint('[main] ⚠️ 共有ストレージ初期化失敗（アプリは継続）: $e');
+  }
+
   configureDependencies();
 
   // IAPサービスの初期化（DI経由）

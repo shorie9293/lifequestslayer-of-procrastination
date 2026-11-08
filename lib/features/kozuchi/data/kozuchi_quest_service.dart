@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:rpg_todo/core/infrastructure/shared_file_store.dart';
 import 'package:rpg_todo/features/kozuchi/domain/kozuchi_quest_model.dart';
 
 /// Kozuchi アプリとのデータ連携サービスインターフェース
@@ -15,34 +16,35 @@ abstract class IKozuchiQuestService {
   Future<KozuchiQuest?> fetchActiveQuest();
 }
 
-/// ファイルベースの [IKozuchiQuestService] 実装
+/// [IKozuchiQuestService] の実装。
 ///
-/// Kozuchi アプリが書き出す共有ストレージの JSON ファイルを読み込む。
-/// ファイルパスはコンストラクタで注入可能（デフォルト:
-/// `/data/local/tmp/takamagahara_shared/kozuchi_quest.json`）。
+/// 保存先は [SharedFileStore] が解決する（Android 実機では SAF の共有フォルダ）。
+/// [filePath] を明示した場合のみ、そのパスを直接読む（試練用の後方互換）。
 class FileKozuchiQuestService implements IKozuchiQuestService {
-  final String filePath;
+  /// 試練用の明示パス。null なら共有ストア経由。
+  final String? filePath;
 
-  /// [filePath] を指定しない場合、デフォルトの共有ストレージパスを使用する。
-  const FileKozuchiQuestService({
-    this.filePath = '/data/local/tmp/takamagahara_shared/kozuchi_quest.json',
-  });
+  const FileKozuchiQuestService({this.filePath});
 
   @override
   Future<KozuchiQuest?> fetchActiveQuest() async {
     try {
-      final file = File(filePath);
+      final String? content;
+      if (filePath != null) {
+        final file = File(filePath!);
+        content = await file.exists() ? await file.readAsString() : null;
+      } else {
+        final store = SharedFileStore.instance;
+        if (!await store.ensureDirectory()) return null;
+        content = await store.readString(SharedCrossAppFiles.kozuchiQuest);
+      }
 
-      if (!await file.exists()) {
+      if (content == null || content.trim().isEmpty) {
         return null;
       }
 
-      final content = await file.readAsString();
-      if (content.trim().isEmpty) {
-        return null;
-      }
-
-      final Map<String, dynamic> decoded = json.decode(content) as Map<String, dynamic>;
+      final Map<String, dynamic> decoded =
+          json.decode(content) as Map<String, dynamic>;
       return KozuchiQuest.fromJson(decoded);
     } catch (_) {
       // ファイル読み込みエラー、JSONパースエラー、
