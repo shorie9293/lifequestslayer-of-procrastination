@@ -11,6 +11,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:rpg_todo/core/search/search_history.dart';
+import 'package:rpg_todo/core/search/search_history_chips.dart';
+import 'package:rpg_todo/core/search/search_history_store.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/domain/models/task.dart';
@@ -29,6 +32,7 @@ class GuildQuestSearchScreen extends StatefulWidget {
     this.now,
     this.onTagsSaved,
     this.queryPreferences,
+    this.searchHistoryStore,
   });
 
   /// 試練用: Provider なしでクエスト一覧を注入できる
@@ -43,6 +47,9 @@ class GuildQuestSearchScreen extends StatefulWidget {
   /// 検索条件の保存先。null なら永続化しない（従来の挙動）。
   final GuildQuestQueryPreferencesStore? queryPreferences;
 
+  /// 検索語履歴の保存先。null なら本番の SharedPreferences 実装を使う。
+  final SearchHistoryStore? searchHistoryStore;
+
   @override
   State<GuildQuestSearchScreen> createState() => _GuildQuestSearchScreenState();
 }
@@ -56,6 +63,9 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
   /// 利用者が一度でも条件を触ったか。復元の遅延到着で入力を潰さないための番人。
   bool _userTouched = false;
 
+  /// 検索語の履歴（新しい順）。
+  SearchHistory _history = const SearchHistory.empty();
+
   @override
   void initState() {
     super.initState();
@@ -63,14 +73,45 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
     if (store != null) {
       unawaited(_restore(store));
     }
+    unawaited(_loadHistory(widget.searchHistoryStore ??
+        const SharedPreferencesSearchHistoryStore()));
   }
 
   @override
   void dispose() {
     // 検索語は確定（onSubmitted）まで書かないため、画面を閉じる時に一度だけ保存する
     _persist();
+    // 履歴も同じ方針: 1文字ごとではなく、閉じる時に非空の語だけを積む
+    _rememberHistory(_query.text);
     _textController.dispose();
     super.dispose();
+  }
+
+  /// 保存済みの検索語履歴を読み込む。既に積んだ語があれば上書きしない。
+  Future<void> _loadHistory(SearchHistoryStore store) async {
+    final loaded = await store.load();
+    if (!mounted || _history.isNotEmpty) return;
+    setState(() => _history = loaded);
+  }
+
+  /// 現在の語を履歴の先頭へ積み、投げっぱなしで保存する。
+  ///
+  /// 空語は積まない。保存失敗は検索の邪魔をしない。
+  void _rememberHistory(String raw) {
+    final store = widget.searchHistoryStore ??
+        const SharedPreferencesSearchHistoryStore();
+    if (raw.trim().isEmpty) return;
+    final next = _history.add(raw);
+    if (identical(next, _history)) return;
+    _history = next;
+    unawaited(store.save(next).catchError((Object _) {}));
+  }
+
+  /// 履歴チップの語を検索欄へ反映し、結果を再計算する。
+  void _applyHistoryTerm(String term) {
+    _userTouched = true;
+    _applyTextToController(term);
+    setState(() => _query = _query.copyWith(text: term));
   }
 
   /// 保存済み条件を復元する。利用者が先に触っていたら上書きしない。
@@ -159,10 +200,12 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
   Widget build(BuildContext context) {
     final tasks = widget.tasksOverride ??
         Provider.of<TaskViewModel>(context, listen: false).guildTasks;
-    final results = GuildQuestQueryService.apply(tasks, _query, now: widget.now);
+    final results =
+        GuildQuestQueryService.apply(tasks, _query, now: widget.now);
     // 札の件数は絞り込み前の全件から集計する
     final tagCounts = QuestTagService.counts(tasks);
-    final showTagEdit = widget.tasksOverride == null || widget.onTagsSaved != null;
+    final showTagEdit =
+        widget.tasksOverride == null || widget.onTagsSaved != null;
 
     return Scaffold(
       key: AppKeys.guildQuestSearchScreen,
@@ -197,8 +240,14 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
               onSubmitted: (_) {
                 _userTouched = true;
                 _persist();
+                // 履歴へ積むのは確定時のみ（1文字ごとには積まない）
+                setState(() => _rememberHistory(_query.text));
               },
             ),
+          ),
+          SearchHistoryChips(
+            entries: _history.entries,
+            onSelected: _applyHistoryTerm,
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
