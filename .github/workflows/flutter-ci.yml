@@ -116,6 +116,14 @@ jobs:
                   mavenCentral()
               }
           }
+          gradle.beforeProject { project ->
+              if (project.rootProject.name != 'gradle') {
+                  project.repositories {
+                      maven { url 'https://maven.aliyun.com/repository/public' }
+                      maven { url 'https://repo1.maven.org/maven2' }
+                  }
+              }
+          }
           EOF
 
       - name: Enable KVM group perms
