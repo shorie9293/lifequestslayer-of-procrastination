@@ -12,6 +12,8 @@ pluginManagement {
 
     repositories {
         google()
+        // GitHub リリースCDN障害時の回避: Maven Central 直ミラーを優先
+        maven("https://repo1.maven.org/maven2")
         mavenCentral()
         gradlePluginPortal()
     }
