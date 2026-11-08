@@ -66,14 +66,16 @@ jobs:
           cat > ~/.gradle/init.d/mirror.gradle <<'EOF'
           beforeSettings { settings ->
               settings.pluginManagement.repositories {
+                  google()
+                  maven { url 'https://maven.aliyun.com/repository/public' }
                   maven { url 'https://repo1.maven.org/maven2' }
                   gradlePluginPortal()
-                  google()
                   mavenCentral()
               }
               settings.dependencyResolutionManagement.repositories {
-                  maven { url 'https://repo1.maven.org/maven2' }
                   google()
+                  maven { url 'https://maven.aliyun.com/repository/public' }
+                  maven { url 'https://repo1.maven.org/maven2' }
                   mavenCentral()
               }
           }
