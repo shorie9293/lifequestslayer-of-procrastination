@@ -24,6 +24,7 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/core/infrastructure/notification_service.dart';
 import 'package:rpg_todo/core/infrastructure/shared_file_store.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 import 'package:rpg_todo/features/reminder/infrastructure/deadline_reminder_coordinator.dart';
 import 'package:rpg_todo/features/reminder/infrastructure/hive_quiet_hours_repository.dart';
 import 'package:rpg_todo/core/infrastructure/iap_service.dart';
@@ -144,10 +145,10 @@ Future<void> bootstrap() async {
       );
     }
     final ready = await SharedFileStore.instance.ensureDirectory();
-    debugPrint(
+    appLog.info(
         '[main] 共有ストレージ: ${ready ? '準備OK' : '未設定（連携機能は停止中）'}');
   } catch (e) {
-    debugPrint('[main] ⚠️ 共有ストレージ初期化失敗（アプリは継続）: $e');
+    appLog.warn('[main] 共有ストレージ初期化失敗（アプリは継続）: $e');
   }
 
   configureDependencies();

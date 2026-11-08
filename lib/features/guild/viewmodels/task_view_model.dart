@@ -412,7 +412,7 @@ class TaskViewModel extends ChangeNotifier {
         .catchError((Object e) {
           crossAppLinkStatus.value =
               crossAppLinkStatus.value.copyWith(lastError: e.toString());
-          debugPrint('[TaskVM] enemy defeat export failed: $e');
+          appLog.warn('[TaskVM] enemy defeat export failed: $e');
         });
     // 勤行の日別履歴ログ（道標§五 #50）: 完遂1件を記録（ベストエフォート）
     _practiceLogRepository
