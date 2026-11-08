@@ -91,9 +91,9 @@ class BuildingState {
       case Building.shop:
         return 'ショップ割引 ${level * 5}%';
       case Building.blacksmith:
-        return '装備強化 +${level}';
+        return '装備強化 +$level';
       case Building.watchtower:
-        return 'クエスト難易度 Lv.${level} まで表示';
+        return 'クエスト難易度 Lv.$level まで表示';
     }
   }
 

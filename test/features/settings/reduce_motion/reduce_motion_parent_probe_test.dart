@@ -26,7 +26,7 @@ void main() {
             .disableAnimations,
         isTrue);
     // textScaler など他のフィールドは壊さない
-    final src = MediaQueryData(textScaler: const TextScaler.linear(1.3));
+    const src = MediaQueryData(textScaler: TextScaler.linear(1.3));
     final dst = applyReduceMotion(src, ReduceMotionSetting.on);
     expect(dst.textScaler.scale(10), closeTo(13, 0.001));
   });

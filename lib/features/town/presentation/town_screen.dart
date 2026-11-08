@@ -7,6 +7,7 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
 import 'package:rpg_todo/features/town/domain/building.dart';
+import 'package:rpg_todo/features/auto_backup/data/auto_backup_status_store.dart';
 import 'package:rpg_todo/features/settings/presentation/settings_hub_screen.dart';
 import 'package:rpg_todo/features/account_deletion/presentation/production_account_deletion_builder.dart';
 import 'package:rpg_todo/features/adventurer/presentation/adventurer_chart_screen.dart';
@@ -68,6 +69,7 @@ class TownScreen extends StatelessWidget {
                   builder: (_) => SettingsHubScreen(
                     accountDeletionScreenBuilder:
                         buildProductionAccountDeletionScreen,
+                    autoBackupStatusStore: FileAutoBackupStatusStore(),
                   ),
                 ),
               ),
@@ -199,7 +201,7 @@ class _TownTab extends StatelessWidget {
             xpToNext: townVM.townLevel.xpToNext,
           ),
           // 町XP獲得方法の説明
-          _TownXpHint(),
+          const _TownXpHint(),
           _TownScaleBar(scale: scale, nextScale: nextScale, nextLevel: nextLevel),
           Expanded(
             child: SingleChildScrollView(
