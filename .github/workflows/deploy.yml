@@ -60,6 +60,26 @@ jobs:
       - name: 📦 Get dependencies
         run: flutter pub get
 
+      - name: 🔧 Gradle mirror init (GitHub リリースCDN 504 回避)
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cat > ~/.gradle/init.d/mirror.gradle <<'EOF'
+          beforeSettings { settings ->
+              settings.pluginManagement.repositories {
+                  maven { url 'https://repo1.maven.org/maven2' }
+              }
+              settings.dependencyResolutionManagement.repositories {
+                  maven { url 'https://repo1.maven.org/maven2' }
+              }
+          }
+          allprojects {
+              repositories {
+                  maven { url 'https://repo1.maven.org/maven2' }
+              }
+          }
+          EOF
+          cat ~/.gradle/init.d/mirror.gradle
+
       - name: 🔐 Decode Keystore
         run: |
           echo "${{ secrets.KEYSTORE_BASE64_RPGTASK }}" | tr -d '\n\r\t %' | base64 -d > android/upload-keystore.jks

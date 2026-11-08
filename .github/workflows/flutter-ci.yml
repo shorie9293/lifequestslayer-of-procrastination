@@ -97,6 +97,25 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Gradle mirror init (GitHub リリースCDN 504 回避)
+        run: |
+          mkdir -p ~/.gradle/init.d
+          cat > ~/.gradle/init.d/mirror.gradle <<'EOF'
+          beforeSettings { settings ->
+              settings.pluginManagement.repositories {
+                  maven { url 'https://repo1.maven.org/maven2' }
+              }
+              settings.dependencyResolutionManagement.repositories {
+                  maven { url 'https://repo1.maven.org/maven2' }
+              }
+          }
+          allprojects {
+              repositories {
+                  maven { url 'https://repo1.maven.org/maven2' }
+              }
+          }
+          EOF
+
       - name: Enable KVM group perms
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
