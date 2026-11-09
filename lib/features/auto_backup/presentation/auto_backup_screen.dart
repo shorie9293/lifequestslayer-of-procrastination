@@ -308,7 +308,19 @@ class _AutoBackupScreenState extends State<AutoBackupScreen> {
     return ListTile(
       key: AutoBackupKeys.row(index),
       title: Text(row.displayLabel),
-      subtitle: Text(row.entry.fileName),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(row.entry.fileName),
+          if (!row.restorability.isRestorable)
+            Text(
+              row.restorability.label,
+              key: AutoBackupKeys.restorabilityLabel(index),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+        ],
+      ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -319,7 +331,7 @@ class _AutoBackupScreenState extends State<AutoBackupScreen> {
               icon: const Icon(Icons.share),
               onPressed: () => _share(row),
             ),
-          if (widget.restorer != null && row.restorable)
+          if (widget.restorer != null && row.restorability.isRestorable)
             IconButton(
               key: AutoBackupKeys.restoreButton(index),
               tooltip: 'このバックアップから復元',

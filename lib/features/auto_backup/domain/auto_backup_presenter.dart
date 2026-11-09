@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_policy.dart';
+import 'package:rpg_todo/features/auto_backup/domain/backup_restorability.dart';
 
 /// 自動バックアップ一覧の1行分（表示用の派生値）。
 class AutoBackupRow {
@@ -9,7 +10,17 @@ class AutoBackupRow {
     required this.byteSize,
     required this.generation,
     required this.restorable,
-  });
+    BackupRestorability? restorability,
+  }) : restorability = restorability ??
+            (restorable
+                ? const BackupRestorability(
+                    BackupRestoreState.restorable,
+                    '復元できます',
+                  )
+                : const BackupRestorability(
+                    BackupRestoreState.corrupt,
+                    '復元できません',
+                  ));
 
   final AutoBackupEntry entry;
   final int byteSize;
@@ -18,7 +29,12 @@ class AutoBackupRow {
   final int generation;
 
   /// 復元可能な JSON か。
+  ///
+  /// 後方互換のための旧フィールド。実際の復元可否は [restorability] を見よ。
   final bool restorable;
+
+  /// 復元可否の詳細分類（列挙・理由・表示ラベル）。
+  final BackupRestorability restorability;
 
   String get dateLabel => AutoBackupPresenter.formatDate(entry.createdAt);
 
@@ -99,6 +115,7 @@ class AutoBackupPresenter {
           byteSize: content == null ? 0 : utf8.encode(content).length,
           generation: i + 1,
           restorable: canRestore(content),
+          restorability: BackupRestorability.classify(content),
         ),
       );
     }

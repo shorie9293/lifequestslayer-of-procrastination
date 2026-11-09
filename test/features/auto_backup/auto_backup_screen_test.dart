@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_status_store.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_store.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_status.dart';
@@ -31,6 +34,15 @@ class _FakeSharer implements AutoBackupSharer {
   }
 }
 
+/// decode を通る最小の正当な控え。
+String validBackupJson() => jsonEncode({
+      'version': 2,
+      'exportedAt': '2026-10-28T00:00:00.000Z',
+      'player': Player().toJson(),
+      'tasks': <dynamic>[],
+      'boxes': <String, dynamic>{},
+    });
+
 void main() {
   late InMemoryAutoBackupStore store;
   var clock = DateTime(2026, 10, 29, 7, 12);
@@ -38,11 +50,11 @@ void main() {
   setUp(() async {
     clock = DateTime(2026, 10, 27, 7, 12);
     store = InMemoryAutoBackupStore(now: () => clock);
-    await store.write('auto_backup_20261027.json', '{"n":1}');
+    await store.write('auto_backup_20261027.json', validBackupJson());
     clock = DateTime(2026, 10, 28, 7, 12);
-    await store.write('auto_backup_20261028.json', '{"n":2}');
+    await store.write('auto_backup_20261028.json', validBackupJson());
     clock = DateTime(2026, 10, 29, 7, 12);
-    await store.write('auto_backup_20261029.json', '{"n":3}');
+    await store.write('auto_backup_20261029.json', validBackupJson());
   });
 
   Future<void> pumpScreen(
@@ -91,7 +103,7 @@ void main() {
 
   testWidgets('壊れたJSONは復元ボタンを出さない', (tester) async {
     final mixed = InMemoryAutoBackupStore(now: () => clock);
-    await mixed.write('auto_backup_20261028.json', '{"ok":true}');
+    await mixed.write('auto_backup_20261028.json', validBackupJson());
     clock = DateTime(2026, 10, 29, 7, 12);
     await mixed.write('auto_backup_20261029.json', 'not json');
 
@@ -109,6 +121,33 @@ void main() {
     // 0番目（最新）は壊れているので復元不可、1番目は復元可能
     expect(find.byKey(AutoBackupKeys.restoreButton(0)), findsNothing);
     expect(find.byKey(AutoBackupKeys.restoreButton(1)), findsOneWidget);
+  });
+
+  testWidgets('版番号なしの控えは復元ボタンを出さない', (tester) async {
+    final mixed = InMemoryAutoBackupStore(now: () => clock);
+    await mixed.write('auto_backup_20261028.json', '{"ok":true}');
+    clock = DateTime(2026, 10, 29, 7, 12);
+    await mixed.write('auto_backup_20261029.json', validBackupJson());
+
+    await tester.pumpWidget(MaterialApp(
+      home: AutoBackupScreen(
+        store: mixed,
+        restorer: _FakeRestorer(),
+        sharer: _FakeSharer(),
+        now: () => clock,
+      ),
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    // 正当な控え（最新）だけ復元ボタンを出し、版番号なしは理由を出す。
+    expect(find.byKey(AutoBackupKeys.restoreButton(0)), findsOneWidget);
+    expect(find.byKey(AutoBackupKeys.restoreButton(1)), findsNothing);
+    expect(
+      find.byKey(AutoBackupKeys.restorabilityLabel(1)),
+      findsOneWidget,
+    );
+    expect(find.text('版番号が無い控えです'), findsOneWidget);
   });
 
   testWidgets('復元は確認ダイアログOKで呼ばれる', (tester) async {

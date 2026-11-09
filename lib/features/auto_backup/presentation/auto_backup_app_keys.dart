@@ -32,6 +32,10 @@ class AutoBackupKeys {
   /// 共有ボタン（[index] は新しい順）。
   static Key shareButton(int index) => Key('btn_auto_backup_share_$index');
 
+  /// 復元不可の理由ラベル（[index] は新しい順）。
+  static Key restorabilityLabel(int index) =>
+      Key('txt_auto_backup_restorability_$index');
+
   /// 設定ハブからの導線。
   static const Key entryFromSettings = Key('tile_settings_auto_backup');
 }

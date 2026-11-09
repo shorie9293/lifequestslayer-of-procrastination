@@ -1,7 +1,7 @@
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_store.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_policy.dart';
-import 'package:rpg_todo/features/auto_backup/domain/auto_backup_presenter.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_restorer.dart';
+import 'package:rpg_todo/features/auto_backup/domain/backup_restorability.dart';
 import 'package:rpg_todo/core/logging/app_logger.dart';
 
 /// 自動バックアップ復元の本番アダプタ。
@@ -33,11 +33,14 @@ class AutoBackupRestorerImpl implements AutoBackupRestorer {
   Future<AutoBackupRestoreResult> restore(String fileName) async {
     try {
       final json = await _store.read(fileName);
-      if (!AutoBackupPresenter.canRestore(json)) {
-        return const AutoBackupRestoreResult(
-          ok: false,
-          message: 'バックアップが壊れているため復元できません',
-        );
+      final restorability = BackupRestorability.classify(json);
+      if (!restorability.isRestorable) {
+        // 版番号が無い控えだけは理由を具体的に返す。それ以外は従来文言を保つ。
+        final message =
+            restorability.state == BackupRestoreState.unsupportedVersion
+                ? restorability.reason
+                : 'バックアップが壊れているため復元できません';
+        return AutoBackupRestoreResult(ok: false, message: message);
       }
 
       // 復元前の現状を必ず退避する（apply が失敗しても現状は残る）。

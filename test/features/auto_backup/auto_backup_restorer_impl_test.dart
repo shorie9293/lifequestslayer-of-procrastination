@@ -1,7 +1,19 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_restorer_impl.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_store.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_policy.dart';
+
+/// decode を通る最小の正当な控え。
+String validBackupJson() => jsonEncode({
+      'version': 2,
+      'exportedAt': '2026-10-28T00:00:00.000Z',
+      'player': Player().toJson(),
+      'tasks': <dynamic>[],
+      'boxes': <String, dynamic>{},
+    });
 
 /// 操作順序を記録する試練用ストア。
 class _RecordingStore implements AutoBackupStore {
@@ -44,8 +56,9 @@ void main() {
   final now = DateTime(2026, 10, 29, 7, 12);
 
   test('復元前に本日分の safety スナップショットを write する', () async {
+    final valid = validBackupJson();
     final store = _RecordingStore({
-      'auto_backup_20261028.json': '{"old":true}',
+      'auto_backup_20261028.json': valid,
     });
     final applied = <String>[];
 
@@ -63,7 +76,7 @@ void main() {
 
     expect(result.ok, isTrue);
     expect(result.safetyFileName, 'auto_backup_20261029.json');
-    expect(applied, ['{"old":true}']);
+    expect(applied, [valid]);
     expect(store.files['auto_backup_20261029.json'], '{"current":true}');
     // 読み込み → 安全確保 → 適用 の順序
     expect(store.ops, [
@@ -94,6 +107,29 @@ void main() {
     expect(store.files.containsKey('auto_backup_20261029.json'), isFalse);
   });
 
+  test('版番号なしの控えは apply せず理由つき ok:false', () async {
+    final store = _RecordingStore({
+      'auto_backup_20261028.json': '{"ok":true}',
+    });
+    final applied = <String>[];
+
+    final restorer = AutoBackupRestorerImpl(
+      store: store,
+      buildCurrentJson: () async => '{"current":true}',
+      applyBackup: (json) async => applied.add(json),
+      now: () => now,
+    );
+
+    final result = await restorer.restore('auto_backup_20261028.json');
+
+    expect(result.ok, isFalse);
+    expect(result.message, contains('版番号が無い控えはこの版では復元できません'));
+    expect(applied, isEmpty);
+    // 現状スナップショットも書かない
+    expect(store.files.containsKey('auto_backup_20261029.json'), isFalse);
+    expect(store.ops, ['read:auto_backup_20261028.json']);
+  });
+
   test('存在しないファイルは ok:false', () async {
     final store = _RecordingStore({});
     final restorer = AutoBackupRestorerImpl(
@@ -109,7 +145,7 @@ void main() {
 
   test('apply の例外を握って ok:false（投げない）', () async {
     final store = _RecordingStore({
-      'auto_backup_20261028.json': '{"old":true}',
+      'auto_backup_20261028.json': validBackupJson(),
     });
     final restorer = AutoBackupRestorerImpl(
       store: store,
@@ -127,7 +163,7 @@ void main() {
 
   test('buildCurrentJson の例外も握る', () async {
     final store = _RecordingStore({
-      'auto_backup_20261028.json': '{"old":true}',
+      'auto_backup_20261028.json': validBackupJson(),
     });
     final restorer = AutoBackupRestorerImpl(
       store: store,
