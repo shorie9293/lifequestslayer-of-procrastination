@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/infrastructure/app_lock_settings_screen.dart';
@@ -11,6 +13,7 @@ import 'package:rpg_todo/features/auto_backup/data/auto_backup_restorer_impl.dar
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_sharer_impl.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_status_store.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_store.dart';
+import 'package:rpg_todo/features/auto_backup/data/backup_restore_flow.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_policy.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_status.dart';
 import 'package:rpg_todo/features/auto_backup/presentation/auto_backup_app_keys.dart';
@@ -49,15 +52,17 @@ void _openAutoBackup(BuildContext context) {
     );
   }
 
-  Future<void> applyBackup(String json) async {
-    final data = FullBackupService().decode(json);
-    if (data == null) {
-      throw const FormatException('バックアップ形式が不正です');
-    }
-    playerVM.restorePlayer(data.player);
-    taskVM.setTasks(data.tasks);
-    await storage.restore(data.boxes);
-  }
+  Future<void> applyBackup(String json) => applyBackupJson(
+        json: json,
+        restorePlayer: playerVM.restorePlayer,
+        setTasks: taskVM.setTasks,
+        restoreBoxes: storage.restore,
+        // 復元で設定（通知時刻）が巻き戻るため、起動時と同じ2手で予約を貼り直す。
+        // 投げっぱなしにして復元UIを待たせない。例外は関数内で握る。
+        onRestored: () async {
+          unawaited(rescheduleNotificationsAfterRestore());
+        },
+      );
 
   final restorer = AutoBackupRestorerImpl(
     store: store,

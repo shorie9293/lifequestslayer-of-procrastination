@@ -1,6 +1,7 @@
 import 'package:hive/hive.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/services/backup_registry.dart';
+import 'package:rpg_todo/domain/services/backup_secret_keys.dart';
 import 'package:rpg_todo/domain/services/reflection_backup_codec.dart';
 
 /// 全データバックアップの Hive I/O 抽象。
@@ -38,6 +39,9 @@ class HiveBackupStorage implements BackupStorage {
         final entries = <String, dynamic>{};
         box.toMap().forEach((key, value) {
           if (key == null) return;
+          // 秘密（パスコードハッシュ等）は box 単位の許可リストを通過しても
+          // 控え JSON（共有・クラウド退避され得る）へは載せない。
+          if (isSecretKey(key.toString())) return;
           switch (spec.kind) {
             case BackupBoxKind.jsonValue:
               final safe = _toJsonSafe(value);
@@ -67,9 +71,18 @@ class HiveBackupStorage implements BackupStorage {
       if (spec == null) continue; // 許可リスト外は無視
       try {
         final box = await _boxOpener(spec.boxName);
+        // clear() で消える自端末の秘密は退避しておき、そのまま書き戻す。
+        // 控え側の秘密は決して採用しない（他端末へ施錠を移さない）。
+        final preservedSecrets = <dynamic, dynamic>{};
+        for (final key in box.keys.toList()) {
+          if (key != null && isSecretKey(key.toString())) {
+            preservedSecrets[key] = box.get(key);
+          }
+        }
         await box.clear();
         final putEntries = <dynamic, dynamic>{};
         entry.value.forEach((key, value) {
+          if (isSecretKey(key)) return; // 旧控えからの再混入を防ぐ
           switch (spec.kind) {
             case BackupBoxKind.jsonValue:
               putEntries[key] = value;
@@ -85,6 +98,7 @@ class HiveBackupStorage implements BackupStorage {
               break;
           }
         });
+        putEntries.addAll(preservedSecrets);
         await box.putAll(putEntries);
       } catch (_) {
         // 各 box の失敗は他 box を止めない／呼出側へは投げない
