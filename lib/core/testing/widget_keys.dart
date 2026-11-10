@@ -108,6 +108,13 @@ class AppKeys {
   static const Key templeBackupButton = Key('btn_temple_backup');
   static const Key templeRestoreButton = Key('btn_temple_restore');
   static const Key templeCsvExportButton = Key('btn_temple_csv_export');
+  static const Key templeRestoreConfirmDialog = Key('dlg_temple_restore');
+  static const Key templeRestoreConfirmButton = Key('btn_temple_restore_confirm');
+  static const Key templeRestoreCancelButton = Key('btn_temple_restore_cancel');
+
+  // ━━━ 復元確認ダイアログの内訳プレビュー ━━━
+  static const Key restorePreviewSummary = Key('txt_restore_preview_summary');
+  static const Key restorePreviewSamples = Key('txt_restore_preview_samples');
 
   // ━━━ 自動バックアップの状態表示（失敗の可視化） ━━━
   static const Key autoBackupLastSuccess = Key('txt_auto_backup_last_success');

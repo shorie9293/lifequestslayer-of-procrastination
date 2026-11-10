@@ -77,6 +77,7 @@ void _openAutoBackup(BuildContext context) {
         restorer: restorer,
         sharer: const AutoBackupSharerImpl(),
         statusStore: FileAutoBackupStatusStore(),
+        backupStorage: storage,
         onBackupNow: () async {
           final json = await buildCurrentJson();
           await store.write(

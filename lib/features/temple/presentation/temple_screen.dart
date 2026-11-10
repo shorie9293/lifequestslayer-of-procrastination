@@ -8,6 +8,8 @@ import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/domain/services/data_export_service.dart';
 import 'package:rpg_todo/domain/services/full_backup.dart';
+import 'package:rpg_todo/features/auto_backup/domain/restore_preview.dart';
+import 'package:rpg_todo/features/auto_backup/presentation/restore_preview_dialog.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/features/temple/data/backup_storage.dart';
@@ -667,11 +669,34 @@ class TempleScreen extends StatelessWidget {
                       }
                       return;
                     }
+                    final storage = _storageFactory();
+                    // 内訳プレビュー（取得失敗は null＝従来表示のまま復元へ進む）。
+                    RestorePreview? preview;
+                    try {
+                      final boxes = await storage.capture();
+                      preview = RestorePreview.tryFromJson(
+                        backupJson: json,
+                        currentBoxes: boxes,
+                      );
+                    } catch (_) {
+                      preview = null;
+                    }
+                    if (!context.mounted) return;
+                    final confirmed = await showRestorePreviewDialog(
+                      context: context,
+                      dialogKey: AppKeys.templeRestoreConfirmDialog,
+                      message: 'このバックアップから復元しますか？'
+                          '現在のデータは先に自動バックアップされます',
+                      preview: preview,
+                      cancelKey: AppKeys.templeRestoreCancelButton,
+                      confirmKey: AppKeys.templeRestoreConfirmButton,
+                    );
+                    if (!confirmed) return;
                     final ok = await applyRestore(
                       jsonString: json,
                       playerVM: playerVM,
                       taskVM: taskVM,
-                      storage: _storageFactory(),
+                      storage: storage,
                     );
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(

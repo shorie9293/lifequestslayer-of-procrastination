@@ -6,7 +6,10 @@ import 'package:rpg_todo/features/auto_backup/domain/auto_backup_presenter.dart'
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_restorer.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_sharer.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_status.dart';
+import 'package:rpg_todo/features/auto_backup/domain/restore_preview.dart';
 import 'package:rpg_todo/features/auto_backup/presentation/auto_backup_app_keys.dart';
+import 'package:rpg_todo/features/auto_backup/presentation/restore_preview_dialog.dart';
+import 'package:rpg_todo/features/temple/data/backup_storage.dart';
 
 /// 自動バックアップの閲覧・復元・共有画面。
 ///
@@ -22,6 +25,7 @@ class AutoBackupScreen extends StatefulWidget {
     this.onBackupNow,
     this.statusStore,
     this.now,
+    this.backupStorage,
   });
 
   final AutoBackupStore store;
@@ -37,6 +41,10 @@ class AutoBackupScreen extends StatefulWidget {
 
   /// 時計（試練での固定用）。未指定なら [DateTime.now]。
   final DateTime Function()? now;
+
+  /// 復元前プレビュー用の現状スナップショット読み出し元。
+  /// 未指定なら内訳を出さず従来表示のみ（後方互換）。
+  final BackupStorage? backupStorage;
 
   @override
   State<AutoBackupScreen> createState() => _AutoBackupScreenState();
@@ -101,33 +109,34 @@ class _AutoBackupScreenState extends State<AutoBackupScreen> {
     messenger?.showSnackBar(SnackBar(content: Text(message)));
   }
 
+  /// 復元前プレビュー（取得失敗は null＝従来表示）。
+  Future<RestorePreview?> _buildPreview(AutoBackupRow row) async {
+    final storage = widget.backupStorage;
+    final json = _contents[row.entry.fileName];
+    if (storage == null || json == null) return null;
+    try {
+      final boxes = await storage.capture();
+      return RestorePreview.tryFromJson(backupJson: json, currentBoxes: boxes);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _confirmRestore(AutoBackupRow row) async {
     final restorer = widget.restorer;
     if (restorer == null) return;
 
-    final confirmed = await showDialog<bool>(
+    final preview = await _buildPreview(row);
+    if (!mounted) return;
+    final confirmed = await showRestorePreviewDialog(
       context: context,
-      builder: (ctx) => AlertDialog(
-        key: AutoBackupKeys.confirmDialog,
-        title: const Text('復元の確認'),
-        content: const Text(
-          'このバックアップから復元しますか？現在のデータは先に自動バックアップされます',
-        ),
-        actions: [
-          TextButton(
-            key: AutoBackupKeys.cancelRestoreButton,
-            onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('キャンセル'),
-          ),
-          FilledButton(
-            key: AutoBackupKeys.confirmRestoreButton,
-            onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('復元する'),
-          ),
-        ],
-      ),
+      dialogKey: AutoBackupKeys.confirmDialog,
+      message: 'このバックアップから復元しますか？現在のデータは先に自動バックアップされます',
+      preview: preview,
+      cancelKey: AutoBackupKeys.cancelRestoreButton,
+      confirmKey: AutoBackupKeys.confirmRestoreButton,
     );
-    if (confirmed != true) return;
+    if (!confirmed) return;
 
     try {
       final result = await restorer.restore(row.entry.fileName);
