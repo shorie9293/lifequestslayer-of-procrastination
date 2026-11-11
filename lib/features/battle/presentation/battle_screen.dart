@@ -136,15 +136,18 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
     if (_battleVM.isInCombat) return;
 
     final settingsVM = context.read<SettingsViewModel>();
-
-    if (!settingsVM.isBattleSceneEnabled) {
-      // 戦闘シーンOFF → 即討伐
-      _completeTask(context, taskId);
-      return;
-    }
-
     final taskVM = context.read<TaskViewModel>();
     final task = taskVM.activeTasks.firstWhere((t) => t.id == taskId);
+
+    if (!settingsVM.isBattleSceneEnabled) {
+      // 戦闘シーンOFF → 即討伐。
+      // ただし状態機械は enterBattle→selectTactic(攻撃)→declareVictory→dismissResult
+      // の正規経路を通す。idle のまま勝利宣言すると BattlePhaseException で落ちる。
+      _battleVM.enterBattle(task);
+      _battleVM.selectTactic(BattleTactic.attack);
+      _completeTask(context, taskId, tactic: BattleTactic.attack);
+      return;
+    }
 
     _battleVM.enterBattle(task);
     setState(() {

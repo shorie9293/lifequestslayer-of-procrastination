@@ -719,6 +719,51 @@ void main() {
       await runTactic(tester, tacticLabel: 'スキル', expectedFragment: 'スキルの型');
     });
   });
+
+  // ━━━ 戦闘シーンOFF: 即討伐でクラッシュしないこと ━━━
+  // 禍津: 戦闘シーンOFF時は _battleVM.enterBattle() を呼ばずに _completeTask() を
+  // 直接実行するため、declareVictory() の _currentTask! が null で落ちていた。
+  group('戦闘シーンOFF 即討伐テスト', () {
+    testWidgets('戦闘シーンOFFで「討つ！」を押してもエラーにならず、クエストが完了する',
+        (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+      late String taskId;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+        vms.player.player.jobLevels[vms.player.player.currentJob] = 2;
+        vms.task.addTask('OFFテスト', rank: QuestRank.B);
+        taskId = vms.task.tasks.first.id;
+        vms.task.acceptTask(taskId);
+        // 戦闘シーンOFFに切り替える
+        await vms.settings.setBattleSceneEnabled(false);
+      });
+
+      await pumpBattleScreen(
+          tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      expect(vms.settings.isBattleSceneEnabled, isFalse);
+
+      // ExpansionTileを展開
+      final taskTitle = find.text('[B] OFFテスト');
+      expect(taskTitle, findsOneWidget);
+      await tester.tap(taskTitle);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 討つ！ボタンをタップ → 戦闘シーンOFFなので即討伐
+      await tester.tap(find.byTooltip('討つ！'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // エラーが発生していないこと
+      expect(tester.takeException(), isNull,
+          reason: '戦闘シーンOFFの即討伐で例外が発生している（_currentTask! の null 参照）');
+
+      // クエストが完了していること（activeTasksから消えている）
+      expect(vms.task.activeTasks.length, 0);
+    });
+  });
 }
 
 /// save()が例外を投げるモックTaskRepository
