@@ -31,6 +31,8 @@ void main() {
       expect(SharedCrossAppFiles.tsundokuRewardEvents,
           'tsundoku_reward_events.jsonl');
       expect(SharedCrossAppFiles.tsundokuBookEvents, 'tsundoku_book_events.json');
+      expect(SharedCrossAppFiles.tsundokuBookCompleted,
+          'tsundoku_book_completed.json');
       expect(SharedCrossAppFiles.electionRewardEvents,
           'election_reward_events.jsonl');
       expect(SharedCrossAppFiles.bookReviewRewardEvents,

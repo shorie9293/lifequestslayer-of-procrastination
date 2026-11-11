@@ -25,6 +25,12 @@ class SharedCrossAppFiles {
   /// tsundoku-quest → kozuchi: 読了イベント（単一 JSON）
   static const String tsundokuBookEvents = 'tsundoku_book_events.json';
 
+  /// tsundoku-quest → kozuchi: 読了通知（単一 JSON・読了時のみ）
+  ///
+  /// rpg-task 自身は読まないが、ファイル名は**5現世共通の契約**ゆえ
+  /// 表に載せておく（各現世が独自に文字列を持ち始めると静かに0件になる）。
+  static const String tsundokuBookCompleted = 'tsundoku_book_completed.json';
+
   /// election-game → rpg-task: 選挙参加報酬イベント（追記専用 jsonl）
   static const String electionRewardEvents = 'election_reward_events.jsonl';
 
