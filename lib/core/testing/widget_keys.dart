@@ -441,6 +441,9 @@ class AppKeys {
   static const Key reflectionGroveScreen = Key('screen_reflection_grove');
   static const Key reflectionGroveEntry = Key('btn_reflection_grove_entry');
 
+  // ━━━ 現世間の受け渡し（クロスアプリ連携） ━━━
+  static const Key crossAppLinkStatusEntry = Key('btn_cross_app_link_entry');
+
   // ━━━ 端末内クラッシュログ・エラー境界（適3） ━━━
   static const Key crashBoundaryScreen = Key('screen_crash_boundary');
   static const Key crashBoundaryReloadButton = Key('btn_crash_boundary_reload');

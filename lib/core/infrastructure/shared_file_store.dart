@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/services.dart';
+
+import 'package:rpg_todo/core/infrastructure/cross_app_link_status.dart';
+import 'package:rpg_todo/core/infrastructure/cross_app_link_status_store.dart';
 
 /// 現世（アプリ）をまたいで受け渡す共有ファイルの**契約**。
 ///
@@ -102,8 +106,14 @@ class FileSharedFileStore implements ISharedFileStore {
       if (!directory.existsSync()) {
         await directory.create(recursive: true);
       }
+      unawaited(
+        CrossAppLinkStatusRecorder.instance.recordFolderReady(true),
+      );
       return true;
     } on Object {
+      unawaited(
+        CrossAppLinkStatusRecorder.instance.recordFolderReady(false),
+      );
       return false;
     }
   }
@@ -118,7 +128,15 @@ class FileSharedFileStore implements ISharedFileStore {
     try {
       await file.parent.create(recursive: true);
       await file.writeAsString(content, flush: true);
+      unawaited(
+        CrossAppLinkStatusRecorder.instance
+            .recordSent(count: 1, fileName: fileName),
+      );
     } on Object catch (e) {
+      unawaited(
+        CrossAppLinkStatusRecorder.instance
+            .recordSendFailure(e, fileName: fileName),
+      );
       throw SharedStorageException('write', fileName, e);
     }
   }
@@ -129,7 +147,15 @@ class FileSharedFileStore implements ISharedFileStore {
     try {
       await file.parent.create(recursive: true);
       await file.writeAsString('$line\n', mode: FileMode.append, flush: true);
+      unawaited(
+        CrossAppLinkStatusRecorder.instance
+            .recordSent(count: 1, fileName: fileName),
+      );
     } on Object catch (e) {
+      unawaited(
+        CrossAppLinkStatusRecorder.instance
+            .recordSendFailure(e, fileName: fileName),
+      );
       throw SharedStorageException('append', fileName, e);
     }
   }
@@ -139,8 +165,19 @@ class FileSharedFileStore implements ISharedFileStore {
     final file = _file(fileName);
     try {
       if (!await file.exists()) return null;
-      return await file.readAsString();
+      final content = await file.readAsString();
+      unawaited(
+        CrossAppLinkStatusRecorder.instance.recordReceived(
+          count: CrossAppLinkStatusText.countLines(content),
+          fileName: fileName,
+        ),
+      );
+      return content;
     } on Object catch (e) {
+      unawaited(
+        CrossAppLinkStatusRecorder.instance
+            .recordReceiveFailure(e, fileName: fileName),
+      );
       throw SharedStorageException('read', fileName, e);
     }
   }
@@ -211,9 +248,17 @@ class AndroidSharedFileStore implements ISharedFileStore {
 
   @override
   Future<bool> ensureDirectory() async {
-    if (_ready) return true;
+    if (_ready) {
+      unawaited(
+        CrossAppLinkStatusRecorder.instance.recordFolderReady(true),
+      );
+      return true;
+    }
     final ok = await _invoke<bool>('ensureDirectory') ?? false;
     _ready = ok;
+    unawaited(
+      CrossAppLinkStatusRecorder.instance.recordFolderReady(ok),
+    );
     return ok;
   }
 
@@ -222,29 +267,83 @@ class AndroidSharedFileStore implements ISharedFileStore {
   Future<bool> chooseDirectory() async {
     final ok = await _invoke<bool>('chooseDirectory') ?? false;
     _ready = ok;
+    unawaited(
+      CrossAppLinkStatusRecorder.instance.recordFolderReady(ok),
+    );
     return ok;
   }
 
   @override
   Future<void> writeString(String fileName, String content) async {
     if (!await ensureDirectory()) {
-      throw const SharedStorageException('write', '*', 'no directory');
+      final error = const SharedStorageException('write', '*', 'no directory');
+      unawaited(
+        CrossAppLinkStatusRecorder.instance
+            .recordSendFailure(error, fileName: fileName),
+      );
+      throw error;
     }
-    await _invoke<void>('writeString', {'name': fileName, 'content': content});
+    try {
+      await _invoke<void>('writeString', {'name': fileName, 'content': content});
+      unawaited(
+        CrossAppLinkStatusRecorder.instance
+            .recordSent(count: 1, fileName: fileName),
+      );
+    } on Object catch (e) {
+      unawaited(
+        CrossAppLinkStatusRecorder.instance
+            .recordSendFailure(e, fileName: fileName),
+      );
+      rethrow;
+    }
   }
 
   @override
   Future<void> appendLine(String fileName, String line) async {
     if (!await ensureDirectory()) {
-      throw const SharedStorageException('append', '*', 'no directory');
+      final error = const SharedStorageException('append', '*', 'no directory');
+      unawaited(
+        CrossAppLinkStatusRecorder.instance
+            .recordSendFailure(error, fileName: fileName),
+      );
+      throw error;
     }
-    await _invoke<void>('appendLine', {'name': fileName, 'line': line});
+    try {
+      await _invoke<void>('appendLine', {'name': fileName, 'line': line});
+      unawaited(
+        CrossAppLinkStatusRecorder.instance
+            .recordSent(count: 1, fileName: fileName),
+      );
+    } on Object catch (e) {
+      unawaited(
+        CrossAppLinkStatusRecorder.instance
+            .recordSendFailure(e, fileName: fileName),
+      );
+      rethrow;
+    }
   }
 
   @override
   Future<String?> readString(String fileName) async {
     if (!await ensureDirectory()) return null;
-    return _invoke<String>('readString', {'name': fileName});
+    try {
+      final content = await _invoke<String>('readString', {'name': fileName});
+      if (content != null) {
+        unawaited(
+          CrossAppLinkStatusRecorder.instance.recordReceived(
+            count: CrossAppLinkStatusText.countLines(content),
+            fileName: fileName,
+          ),
+        );
+      }
+      return content;
+    } on Object catch (e) {
+      unawaited(
+        CrossAppLinkStatusRecorder.instance
+            .recordReceiveFailure(e, fileName: fileName),
+      );
+      rethrow;
+    }
   }
 
   @override

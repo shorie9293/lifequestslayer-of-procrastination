@@ -22,6 +22,7 @@ import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/reminder/presentation/quiet_hours_settings_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
+import 'package:rpg_todo/features/settings/presentation/cross_app_link_status_screen.dart';
 import 'package:rpg_todo/features/settings/presentation/reduce_motion_settings_screen.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/streak_freeze/presentation/streak_freeze_app_keys.dart';
@@ -99,6 +100,7 @@ class SettingsHubScreen extends StatelessWidget {
     this.reflectionGroveScreenBuilder,
     this.accountDeletionScreenBuilder,
     this.autoBackupStatusStore,
+    this.crossAppLinkStatusScreenBuilder,
   });
 
   final WidgetBuilder? reminderScreenBuilder;
@@ -121,6 +123,11 @@ class SettingsHubScreen extends StatelessWidget {
   /// 未指定なら従来どおりの説明文のみ（後方互換）。指定すると、連続失敗が
   /// 閾値以上なら警告文言と警告アイコンに切り替える。
   final AutoBackupStatusStore? autoBackupStatusStore;
+
+  /// 連携状況（現世間の受け渡し）画面のビルダー。
+  ///
+  /// 未指定なら実画面 [CrossAppLinkStatusScreen]（アプリ共有の記録口）を開く。
+  final WidgetBuilder? crossAppLinkStatusScreenBuilder;
 
   /// 自動バックアップの導線1行。
   ///
@@ -264,6 +271,19 @@ class SettingsHubScreen extends StatelessWidget {
           ),
           // 末尾追加: 自動バックアップの閲覧・復元・共有
           _autoBackupTile(context),
+          // 末尾追加: 現世間の受け渡し（最終送信／最終受信の可視化）
+          ListTile(
+            key: AppKeys.crossAppLinkStatusEntry,
+            title: const Text('連携状況（現世間の受け渡し）'),
+            subtitle: const Text('最終送信・最終受信の成否／時刻／件数'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: crossAppLinkStatusScreenBuilder ??
+                    (_) => const CrossAppLinkStatusScreen(),
+              ),
+            ),
+          ),
           // 末尾追加: アカウント削除（退会）。ビルダー未注入なら導線を出さない。
           if (accountDeletionScreenBuilder != null)
             ListTile(
