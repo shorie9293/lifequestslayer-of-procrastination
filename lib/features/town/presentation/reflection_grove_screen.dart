@@ -247,62 +247,90 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
         ),
         child: _reflections.isEmpty
             ? _buildEmptyState()
-            : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── 統計概要カード ──
-                    _buildStatsRow(),
-                    const SizedBox(height: 20),
+            : CustomScrollView(
+                slivers: [
+                  // ── ヘッダ群（統計・報告・各種チャート）──
+                  SliverPadding(
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      top: 16,
+                    ),
+                    sliver: SliverToBoxAdapter(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ── 統計概要カード ──
+                          _buildStatsRow(),
+                          const SizedBox(height: 20),
 
-                    // ── 週次グリフォン報告 ──
-                    _buildGryphonReportSection(),
-                    const SizedBox(height: 24),
+                          // ── 週次グリフォン報告 ──
+                          _buildGryphonReportSection(),
+                          const SizedBox(height: 24),
 
-                    // ── 月間/年間 俯瞰（残心の質的蓄積・#24） ──
-                    _buildSectionTitle('📅 月間・年間の俯瞰'),
-                    const SizedBox(height: 8),
-                    _MonthlyOverview(analytics: _analytics),
-                    const SizedBox(height: 24),
+                          // ── 月間/年間 俯瞰（残心の質的蓄積・#24） ──
+                          _buildSectionTitle('📅 月間・年間の俯瞰'),
+                          const SizedBox(height: 8),
+                          _MonthlyOverview(analytics: _analytics),
+                          const SizedBox(height: 24),
 
-                    // ── 自己評価 vs AI推定 比較グラフ ──
-                    _buildSectionTitle('📊 自己評価 vs AI推定 難易度比較'),
-                    const SizedBox(height: 8),
-                    if (comparisonData.isNotEmpty)
-                      _ComparisonChart(data: comparisonData),
-                    const SizedBox(height: 24),
+                          // ── 自己評価 vs AI推定 比較グラフ ──
+                          _buildSectionTitle('📊 自己評価 vs AI推定 難易度比較'),
+                          const SizedBox(height: 8),
+                          if (comparisonData.isNotEmpty)
+                            _ComparisonChart(data: comparisonData),
+                          const SizedBox(height: 24),
 
-                    // ── 難易度分布 ──
-                    _buildSectionTitle('📈 AI推定 難易度分布'),
-                    const SizedBox(height: 8),
-                    _AiRankDistribution(reflections: _reflections),
-                    const SizedBox(height: 24),
+                          // ── 難易度分布 ──
+                          _buildSectionTitle('📈 AI推定 難易度分布'),
+                          const SizedBox(height: 8),
+                          _AiRankDistribution(reflections: _reflections),
+                          const SizedBox(height: 24),
 
-                    // ── 難易度推移（直近10件） ──
-                    if (comparisonData.length >= 2) ...[
-                      _buildSectionTitle('📉 難易度の推移（直近）'),
-                      const SizedBox(height: 8),
-                      _TrendChart(
-                        data: comparisonData.length > 10
-                            ? comparisonData.sublist(comparisonData.length - 10)
-                            : comparisonData,
+                          // ── 難易度推移（直近10件） ──
+                          if (comparisonData.length >= 2) ...[
+                            _buildSectionTitle('📉 難易度の推移（直近）'),
+                            const SizedBox(height: 8),
+                            _TrendChart(
+                              data: comparisonData.length > 10
+                                  ? comparisonData
+                                      .sublist(comparisonData.length - 10)
+                                  : comparisonData,
+                            ),
+                            const SizedBox(height: 24),
+                          ],
+
+                          // ── 振り返りログ一覧 ──
+                          _buildSectionTitle(
+                              '📜 学びの記録（${_reflections.length}件）'),
+                          const SizedBox(height: 8),
+                        ],
                       ),
-                      const SizedBox(height: 24),
-                    ],
-
-                    // ── 振り返りログ一覧 ──
-                    _buildSectionTitle(
-                        '📜 学びの記録（${_reflections.length}件）'),
-                    const SizedBox(height: 8),
-                    ..._reflections.take(20).map((r) => _ReflectionTile(
-                          reflection: r,
-                          rankColor: _rankColor(r.aiDifficulty),
-                          selfColor: _selfDifficultyColor(r.selfDifficulty),
-                          rankLabel: _rankLabel(r.aiDifficulty),
-                        )),
-                  ],
-                ),
+                    ),
+                  ),
+                  // ── 振り返りログ タイル列（遅延描画で全件を辿る）──
+                  SliverPadding(
+                    padding: const EdgeInsets.only(
+                      left: 16,
+                      right: 16,
+                      bottom: 16,
+                    ),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final r = _reflections[index];
+                          return _ReflectionTile(
+                            reflection: r,
+                            rankColor: _rankColor(r.aiDifficulty),
+                            selfColor: _selfDifficultyColor(r.selfDifficulty),
+                            rankLabel: _rankLabel(r.aiDifficulty),
+                          );
+                        },
+                        childCount: _reflections.length,
+                      ),
+                    ),
+                  ),
+                ],
               ),
       ),
     );
