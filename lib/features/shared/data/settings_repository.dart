@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 import 'package:rpg_todo/features/battle/domain/sfx_volume.dart';
+import 'package:rpg_todo/features/shared/domain/settings_write_result.dart';
 
 /// Hiveの settingsBox / tutorialBox へのアクセスを集約するリポジトリ。
 ///
@@ -9,8 +11,71 @@ import 'package:rpg_todo/features/battle/domain/sfx_volume.dart';
 /// 永続化の詳細を隠蔽し、テスト容易性を向上させる。
 @lazySingleton
 class SettingsRepository {
+  /// [logger] は試練で保存失敗ログを検証するための差し替え口。既定は [appLog]。
+  SettingsRepository({AppLogger? logger}) : _log = logger ?? appLog;
+
+  final AppLogger _log;
+
   static const String _settingsBoxName = 'settingsBox';
   static const String _tutorialBoxName = 'tutorialBox';
+
+  /// 保存処理を実行し、失敗を [SettingsWriteResult] として返す（例外は投げない）。
+  ///
+  /// [save] には既存の `setXxx` を**仮想ディスパッチで**渡す。これにより
+  /// 試練のフェイクが override した void setter もそのまま経路に乗る。
+  /// ログはここで1回だけ出す（setter 側では出さない）。
+  Future<SettingsWriteResult> _write(
+    String label,
+    Future<void> Function() save,
+  ) async {
+    try {
+      await save();
+      return const SettingsWriteResult.success();
+    } catch (e, st) {
+      _log.warn('設定の保存に失敗しました: $label', e, st);
+      return SettingsWriteResult.failure('$labelを保存できませんでした');
+    }
+  }
+
+  /// 文字サイズの保存結果つきラッパー。
+  Future<SettingsWriteResult> writeFontSizeScale(double v) =>
+      _write('文字サイズ', () => setFontSizeScale(v));
+
+  /// 学びクエストON/OFFの保存結果つきラッパー。
+  Future<SettingsWriteResult> writeKnowledgeQuestEnabled(bool v) =>
+      _write('学びクエスト設定', () => setKnowledgeQuestEnabled(v));
+
+  /// 朝通知ON/OFFの保存結果つきラッパー。
+  Future<SettingsWriteResult> writeMorningNotificationEnabled(bool v) =>
+      _write('朝の通知設定', () => setMorningNotificationEnabled(v));
+
+  /// デバッグモードの保存結果つきラッパー。
+  Future<SettingsWriteResult> writeDebugModeEnabled(bool v) =>
+      _write('デバッグモード設定', () => setDebugModeEnabled(v));
+
+  /// 魔導書解析AIの保存結果つきラッパー。
+  Future<SettingsWriteResult> writeGriffonEnabled(bool v) =>
+      _write('魔導書解析AI設定', () => setGriffonEnabled(v));
+
+  /// 効果音ON/OFFの保存結果つきラッパー。
+  Future<SettingsWriteResult> writeSfxEnabled(bool v) =>
+      _write('効果音設定', () => setSfxEnabled(v));
+
+  /// 効果音音量の保存結果つきラッパー。
+  Future<SettingsWriteResult> writeSfxVolume(double v) =>
+      _write('効果音の音量', () => setSfxVolume(v));
+
+  /// 戦闘シーンON/OFFの保存結果つきラッパー。
+  Future<SettingsWriteResult> writeBattleSceneEnabled(bool v) =>
+      _write('戦闘シーン設定', () => setBattleSceneEnabled(v));
+
+  /// テーマモードの保存結果つきラッパー。
+  Future<SettingsWriteResult> writeThemeMode(ThemeMode mode) =>
+      _write('テーマ設定', () => setThemeMode(mode));
+
+  /// 最終バックアップ日時の保存結果つきラッパー。
+  Future<SettingsWriteResult> writeLastBackupTime(DateTime time) =>
+      _write('最終バックアップ日時', () => setLastBackupTime(time));
 
   // ── settingsBox ──────────────────────────────────────────
 
@@ -169,11 +234,10 @@ class SettingsRepository {
     }
   }
 
+  /// デバッグモードの保存。失敗は例外として呼出元へ伝播する（無音化しない）。
   Future<void> setDebugModeEnabled(bool enabled) async {
-    try {
-      final box = await _openSettingsBox();
-      await box.put('debugModeEnabled', enabled);
-    } catch (_) {}
+    final box = await _openSettingsBox();
+    await box.put('debugModeEnabled', enabled);
   }
 
   // ── 魔導書解析AI（Griffon） ────────────────────────────
@@ -192,11 +256,10 @@ class SettingsRepository {
     }
   }
 
+  /// 魔導書解析AIの保存。失敗は例外として呼出元へ伝播する。
   Future<void> setGriffonEnabled(bool enabled) async {
-    try {
-      final box = await _openSettingsBox();
-      await box.put('griffonEnabled', enabled);
-    } catch (_) {}
+    final box = await _openSettingsBox();
+    await box.put('griffonEnabled', enabled);
   }
 
   // ── 効果音（SFX） ─────────────────────────────────────
@@ -210,11 +273,10 @@ class SettingsRepository {
     }
   }
 
+  /// 効果音ON/OFFの保存。失敗は例外として呼出元へ伝播する。
   Future<void> setSfxEnabled(bool enabled) async {
-    try {
-      final box = await _openSettingsBox();
-      await box.put('sfxEnabled', enabled);
-    } catch (_) {}
+    final box = await _openSettingsBox();
+    await box.put('sfxEnabled', enabled);
   }
 
   /// 効果音の音量（0.0〜1.0）。破損値は既定値へ安全フォールバックする（改善提案#67）。
@@ -228,11 +290,10 @@ class SettingsRepository {
     }
   }
 
+  /// 効果音音量の保存。失敗は例外として呼出元へ伝播する。
   Future<void> setSfxVolume(double volume) async {
-    try {
-      final box = await _openSettingsBox();
-      await box.put(SfxVolumeSetting.storageKey, SfxVolumeSetting(volume).value);
-    } catch (_) {}
+    final box = await _openSettingsBox();
+    await box.put(SfxVolumeSetting.storageKey, SfxVolumeSetting(volume).value);
   }
 
   // ── 戦闘シーン（討伐演出） ──────────────────────────
@@ -246,11 +307,10 @@ class SettingsRepository {
     }
   }
 
+  /// 戦闘シーン設定の保存。失敗は例外として呼出元へ伝播する。
   Future<void> setBattleSceneEnabled(bool enabled) async {
-    try {
-      final box = await _openSettingsBox();
-      await box.put('battleSceneEnabled', enabled);
-    } catch (_) {}
+    final box = await _openSettingsBox();
+    await box.put('battleSceneEnabled', enabled);
   }
 
   // ── テーマモード（ライト/ダーク切替） ──────────────────
@@ -277,11 +337,10 @@ class SettingsRepository {
     }
   }
 
+  /// テーマモードの保存。失敗は例外として呼出元へ伝播する。
   Future<void> setThemeMode(ThemeMode mode) async {
-    try {
-      final box = await _openSettingsBox();
-      await box.put('themeMode', mode.name);
-    } catch (_) {}
+    final box = await _openSettingsBox();
+    await box.put('themeMode', mode.name);
   }
 
   // ── バックアップ（道標§五#17: 最終バックアップ日時） ──────────────
@@ -298,11 +357,9 @@ class SettingsRepository {
     }
   }
 
-  /// 最終バックアップ日時を記録する。
+  /// 最終バックアップ日時を記録する。失敗は例外として呼出元へ伝播する。
   Future<void> setLastBackupTime(DateTime time) async {
-    try {
-      final box = await _openSettingsBox();
-      await box.put('lastBackupTime', time.toIso8601String());
-    } catch (_) {}
+    final box = await _openSettingsBox();
+    await box.put('lastBackupTime', time.toIso8601String());
   }
 }
