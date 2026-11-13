@@ -5,6 +5,7 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/reflection_badge.dart';
 import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/domain/services/reflection_badge_collection.dart';
 import 'package:rpg_todo/domain/services/reflection_badge_service.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 
@@ -348,6 +349,36 @@ void main() {
       expect(loaded, isNotNull);
       expect(loaded!.totalReflections, 42);
       expect(loaded.reflectionBadges, ['first_reflection', 'streak_3']);
+    });
+  });
+
+  // ── UTC 種別 DateTime（バックアップ復元由来）のストリーク算出 ──
+  group('ReflectionBadgeCollection - UTC 種別 date の連続日判定', () {
+    test('早朝の記録が UTC 暦で前日にずれてもローカル暦で連続日と数える', () {
+      // ローカル暦で 11/1 00:05 と 11/2 23:05（連続2日）。
+      // UTC 暦では 10/31 と 11/2 になり、直読みだと 2 日差＝連続扱いが崩れる。
+      final dates = <DateTime>[
+        DateTime(2026, 11, 1, 0, 5).toUtc(),
+        DateTime(2026, 11, 2, 23, 5).toUtc(),
+      ];
+      final reflections = <Reflection>[
+        for (int i = 0; i < dates.length; i++)
+          Reflection(
+            id: 'utc_$i',
+            taskId: 't1',
+            date: dates[i],
+            content: 'c',
+            selfDifficulty: 3,
+            aiDifficulty: QuestRank.B,
+          ),
+      ];
+
+      final list = ReflectionBadgeCollection.build(
+        player: Player(totalReflections: 2),
+        reflections: reflections,
+      );
+      final streak3 = list.firstWhere((p) => p.def.id == 'streak_3');
+      expect(streak3.current, 2, reason: 'ローカル暦で連続2日');
     });
   });
 }

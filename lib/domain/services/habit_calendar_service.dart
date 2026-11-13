@@ -1,3 +1,4 @@
+import 'package:rpg_todo/core/time/local_calendar_date.dart';
 import 'package:rpg_todo/domain/models/habit_calendar.dart';
 
 /// 勤行の習慣カレンダー（道標§五 #31）を構築する純粋サービス。
@@ -47,8 +48,10 @@ class HabitCalendarService {
     // 対象月の日別件数（未来日付は除外＝統計の整合を保つ）。
     final monthCounts = <int, int>{};
     for (final d in activityDates) {
-      if (d.year == year && d.month == month && dayKey(d) <= todayKey) {
-        monthCounts[d.day] = (monthCounts[d.day] ?? 0) + 1;
+      if (localYear(d) == year &&
+          localMonth(d) == month &&
+          dayKey(d) <= todayKey) {
+        monthCounts[localDay(d)] = (monthCounts[localDay(d)] ?? 0) + 1;
       }
     }
 
@@ -62,10 +65,10 @@ class HabitCalendarService {
     var elapsedDays = 0;
     for (var day = 1; day <= daysInMonth; day++) {
       final date = DateTime(year, month, day);
-      final isToday = date.year == today.year &&
-          date.month == today.month &&
-          date.day == today.day;
-      if (!date.isAfter(DateTime(today.year, today.month, today.day))) {
+      final isToday = date.year == localYear(today) &&
+          date.month == localMonth(today) &&
+          date.day == localDay(today);
+      if (!date.isAfter(localDateOnly(today))) {
         elapsedDays++;
       }
       cells.add(HabitDay(
@@ -94,9 +97,12 @@ class HabitCalendarService {
   }
 
   /// 日付を日単位の連番キーへ正規化する（時刻・夏時間の影響を排除）。
+  ///
+  /// ローカル暦の年月日を用いるため、UTC 種別の入力でも UTC 暦に落ちない。
   static int dayKey(DateTime d) =>
-      DateTime.utc(d.year, d.month, d.day).millisecondsSinceEpoch ~/
-          Duration.millisecondsPerDay;
+      DateTime.utc(localYear(d), localMonth(d), localDay(d))
+          .millisecondsSinceEpoch ~/
+      Duration.millisecondsPerDay;
 
   /// 現在の連続日数。[todayKey] が活動日ならそこから、未活動なら昨日から遡る。
   static int currentStreakOf(Set<int> activeKeys, int todayKey) {

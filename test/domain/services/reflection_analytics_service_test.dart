@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rpg_todo/core/time/local_calendar_date.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/services/reflection_analytics_service.dart';
@@ -158,6 +159,42 @@ void main() {
       expect(a.lastMonths.first.year, 2026);
       expect(a.lastMonths.first.month, 4);
       expect(a.lastMonths.last.month, 9);
+    });
+  });
+
+  // ── UTC 種別 DateTime（バックアップ復元・JSON 取込由来）の局所暦集計 ──
+  //
+  // 保存形式は UTC 瞬間でありうるが、月バケットはローカル暦で決まるべき。
+  // 期待値は toLocal() から算出し TZ 非依存に保つ。
+  group('ReflectionAnalyticsService.compute - UTC 種別の date', () {
+    test('JST 月初 00:05 の記録がローカル暦の当月バケットに入る', () {
+      final utcEarlyMorning = DateTime(2026, 11, 1, 0, 5).toUtc();
+      final a = ReflectionAnalyticsService.compute(
+        reflections: [refl(date: utcEarlyMorning)],
+        now: DateTime(2026, 11, 15, 12, 0),
+        months: 3,
+      );
+      final expectedMonth = localMonth(utcEarlyMorning);
+      final expectedYear = localYear(utcEarlyMorning);
+      final bucket = a.lastMonths
+          .firstWhere((m) => m.year == expectedYear && m.month == expectedMonth);
+      expect(bucket.count, 1);
+      // ローカル暦の当月以外に漏れていないこと。
+      expect(a.lastMonths.where((m) => m.count > 0).length, 1);
+    });
+
+    test('UTC 種別でも年間集計はローカル暦の年で数える', () {
+      final utcYearEndEarlyMorning = DateTime(2026, 1, 1, 0, 5).toUtc();
+      final localY = localYear(utcYearEndEarlyMorning);
+      final a = ReflectionAnalyticsService.compute(
+        reflections: [refl(date: utcYearEndEarlyMorning)],
+        now: DateTime(2026, 6, 1, 12, 0),
+        months: 12,
+      );
+      // 基準日 2026 年に対し、ローカル暦で 2026 なら当年、2025 なら前年。
+      expect(a.currentYearTotal, localY == 2026 ? 1 : 0);
+      expect(a.previousYearTotal, localY == 2026 ? 0 : 1);
+      expect(a.totalCount, 1);
     });
   });
 }

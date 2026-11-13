@@ -160,7 +160,9 @@ void main() {
       expect((r1 as Reflection).id, 'ref1');
       expect(r1.sentiment, 'kaishin');
       expect(r1.aiDifficulty, QuestRank.S);
-      expect(r1.date, DateTime.utc(2026, 10, 14, 9));
+      // #245: 往復は瞬間を保ち、種別はローカル暦へ正規化される。
+      expect(r1.date.isAtSameMomentAs(DateTime.utc(2026, 10, 14, 9)), isTrue);
+      expect(r1.date.isUtc, isFalse);
       expect((target['reflections']!.get('ref2') as Reflection).sentiment, isNull);
       expect((target['reflectionsBox']!.get('ref3') as Reflection).id, 'ref3');
       // 受け側の許可リスト外 box は触られない

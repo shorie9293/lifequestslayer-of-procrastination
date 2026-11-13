@@ -1,3 +1,4 @@
+import 'package:rpg_todo/core/time/local_calendar_date.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/reflection_analytics.dart';
 
@@ -26,12 +27,13 @@ class ReflectionAnalyticsService {
   }) {
     // ── 月別バケット（直近 months か月、古い順）──
     final buckets = <ReflectionMonthlyCount>[];
-    final anchorYear = now.year;
-    final anchorMonth = now.month;
+    final anchorYear = localYear(now);
+    final anchorMonth = localMonth(now);
     for (int i = months - 1; i >= 0; i--) {
       final ym = _shiftMonth(anchorYear, anchorMonth, -i);
       final count = reflections
-          .where((r) => r.date.year == ym.year && r.date.month == ym.month)
+          .where((r) => localYear(r.date) == ym.year &&
+              localMonth(r.date) == ym.month)
           .length;
       buckets.add(ReflectionMonthlyCount(
         year: ym.year,
@@ -43,11 +45,12 @@ class ReflectionAnalyticsService {
     final lastMonths = buckets;
 
     // ── 年間集計 ──
+    final currentYear = localYear(now);
     final currentYearTotal = reflections
-        .where((r) => r.date.year == now.year)
+        .where((r) => isSameLocalYear(r.date, now))
         .length;
     final previousYearTotal = reflections
-        .where((r) => r.date.year == now.year - 1)
+        .where((r) => localYear(r.date) == currentYear - 1)
         .length;
 
     // ── 活動の広がり ──

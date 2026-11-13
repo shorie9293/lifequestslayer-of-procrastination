@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import '../../../core/time/local_calendar_date.dart';
 import '../../../domain/models/reflection.dart';
 
 /// 振り返りデータの永続化を担当するリポジトリ。
@@ -52,11 +53,12 @@ class ReflectionRepository {
 
     for (final r in all) {
       // 週の開始日（日曜日）でグループ化
-      final daysSinceSunday = r.date.weekday % 7;
+      final date = localDateOnly(r.date);
+      final daysSinceSunday = date.weekday % 7;
       final weekStart = DateTime(
-        r.date.year,
-        r.date.month,
-        r.date.day - daysSinceSunday,
+        date.year,
+        date.month,
+        date.day - daysSinceSunday,
       );
       summaries[weekStart] = (summaries[weekStart] ?? 0) + 1;
     }

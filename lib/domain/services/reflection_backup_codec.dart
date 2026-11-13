@@ -1,3 +1,4 @@
+import 'package:rpg_todo/core/time/local_calendar_date.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 
@@ -65,11 +66,17 @@ class ReflectionBackupCodec {
     throw FormatException('Reflection field "$key" must be an int');
   }
 
+  /// `date` を ISO8601 として解釈し、**必ずローカル種別**へ正規化して返す。
+  ///
+  /// 不変条件: 返り値は `isUtc == false`。`...Z` 付きの UTC 表記が来ても
+  /// 同じ瞬間のローカル表現に変換するため、`.year`/`.month`/`.day` の直読みが
+  /// UTC 暦を返すことはない。Z 無し（ローカル時刻表記）の解釈は従来どおり
+  /// （[DateTime.tryParse] のローカル解釈）で不変。
   static DateTime _requireDate(Map<String, dynamic> m, String key) {
     final v = m[key];
     if (v is String) {
       final d = DateTime.tryParse(v);
-      if (d != null) return d;
+      if (d != null) return normalizeToLocal(d);
     }
     throw FormatException('Reflection field "$key" must be an ISO8601 date');
   }

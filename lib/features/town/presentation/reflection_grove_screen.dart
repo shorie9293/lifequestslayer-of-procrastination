@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/core/time/local_calendar_date.dart';
 import 'package:rpg_todo/domain/models/gryphon_report.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/reflection_analytics.dart';
@@ -1189,8 +1190,9 @@ class _ReflectionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final localDate = normalizeToLocal(reflection.date);
     final dateStr =
-        '${reflection.date.month}/${reflection.date.day} ${reflection.date.hour}:${reflection.date.minute.toString().padLeft(2, '0')}';
+        '${localDate.month}/${localDate.day} ${localDate.hour}:${localDate.minute.toString().padLeft(2, '0')}';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 8),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/core/time/local_calendar_date.dart';
 import 'package:rpg_todo/domain/models/habit_calendar.dart';
 
 /// 1か月分の勤行出席マップ（道標§五 #31）。
@@ -60,13 +61,16 @@ class HabitMonthGrid extends StatelessWidget {
   }
 
   Widget _dayCell(HabitDay day) {
+    // HabitCalendarService はローカル暦で日付を構築するが、将来 UTC 種別の
+    // 日付が流入しても表示が崩れないよう正準関数を経由する（冪等）。
+    final date = normalizeToLocal(day.date);
     final keyStr =
-        '${day.date.year.toString().padLeft(4, '0')}-'
-        '${day.date.month.toString().padLeft(2, '0')}-'
-        '${day.date.day.toString().padLeft(2, '0')}';
+        '${date.year.toString().padLeft(4, '0')}-'
+        '${date.month.toString().padLeft(2, '0')}-'
+        '${date.day.toString().padLeft(2, '0')}';
     final semantics = day.isActive
-        ? '${day.date.month}月${day.date.day}日 勤行${day.activityCount}件'
-        : '${day.date.month}月${day.date.day}日 未活動';
+        ? '${date.month}月${date.day}日 勤行${day.activityCount}件'
+        : '${date.month}月${date.day}日 未活動';
 
     return Semantics(
       label: semantics,

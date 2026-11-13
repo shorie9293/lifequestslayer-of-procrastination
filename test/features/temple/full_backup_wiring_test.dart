@@ -143,7 +143,9 @@ void main() {
       expect(r.id, 'ref2');
       expect(r.aiDifficulty, QuestRank.B);
       expect(r.sentiment, isNull);
-      expect(r.date, original.date);
+      // #245: 復元は「同じ瞬間」をローカル種別で返す（isUtc==false が契約）。
+      expect(r.date.isAtSameMomentAs(original.date), isTrue);
+      expect(r.date.isUtc, isFalse);
     });
 
     test('破損 JSON では applyRestore が false を返し何も書き換えない', () async {

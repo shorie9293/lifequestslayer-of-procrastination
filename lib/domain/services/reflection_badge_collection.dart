@@ -1,3 +1,4 @@
+import 'package:rpg_todo/core/time/local_calendar_date.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/reflection_badge.dart';
@@ -149,7 +150,7 @@ class ReflectionBadgeCollection {
     if (reflections == null || reflections.isEmpty) return 0;
     // 日付のみに丸めた一意な日リスト（降順）。
     final days = reflections
-        .map((r) => DateTime(r.date.year, r.date.month, r.date.day))
+        .map((r) => localDateOnly(r.date))
         .toSet()
         .toList()
       ..sort((a, b) => b.compareTo(a));
