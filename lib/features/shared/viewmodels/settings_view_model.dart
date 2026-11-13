@@ -57,6 +57,13 @@ class SettingsViewModel extends ChangeNotifier {
   /// 廃したため、失敗時に getter が新しい値を返すことはない。
   String? get lastWriteError => _lastWriteError;
 
+  /// 失敗理由を消費済みにする（画面が1度だけ通知した後で呼ぶ）。
+  ///
+  /// 通知はしないため、聴取器のコールバックから呼んでも再入しない。
+  void clearWriteError() {
+    _lastWriteError = null;
+  }
+
   /// 保存 → 成功時のみメモリ確定 → 通知、の順で適用する。
   ///
   /// 失敗時はメモリを旧値のまま残し、[lastWriteError] に理由を載せる。

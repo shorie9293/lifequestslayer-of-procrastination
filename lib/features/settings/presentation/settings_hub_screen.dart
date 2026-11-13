@@ -24,6 +24,7 @@ import 'package:rpg_todo/features/reminder/presentation/quiet_hours_settings_scr
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
 import 'package:rpg_todo/features/settings/presentation/cross_app_link_status_screen.dart';
 import 'package:rpg_todo/features/settings/presentation/reduce_motion_settings_screen.dart';
+import 'package:rpg_todo/features/shared/presentation/settings_write_error_listener.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/streak_freeze/presentation/streak_freeze_app_keys.dart';
 import 'package:rpg_todo/features/streak_freeze/presentation/streak_freeze_screen.dart';
@@ -158,6 +159,8 @@ class SettingsHubScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('設定')),
       body: ListView(
         children: [
+          // 設定の保存失敗を無音にしない（結果型の読み手を必ず1つ置く）
+          const SettingsWriteErrorListener(child: SizedBox.shrink()),
           const ThemeSection(),
           ListTile(
             title: const Text('文字サイズ'),

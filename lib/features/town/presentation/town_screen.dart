@@ -12,6 +12,7 @@ import 'package:rpg_todo/features/settings/presentation/settings_hub_screen.dart
 import 'package:rpg_todo/features/account_deletion/presentation/production_account_deletion_builder.dart';
 import 'package:rpg_todo/features/adventurer/presentation/adventurer_chart_screen.dart';
 import 'package:rpg_todo/features/character_customization/presentation/equipment_tab.dart';
+import 'package:rpg_todo/features/shared/presentation/settings_write_error_listener.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/features/town/domain/random_event.dart';
 import 'package:rpg_todo/features/town/domain/town_event_reward.dart';
@@ -245,6 +246,7 @@ class _TownTab extends StatelessWidget {
                   const SizedBox(height: 24),
                   TitleSection(viewModel: playerVM, player: player),
                   const SizedBox(height: 24),
+                  const SettingsWriteErrorListener(child: SizedBox.shrink()),
                   const ThemeSection(),
                   const SizedBox(height: 24),
                   const SfxVolumeSection(),
