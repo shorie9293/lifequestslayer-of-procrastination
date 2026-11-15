@@ -42,6 +42,7 @@ flutter test --no-pub -j 2 \
   test/features/streak_freeze/ \
   test/features/about/ \
   test/core/notification/ \
+  test/core/widgets/ \
   test/core/crash/
 echo "✅ shard 1/3 passed"
 

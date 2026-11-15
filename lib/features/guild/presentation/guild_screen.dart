@@ -16,6 +16,7 @@ import 'package:rpg_todo/features/shared/widgets/player_status_header.dart';
 import 'widgets/task_card.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
+import 'package:rpg_todo/core/widgets/empty_state.dart';
 import 'package:rpg_todo/features/kozuchi/presentation/widgets/kozuchi_quest_card.dart';
 import 'package:rpg_todo/features/habits/presentation/screens/habit_calendar_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/quiet_hours_settings_screen.dart';
@@ -744,7 +745,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: const [
             Text("寄合所"),
             SizedBox(width: 8),
-            Text("v1.5.79+175", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+            Text("v1.5.80+176", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -1188,24 +1189,18 @@ class _GuildScreenState extends State<GuildScreen> {
                           testId: SemanticHelper.createTestId(
                               SemanticTypes.section, 'empty_no_quests'),
                           label: 'クエストなし',
-                          child: const Center(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text("🏯", style: TextStyle(fontSize: 48)),
-                                SizedBox(height: 12),
-                                Text(
-                                  "まだクエストが届いていない。",
-                                  style: TextStyle(
-                                      fontSize: 18, color: Colors.grey),
-                                ),
-                                SizedBox(height: 8),
-                                Text(
-                                  "右下の ＋ から最初のクエストを登録しよう！",
-                                  style: TextStyle(
-                                      fontSize: 14, color: Colors.grey),
-                                ),
-                              ],
+                          child: EmptyStateView(
+                            key: AppKeys.guildEmptyStateView,
+                            icon: const Text('🏯', style: TextStyle(fontSize: 48)),
+                            titleStyle:
+                                const TextStyle(fontSize: 18, color: Colors.grey),
+                            descriptionStyle:
+                                const TextStyle(fontSize: 14, color: Colors.grey),
+                            spec: EmptyStateSpec(
+                              title: 'まだクエストが届いていない。',
+                              description: '右下の ＋ から最初のクエストを登録しよう！',
+                              actionLabel: '最初のクエストを登録する',
+                              onAction: () => _showCreateTaskDialog(context),
                             ),
                           ),
                         );

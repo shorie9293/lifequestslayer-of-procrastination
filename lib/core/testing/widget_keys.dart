@@ -18,6 +18,7 @@ class AppKeys {
   static const Key guildFab = Key('fab_add_task');
   static const Key guildQuestList = Key('list_quests');
   static const Key guildEmptyState = Key('empty_no_quests');
+  static const Key guildEmptyStateView = Key('view_empty_no_quests');
   static const Key guildRefreshIndicator = Key('refresh_quests');
   static const Key guildRecurringTasksDialog = Key('dlg_recurring_tasks');
   static const Key guildSettingsMenu = Key('menu_settings');
@@ -440,6 +441,8 @@ class AppKeys {
   // ━━━ 振り返りの杜 ━━━
   static const Key reflectionGroveScreen = Key('screen_reflection_grove');
   static const Key reflectionGroveEntry = Key('btn_reflection_grove_entry');
+  static const Key reflectionGroveEmptyStateView =
+      Key('view_reflection_grove_empty');
 
   // ━━━ 現世間の受け渡し（クロスアプリ連携） ━━━
   static const Key crossAppLinkStatusEntry = Key('btn_cross_app_link_entry');

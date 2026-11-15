@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/core/time/local_calendar_date.dart';
+import 'package:rpg_todo/core/widgets/empty_state.dart';
 import 'package:rpg_todo/domain/models/gryphon_report.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/reflection_analytics.dart';
@@ -338,23 +339,18 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
   }
 
   Widget _buildEmptyState() {
-    return const Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text('🌳', style: TextStyle(fontSize: 64)),
-          SizedBox(height: 16),
-          Text(
-            'まだ振り返りがありません。',
-            style: TextStyle(fontSize: 18, color: Colors.white70),
-          ),
-          SizedBox(height: 8),
-          Text(
-            '討伐後に「戦後の一息」で\n学びを記してみましょう。',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 14, color: Colors.white38),
-          ),
-        ],
+    // 次の一手は既存の戻る導線（onBack）を差し出す。onBack が無ければボタンは描かない。
+    final onBack = widget.onBack;
+    return EmptyStateView(
+      key: AppKeys.reflectionGroveEmptyStateView,
+      icon: const Text('🌳', style: TextStyle(fontSize: 64)),
+      titleStyle: const TextStyle(fontSize: 18, color: Colors.white70),
+      descriptionStyle: const TextStyle(fontSize: 14, color: Colors.white38),
+      spec: EmptyStateSpec(
+        title: 'まだ振り返りがありません。',
+        description: '討伐後に「戦後の一息」で\n学びを記してみましょう。',
+        actionLabel: onBack == null ? null : '町へ戻ってクエストに挑む',
+        onAction: onBack,
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_screen.dart';
+import 'package:rpg_todo/features/guild/presentation/dialogs/create_task_dialog.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
@@ -247,6 +248,26 @@ void main() {
 
       // 空状態が表示されている（AppKeyで検証）
       expect(find.byKey(AppKeys.guildEmptyState), findsOneWidget);
+    });
+
+    // 空状態の共通部品が次の一手（既存の作成ダイアログ）を差し出すことを検める。
+    testWidgets('空状態の行動ボタンで CreateTaskDialog が開く', (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+      });
+
+      await pumpGuildScreen(tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      expect(find.byKey(AppKeys.guildEmptyStateView), findsOneWidget);
+      expect(
+          find.widgetWithText(FilledButton, '最初のクエストを登録する'), findsOneWidget);
+
+      await tester.tap(find.text('最初のクエストを登録する'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CreateTaskDialog), findsOneWidget);
     });
   });
 

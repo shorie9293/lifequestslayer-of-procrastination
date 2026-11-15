@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hive/hive.dart';
+import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/domain/models/gryphon_report.dart';
 import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/task.dart';
@@ -131,7 +132,38 @@ void main() {
     await pumpGrove(tester);
 
     expect(find.text('まだ振り返りがありません。'), findsOneWidget);
+    expect(find.textContaining('戦後の一息'), findsOneWidget);
     expect(_tileFinder, findsNothing);
+  });
+
+  testWidgets('0件の空状態には次の一手（既存の onBack）ボタンが出て、押すと onBack が呼ばれる',
+      (tester) async {
+    await tester.runAsync(() async {
+      await Hive.openBox<Reflection>(ReflectionRepository.boxName);
+    });
+
+    var backCount = 0;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: ReflectionGroveScreen(
+          onBack: () => backCount++,
+          reportRepository: _InMemoryGryphonReportRepository(),
+        ),
+      ),
+    );
+    await tester.runAsync(() async {
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+    });
+    await tester.pump();
+
+    expect(find.byKey(AppKeys.reflectionGroveEmptyStateView), findsOneWidget);
+
+    final action = find.text('町へ戻ってクエストに挑む');
+    expect(action, findsOneWidget);
+    await tester.tap(action);
+    await tester.pump();
+
+    expect(backCount, 1);
   });
 
   testWidgets('21件目以降もスクロールで到達できる（take(20) の穴が閉じている）', (tester) async {
