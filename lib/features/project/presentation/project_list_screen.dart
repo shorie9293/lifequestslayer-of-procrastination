@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/text/japanese_number.dart';
+import 'package:rpg_todo/core/widgets/empty_state.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
@@ -77,17 +78,14 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
     final projects = ProjectService.listProjects(player);
 
     if (projects.isEmpty) {
-      return Center(
-        child: Column(
-          key: ProjectAppKeys.projectEmptyState,
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.map_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text('プロジェクトがありません'),
-            SizedBox(height: 8),
-            Text('右下の ＋ から新しい計画を作ろう。'),
-          ],
+      return EmptyStateView(
+        key: ProjectAppKeys.projectEmptyState,
+        icon: const Icon(Icons.map_outlined, size: 64, color: Colors.grey),
+        spec: EmptyStateSpec(
+          title: 'プロジェクトがありません',
+          description: '右下の ＋ から新しい計画を作ろう。',
+          actionLabel: '最初の計画を作る',
+          onAction: () => _showEditDialog(context, null),
         ),
       );
     }

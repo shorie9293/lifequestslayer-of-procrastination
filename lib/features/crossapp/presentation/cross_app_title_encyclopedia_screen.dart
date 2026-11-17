@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/core/widgets/empty_state.dart';
 import 'package:rpg_todo/features/crossapp/domain/cross_app_title_collection.dart';
 import 'package:rpg_todo/features/crossapp/domain/cross_app_title_definition.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
@@ -58,14 +59,16 @@ class _CrossAppTitleEncyclopediaScreenState
           _buildFilterChips(),
           const SizedBox(height: 12),
           if (filtered.total == 0)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 32),
-              child: Center(
-                child: Text(
-                  '該当する称号はありません',
-                  key: AppKeys.crossAppTitleEmpty,
-                  style: TextStyle(fontSize: 14, color: Colors.white54),
-                ),
+            EmptyStateView(
+              key: AppKeys.crossAppTitleEmpty,
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              titleStyle: const TextStyle(fontSize: 14, color: Colors.white54),
+              spec: EmptyStateSpec(
+                title: '該当する称号はありません',
+                actionLabel: _filter == CrossAppTitleFilter.all ? null : '絞り込みを解除',
+                onAction: _filter == CrossAppTitleFilter.all
+                    ? null
+                    : () => setState(() => _filter = CrossAppTitleFilter.all),
               ),
             )
           else

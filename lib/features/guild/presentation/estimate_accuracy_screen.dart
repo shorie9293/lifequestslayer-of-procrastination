@@ -4,6 +4,7 @@ import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 import 'package:rpg_todo/core/di/injection.dart';
 import 'package:rpg_todo/core/text/japanese_number.dart';
+import 'package:rpg_todo/core/widgets/empty_state.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/data/task_time_record_repository.dart';
 import 'package:rpg_todo/features/guild/domain/estimate_accuracy.dart';
@@ -186,17 +187,14 @@ class _EstimateAccuracyScreenState extends State<EstimateAccuracyScreen> {
   }
 
   Widget _buildEmptyState() {
-    return Center(
+    return EmptyStateView(
       key: EstimateAccuracyKeys.emptyState,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          Text('🧭', style: TextStyle(fontSize: 48)),
-          SizedBox(height: 12),
-          Text('まだ記録がありません。'),
-          SizedBox(height: 8),
-          Text('「実績を記録」から見積もりと実績を残そう。'),
-        ],
+      icon: const Text('🧭', style: TextStyle(fontSize: 48)),
+      spec: EmptyStateSpec(
+        title: 'まだ記録がありません。',
+        description: '「実績を記録」から見積もりと実績を残そう。',
+        actionLabel: '実績を記録',
+        onAction: _openAddDialog,
       ),
     );
   }

@@ -6,6 +6,7 @@
 // NoopBattleRecordRepository が既定となり例外を出さない。
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/core/widgets/empty_state.dart';
 import 'package:rpg_todo/features/battle/data/battle_record_repository.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record.dart';
 import 'package:rpg_todo/features/battle/domain/enemy_catalog.dart';
@@ -137,20 +138,11 @@ class _EnemyCatalogScreenState extends State<EnemyCatalogScreen> {
     int rareTotal,
   ) {
     if (full.entries.isEmpty) {
-      return Center(
-        child: Column(
-          key: AppKeys.enemyCatalogEmpty,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.menu_book, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
-            Text(
-              '図鑑の情報がありません。',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-            ),
-          ],
-        ),
+      return EmptyStateView(
+        key: AppKeys.enemyCatalogEmpty,
+        icon: const Icon(Icons.menu_book, size: 64, color: Colors.grey),
+        titleStyle: const TextStyle(fontSize: 16, color: Colors.grey),
+        spec: EmptyStateSpec(title: '図鑑の情報がありません。'),
       );
     }
     return Column(

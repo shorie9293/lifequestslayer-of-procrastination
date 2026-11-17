@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/text/japanese_number.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/core/widgets/empty_state.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/data/task_template_repository.dart';
 import 'package:rpg_todo/features/guild/domain/task_template.dart';
@@ -222,17 +223,17 @@ class _TaskTemplateScreenState extends State<TaskTemplateScreen> {
                 ),
                 Expanded(
                   child: sorted.isEmpty
-                      ? Center(
-                          child: Column(
-                            key: AppKeys.taskTemplateEmptyState,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.bookmark_border, size: 48),
-                              const SizedBox(height: 8),
-                              Text(_query.isEmpty
-                                  ? '定型はまだありません\n右下の + で追加できます'
-                                  : '一致する定型はありません'),
-                            ],
+                      ? EmptyStateView(
+                          key: AppKeys.taskTemplateEmptyState,
+                          icon: const Icon(Icons.bookmark_border, size: 48),
+                          spec: EmptyStateSpec(
+                            title: _query.isEmpty
+                                ? '定型はまだありません\n右下の + で追加できます'
+                                : '一致する定型はありません',
+                            actionLabel: _query.isEmpty ? '定型を追加' : '検索をクリア',
+                            onAction: _query.isEmpty
+                                ? () => _openTemplateDialog()
+                                : () => setState(() => _query = ''),
                           ),
                         )
                       : ListView.builder(

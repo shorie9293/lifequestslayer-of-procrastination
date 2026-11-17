@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
+import 'package:rpg_todo/core/widgets/empty_state.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/calendar_export/data/ics_share_exporter.dart';
 import 'package:rpg_todo/features/calendar_export/domain/task_calendar_export_service.dart';
@@ -83,10 +84,10 @@ class _CalendarExportScreenState extends State<CalendarExportScreen> {
             ),
             const SizedBox(height: 12),
             if (events.isEmpty)
-              const Text(
-                '書き出せるクエストがありません',
+              EmptyStateView(
                 key: CalendarExportAppKeys.emptyState,
-                style: TextStyle(color: Color(0xFF888888)),
+                titleStyle: const TextStyle(color: Color(0xFF888888)),
+                spec: EmptyStateSpec(title: '書き出せるクエストがありません'),
               )
             else
               Column(

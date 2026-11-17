@@ -6,6 +6,7 @@ import 'package:rpg_todo/core/crash/crash_log_entry.dart';
 import 'package:rpg_todo/core/crash/crash_log_repository.dart';
 import 'package:rpg_todo/core/crash/crash_log_service.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/core/widgets/empty_state.dart';
 
 /// 端末内に残したクラッシュログの閲覧・コピー画面。
 class CrashLogScreen extends StatefulWidget {
@@ -95,16 +96,13 @@ class _CrashLogScreenState extends State<CrashLogScreen> {
                   ),
                 ),
                 if (recentEntries.isEmpty)
-                  const Padding(
+                  EmptyStateView(
                     key: AppKeys.crashLogEmpty,
-                    padding: EdgeInsets.symmetric(vertical: 48, horizontal: 24),
-                    child: Center(
-                      child: Text(
-                        '記録された不具合はありません',
-                        style:
-                            TextStyle(fontSize: 14, color: Color(0xFF777777)),
-                      ),
-                    ),
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 48, horizontal: 24),
+                    titleStyle: const TextStyle(
+                        fontSize: 14, color: Color(0xFF777777)),
+                    spec: EmptyStateSpec(title: '記録された不具合はありません'),
                   )
                 else
                   for (final entry in recentEntries)

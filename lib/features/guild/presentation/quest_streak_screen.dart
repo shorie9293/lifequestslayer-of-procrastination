@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:rpg_todo/core/widgets/empty_state.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/domain/quest_streak.dart';
@@ -156,17 +157,12 @@ class _QuestStreakScreenState extends State<QuestStreakScreen> {
   }
 
   Widget _buildEmptyState(bool noRecords) {
-    return Center(
+    return EmptyStateView(
       key: QuestStreakKeys.emptyState,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Text('🔥', style: TextStyle(fontSize: 48)),
-          const SizedBox(height: 12),
-          Text(noRecords ? 'まだストリークがありません。' : '該当するクエストがありません。'),
-          const SizedBox(height: 8),
-          const Text('クエストを完了すると連続記録が育ちます。'),
-        ],
+      icon: const Text('🔥', style: TextStyle(fontSize: 48)),
+      spec: EmptyStateSpec(
+        title: noRecords ? 'まだストリークがありません。' : '該当するクエストがありません。',
+        description: 'クエストを完了すると連続記録が育ちます。',
       ),
     );
   }
