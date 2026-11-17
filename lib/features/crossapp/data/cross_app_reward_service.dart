@@ -4,8 +4,10 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:hive/hive.dart';
 import 'package:rpg_todo/core/infrastructure/shared_file_store.dart';
+import 'package:rpg_todo/core/logging/app_logger.dart';
 import 'package:rpg_todo/features/crossapp/domain/cross_app_reward_event.dart';
 import 'package:rpg_todo/features/crossapp/domain/cross_app_title_definition.dart';
+import 'package:rpg_todo/features/crossapp/domain/jsonl_retention.dart';
 
 /// 連携（クロスアプリ受け渡し）の状態。連携画面はこの1つを表示すればよい。
 class CrossAppLinkStatus {
@@ -86,15 +88,37 @@ class FileCrossAppRewardService implements ICrossAppRewardService {
     kDefaultBookReviewEventsFile,
   ];
 
+  /// 他現世が**行数を数えている**イベント種別（処理済みでも剪定しない）。
+  ///
+  /// 実測: kozuchi の `CrossAppAchievementAggregator.countBooksRead` は
+  /// `tsundoku_reward_events.jsonl` の `book_completed` 行を数えて実績を判定する。
+  /// ここを落とすと実績が静かに減る（＝他現世の意味論を壊す）ため、
+  /// 種別単位で保持する。election / book-review のファイルは行数参照が無い。
+  static const Map<String, Set<String>> kPreservedEventTypesByFile =
+      <String, Set<String>>{
+    kDefaultTsundokuEventsFile: <String>{'book_completed'},
+  };
+
   /// 試練用の明示パス。null なら共有ストア（SharedFileStore）経由。
   final String? filePath;
   final List<String> additionalFilePaths;
   final String hiveBoxName;
 
+  /// 処理済み行の剪定を行うか（既定 true）。
+  ///
+  /// 追記専用 JSONL は捨てる工程が無いと起動コストが履歴長に比例する。
+  /// 剪定は**処理済み行のみ**を落とし、未処理行は絶対に落とさない。
+  final bool pruneConsumedLines;
+
+  /// 診断用に残す壊れ行の上限（既定 10）。
+  final int maxRetainedCorruptLines;
+
   const FileCrossAppRewardService({
     this.filePath,
     this.additionalFilePaths = const [],
     this.hiveBoxName = 'cross_app_rewards',
+    this.pruneConsumedLines = true,
+    this.maxRetainedCorruptLines = 10,
   });
 
   /// 走査対象の全パス（試練モード: [filePath] を明示した場合のみ）
@@ -166,6 +190,12 @@ class FileCrossAppRewardService implements ICrossAppRewardService {
     for (final path in existingPaths) {
       final lines = await File(path).readAsLines();
       await _consumeLines(lines, linkedUserId, box, consumedIds, rewards);
+      await _applyRetention(
+        lines: lines,
+        consumedIds: consumedIds,
+        label: path,
+        write: (content) => File(path).writeAsString(content, flush: true),
+      );
     }
   }
 
@@ -190,14 +220,56 @@ class FileCrossAppRewardService implements ICrossAppRewardService {
     for (final name in allFileNames) {
       final content = await store.readString(name);
       if (content == null || content.trim().isEmpty) continue;
+      final lines = const LineSplitter().convert(content);
       await _consumeLines(
-        const LineSplitter().convert(content),
+        lines,
         linkedUserId,
         box,
         consumedIds,
         rewards,
       );
+      await _applyRetention(
+        lines: lines,
+        consumedIds: consumedIds,
+        label: name,
+        write: (pruned) => store.writeString(name, pruned),
+      );
     }
+  }
+
+  /// 処理済み行の剪定をファイルへ書き戻す（ベストエフォート）。
+  ///
+  /// 不変条件: **未処理行は落とさない**（[buildJsonlRetentionPlan] が担保）。
+  /// 捨てる行が無ければ書き戻さない（無駄な SAF 書込を避ける）。
+  /// 書き戻しの失敗は討伐や報酬付与を妨げないが、無音にはしない。
+  Future<void> _applyRetention({
+    required List<String> lines,
+    required Set<String> consumedIds,
+    required String label,
+    required Future<void> Function(String content) write,
+  }) async {
+    if (!pruneConsumedLines) return;
+
+    final plan = buildJsonlRetentionPlan(
+      lines,
+      consumedIds: consumedIds,
+      preservedEventTypes: preservedEventTypesFor(label),
+      maxRetainedCorrupt: maxRetainedCorruptLines,
+    );
+    if (!plan.shouldRewrite) return;
+
+    try {
+      await write(plan.content);
+    } on Object catch (e) {
+      // 次回の走査で再試行される。落とした行は「処理済み」ゆえ再付与はない。
+      appLog.warn('[CrossAppRewardService] 剪定の書き戻しに失敗（次回再試行）: $label', e);
+    }
+  }
+
+  /// ファイル（パスでも名前でも可）に対応する「保持する種別」を返す。
+  Set<String> preservedEventTypesFor(String pathOrName) {
+    final base = pathOrName.split('/').last.split(r'\').last;
+    return kPreservedEventTypesByFile[base] ?? const <String>{};
   }
 
   /// JSONL の行群を走査し、未処理イベントを報酬へ変換する。
