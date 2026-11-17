@@ -12,6 +12,12 @@ import 'package:rpg_todo/features/crossapp/domain/enemy_defeat_event.dart';
 /// - B: `rpg_enemy_defeat_events.jsonl` — 追記専用。1行1コンパクトJSON。
 ///   kozuchi の集計が `event` フィールドで行数を数える。
 ///
+/// ⚠️ **B は剪定してはならない** — kozuchi の `countEnemyDefeats` は行数を
+/// そのまま討伐数として実績判定に使う。剪定すると実績が静かに減る。
+/// 同じ理由で、消費側（rpg）が読む `tsundoku_reward_events.jsonl` も
+/// `book_completed` 行だけは保持する（`CrossAppRewardService` の
+/// `kPreservedEventTypesByFile`）。
+///
 /// 双方のスキーマは同一:
 /// `{event: 'enemy_defeated', taskTitle, questRank, baseExp, timestamp}`
 ///
