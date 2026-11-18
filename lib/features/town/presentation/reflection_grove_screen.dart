@@ -11,6 +11,7 @@ import 'package:rpg_todo/features/town/data/gryphon_report_repository.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 import 'package:rpg_todo/features/shared/domain/gryphon_insight_generator.dart';
 import 'package:rpg_todo/features/shared/domain/gryphon_report_service.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/town/presentation/reflection_badge_collection_screen.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -20,6 +21,8 @@ import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 /// - 自己評価 vs AI推定難易度 比較グラフ
 /// - 難易度推移グラフ
 /// - 振り返りログ時系列一覧
+///
+/// 配色は [GamePalette] の明度トークン経由で解決する（ダーク/ライト両対応）。
 class ReflectionGroveScreen extends StatefulWidget {
   final VoidCallback? onBack;
 
@@ -45,8 +48,7 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
   late final GryphonReportRepository _reportRepo =
       widget.reportRepository ?? GryphonReportRepository();
   late final GryphonReportService _reportService = GryphonReportService(
-    insightGenerator:
-        widget.insightGenerator ?? RealGryphonInsightGenerator(),
+    insightGenerator: widget.insightGenerator ?? RealGryphonInsightGenerator(),
   );
   List<Reflection> _reflections = [];
   GryphonReport? _latestReport;
@@ -106,9 +108,7 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
     for (final r in _reflections) {
       counts[r.aiDifficulty] = (counts[r.aiDifficulty] ?? 0) + 1;
     }
-    return counts.entries
-        .reduce((a, b) => a.value >= b.value ? a : b)
-        .key;
+    return counts.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
   }
 
   int get _currentStreak {
@@ -148,8 +148,7 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
       ..sort((a, b) => a.date.compareTo(b.date));
   }
 
-  String _shortDate(DateTime d) =>
-      '${d.month}/${d.day}';
+  String _shortDate(DateTime d) => '${d.month}/${d.day}';
 
   String _rankLabel(QuestRank r) {
     switch (r) {
@@ -162,6 +161,8 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
     }
   }
 
+  /// ランク色。塗り（バー・バッジ地）に使う原色で、文字色には
+  /// [GamePalette.readable] を通してから用いる。
   Color _rankColor(QuestRank r) {
     switch (r) {
       case QuestRank.S:
@@ -199,6 +200,7 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
       );
     }
 
+    final palette = GamePalette.of(context);
     final comparisonData = _comparisonData;
 
     return Scaffold(
@@ -226,8 +228,8 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
         ],
         leading: widget.onBack != null
             ? SemanticHelper.interactive(
-                testId: SemanticHelper.createTestId(
-                    SemanticTypes.button, 'back'),
+                testId:
+                    SemanticHelper.createTestId(SemanticTypes.button, 'back'),
                 label: '戻る',
                 child: IconButton(
                   icon: const Icon(Icons.arrow_back),
@@ -237,18 +239,21 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
             : null,
       ),
       body: Container(
+        // ライトでは和紙無地（画像の黒スクリムはライトで文字が沈むため敷かない）。
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: const AssetImage('assets/images/home_bg.png'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              Colors.black.withValues(alpha: 0.7),
-              BlendMode.darken,
-            ),
-          ),
+          image: palette.usesBackdropImage
+              ? DecorationImage(
+                  image: const AssetImage('assets/images/home_bg.png'),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    palette.scrim,
+                    BlendMode.darken,
+                  ),
+                )
+              : null,
         ),
         child: _reflections.isEmpty
-            ? _buildEmptyState()
+            ? _buildEmptyState(palette)
             : CustomScrollView(
                 slivers: [
                   // ── ヘッダ群（統計・報告・各種チャート）──
@@ -263,35 +268,35 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           // ── 統計概要カード ──
-                          _buildStatsRow(),
+                          _buildStatsRow(palette),
                           const SizedBox(height: 20),
 
                           // ── 週次グリフォン報告 ──
-                          _buildGryphonReportSection(),
+                          _buildGryphonReportSection(palette),
                           const SizedBox(height: 24),
 
                           // ── 月間/年間 俯瞰（残心の質的蓄積・#24） ──
-                          _buildSectionTitle('📅 月間・年間の俯瞰'),
+                          _buildSectionTitle('📅 月間・年間の俯瞰', palette),
                           const SizedBox(height: 8),
                           _MonthlyOverview(analytics: _analytics),
                           const SizedBox(height: 24),
 
                           // ── 自己評価 vs AI推定 比較グラフ ──
-                          _buildSectionTitle('📊 自己評価 vs AI推定 難易度比較'),
+                          _buildSectionTitle('📊 自己評価 vs AI推定 難易度比較', palette),
                           const SizedBox(height: 8),
                           if (comparisonData.isNotEmpty)
                             _ComparisonChart(data: comparisonData),
                           const SizedBox(height: 24),
 
                           // ── 難易度分布 ──
-                          _buildSectionTitle('📈 AI推定 難易度分布'),
+                          _buildSectionTitle('📈 AI推定 難易度分布', palette),
                           const SizedBox(height: 8),
                           _AiRankDistribution(reflections: _reflections),
                           const SizedBox(height: 24),
 
                           // ── 難易度推移（直近10件） ──
-                          if (comparisonData.length >= 2) ...[
-                            _buildSectionTitle('📉 難易度の推移（直近）'),
+                          if (comparisonData.length >= 2) ...{
+                            _buildSectionTitle('📉 難易度の推移（直近）', palette),
                             const SizedBox(height: 8),
                             _TrendChart(
                               data: comparisonData.length > 10
@@ -300,11 +305,11 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
                                   : comparisonData,
                             ),
                             const SizedBox(height: 24),
-                          ],
+                          },
 
                           // ── 振り返りログ一覧 ──
                           _buildSectionTitle(
-                              '📜 学びの記録（${_reflections.length}件）'),
+                              '📜 学びの記録（${_reflections.length}件）', palette),
                           const SizedBox(height: 8),
                         ],
                       ),
@@ -338,14 +343,14 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(GamePalette palette) {
     // 次の一手は既存の戻る導線（onBack）を差し出す。onBack が無ければボタンは描かない。
     final onBack = widget.onBack;
     return EmptyStateView(
       key: AppKeys.reflectionGroveEmptyStateView,
       icon: const Text('🌳', style: TextStyle(fontSize: 64)),
-      titleStyle: const TextStyle(fontSize: 18, color: Colors.white70),
-      descriptionStyle: const TextStyle(fontSize: 14, color: Colors.white38),
+      titleStyle: TextStyle(fontSize: 18, color: palette.onSurfaceMuted),
+      descriptionStyle: TextStyle(fontSize: 14, color: palette.onSurfaceFaint),
       spec: EmptyStateSpec(
         title: 'まだ振り返りがありません。',
         description: '討伐後に「戦後の一息」で\n学びを記してみましょう。',
@@ -355,42 +360,42 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
     );
   }
 
-  Widget _buildSectionTitle(String title) {
+  Widget _buildSectionTitle(String title, GamePalette palette) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF4CAF50),
+        color: palette.success,
       ),
     );
   }
 
   // ── 週次グリフォン報告 ──
 
-  Widget _buildGryphonReportSection() {
+  Widget _buildGryphonReportSection(GamePalette palette) {
     return Container(
       key: AppKeys.gryphonReportSection,
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black26,
+        color: palette.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionTitle('🦅 週次グリフォン報告'),
+          _buildSectionTitle('🦅 週次グリフォン報告', palette),
           const SizedBox(height: 8),
           if (_latestReport == null)
             Container(
               key: AppKeys.gryphonReportEmpty,
               width: double.infinity,
               padding: const EdgeInsets.all(12),
-              child: const Text(
+              child: Text(
                 '魔導書グリフォンはまだ今週の報告を書いていません。\n「報告を召喚」で今週の振り返りを解析させましょう。',
-                style: TextStyle(fontSize: 12, color: Colors.white54),
+                style: TextStyle(fontSize: 12, color: palette.onSurfaceFaint),
               ),
             )
           else
@@ -404,6 +409,9 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
               label: '週次グリフォン報告を生成',
               child: ElevatedButton.icon(
                 key: AppKeys.gryphonReportGenerateButton,
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: palette.accent,
+                ),
                 icon: _generating
                     ? const SizedBox(
                         width: 14,
@@ -421,7 +429,7 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
     );
   }
 
-  Widget _buildStatsRow() {
+  Widget _buildStatsRow(GamePalette palette) {
     return Row(
       children: [
         _StatCard(
@@ -432,7 +440,9 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
         const SizedBox(width: 8),
         _StatCard(
           label: '平均自己評価',
-          value: _reflections.isEmpty ? '-' : _avgSelfDifficulty.toStringAsFixed(1),
+          value: _reflections.isEmpty
+              ? '-'
+              : _avgSelfDifficulty.toStringAsFixed(1),
           icon: '🎯',
         ),
         const SizedBox(width: 8),
@@ -440,7 +450,8 @@ class _ReflectionGroveScreenState extends State<ReflectionGroveScreen> {
           label: '最多AI推定',
           value: _reflections.isEmpty ? '-' : _rankLabel(_mostCommonAiRank),
           icon: '🔮',
-          valueColor: _reflections.isEmpty ? null : _rankColor(_mostCommonAiRank),
+          valueColor:
+              _reflections.isEmpty ? null : _rankColor(_mostCommonAiRank),
         ),
         const SizedBox(width: 8),
         _StatCard(
@@ -464,14 +475,15 @@ class _GryphonReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Container(
       key: AppKeys.gryphonReportCard,
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black38,
+        color: palette.cardBackgroundStrong,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -483,21 +495,21 @@ class _GryphonReportCard extends StatelessWidget {
                     .replaceFirst('M/d', _formatDate(report.weekStartDate))
                     .replaceFirst('M/d', _formatDate(report.weekEndDate)),
                 key: AppKeys.gryphonReportWeek,
-                style: const TextStyle(fontSize: 11, color: Colors.white54),
+                style: TextStyle(fontSize: 11, color: palette.onSurfaceFaint),
               ),
               const Spacer(),
-              if (report.growthScore != null) ...[
+              if (report.growthScore != null) ...{
                 const Text('🪶', style: TextStyle(fontSize: 12)),
                 Text(
                   '成長スコア ${report.growthScore}',
                   key: AppKeys.gryphonReportGrowthScore,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFFFD700),
+                    color: palette.accentStrong,
                   ),
                 ),
-              ],
+              },
             ],
           ),
           const SizedBox(height: 8),
@@ -519,6 +531,7 @@ class _ReportSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (body.isEmpty) return const SizedBox.shrink();
+    final palette = GamePalette.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: 6),
       child: Column(
@@ -526,18 +539,18 @@ class _ReportSection extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.bold,
-              color: Color(0xFF81C784),
+              color: palette.readable(const Color(0xFF81C784)),
             ),
           ),
           const SizedBox(height: 2),
           Text(
             body,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: Colors.white70,
+              color: palette.onSurfaceMuted,
               height: 1.4,
             ),
           ),
@@ -562,13 +575,14 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.black38,
+          color: palette.cardBackgroundStrong,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(color: palette.border),
         ),
         child: Column(
           children: [
@@ -579,13 +593,13 @@ class _StatCard extends StatelessWidget {
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: valueColor ?? const Color(0xFF4CAF50),
+                color: palette.readable(valueColor ?? palette.success),
               ),
             ),
             const SizedBox(height: 2),
             Text(
               label,
-              style: const TextStyle(fontSize: 11, color: Colors.white54),
+              style: TextStyle(fontSize: 11, color: palette.onSurfaceFaint),
               textAlign: TextAlign.center,
             ),
           ],
@@ -622,21 +636,23 @@ class _ComparisonChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final displayData =
         data.length > 15 ? data.sublist(data.length - 15) : data;
     return Container(
       height: 200,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black26,
+        color: palette.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: palette.border),
       ),
       child: CustomPaint(
         painter: _ComparisonChartPainter(
           data: displayData,
           selfColor: const Color(0xFF4CAF50),
           aiColor: const Color(0xFFFFD700),
+          palette: palette,
         ),
         size: Size.infinite,
       ),
@@ -648,11 +664,13 @@ class _ComparisonChartPainter extends CustomPainter {
   final List<_ComparisonPoint> data;
   final Color selfColor;
   final Color aiColor;
+  final GamePalette palette;
 
   _ComparisonChartPainter({
     required this.data,
     required this.selfColor,
     required this.aiColor,
+    required this.palette,
   });
 
   @override
@@ -672,7 +690,7 @@ class _ComparisonChartPainter extends CustomPainter {
 
     // グリッド線
     final gridPaint = Paint()
-      ..color = Colors.white12
+      ..color = palette.grid
       ..strokeWidth = 0.5;
     for (int i = 1; i <= 5; i++) {
       final y = topPad + chartH * (1 - i / maxVal);
@@ -684,7 +702,7 @@ class _ComparisonChartPainter extends CustomPainter {
     }
 
     // Y軸ラベル
-    const labelStyle = TextStyle(color: Colors.white38, fontSize: 9);
+    final labelStyle = TextStyle(color: palette.onSurfaceFaintest, fontSize: 9);
     for (int i = 1; i <= 5; i++) {
       final y = topPad + chartH * (1 - i / maxVal);
       final tp = TextPainter(
@@ -728,7 +746,10 @@ class _ComparisonChartPainter extends CustomPainter {
       // X軸ラベル（3つおきに）
       if (data.length <= 10 || i % 3 == 0) {
         final tp = TextPainter(
-          text: TextSpan(text: d.label, style: const TextStyle(color: Colors.white38, fontSize: 8)),
+          text: TextSpan(
+            text: d.label,
+            style: TextStyle(color: palette.onSurfaceFaintest, fontSize: 8),
+          ),
           textDirection: TextDirection.ltr,
         )..layout();
         tp.paint(
@@ -740,16 +761,16 @@ class _ComparisonChartPainter extends CustomPainter {
 
     // 凡例
     final selfLabel = TextPainter(
-      text: const TextSpan(
+      text: TextSpan(
         text: '■ 自己評価',
-        style: TextStyle(color: Color(0xFF4CAF50), fontSize: 10),
+        style: TextStyle(color: palette.readable(selfColor), fontSize: 10),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
     final aiLabel = TextPainter(
-      text: const TextSpan(
+      text: TextSpan(
         text: '■ AI推定',
-        style: TextStyle(color: Color(0xFFFFD700), fontSize: 10),
+        style: TextStyle(color: palette.readable(aiColor), fontSize: 10),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
@@ -771,17 +792,21 @@ class _AiRankDistribution extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final total = reflections.length;
-    final sCount = reflections.where((r) => r.aiDifficulty == QuestRank.S).length;
-    final aCount = reflections.where((r) => r.aiDifficulty == QuestRank.A).length;
-    final bCount = reflections.where((r) => r.aiDifficulty == QuestRank.B).length;
+    final sCount =
+        reflections.where((r) => r.aiDifficulty == QuestRank.S).length;
+    final aCount =
+        reflections.where((r) => r.aiDifficulty == QuestRank.A).length;
+    final bCount =
+        reflections.where((r) => r.aiDifficulty == QuestRank.B).length;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.black26,
+        color: palette.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         children: [
@@ -826,6 +851,7 @@ class _RankBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final fraction = total > 0 ? count / total : 0.0;
     return Row(
       children: [
@@ -834,7 +860,7 @@ class _RankBar extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: color,
+              color: palette.readable(color),
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),
@@ -844,7 +870,7 @@ class _RankBar extends StatelessWidget {
           child: Container(
             height: 20,
             decoration: BoxDecoration(
-              color: Colors.white10,
+              color: palette.track,
               borderRadius: BorderRadius.circular(4),
             ),
             child: FractionallySizedBox(
@@ -864,7 +890,7 @@ class _RankBar extends StatelessWidget {
           width: 44,
           child: Text(
             '$count件 (${(fraction * 100).toStringAsFixed(0)}%)',
-            style: const TextStyle(color: Colors.white54, fontSize: 11),
+            style: TextStyle(color: palette.onSurfaceFaint, fontSize: 11),
           ),
         ),
       ],
@@ -881,16 +907,17 @@ class _TrendChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Container(
       height: 160,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black26,
+        color: palette.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: palette.border),
       ),
       child: CustomPaint(
-        painter: _TrendChartPainter(data: data),
+        painter: _TrendChartPainter(data: data, palette: palette),
         size: Size.infinite,
       ),
     );
@@ -899,8 +926,9 @@ class _TrendChart extends StatelessWidget {
 
 class _TrendChartPainter extends CustomPainter {
   final List<_ComparisonPoint> data;
+  final GamePalette palette;
 
-  _TrendChartPainter({required this.data});
+  _TrendChartPainter({required this.data, required this.palette});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -917,11 +945,12 @@ class _TrendChartPainter extends CustomPainter {
 
     // グリッド線
     final gridPaint = Paint()
-      ..color = Colors.white12
+      ..color = palette.grid
       ..strokeWidth = 0.5;
     for (int i = 1; i <= 5; i++) {
       final y = topPad + chartH * (1 - i / maxVal);
-      canvas.drawLine(Offset(leftPad, y), Offset(leftPad + chartW, y), gridPaint);
+      canvas.drawLine(
+          Offset(leftPad, y), Offset(leftPad + chartW, y), gridPaint);
     }
 
     // 自己評価線
@@ -993,7 +1022,7 @@ class _TrendChartPainter extends CustomPainter {
         final tp = TextPainter(
           text: TextSpan(
             text: data[i].label,
-            style: const TextStyle(color: Colors.white38, fontSize: 8),
+            style: TextStyle(color: palette.onSurfaceFaintest, fontSize: 8),
           ),
           textDirection: TextDirection.ltr,
         )..layout();
@@ -1003,16 +1032,22 @@ class _TrendChartPainter extends CustomPainter {
 
     // 凡例
     final selfLabel = TextPainter(
-      text: const TextSpan(
+      text: TextSpan(
         text: '─ 自己評価',
-        style: TextStyle(color: Color(0xFF4CAF50), fontSize: 10),
+        style: TextStyle(
+          color: palette.readable(const Color(0xFF4CAF50)),
+          fontSize: 10,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
     final aiLabel = TextPainter(
-      text: const TextSpan(
+      text: TextSpan(
         text: '─ AI推定',
-        style: TextStyle(color: Color(0xFFFFD700), fontSize: 10),
+        style: TextStyle(
+          color: palette.readable(const Color(0xFFFFD700)),
+          fontSize: 10,
+        ),
       ),
       textDirection: TextDirection.ltr,
     )..layout();
@@ -1035,6 +1070,7 @@ class _MonthlyOverview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final buckets = analytics.lastMonths.length > 12
         ? analytics.lastMonths.sublist(analytics.lastMonths.length - 12)
         : analytics.lastMonths;
@@ -1044,41 +1080,44 @@ class _MonthlyOverview extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _overviewCard(
+          palette,
           child: Row(
             children: [
               _kpi('本年', '${analytics.currentYearTotal}件',
-                  const Color(0xFF4CAF50)),
+                  const Color(0xFF4CAF50), palette),
               _kpi('前年', '${analytics.previousYearTotal}件',
-                  const Color(0xFFFFD700)),
-              _kpi('活動月', '${analytics.activeMonths}月',
-                  const Color(0xFF81C784)),
+                  const Color(0xFFFFD700), palette),
+              _kpi('活動月', '${analytics.activeMonths}月', const Color(0xFF81C784),
+                  palette),
               _kpi('月連続', '${analytics.currentMonthlyStreak}月',
-                  const Color(0xFFFF8A65)),
+                  const Color(0xFFFF8A65), palette),
             ],
           ),
         ),
         const SizedBox(height: 8),
         _overviewCard(
+          palette,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 '月別の振り返り（直近12か月）',
-                style: TextStyle(fontSize: 12, color: Colors.white54),
+                style: TextStyle(fontSize: 12, color: palette.onSurfaceFaint),
               ),
               const SizedBox(height: 8),
-              ...buckets.map((b) => _monthBar(b, maxCount)),
+              ...buckets.map((b) => _monthBar(b, maxCount, palette)),
             ],
           ),
         ),
         const SizedBox(height: 8),
         _overviewCard(
+          palette,
           child: Row(
             children: [
               _kpi('⚔️ 会心', '${analytics.sentiment.kaishin}',
-                  const Color(0xFFFFD700)),
+                  const Color(0xFFFFD700), palette),
               _kpi('💧 戒め', '${analytics.sentiment.imashime}',
-                  const Color(0xFF64B5F6)),
+                  const Color(0xFF64B5F6), palette),
             ],
           ),
         ),
@@ -1086,20 +1125,20 @@ class _MonthlyOverview extends StatelessWidget {
     );
   }
 
-  Widget _overviewCard({required Widget child}) {
+  Widget _overviewCard(GamePalette palette, {required Widget child}) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black26,
+        color: palette.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: palette.border),
       ),
       child: child,
     );
   }
 
-  Widget _kpi(String label, String value, Color color) {
+  Widget _kpi(String label, String value, Color color, GamePalette palette) {
     return Expanded(
       child: Column(
         children: [
@@ -1108,20 +1147,21 @@ class _MonthlyOverview extends StatelessWidget {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.bold,
-              color: color,
+              color: palette.readable(color),
             ),
           ),
           const SizedBox(height: 2),
           Text(
             label,
-            style: const TextStyle(fontSize: 10, color: Colors.white54),
+            style: TextStyle(fontSize: 10, color: palette.onSurfaceFaint),
           ),
         ],
       ),
     );
   }
 
-  Widget _monthBar(ReflectionMonthlyCount bucket, int maxCount) {
+  Widget _monthBar(
+      ReflectionMonthlyCount bucket, int maxCount, GamePalette palette) {
     final fraction = maxCount > 0 ? bucket.count / maxCount : 0.0;
     final label = '${bucket.year % 100}/${bucket.month}';
     return Padding(
@@ -1132,14 +1172,14 @@ class _MonthlyOverview extends StatelessWidget {
             width: 44,
             child: Text(
               label,
-              style: const TextStyle(fontSize: 11, color: Colors.white54),
+              style: TextStyle(fontSize: 11, color: palette.onSurfaceFaint),
             ),
           ),
           Expanded(
             child: Container(
               height: 14,
               decoration: BoxDecoration(
-                color: Colors.white10,
+                color: palette.track,
                 borderRadius: BorderRadius.circular(3),
               ),
               child: FractionallySizedBox(
@@ -1160,7 +1200,7 @@ class _MonthlyOverview extends StatelessWidget {
             child: Text(
               '${bucket.count}',
               textAlign: TextAlign.right,
-              style: const TextStyle(fontSize: 11, color: Colors.white70),
+              style: TextStyle(fontSize: 11, color: palette.onSurfaceMuted),
             ),
           ),
         ],
@@ -1186,6 +1226,7 @@ class _ReflectionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final localDate = normalizeToLocal(reflection.date);
     final dateStr =
         '${localDate.month}/${localDate.day} ${localDate.hour}:${localDate.minute.toString().padLeft(2, '0')}';
@@ -1194,9 +1235,9 @@ class _ReflectionTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black38,
+        color: palette.cardBackgroundStrong,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1205,8 +1246,7 @@ class _ReflectionTile extends StatelessWidget {
             children: [
               // 自己評価バッジ
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: selfColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
@@ -1215,7 +1255,7 @@ class _ReflectionTile extends StatelessWidget {
                 child: Text(
                   '自己: ${reflection.selfDifficulty}',
                   style: TextStyle(
-                    color: selfColor,
+                    color: palette.readable(selfColor),
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1224,8 +1264,7 @@ class _ReflectionTile extends StatelessWidget {
               const SizedBox(width: 8),
               // AI推定バッジ
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: rankColor.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
@@ -1234,7 +1273,7 @@ class _ReflectionTile extends StatelessWidget {
                 child: Text(
                   'AI: $rankLabel',
                   style: TextStyle(
-                    color: rankColor,
+                    color: palette.readable(rankColor),
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
@@ -1243,21 +1282,22 @@ class _ReflectionTile extends StatelessWidget {
               const Spacer(),
               Text(
                 dateStr,
-                style: const TextStyle(color: Colors.white38, fontSize: 11),
+                style:
+                    TextStyle(color: palette.onSurfaceFaintest, fontSize: 11),
               ),
             ],
           ),
-          if (reflection.content.isNotEmpty) ...[
+          if (reflection.content.isNotEmpty) ...{
             const SizedBox(height: 8),
             Text(
               reflection.content,
-              style: const TextStyle(
-                color: Colors.white70,
+              style: TextStyle(
+                color: palette.onSurfaceMuted,
                 fontSize: 13,
                 height: 1.4,
               ),
             ),
-          ],
+          },
         ],
       ),
     );

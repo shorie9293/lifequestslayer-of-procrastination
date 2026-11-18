@@ -21,41 +21,45 @@ class GameThemes {
 
   /// 浪人 — 和紙黒基調、金アクセント
   static final adventurer = _base.copyWith(
-    appBarTheme: const AppBarTheme(
-      backgroundColor: _deepPurple, elevation: 0),
+    appBarTheme: const AppBarTheme(backgroundColor: _deepPurple, elevation: 0),
     colorScheme: const ColorScheme.dark(
-      primary: _gold, secondary: _gold,
-      surface: _washiDark, error: Color(0xFFE85050)),
+        primary: _gold,
+        secondary: _gold,
+        surface: _washiDark,
+        error: Color(0xFFE85050)),
   );
 
   /// 侍 — 墨黒基調、朱アクセント
   static final warrior = _base.copyWith(
     scaffoldBackgroundColor: const Color(0xFF1A0D0D),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF2A1010), elevation: 0),
+    appBarTheme:
+        const AppBarTheme(backgroundColor: Color(0xFF2A1010), elevation: 0),
     colorScheme: const ColorScheme.dark(
-      primary: Color(0xFFE85050), secondary: _gold,
-      surface: Color(0xFF2A1A1A)),
+        primary: Color(0xFFE85050),
+        secondary: _gold,
+        surface: Color(0xFF2A1A1A)),
   );
 
   /// 法師 — 墨黒基調、青緑アクセント
   static final cleric = _base.copyWith(
     scaffoldBackgroundColor: const Color(0xFF0D1A1A),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF102A2A), elevation: 0),
+    appBarTheme:
+        const AppBarTheme(backgroundColor: Color(0xFF102A2A), elevation: 0),
     colorScheme: const ColorScheme.dark(
-      primary: Color(0xFF4DB6AC), secondary: _gold,
-      surface: Color(0xFF1A2A2A)),
+        primary: Color(0xFF4DB6AC),
+        secondary: _gold,
+        surface: Color(0xFF1A2A2A)),
   );
 
   /// 陰陽師 — 深紫基調、金アクセント
   static final wizard = _base.copyWith(
     scaffoldBackgroundColor: _deepPurple,
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF261650), elevation: 0),
+    appBarTheme:
+        const AppBarTheme(backgroundColor: Color(0xFF261650), elevation: 0),
     colorScheme: const ColorScheme.dark(
-      primary: _gold, secondary: Color(0xFFBB86FC),
-      surface: Color(0xFF1A1040)),
+        primary: _gold,
+        secondary: Color(0xFFBB86FC),
+        surface: Color(0xFF1A1040)),
   );
 
   static ThemeData forJob(Job job) {
@@ -74,50 +78,70 @@ class GameThemes {
   static const _paperWhite = Color(0xFFF7F3E8);
   static const _paperSurface = Color(0xFFEFE9D8);
 
+  /// ライト時の本文色（和紙白に対する 12:1 前後）。
+  static const _ink = Color(0xFF2B2B2B);
+
   static final _lightBase = ThemeData(
     brightness: Brightness.light,
     primaryColor: _gold,
     scaffoldBackgroundColor: _paperWhite,
     useMaterial3: true,
+    // 明背景での文字色契約（ダークは ThemeData.dark の既定に委ねる）。
+    textTheme: Typography.material2021()
+        .black
+        .apply(bodyColor: _ink, displayColor: _ink),
   );
 
   /// 浪人（ライト） — 和紙白基調、金アクセント
   static final adventurerLight = _lightBase.copyWith(
-    appBarTheme: const AppBarTheme(
-        backgroundColor: _paperSurface, elevation: 0),
+    appBarTheme:
+        const AppBarTheme(backgroundColor: _paperSurface, elevation: 0),
     colorScheme: const ColorScheme.light(
-      primary: _gold, secondary: _gold,
-      surface: _paperSurface, error: Color(0xFFC0392B)),
+        primary: _gold,
+        onPrimary: _ink,
+        secondary: _gold,
+        surface: _paperSurface,
+        onSurface: _ink,
+        error: Color(0xFFC0392B)),
   );
 
   /// 侍（ライト） — 白基調、朱アクセント
   static final warriorLight = _lightBase.copyWith(
     scaffoldBackgroundColor: const Color(0xFFFBF4F2),
-    appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFFF2E2DE), elevation: 0),
+    appBarTheme:
+        const AppBarTheme(backgroundColor: Color(0xFFF2E2DE), elevation: 0),
     colorScheme: const ColorScheme.light(
-      primary: Color(0xFFC0392B), secondary: _gold,
-      surface: Color(0xFFF2E2DE)),
+        primary: Color(0xFFC0392B),
+        onPrimary: Colors.white,
+        secondary: _gold,
+        surface: Color(0xFFF2E2DE),
+        onSurface: _ink),
   );
 
   /// 法師（ライト） — 白基調、青緑アクセント
   static final clericLight = _lightBase.copyWith(
     scaffoldBackgroundColor: const Color(0xFFF0F6F5),
-    appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFFDCEBE9), elevation: 0),
+    appBarTheme:
+        const AppBarTheme(backgroundColor: Color(0xFFDCEBE9), elevation: 0),
     colorScheme: const ColorScheme.light(
-      primary: Color(0xFF2E8B82), secondary: _gold,
-      surface: Color(0xFFDCEBE9)),
+        primary: Color(0xFF2E8B82),
+        onPrimary: Colors.white,
+        secondary: _gold,
+        surface: Color(0xFFDCEBE9),
+        onSurface: _ink),
   );
 
   /// 陰陽師（ライト） — 淡紫基調、金アクセント
   static final wizardLight = _lightBase.copyWith(
     scaffoldBackgroundColor: const Color(0xFFF4F1FA),
-    appBarTheme: const AppBarTheme(
-        backgroundColor: Color(0xFFE5DEF5), elevation: 0),
+    appBarTheme:
+        const AppBarTheme(backgroundColor: Color(0xFFE5DEF5), elevation: 0),
     colorScheme: const ColorScheme.light(
-      primary: _gold, secondary: Color(0xFF7E57C2),
-      surface: Color(0xFFE5DEF5)),
+        primary: _gold,
+        onPrimary: _ink,
+        secondary: Color(0xFF7E57C2),
+        surface: Color(0xFFE5DEF5),
+        onSurface: _ink),
   );
 
   /// ジョブに応じたライトテーマを返す
