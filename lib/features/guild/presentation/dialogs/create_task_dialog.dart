@@ -6,6 +6,7 @@ import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/domain/difficulty_estimator.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
@@ -247,6 +248,7 @@ class CreateTaskDialogState extends State<CreateTaskDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final playerVM = Provider.of<PlayerViewModel>(context, listen: false);
     final player = playerVM.player;
 
@@ -287,7 +289,10 @@ class CreateTaskDialogState extends State<CreateTaskDialog> {
                       "📖 魔導書解析: 過去の実績から約$_estimatedMinutes分と推定",
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.amber[200],
+                        // ライトでは amber200 が白地で 1.2:1。金は濃金へ。
+                        color: palette.isLight
+                            ? palette.accent
+                            : Colors.amber[200],
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -312,7 +317,11 @@ class CreateTaskDialogState extends State<CreateTaskDialog> {
                             ? "${_deadline!.year}/${_deadline!.month.toString().padLeft(2, '0')}/${_deadline!.day.toString().padLeft(2, '0')}"
                             : "期限なし",
                         style: TextStyle(
-                          color: _deadline != null ? Colors.white : Colors.grey,
+                          color: _deadline != null
+                              ? palette.onSurface
+                              : (palette.isLight
+                                  ? palette.onSurfaceFaint
+                                  : Colors.grey),
                         ),
                       ),
                     ),
@@ -468,7 +477,10 @@ class CreateTaskDialogState extends State<CreateTaskDialog> {
         TextButton(
           key: AppKeys.formTaskCancel,
           onPressed: () => Navigator.pop(context),
-          style: TextButton.styleFrom(foregroundColor: Colors.grey[400]),
+          style: TextButton.styleFrom(
+              foregroundColor: palette.isLight
+                  ? palette.onSurfaceMuted
+                  : Colors.grey[400]),
           child: const Text("キャンセル", style: TextStyle(fontSize: 16)),
         ),
         ElevatedButton(

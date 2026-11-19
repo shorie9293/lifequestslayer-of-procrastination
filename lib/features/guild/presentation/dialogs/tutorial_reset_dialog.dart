@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -10,6 +11,7 @@ class TutorialResetDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return AlertDialog(
       key: AppKeys.confirmDialog,
       title: const Text('導きの書をリセット'),
@@ -22,7 +24,10 @@ class TutorialResetDialog extends StatelessWidget {
           child: TextButton(
             key: AppKeys.closeButton,
             onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(foregroundColor: Colors.grey),
+            style: TextButton.styleFrom(
+                foregroundColor: palette.isLight
+                    ? palette.onSurfaceMuted
+                    : Colors.grey),
             child: const Text('キャンセル'),
           ),
         ),
@@ -39,7 +44,10 @@ class TutorialResetDialog extends StatelessWidget {
               );
             },
             style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.amber[700],
+                // ライトでは琥珀地に白が 2.2:1。地を白が載る濃金へ落とす。
+                backgroundColor: palette.isLight
+                    ? palette.readable(Colors.amber[700]!)
+                    : Colors.amber[700],
                 foregroundColor: Colors.white),
             child: const Text('リセット'),
           ),

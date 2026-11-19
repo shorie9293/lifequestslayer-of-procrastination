@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/core/infrastructure/notification_service.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 通知設定ダイアログ
@@ -130,7 +131,9 @@ class _NotificationSettingsDialogState
               child: ElevatedButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.amber[700],
+                  // ライトでは琥珀地に白が 2.2:1。地を濃金へ。
+                  backgroundColor: GamePalette.of(context)
+                      .readable(Colors.amber[700]!),
                   foregroundColor: Colors.white,
                 ),
                 child: const Text('設定を開く'),
@@ -176,7 +179,8 @@ class _NotificationSettingsDialogState
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(ctx, true),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.amber[700],
+                    backgroundColor: GamePalette.of(context)
+                        .readable(Colors.amber[700]!),
                     foregroundColor: Colors.white,
                   ),
                   child: const Text('設定を開く'),
@@ -236,13 +240,15 @@ class _NotificationSettingsDialogState
       );
     }
 
+    final palette = GamePalette.of(context);
     return AlertDialog(
       key: AppKeys.notificationSettingsDialog,
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.notifications_active, color: Colors.amber),
-          SizedBox(width: 8),
-          Text('通知設定'),
+          Icon(Icons.notifications_active,
+              color: palette.isLight ? palette.accent : Colors.amber),
+          const SizedBox(width: 8),
+          const Text('通知設定'),
         ],
       ),
       content: Column(
@@ -367,7 +373,9 @@ class _NotificationSettingsDialogState
                 icon: const Icon(Icons.send, size: 16),
                 label: const Text('送信'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.orange[700],
+                  backgroundColor: palette.isLight
+                      ? palette.readable(Colors.orange[700]!)
+                      : Colors.orange[700],
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                 ),
@@ -403,7 +411,10 @@ class _NotificationSettingsDialogState
           label: '通知設定をキャンセル',
           child: TextButton(
             onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(foregroundColor: Colors.grey[400]),
+            style: TextButton.styleFrom(
+                foregroundColor: palette.isLight
+                    ? palette.onSurfaceMuted
+                    : Colors.grey[400]),
             child: const Text('キャンセル'),
           ),
         ),
@@ -414,7 +425,9 @@ class _NotificationSettingsDialogState
           child: ElevatedButton(
             onPressed: _save,
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.amber[700],
+              backgroundColor: palette.isLight
+                  ? palette.readable(Colors.amber[700]!)
+                  : Colors.amber[700],
               foregroundColor: Colors.white,
             ),
             child: const Text('保存'),

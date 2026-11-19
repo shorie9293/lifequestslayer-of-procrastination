@@ -8,6 +8,7 @@ import 'package:rpg_todo/features/shared/widgets/widgets/rank_slot_display.dart'
 import 'package:rpg_todo/features/shared/widgets/widgets/fatigue_gauge.dart';
 import 'package:rpg_todo/features/shared/widgets/widgets/exp_progress_bar.dart';
 import 'package:rpg_todo/features/shared/widgets/widgets/badge_row.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class PlayerStatusHeader extends StatelessWidget {
@@ -19,6 +20,7 @@ class PlayerStatusHeader extends StatelessWidget {
     final taskVM = context.watch<TaskViewModel>();
     final player = playerVM.player;
     final activeTasks = taskVM.activeTasks;
+    final palette = GamePalette.of(context);
 
     return SemanticHelper.container(
         testId: '${SemanticTypes.section}_player_status',
@@ -26,7 +28,9 @@ class PlayerStatusHeader extends StatelessWidget {
         child: Container(
           key: AppKeys.playerStatusHeader,
           padding: const EdgeInsets.all(16),
-          color: Colors.black12,
+          // 旧 Colors.black12（ダーク不変）。ライトでは黒12%が灰色の地になり
+          // 中の白文字が沈むため、和紙に馴染む半透明白へ。
+          color: palette.isLight ? palette.cardBackground : Colors.black12,
           child: Column(
             children: [
               Row(

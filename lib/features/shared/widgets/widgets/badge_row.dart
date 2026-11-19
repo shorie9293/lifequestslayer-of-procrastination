@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 /// ストリーク・ミッションバッジ表示Widget
 class BadgeRow extends StatelessWidget {
@@ -24,12 +25,14 @@ class BadgeRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Wrap(
       spacing: 8,
       runSpacing: 6,
       children: [
-        _buildStreakBadge(),
+        _buildStreakBadge(palette),
         _buildMissionBadge(
+          palette: palette,
           icon: "📅",
           label: isDailyMissionComplete
               ? "デイリー達成！"
@@ -38,6 +41,7 @@ class BadgeRow extends StatelessWidget {
           isDone: isDailyMissionComplete,
         ),
         _buildMissionBadge(
+          palette: palette,
           icon: "🏆",
           label: isWeeklyMissionComplete
               ? "週次ミッション達成！"
@@ -49,7 +53,11 @@ class BadgeRow extends StatelessWidget {
     );
   }
 
-  Widget _buildStreakBadge() {
+  /// 旧 Colors.white24（枠・ドット）。ライトは墨24%へ。
+  Color _hairline(GamePalette p) =>
+      p.isLight ? const Color(0x3D000000) : Colors.white24;
+
+  Widget _buildStreakBadge(GamePalette palette) {
     // 次のマイルストーンを求める
     final nextMilestone = streakDays < 3
         ? 3
@@ -63,10 +71,10 @@ class BadgeRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isHot ? Colors.orange.withValues(alpha: 0.2) : Colors.white10,
+        color: isHot ? Colors.orange.withValues(alpha: 0.2) : palette.track,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: isHot ? Colors.orange : Colors.white24,
+          color: isHot ? Colors.orange : _hairline(palette),
           width: 1,
         ),
       ),
@@ -77,7 +85,11 @@ class BadgeRow extends StatelessWidget {
             "🔥 $streakDays 日連続",
             style: TextStyle(
               fontSize: 10,
-              color: isHot ? Colors.orangeAccent : Colors.white70,
+              // ダークは従来の orangeAccent / white70。ライトは地色に対して
+              // 4.5:1 を満たすまで濃色化する。
+              color: isHot
+                  ? palette.readable(Colors.orangeAccent)
+                  : palette.onSurfaceMuted,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -91,7 +103,7 @@ class BadgeRow extends StatelessWidget {
                 height: 6,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: i < streakDays ? Colors.orange : Colors.white24,
+                  color: i < streakDays ? Colors.orange : _hairline(palette),
                 ),
               );
             }),
@@ -102,7 +114,8 @@ class BadgeRow extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 4,
-              backgroundColor: Colors.white12,
+              backgroundColor:
+                  palette.isLight ? palette.track : Colors.white12,
               valueColor: AlwaysStoppedAnimation<Color>(
                 isHot ? Colors.orange : Colors.amber,
               ),
@@ -114,6 +127,7 @@ class BadgeRow extends StatelessWidget {
   }
 
   Widget _buildMissionBadge({
+    required GamePalette palette,
     required String icon,
     required String label,
     required double progress,
@@ -122,10 +136,10 @@ class BadgeRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isDone ? Colors.green.withValues(alpha: 0.2) : Colors.white10,
+        color: isDone ? Colors.green.withValues(alpha: 0.2) : palette.track,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(
-          color: isDone ? Colors.green : Colors.white24,
+          color: isDone ? Colors.green : _hairline(palette),
           width: 1,
         ),
       ),
@@ -136,7 +150,9 @@ class BadgeRow extends StatelessWidget {
             "$icon $label",
             style: TextStyle(
               fontSize: 10,
-              color: isDone ? Colors.greenAccent : Colors.white70,
+              color: isDone
+                  ? palette.readable(Colors.greenAccent)
+                  : palette.onSurfaceMuted,
               fontWeight: isDone ? FontWeight.bold : FontWeight.normal,
             ),
             overflow: TextOverflow.ellipsis,
@@ -147,7 +163,8 @@ class BadgeRow extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress.clamp(0.0, 1.0),
               minHeight: 4,
-              backgroundColor: Colors.white12,
+              backgroundColor:
+                  palette.isLight ? palette.track : Colors.white12,
               valueColor: AlwaysStoppedAnimation<Color>(
                 isDone ? Colors.green : Colors.amber,
               ),

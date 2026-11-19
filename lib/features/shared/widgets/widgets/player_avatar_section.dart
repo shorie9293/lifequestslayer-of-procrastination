@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 /// アバター・称号・ジョブ・コイン・コンボを表示するLeft-side Widget
 class PlayerAvatarSection extends StatelessWidget {
@@ -44,10 +45,13 @@ class PlayerAvatarSection extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     "${player.coins}",
-                    style: const TextStyle(
+                    style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.amber),
+                        // ライトの和紙地では Colors.amber が 1.6:1。金は濃金へ。
+                        color: GamePalette.of(context).isLight
+                            ? GamePalette.of(context).accentStrong
+                            : Colors.amber),
                   ),
                 ],
               ),

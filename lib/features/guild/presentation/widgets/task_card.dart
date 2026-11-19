@@ -3,7 +3,32 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
+
+/// 2色のコントラスト比（WCAG）。
+double _contrastRatio(Color a, Color b) {
+  final la = a.computeLuminance();
+  final lb = b.computeLuminance();
+  final hi = la > lb ? la : lb;
+  final lo = la > lb ? lb : la;
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/// ライトテーマの札は「漆塗り」— 白文字が 4.5:1 を満たす濃色まで落とす。
+///
+/// 銀(#9E9E9E)・金(#D4A038)・銅(#8D6E63) は中間調で、白も墨も 3:1 に届かず
+/// どちらの前景でも読めない（実測 2.1〜2.7:1）。地を濃色に寄せることで
+/// 札の金/銀/銅という同一性を保ったまま可読にする。
+Color _lacquer(Color base) {
+  if (_contrastRatio(Colors.white, base) >= 4.5) return base;
+  var current = base;
+  for (double t = 0.1; t <= 0.9; t += 0.1) {
+    current = Color.lerp(base, const Color(0xFF1A1A1A), t)!;
+    if (_contrastRatio(Colors.white, current) >= 4.5) return current;
+  }
+  return current;
+}
 
 class TaskCard extends StatefulWidget {
   // ━━━ 緊急度カラー定数 ━━━
@@ -204,13 +229,23 @@ class _TaskCardState extends State<TaskCard>
 
   @override
   Widget build(BuildContext context) {
-    final cardColor = widget.color ??
+    final Color baseCardColor = widget.color ??
         (_task.status == TaskStatus.active
-            ? Colors.red[900]
+            ? Colors.red[900]!
             : const Color(0xFF2A2D34));
-    final textColor = (cardColor != null && cardColor.computeLuminance() < 0.5)
+    final palette = GamePalette.of(context);
+    // ライトは地を漆色へ（中間調の札では白/墨どちらも沈む）。ダークは不変。
+    final cardColor = palette.isLight ? _lacquer(baseCardColor) : baseCardColor;
+    final textColor = cardColor.computeLuminance() < 0.5
         ? Colors.white
         : Colors.black87;
+    // ライトでも地が濃色になったため、白が勝てば白を採る（実コントラスト判定）。
+    final cardTextColor = palette.isLight
+        ? (_contrastRatio(Colors.black87, cardColor) >
+                _contrastRatio(Colors.white, cardColor)
+            ? Colors.black87
+            : Colors.white)
+        : textColor;
     final urgencyBorderColor = _currentUrgencyColor;
 
     return SemanticHelper.container(
@@ -235,17 +270,17 @@ class _TaskCardState extends State<TaskCard>
                   Theme.of(context).copyWith(dividerColor: Colors.transparent),
               child: ExpansionTile(
                 initiallyExpanded: widget.initiallyExpanded,
-                collapsedIconColor: textColor,
-                iconColor: textColor,
-                collapsedTextColor: textColor,
-                textColor: textColor,
+                collapsedIconColor: cardTextColor,
+                iconColor: cardTextColor,
+                collapsedTextColor: cardTextColor,
+                textColor: cardTextColor,
                 trailing: widget.trailing,
                 tilePadding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 leading: (_task.status == TaskStatus.active ||
                         (_task.enemyAssetPath != null &&
                             _task.enemyAssetPath!.isNotEmpty))
-                    ? _buildEnemyAvatar(textColor)
+                    ? _buildEnemyAvatar(cardTextColor)
                     : Container(
                         width: 48,
                         height: 48,
@@ -265,7 +300,7 @@ class _TaskCardState extends State<TaskCard>
                           ),
                           child: Center(
                             child: Icon(Icons.assignment,
-                                size: 24, color: textColor),
+                                size: 24, color: cardTextColor),
                           ),
                         ),
                       ),
@@ -282,7 +317,7 @@ class _TaskCardState extends State<TaskCard>
                                   "[${_task.rank.name}] ${_task.title}",
                               style: GoogleFonts.vt323(
                                   fontSize: 26,
-                                  color: textColor,
+                                  color: cardTextColor,
                                   fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -298,6 +333,7 @@ class _TaskCardState extends State<TaskCard>
                             child: const Text('緊急',
                                 style: TextStyle(
                                     fontSize: 11,
+                                    color: Colors.white,
                                     fontWeight: FontWeight.bold)),
                           ),
                         if (widget.isSnoozed && widget.snoozeLabel != null)
@@ -330,7 +366,12 @@ class _TaskCardState extends State<TaskCard>
                         child: Text(
                           _countdownText,
                           style: TextStyle(
-                            color: _currentUrgencyColor ?? Colors.white70,
+                            // ライトでは青/黄/赤の緊急色が札の地で沈むため濃色化。
+                            color: _currentUrgencyColor == null
+                                ? palette.onSurfaceMuted
+                                : (palette.isLight
+                                    ? palette.readable(_currentUrgencyColor!)
+                                    : _currentUrgencyColor!),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -343,7 +384,7 @@ class _TaskCardState extends State<TaskCard>
                         padding: const EdgeInsets.only(top: 4.0),
                         child: Text(widget.subtitle!,
                             style: TextStyle(
-                                color: textColor.withValues(alpha: 0.7),
+                                color: cardTextColor.withValues(alpha: 0.7),
                                 fontSize: 13)),
                       )
                     : null,
@@ -371,7 +412,7 @@ class _TaskCardState extends State<TaskCard>
                             dense: true,
                             title: Text(sub.title,
                                 style: TextStyle(
-                                    color: textColor, fontSize: 16)),
+                                    color: cardTextColor, fontSize: 16)),
                             leading: TweenAnimationBuilder<double>(
                               tween: Tween<double>(
                                 begin: isAnimating ? 0.0 : 1.0,

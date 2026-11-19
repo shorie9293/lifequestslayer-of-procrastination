@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 /// 疲労ゲージ・体調表示Widget
 class FatigueGauge extends StatelessWidget {
@@ -19,6 +20,7 @@ class FatigueGauge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Column(
       children: [
         Row(
@@ -36,7 +38,7 @@ class FatigueGauge extends StatelessWidget {
         LinearProgressIndicator(
           value: 1.0 - fatigueProgress,
           minHeight: 8,
-          backgroundColor: Colors.grey[800],
+          backgroundColor: palette.isLight ? palette.track : Colors.grey[800],
           valueColor: AlwaysStoppedAnimation<Color>(
             fatigueProgress >= 1.0
                 ? Colors.red
@@ -46,12 +48,12 @@ class FatigueGauge extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        _buildFatigueGauge(),
+        _buildFatigueGauge(palette),
       ],
     );
   }
 
-  Widget _buildFatigueGauge() {
+  Widget _buildFatigueGauge(GamePalette palette) {
     final Color bgColor;
     final Color borderColor;
     final Color textColor;
@@ -97,7 +99,9 @@ class FatigueGauge extends StatelessWidget {
         style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: textColor,
+          // ライトでは lightBlueAccent 等が淡い地で 1.1:1 まで沈む。
+          // ダークは従来色のまま（readable はライトのみ作用）。
+          color: palette.readable(textColor),
           letterSpacing: 1.2,
         ),
       ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 /// S/A/Bランク枠表示Widget
 class RankSlotDisplay extends StatelessWidget {
@@ -16,22 +17,26 @@ class RankSlotDisplay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         _buildRankRow(
+          palette,
           QuestRank.S,
           activeTasks.where((t) => t.rank == QuestRank.S).length,
           player.questSlots[QuestRank.S] ?? 0,
         ),
         const SizedBox(height: 4),
         _buildRankRow(
+          palette,
           QuestRank.A,
           activeTasks.where((t) => t.rank == QuestRank.A).length,
           player.questSlots[QuestRank.A] ?? 0,
         ),
         const SizedBox(height: 4),
         _buildRankRow(
+          palette,
           QuestRank.B,
           activeTasks.where((t) => t.rank == QuestRank.B).length,
           player.questSlots[QuestRank.B] ?? 0,
@@ -40,7 +45,7 @@ class RankSlotDisplay extends StatelessWidget {
     );
   }
 
-  Widget _buildRankRow(QuestRank rank, int current, int max) {
+  Widget _buildRankRow(GamePalette palette, QuestRank rank, int current, int max) {
     Color color;
     switch (rank) {
       case QuestRank.S:
@@ -53,6 +58,9 @@ class RankSlotDisplay extends StatelessWidget {
         color = const Color(0xFFCD7F32);
         break;
     }
+    // 枠（スウォッチ）は記号色として維持し、文字だけ可読化する。
+    // ライトでは金/銀/銅が和紙地で 1.6〜2.0:1 まで沈む。
+    final labelColor = palette.readable(color);
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -60,10 +68,15 @@ class RankSlotDisplay extends StatelessWidget {
         Text(
           rank.name,
           style: GoogleFonts.pressStart2p(
-              fontSize: 12, color: color, fontWeight: FontWeight.bold),
+              fontSize: 12, color: labelColor, fontWeight: FontWeight.bold),
         ),
         const SizedBox(width: 8),
-        if (max == 0) Text("-", style: TextStyle(color: Colors.grey[600])),
+        if (max == 0)
+          Text("-",
+              style: TextStyle(
+                  color: palette.isLight
+                      ? palette.onSurfaceFaint
+                      : Colors.grey[600])),
         for (int i = 0; i < max; i++)
           Container(
             margin: const EdgeInsets.only(left: 4),

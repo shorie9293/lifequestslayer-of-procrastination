@@ -50,6 +50,21 @@ import 'package:rpg_todo/features/overview/presentation/screens/overview_screen.
 import 'package:rpg_todo/features/shared/widgets/widgets/player_avatar_section.dart'
     show getJobName;
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
+
+/// 明度テーマに依らず地が暗い面（SnackBar・緊急クエスト節の赤地）の前景。
+/// 旧 Colors.white と同値。パレットに白トークンが無いためここに固定する。
+const Color _onDarkFill = Color(0xFFFFFFFF);
+
+/// 同上（副次文字）。旧 Colors.white70 と同値。
+const Color _onDarkFillMuted = Color(0xB3FFFFFF);
+
+/// 旧 `Colors.grey` の代替。ライトは和紙地で読める墨、ダークは従来の grey。
+/// （ライトで grey は 2.4:1 まで沈む）
+Color _faintText(BuildContext context) {
+  final palette = GamePalette.of(context);
+  return palette.isLight ? palette.onSurfaceFaint : Colors.grey;
+}
 
 /// 勤行リマインダー画面から静穏時間画面への導線（本番結線）。
 Widget _buildQuietHoursScreen(BuildContext context) =>
@@ -133,6 +148,9 @@ class _JobSkillChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pulldown = JobSkillPulldownService.build(player);
+    // 旧 Colors.grey はライトの和紙地で 2.4:1。ライトのみ墨へ寄せる
+    // （ダークは従来の grey を保ち見た目不変）。
+    final faint = _faintText(context);
     return PopupMenuButton<JobSkill>(
       key: AppKeys.guildJobChip,
       tooltip: '現在の職業とスキル',
@@ -145,10 +163,10 @@ class _JobSkillChip extends StatelessWidget {
             key: AppKeys.guildJobSkillGroupHeader(group.key),
             child: Text(
               group.label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey,
+                color: faint,
               ),
             ),
           ),
@@ -162,7 +180,7 @@ class _JobSkillChip extends StatelessWidget {
                   Text(
                     entry.skill.displayName,
                     style: TextStyle(
-                      color: entry.isUnlocked ? null : Colors.grey,
+                      color: entry.isUnlocked ? null : faint,
                     ),
                   ),
                   if (entry.isInherited) ...[
@@ -173,8 +191,7 @@ class _JobSkillChip extends StatelessWidget {
                         color: Colors.grey.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text('継承',
-                          style: TextStyle(fontSize: 9, color: Colors.grey)),
+                      child: Text('継承', style: TextStyle(fontSize: 9, color: faint)),
                     ),
                   ],
                   if (entry.isEquipped) ...[
@@ -188,7 +205,7 @@ class _JobSkillChip extends StatelessWidget {
                     entry.isUnlocked
                         ? 'Lv${entry.requiredLevel}'
                         : '🔒 Lv${entry.requiredLevel}で解放',
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    style: TextStyle(fontSize: 11, color: faint),
                   ),
                 ],
               ),
@@ -272,7 +289,7 @@ class _GuildScreenState extends State<GuildScreen> {
             if (email != null) ...[
               const SizedBox(height: 8),
               Text('ログイン中: $email',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                  style: TextStyle(fontSize: 12, color: _faintText(ctx))),
             ],
             const SizedBox(height: 16),
             Container(
@@ -336,7 +353,7 @@ class _GuildScreenState extends State<GuildScreen> {
     if (blockReason != null) {
       messenger.showSnackBar(
         SnackBar(
-          content: Text(blockReason, style: const TextStyle(color: Colors.white)),
+          content: Text(blockReason, style: const TextStyle(color: _onDarkFill)),
           backgroundColor: Colors.orange.shade900,
         ),
       );
@@ -378,7 +395,7 @@ class _GuildScreenState extends State<GuildScreen> {
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(error, style: const TextStyle(color: Colors.white)),
+          content: Text(error, style: const TextStyle(color: _onDarkFill)),
           backgroundColor: Colors.red,
         ),
       );
@@ -535,6 +552,7 @@ class _GuildScreenState extends State<GuildScreen> {
             final timeStr = _formatTimeRemaining(diff);
             final isExpired = diff.isNegative;
             final snoozeBadge = snooze.badgeLabel(player.snoozedTasks, task.id);
+            final pal = GamePalette.of(context);
 
             return Container(
               margin: const EdgeInsets.only(bottom: 6),
@@ -555,7 +573,7 @@ class _GuildScreenState extends State<GuildScreen> {
                           child: Text(
                             task.title,
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: _onDarkFill,
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
                             ),
@@ -575,7 +593,7 @@ class _GuildScreenState extends State<GuildScreen> {
                               style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
-                                  color: Colors.white)),
+                                  color: _onDarkFill)),
                         ),
                         // 🌙 スヌーズ済みバッジ（Monk Lv5 で微睡ませた記録）
                         if (snoozeBadge != null) ...[
@@ -593,7 +611,7 @@ class _GuildScreenState extends State<GuildScreen> {
                               style: const TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w500,
-                                  color: Colors.white),
+                                  color: _onDarkFill),
                             ),
                           ),
                         ],
@@ -613,7 +631,10 @@ class _GuildScreenState extends State<GuildScreen> {
                     child: Text(
                       timeStr,
                       style: TextStyle(
-                        color: isExpired ? Colors.redAccent : Colors.amber,
+                        // ライトでは琥珀 on 橙地が 2.3:1。地が暗赤なので白へ。
+                        color: pal.isLight
+                            ? _onDarkFill
+                            : (isExpired ? Colors.redAccent : Colors.amber),
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -631,7 +652,10 @@ class _GuildScreenState extends State<GuildScreen> {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Colors.amber.shade800,
+                          // ライトでは琥珀地に白が 2.3:1。地を濃金へ落とす。
+                          color: pal.isLight
+                              ? const Color(0xFF8A5A00)
+                              : Colors.amber.shade800,
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Row(
@@ -642,7 +666,7 @@ class _GuildScreenState extends State<GuildScreen> {
                             Text(
                               '出発',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: _onDarkFill,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -698,11 +722,11 @@ class _GuildScreenState extends State<GuildScreen> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text('🌙', style: TextStyle(fontSize: 12)),
-                              SizedBox(width: 2),
+                              const SizedBox(width: 2),
                               Text(
                                 '微睡み',
                                 style: TextStyle(
-                                  color: Colors.white,
+                                  color: _onDarkFill,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -737,15 +761,22 @@ class _GuildScreenState extends State<GuildScreen> {
     const snooze = QuestSnoozeService();
     final player = playerVM.player;
     final canSnooze = player.hasSkill(JobSkill.monkSnooze);
+    final palette = GamePalette.of(context);
 
     return Scaffold(
       appBar: AppBar(
         title: Row(
           mainAxisSize: MainAxisSize.min,
-          children: const [
-            Text("寄合所"),
-            SizedBox(width: 8),
-            Text("v1.5.84+180", style: TextStyle(fontSize: 10, color: Color(0xFF888888))),
+          children: [
+            const Text("寄合所"),
+            const SizedBox(width: 8),
+            Text("v1.5.85+181",
+                style: TextStyle(
+                    fontSize: 10,
+                    // ライトの和紙地では #888 が 2.9:1。墨へ寄せる。
+                    color: palette.isLight
+                        ? palette.onSurfaceFaint
+                        : const Color(0xFF888888))),
           ],
         ),
         actions: [
@@ -1111,13 +1142,19 @@ class _GuildScreenState extends State<GuildScreen> {
         ],
       ),
       body: Container(
+        // ライトは和紙無地（背景画像を敷かない）。ダークは従来どおり暗幕70%。
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: const AssetImage('assets/images/guild_bg.png'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-                Colors.black.withValues(alpha: 0.7), BlendMode.darken),
-          ),
+          color: palette.usesBackdropImage
+              ? null
+              : Theme.of(context).scaffoldBackgroundColor,
+          image: palette.usesBackdropImage
+              ? const DecorationImage(
+                  image: AssetImage('assets/images/guild_bg.png'),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                      Color(0xB3000000), BlendMode.darken),
+                )
+              : null,
         ),
         child: Column(
           children: [
@@ -1128,16 +1165,18 @@ class _GuildScreenState extends State<GuildScreen> {
                 width: double.infinity,
                 padding:
                     const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                color: Colors.black26,
+                color: palette.cardBackground,
                 child: Row(
                   children: [
                     const Text("📋", style: TextStyle(fontSize: 16)),
                     const SizedBox(width: 8),
                     Text(
                       "未着手のクエスト（見積もり）: ${taskVM.guildEstimatedMinutes}分",
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: Colors.amberAccent,
+                        color: palette.isLight
+                            ? palette.accentStrong
+                            : Colors.amberAccent,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -1192,10 +1231,10 @@ class _GuildScreenState extends State<GuildScreen> {
                           child: EmptyStateView(
                             key: AppKeys.guildEmptyStateView,
                             icon: const Text('🏯', style: TextStyle(fontSize: 48)),
-                            titleStyle:
-                                const TextStyle(fontSize: 18, color: Colors.grey),
-                            descriptionStyle:
-                                const TextStyle(fontSize: 14, color: Colors.grey),
+                            titleStyle: TextStyle(
+                                fontSize: 18, color: _faintText(context)),
+                            descriptionStyle: TextStyle(
+                                fontSize: 14, color: _faintText(context)),
                             spec: EmptyStateSpec(
                               title: 'まだクエストが届いていない。',
                               description: '右下の ＋ から最初のクエストを登録しよう！',
@@ -1230,7 +1269,8 @@ class _GuildScreenState extends State<GuildScreen> {
                               Text(
                                 '[${task.rank.name}] ${task.title}',
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  // 札の地はライトでも漆色（暗）＝白が正しい。
+                                  color: _onDarkFill,
                                   fontSize: 20,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -1240,14 +1280,14 @@ class _GuildScreenState extends State<GuildScreen> {
                                 Text(
                                   '⏱ 見積もり: ${task.targetTimeMinutes}分',
                                   style: const TextStyle(
-                                    color: Colors.white70,
+                                    color: _onDarkFillMuted,
                                     fontSize: 13,
                                   ),
                                 ),
                               Text(
                                 _getTaskDetails(task),
                                 style: const TextStyle(
-                                  color: Colors.white70,
+                                  color: _onDarkFillMuted,
                                   fontSize: 13,
                                 ),
                               ),
@@ -1260,8 +1300,11 @@ class _GuildScreenState extends State<GuildScreen> {
                               child: TextButton(
                                 onPressed: () =>
                                     _showEditTaskDialog(context, task),
-                                child: const Text("編集",
-                                    style: TextStyle(color: Colors.grey)),
+                                child: Text("編集",
+                                    style: TextStyle(
+                                        color: palette.isLight
+                                            ? _onDarkFillMuted
+                                            : Colors.grey)),
                               ),
                             ),
                             SemanticHelper.interactive(
@@ -1270,8 +1313,11 @@ class _GuildScreenState extends State<GuildScreen> {
                               child: TextButton(
                                 key: AppKeys.taskCardDelete,
                                 onPressed: () => _deleteTask(context, task.id),
-                                child: const Text("破棄",
-                                    style: TextStyle(color: Colors.grey)),
+                                child: Text("破棄",
+                                    style: TextStyle(
+                                        color: palette.isLight
+                                            ? _onDarkFillMuted
+                                            : Colors.grey)),
                               ),
                             ),
                             const SizedBox(width: 8),
@@ -1285,8 +1331,11 @@ class _GuildScreenState extends State<GuildScreen> {
                                 onPressed: () =>
                                     _acceptTask(context, task.id),
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.amber[700],
-                                  foregroundColor: Colors.white,
+                                  // ライトでは琥珀地に白が 2.2:1。地を濃金へ落とす。
+                                  backgroundColor: palette.isLight
+                                      ? const Color(0xFF8A5A00)
+                                      : Colors.amber[700],
+                                  foregroundColor: _onDarkFill,
                                   textStyle: const TextStyle(
                                       fontWeight: FontWeight.bold),
                                 ),

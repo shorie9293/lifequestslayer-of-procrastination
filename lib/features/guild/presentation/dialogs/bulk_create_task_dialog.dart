@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
@@ -66,6 +67,7 @@ class _BulkCreateTaskDialogState extends State<BulkCreateTaskDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return AlertDialog(
       key: AppKeys.bulkCreateTaskDialog,
       title: const Text("一括クエスト登録"),
@@ -117,7 +119,10 @@ class _BulkCreateTaskDialogState extends State<BulkCreateTaskDialog> {
           child: TextButton(
             key: AppKeys.formTaskCancel,
             onPressed: () => Navigator.pop(context),
-            style: TextButton.styleFrom(foregroundColor: Colors.grey[400]),
+            style: TextButton.styleFrom(
+                foregroundColor: palette.isLight
+                    ? palette.onSurfaceMuted
+                    : Colors.grey[400]),
             child: const Text("キャンセル", style: TextStyle(fontSize: 16)),
           ),
         ),
