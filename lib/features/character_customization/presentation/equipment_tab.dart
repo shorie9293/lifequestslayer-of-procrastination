@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/features/character_customization/domain/character_skin.dart';
 import 'package:rpg_todo/features/character_customization/presentation/widgets/avatar_preview_widget.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 /// キャラクター装備タブ — 5部位のスキン選択UI。
@@ -35,21 +36,22 @@ class _EquipmentTabState extends State<EquipmentTab> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.all(16),
+        Padding(
+          padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              Icon(Icons.face, color: Colors.white),
-              SizedBox(width: 8),
+              Icon(Icons.face, color: palette.onSurface),
+              const SizedBox(width: 8),
               Text(
                 '装備',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: palette.onSurface,
                 ),
               ),
             ],
@@ -71,8 +73,8 @@ class _EquipmentTabState extends State<EquipmentTab> {
                 if (_selectedSlot != null && _previewSkinId != null)
                   Text(
                     '「${SkinCatalog.findById(_previewSkinId!)?.name ?? ''}」をプレビュー中',
-                    style: const TextStyle(
-                      color: Color(0xFFFFD700),
+                    style: TextStyle(
+                      color: palette.accentStrong,
                       fontSize: 13,
                     ),
                   ),
@@ -112,9 +114,13 @@ class _EquipmentTabState extends State<EquipmentTab> {
                       });
                     },
                     selectedColor: Colors.amber.shade700,
-                    backgroundColor: Colors.brown.shade800,
+                    // 未選択チップは明地のカード面に載るため、明度で地を分ける
+                    // （ダークは従来の茶を厳密に保つ）。
+                    backgroundColor: palette.isLight
+                        ? palette.cardBackgroundStrong
+                        : Colors.brown.shade800,
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.black : Colors.white,
+                      color: isSelected ? Colors.black : palette.onSurface,
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
@@ -131,11 +137,12 @@ class _EquipmentTabState extends State<EquipmentTab> {
             child: _buildSkinList(_selectedSlot!),
           )
         else
-          const Expanded(
+          Expanded(
             child: Center(
               child: Text(
                 '装備部位を選んでね',
-                style: TextStyle(color: Colors.white54, fontSize: 16),
+                style: TextStyle(
+                    color: palette.onSurfaceFaint, fontSize: 16),
               ),
             ),
           ),
@@ -144,6 +151,7 @@ class _EquipmentTabState extends State<EquipmentTab> {
   }
 
   Widget _buildSkinList(SkinSlot slot) {
+    final palette = GamePalette.of(context);
     final allSkins = SkinCatalog.skinsForSlot(slot);
     final currentId = widget.currentSkin.getSlot(slot);
 
@@ -177,11 +185,12 @@ class _EquipmentTabState extends State<EquipmentTab> {
         }),
         // 未解放スキン（ロック表示）
         if (locked.isNotEmpty) ...[
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(
               '── 未解放 ──',
-              style: TextStyle(color: Colors.white38, fontSize: 12),
+              style: TextStyle(
+                  color: palette.onSurfaceFaintest, fontSize: 12),
             ),
           ),
           ...locked.map((skin) {
@@ -199,10 +208,16 @@ class _EquipmentTabState extends State<EquipmentTab> {
     required bool locked,
   }) {
     final isPreviewing = _previewSkinId == skin.id;
+    final palette = GamePalette.of(context);
+    // 明地では面を明るく（プレビューは金の淡い敷き）、ダークは従来の
+    // #00000054 / 金900 40% を厳密に保つ。
+    final cardColor = isPreviewing
+        ? (palette.isLight
+            ? Colors.amber.withValues(alpha: 0.25)
+            : Colors.amber.shade900.withValues(alpha: 0.4))
+        : (palette.isLight ? palette.cardBackgroundStrong : Colors.black54);
     return Card(
-      color: isPreviewing
-          ? Colors.amber.shade900.withValues(alpha: 0.4)
-          : Colors.black54,
+      color: cardColor,
       margin: const EdgeInsets.only(bottom: 8),
       child: InkWell(
         onTap: locked
@@ -219,18 +234,28 @@ class _EquipmentTabState extends State<EquipmentTab> {
           skin.name,
           style: TextStyle(
             fontWeight: FontWeight.bold,
-            color: locked ? Colors.white38 : Colors.white,
+            color:
+                locked ? palette.onSurfaceFaintest : palette.onSurface,
           ),
         ),
         subtitle: Text(
           locked ? skin.unlockConditionDescription : skin.description,
           style: TextStyle(
-            color: locked ? Colors.white30 : Colors.white54,
+            // ダークの未解放は従来の白30%（トークンの白38%より淡い）。
+            color: locked
+                ? (palette.isLight
+                    ? palette.onSurfaceFaintest
+                    : Colors.white30)
+                : palette.onSurfaceFaint,
             fontSize: 12,
           ),
         ),
         trailing: locked
-            ? const Icon(Icons.lock, color: Colors.white30, size: 20)
+            ? Icon(Icons.lock,
+                color: palette.isLight
+                    ? palette.onSurfaceFaintest
+                    : Colors.white30,
+                size: 20)
             : isEquipped
                 ? Container(
                     padding:

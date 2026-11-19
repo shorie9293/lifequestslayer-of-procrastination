@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/infrastructure/shared_file_store.dart';
 import 'package:rpg_todo/features/crossapp/data/cross_app_reward_service.dart';
 import 'package:rpg_todo/features/crossapp/data/cross_app_settings_repository.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// tsundoku-quest 連携設定ダイアログ
@@ -54,22 +55,25 @@ class _TsundokuIdentityLinkDialogState
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return AlertDialog(
-      title: const Row(
+      title: Row(
         children: [
-          Icon(Icons.link, color: Colors.amber),
-          SizedBox(width: 8),
-          Text('tsundoku-quest 連携設定'),
+          // 信号色は readable() に通す（ダークは素通し＝従来値そのまま、
+          // ライトだけ 4.5:1 を満たす濃さへ落とす）。
+          Icon(Icons.link, color: palette.readable(Colors.amber)),
+          const SizedBox(width: 8),
+          const Text('tsundoku-quest 連携設定'),
         ],
       ),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'tsundoku-quest アプリのユーザーID（先頭8文字）を入力してください。\n\n'
             '連携すると、読書の進捗に応じて rpg-task 内で称号や報酬を獲得できます。',
-            style: TextStyle(fontSize: 13, color: Colors.white70),
+            style: TextStyle(fontSize: 13, color: palette.onSurfaceMuted),
           ),
           const SizedBox(height: 12),
           // 共有フォルダの状態（最終送信/最終受信/失敗）を1つの状態から表示
@@ -101,7 +105,8 @@ class _TsundokuIdentityLinkDialogState
             const SizedBox(height: 8),
             Text(
               '現在の連携ID: ${widget.currentUserId}',
-              style: const TextStyle(fontSize: 12, color: Colors.green),
+              style: TextStyle(
+                  fontSize: 12, color: palette.readable(Colors.green)),
             ),
           ],
         ],
@@ -123,7 +128,8 @@ class _TsundokuIdentityLinkDialogState
                         Navigator.of(context).pop(null);
                       }
                     },
-              child: const Text('連携解除', style: TextStyle(color: Colors.red)),
+              child: Text('連携解除',
+                  style: TextStyle(color: palette.readable(Colors.red))),
             ),
           ),
         SemanticHelper.interactive(
@@ -195,14 +201,17 @@ class _SharedStorageStatusBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = status.isHealthy ? Colors.greenAccent : Colors.orangeAccent;
+    final palette = GamePalette.of(context);
+    final color = palette.readable(
+        status.isHealthy ? Colors.greenAccent : Colors.orangeAccent);
     final label = status.sharedFolderReady ? '共有フォルダ: 設定済み' : '共有フォルダ: 未設定';
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.black26,
+        // ダークは従来の #00000026、ライトは和紙白の上に薄い墨の帯。
+        color: palette.isLight ? palette.track : Colors.black26,
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
@@ -228,13 +237,14 @@ class _SharedStorageStatusBlock extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             '最終送信: ${_fmt(status.lastSentAt)}　最終受信: ${_fmt(status.lastReceivedAt)}',
-            style: const TextStyle(fontSize: 11, color: Colors.white54),
+            style: TextStyle(fontSize: 11, color: palette.onSurfaceFaint),
           ),
           if (status.lastError != null) ...[
             const SizedBox(height: 4),
             Text(
               '直近の失敗: ${status.lastError}',
-              style: const TextStyle(fontSize: 11, color: Colors.redAccent),
+              style: TextStyle(
+                  fontSize: 11, color: palette.readable(Colors.redAccent)),
             ),
           ],
           if (!status.sharedFolderReady)

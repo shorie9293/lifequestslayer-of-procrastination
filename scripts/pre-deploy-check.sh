@@ -36,6 +36,7 @@ flutter test --no-pub -j 2 \
   test/features/kozuchi/ \
   test/features/player/ \
   test/features/shared/ \
+  test/screens/ \
   test/features/adventurer/ \
   test/features/project/ \
   test/features/settings/ \

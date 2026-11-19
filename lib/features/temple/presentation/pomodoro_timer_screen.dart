@@ -8,6 +8,7 @@ import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/shared/data/pomodoro_state_store.dart';
 import 'package:rpg_todo/features/shared/domain/pomodoro_runtime.dart';
 import 'package:rpg_todo/features/shared/domain/pomodoro_timer.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 /// 集中の型（サムライ系ジョブスキル）— ポモドーロ集中タイマー画面。
 ///
@@ -294,6 +295,7 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
     _ensureInitialized(PomodoroConfig.fromPlayer(player));
     final state = _state!;
     final theme = Theme.of(context);
+    final palette = GamePalette.of(context);
     final hasFocusSkill = player.hasSkill(JobSkill.samuraiPomodoro);
     final remainingUntilLongBreak = state.config.focusSessionsBeforeLongBreak -
         (state.completedFocusSessions %
@@ -327,15 +329,16 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
                         : Colors.lightBlue.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: state.isFocus ? Colors.amber : Colors.lightBlue,
+                      color: palette.readable(
+                          state.isFocus ? Colors.amber : Colors.lightBlue),
                     ),
                   ),
                   child: Text(
                     state.phase.label,
                     style: theme.textTheme.titleMedium?.copyWith(
-                      color: state.isFocus
-                          ? Colors.amber[800]
-                          : Colors.lightBlue[800],
+                      color: palette.readable(state.isFocus
+                          ? Colors.amber[800]!
+                          : Colors.lightBlue[800]!),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -356,9 +359,11 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
                           key: AppKeys.pomodoroProgress,
                           value: state.progress,
                           strokeWidth: 10,
-                          backgroundColor: Colors.black12,
-                          color:
-                              state.isFocus ? Colors.amber : Colors.lightBlue,
+                          backgroundColor: palette.usesBackdropImage
+                              ? Colors.black12
+                              : palette.track,
+                          color: palette.readable(
+                              state.isFocus ? Colors.amber : Colors.lightBlue),
                         ),
                       ),
                       Text(
@@ -389,7 +394,11 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
                 key: AppKeys.pomodoroSkillStatus,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: hasFocusSkill ? Colors.green[700] : Colors.grey[600],
+                  color: hasFocusSkill
+                      ? palette.readable(Colors.green[700]!)
+                      : (palette.usesBackdropImage
+                          ? Colors.grey[600]
+                          : palette.onSurfaceFaint),
                 ),
               ),
               const SizedBox(height: 24),
@@ -430,16 +439,20 @@ class _PomodoroTimerScreenState extends State<PomodoroTimerScreen>
                 '長休止${state.config.longBreakMinutes}分 '
                 '（${state.config.focusSessionsBeforeLongBreak}回ごと）',
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: Colors.grey[600]),
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: palette.usesBackdropImage
+                        ? Colors.grey[600]
+                        : palette.onSurfaceFaint),
               ),
               const SizedBox(height: 8),
               Text(
                 '集中フェーズの間に勤行（クエスト）を完了すると、'
                 '侍ジョブの「集中の型」EXPボーナスが発動する。',
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: Colors.grey[600]),
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: palette.usesBackdropImage
+                        ? Colors.grey[600]
+                        : palette.onSurfaceFaint),
               ),
             ],
           ),

@@ -4,6 +4,7 @@ import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_screen.dart';
 import 'package:rpg_todo/features/battle/presentation/battle_screen.dart';
@@ -78,27 +79,36 @@ class _MainScreenState extends State<MainScreen> {
     if (widget.onExitOffline == null) return;
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [Text('📶', style: TextStyle(fontSize: 24)), SizedBox(width: 8), Text('オンライン同期に戻る')],
-        ),
-        content: const Text('ログイン画面に戻ります。\nオンライン時に Google ログインすると\nオフライン中に記録したデータが同期されます。'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            style: TextButton.styleFrom(foregroundColor: Colors.grey),
-            child: const Text('キャンセル'),
+      builder: (ctx) {
+        final palette = GamePalette.of(ctx);
+        return AlertDialog(
+          title: const Row(
+            children: [Text('📶', style: TextStyle(fontSize: 24)), SizedBox(width: 8), Text('オンライン同期に戻る')],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              widget.onExitOffline?.call();
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], foregroundColor: Colors.white),
-            child: const Text('戻る'),
-          ),
-        ],
-      ),
+          content: const Text('ログイン画面に戻ります。\nオンライン時に Google ログインすると\nオフライン中に記録したデータが同期されます。'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              style: TextButton.styleFrom(foregroundColor: palette.onSurfaceFaint),
+              child: const Text('キャンセル'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(ctx).pop();
+                widget.onExitOffline?.call();
+              },
+              // 明地の金 #FFA000 は白文字で 2.0:1 まで落ちるため、ライトだけ
+              // 濃金（palette.accent）へ。ダークは従来の amber[700] のまま。
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    palette.isLight ? palette.accent : Colors.amber[700],
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('戻る'),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -124,6 +134,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final playerVM = context.watch<PlayerViewModel>();
     final settingsVM = context.watch<SettingsViewModel>();
+    final palette = GamePalette.of(context);
     final isLoaded = playerVM.isLoaded && context.read<TaskViewModel>().isLoaded;
     if (!isLoaded) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
@@ -257,7 +268,14 @@ class _MainScreenState extends State<MainScreen> {
           child: Semantics(
             label: 'デバッグモード',
             child: IconButton(
-              icon: Icon(Icons.settings, color: settingsVM.isDebugMode ? Colors.amber : Colors.white24, size: 20),
+              icon: Icon(Icons.settings,
+                // 和紙白地では白24%が 1.06:1 まで落ちるため、ライトのみ墨系へ。
+                color: settingsVM.isDebugMode
+                    ? (palette.isLight ? palette.accent : Colors.amber)
+                    : (palette.isLight
+                        ? palette.onSurfaceFaintest
+                        : Colors.white24),
+                size: 20),
               onPressed: settingsVM.isDebugMode ? () => _showDebugPanel(settingsVM) : () => _showDebugPasswordDialog(settingsVM),
               tooltip: settingsVM.isDebugMode ? 'デバッグパネルを開く' : 'デバッグモード',
             ),
@@ -274,42 +292,49 @@ class _MainScreenState extends State<MainScreen> {
   void _showTutorialChoiceDialog(SettingsViewModel settingsVM) {
     showDialog(
       context: context, barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Row(children: [Text('📜', style: TextStyle(fontSize: 24)), SizedBox(width: 8), Text('導きの書')]),
-        content: const Text('修練の基本を指南を受けますか？\n（初めてプレイする方は「指南を受ける」を推奨）'),
-        actions: [
-          SemanticHelper.interactive(
-            testId: SemanticHelper.createTestId(
-                SemanticTypes.button, 'skip_tutorial_inline'),
-            label: 'チュートリアルを略する',
-            child: TextButton(
-              key: AppKeys.tutorialSkip,
-              onPressed: () async {
-                final nav = Navigator.of(ctx);
-                await settingsVM.skipTutorial();
-                if (mounted) { nav.pop(); setState(() => _isTutorialChoiceShowing = false); }
-              },
-              style: TextButton.styleFrom(foregroundColor: Colors.grey),
-              child: const Text('略する'),
+      builder: (ctx) {
+        final palette = GamePalette.of(ctx);
+        return AlertDialog(
+          title: const Row(children: [Text('📜', style: TextStyle(fontSize: 24)), SizedBox(width: 8), Text('導きの書')]),
+          content: const Text('修練の基本を指南を受けますか？\n（初めてプレイする方は「指南を受ける」を推奨）'),
+          actions: [
+            SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(
+                  SemanticTypes.button, 'skip_tutorial_inline'),
+              label: 'チュートリアルを略する',
+              child: TextButton(
+                key: AppKeys.tutorialSkip,
+                onPressed: () async {
+                  final nav = Navigator.of(ctx);
+                  await settingsVM.skipTutorial();
+                  if (mounted) { nav.pop(); setState(() => _isTutorialChoiceShowing = false); }
+                },
+                style: TextButton.styleFrom(foregroundColor: palette.onSurfaceFaint),
+                child: const Text('略する'),
+              ),
             ),
-          ),
-          SemanticHelper.interactive(
-            testId: SemanticHelper.createTestId(
-                SemanticTypes.button, 'start_tutorial_inline'),
-            label: 'チュートリアルを開始',
-            child: ElevatedButton(
-              key: AppKeys.tutorialUnderstood,
-              onPressed: () async {
-                final nav = Navigator.of(ctx);
-                await settingsVM.markTutorialChoiceMade();
-                if (mounted) { nav.pop(); setState(() => _isTutorialChoiceShowing = false); }
-              },
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[700], foregroundColor: Colors.white),
-              child: const Text('指南を受ける'),
+            SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(
+                  SemanticTypes.button, 'start_tutorial_inline'),
+              label: 'チュートリアルを開始',
+              child: ElevatedButton(
+                key: AppKeys.tutorialUnderstood,
+                onPressed: () async {
+                  final nav = Navigator.of(ctx);
+                  await settingsVM.markTutorialChoiceMade();
+                  if (mounted) { nav.pop(); setState(() => _isTutorialChoiceShowing = false); }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      palette.isLight ? palette.accent : Colors.amber[700],
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('指南を受ける'),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
   }
 
@@ -317,7 +342,9 @@ class _MainScreenState extends State<MainScreen> {
     showGeneralDialog(
       context: context, barrierDismissible: true, barrierLabel: '', barrierColor: Colors.black87,
       transitionDuration: const Duration(milliseconds: 600),
-      pageBuilder: (ctx, a1, a2) => Center(
+      pageBuilder: (ctx, a1, a2) {
+        final palette = GamePalette.of(ctx);
+        return Center(
         child: Material(color: Colors.transparent, child: Column(mainAxisSize: MainAxisSize.min, children: [
           const Text('＼ 本日の賜り物 ／', style: TextStyle(color: Colors.amberAccent, fontSize: 24, fontWeight: FontWeight.bold)),
           const SizedBox(height: 16),
@@ -327,13 +354,18 @@ class _MainScreenState extends State<MainScreen> {
             testId: SemanticHelper.createTestId(SemanticTypes.button, 'claim_login_bonus'), label: 'ボーナスを受け取る',
             child: ElevatedButton(
               key: AppKeys.tutorialReward,
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.amber[800], foregroundColor: Colors.white, padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor:
+                    palette.isLight ? palette.accent : Colors.amber[800],
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12)),
               onPressed: () => Navigator.of(ctx).pop(),
               child: const Text('ありがたき幸せ！', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ),
           ),
         ])),
-      ),
+        );
+      },
       transitionBuilder: (ctx, a1, a2, c) => Transform.scale(scale: Curves.elasticOut.transform(a1.value), child: c),
     );
   }

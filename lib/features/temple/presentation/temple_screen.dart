@@ -11,6 +11,7 @@ import 'package:rpg_todo/domain/services/full_backup.dart';
 import 'package:rpg_todo/features/auto_backup/domain/restore_preview.dart';
 import 'package:rpg_todo/features/auto_backup/presentation/restore_preview_dialog.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/features/temple/data/backup_storage.dart';
 import 'package:rpg_todo/features/temple/presentation/pomodoro_timer_screen.dart';
@@ -36,6 +37,7 @@ class TempleScreen extends StatelessWidget {
         player.currentJob == Job.adventurer || currentJobLv >= 10;
     final canChangeJob = canUnlockOtherJobs && canLeaveCurrentJob;
     final maxSlots = JobSkill.maxSkillSlots(player.jobLevels);
+    final palette = GamePalette.of(context);
 
     // Get current job's skills (unlocked/locked)
     final currentJobSkills =
@@ -63,12 +65,18 @@ class TempleScreen extends StatelessWidget {
       ),
       body: Container(
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: const AssetImage('assets/images/temple_bg.png'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-                Colors.black.withValues(alpha: 0.7), BlendMode.darken),
-          ),
+          // ライトは和紙無地（暗い情景画像の上に墨文字は沈むため敷かない）。
+          color: palette.usesBackdropImage
+              ? null
+              : Theme.of(context).scaffoldBackgroundColor,
+          image: palette.usesBackdropImage
+              ? DecorationImage(
+                  image: const AssetImage('assets/images/temple_bg.png'),
+                  fit: BoxFit.cover,
+                  colorFilter:
+                      ColorFilter.mode(palette.scrim, BlendMode.darken),
+                )
+              : null,
         ),
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -82,11 +90,16 @@ class TempleScreen extends StatelessWidget {
             if (!canChangeJob)
               Container(
                 padding: const EdgeInsets.all(8),
-                color: Colors.red.withValues(alpha: 0.2),
+                color: palette.usesBackdropImage
+                    ? Colors.red.withValues(alpha: 0.2)
+                    : palette.danger.withValues(alpha: 0.12),
                 child: Text(
                   "転職は浪人レベル10から可能です (現在 Lv.$adventurerLv)",
-                  style: const TextStyle(
-                      color: Colors.redAccent, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: palette.usesBackdropImage
+                          ? Colors.redAccent
+                          : palette.danger,
+                      fontWeight: FontWeight.bold),
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -146,11 +159,12 @@ class TempleScreen extends StatelessWidget {
 
             // ━━━ 現在の職業スキル一覧 ━━━
             const SizedBox(height: 16),
-            _buildCurrentJobSkillsSection(playerVM, player, currentJobSkills),
+            _buildCurrentJobSkillsSection(
+                context, playerVM, player, currentJobSkills),
 
             // ━━━ 修行の道標（スキル/ジョブ進捗の俯瞰） ━━━
             const SizedBox(height: 16),
-            _buildSkillProgressionCard(player),
+            _buildSkillProgressionCard(context, player),
 
             // ━━━ バックアップ/復元 ━━━
             const SizedBox(height: 16),
@@ -167,39 +181,50 @@ class TempleScreen extends StatelessWidget {
     Player player,
     int maxSlots,
   ) {
+    final palette = GamePalette.of(context);
     final equipped = player.equippedSkills;
     return Container(
       key: AppKeys.templeSkillSlotSection,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
+        color: palette.usesBackdropImage
+            ? Colors.black.withValues(alpha: 0.3)
+            : palette.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blueGrey.withValues(alpha: 0.5)),
+        border: Border.all(
+            color: palette.usesBackdropImage
+                ? Colors.blueGrey.withValues(alpha: 0.5)
+                : palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.extension, color: Colors.cyanAccent, size: 20),
+              Icon(Icons.extension,
+                  color: palette.readable(Colors.cyanAccent), size: 20),
               const SizedBox(width: 8),
               Text(
                 "スキルスロット (${equipped.length}/$maxSlots)",
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: Colors.cyanAccent,
+                  color: palette.readable(Colors.cyanAccent),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
           if (maxSlots == 0)
-            const Padding(
-              padding: EdgeInsets.all(8),
+            Padding(
+              padding: const EdgeInsets.all(8),
               child: Text(
                 "浪人Lv.8以上でスキルスロットが解放されます",
-                style: TextStyle(color: Colors.grey, fontSize: 12),
+                style: TextStyle(
+                    color: palette.usesBackdropImage
+                        ? Colors.grey
+                        : palette.onSurfaceFaint,
+                    fontSize: 12),
               ),
             ),
           ...List.generate(maxSlots, (index) {
@@ -212,19 +237,24 @@ class TempleScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+              color: palette.usesBackdropImage
+                  ? Colors.white.withValues(alpha: 0.05)
+                  : palette.track,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Row(
               children: [
-                const Icon(Icons.info_outline, size: 14, color: Colors.white38),
+                Icon(Icons.info_outline,
+                    size: 14, color: palette.onSurfaceFaintest),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     '他の職業を育てると、そのスキルをスロットに装備できます。'
                     'Lv到達で解放されたスキルが候補に表示されます。',
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.4),
+                      color: palette.usesBackdropImage
+                          ? Colors.white.withValues(alpha: 0.4)
+                          : palette.onSurfaceFaintest,
                       fontSize: 11,
                     ),
                   ),
@@ -258,41 +288,49 @@ class TempleScreen extends StatelessWidget {
       final jobLevel = player.jobLevels[s.job] ?? 1;
       return jobLevel >= s.requiredLevel;
     }).toList();
+    final palette = GamePalette.of(context);
 
     return Container(
       key: Key('slot_$slotIndex'),
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: isFilled
-            ? Colors.blueGrey.withValues(alpha: 0.2)
-            : Colors.grey.withValues(alpha: 0.1),
+        color: palette.usesBackdropImage
+            ? (isFilled
+                ? Colors.blueGrey.withValues(alpha: 0.2)
+                : Colors.grey.withValues(alpha: 0.1))
+            : palette.cardBackground,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         children: [
           Text("枠${slotIndex + 1}: ",
-              style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              style: TextStyle(color: palette.onSurfaceMuted, fontSize: 12)),
           const SizedBox(width: 4),
           Expanded(
             child: isFilled
                 ? Row(
                     children: [
-                      const Icon(Icons.check_circle,
-                          size: 14, color: Colors.greenAccent),
+                      Icon(Icons.check_circle,
+                          size: 14,
+                          color: palette.readable(Colors.greenAccent)),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           "${_jobDisplayName(eqSkill!.skill.job)}・${eqSkill.skill.displayName}",
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 13),
+                          style: TextStyle(
+                              color: palette.onSurface, fontSize: 13),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   )
-                : const Text("空きスロット",
-                    style: TextStyle(color: Colors.grey, fontSize: 12)),
+                : Text("空きスロット",
+                    style: TextStyle(
+                        color: palette.usesBackdropImage
+                            ? Colors.grey
+                            : palette.onSurfaceFaint,
+                        fontSize: 12)),
           ),
           if (isFilled && eqSkill != null) ...[
             // ON/OFF toggle
@@ -304,7 +342,7 @@ class TempleScreen extends StatelessWidget {
                   viewModel.toggleEquippedSkill(slotIndex);
                   viewModel.save();
                 },
-                activeColor: Colors.cyanAccent,
+                activeColor: palette.readable(Colors.cyanAccent),
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
@@ -316,16 +354,16 @@ class TempleScreen extends StatelessWidget {
                 color: Colors.amber.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(4),
               ),
-              child: const Text("常時発動",
+              child: Text("常時発動",
                   style: TextStyle(
-                      color: Colors.amber,
+                      color: palette.readable(Colors.amber),
                       fontSize: 10,
                       fontWeight: FontWeight.bold)),
             ),
           if (isFilled)
             IconButton(
-              icon: const Icon(Icons.remove_circle_outline,
-                  size: 18, color: Colors.redAccent),
+              icon: Icon(Icons.remove_circle_outline,
+                  size: 18, color: palette.readable(Colors.redAccent)),
               onPressed: () {
                 viewModel.unequipSkill(slotIndex);
                 viewModel.save();
@@ -336,8 +374,8 @@ class TempleScreen extends StatelessWidget {
           if (!isFilled && learnableSkills.isNotEmpty)
             PopupMenuButton<JobSkill>(
               key: AppKeys.templeSkillSlotDropdown,
-              icon: const Icon(Icons.add_circle_outline,
-                  size: 18, color: Colors.cyanAccent),
+              icon: Icon(Icons.add_circle_outline,
+                  size: 18, color: palette.readable(Colors.cyanAccent)),
               onSelected: (skill) {
                 viewModel.equipSkill(skill);
                 viewModel.save();
@@ -355,8 +393,11 @@ class TempleScreen extends StatelessWidget {
                       ),
                       Text(
                         skill.description,
-                        style:
-                            const TextStyle(fontSize: 10, color: Colors.grey),
+                        style: TextStyle(
+                            fontSize: 10,
+                            color: palette.usesBackdropImage
+                                ? Colors.grey
+                                : palette.onSurfaceFaint),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -371,32 +412,39 @@ class TempleScreen extends StatelessWidget {
   }
 
   Widget _buildCurrentJobSkillsSection(
+    BuildContext context,
     PlayerViewModel viewModel,
     Player player,
     List<JobSkill> skills,
   ) {
+    final palette = GamePalette.of(context);
     final currentJobLevel = player.level;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
+        color: palette.usesBackdropImage
+            ? Colors.black.withValues(alpha: 0.3)
+            : palette.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.teal.withValues(alpha: 0.5)),
+        border: Border.all(
+            color: palette.usesBackdropImage
+                ? Colors.teal.withValues(alpha: 0.5)
+                : palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.auto_awesome,
-                  color: Colors.tealAccent, size: 20),
+              Icon(Icons.auto_awesome,
+                  color: palette.readable(Colors.tealAccent), size: 20),
               const SizedBox(width: 8),
               Text(
                 "${_jobDisplayName(player.currentJob)}のスキル (Lv.$currentJobLevel)",
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.tealAccent,
+                  color: palette.readable(Colors.tealAccent),
                 ),
               ),
             ],
@@ -413,7 +461,11 @@ class TempleScreen extends StatelessWidget {
                   Icon(
                     isUnlocked ? Icons.check_circle : Icons.lock,
                     size: 16,
-                    color: isUnlocked ? Colors.greenAccent : Colors.grey,
+                    color: isUnlocked
+                        ? palette.readable(Colors.greenAccent)
+                        : (palette.usesBackdropImage
+                            ? Colors.grey
+                            : palette.onSurfaceFaint),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -423,7 +475,11 @@ class TempleScreen extends StatelessWidget {
                         Text(
                           skill.displayName,
                           style: TextStyle(
-                            color: isUnlocked ? Colors.white : Colors.grey,
+                            color: isUnlocked
+                                ? palette.onSurface
+                                : (palette.usesBackdropImage
+                                    ? Colors.grey
+                                    : palette.onSurfaceFaint),
                             fontSize: 14,
                           ),
                         ),
@@ -432,8 +488,10 @@ class TempleScreen extends StatelessWidget {
                           skill.description,
                           style: TextStyle(
                             color: isUnlocked
-                                ? Colors.white54
-                                : Colors.grey.withValues(alpha: 0.5),
+                                ? palette.onSurfaceFaint
+                                : (palette.usesBackdropImage
+                                    ? Colors.grey.withValues(alpha: 0.5)
+                                    : palette.onSurfaceFaintest),
                             fontSize: 11,
                           ),
                         ),
@@ -443,7 +501,11 @@ class TempleScreen extends StatelessWidget {
                   Text(
                     "Lv.${skill.requiredLevel}",
                     style: TextStyle(
-                      color: isUnlocked ? Colors.white60 : Colors.redAccent,
+                      color: isUnlocked
+                          ? (palette.usesBackdropImage
+                              ? Colors.white60
+                              : palette.onSurfaceMuted)
+                          : palette.readable(Colors.redAccent),
                       fontSize: 11,
                     ),
                   ),
@@ -456,9 +518,9 @@ class TempleScreen extends StatelessWidget {
                         color: Colors.amber.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: const Text("MASTER",
+                      child: Text("MASTER",
                           style: TextStyle(
-                              color: Colors.amber,
+                              color: palette.readable(Colors.amber),
                               fontSize: 9,
                               fontWeight: FontWeight.bold)),
                     ),
@@ -473,31 +535,38 @@ class TempleScreen extends StatelessWidget {
   }
 
   /// 修行の道標 — スキルツリーとジョブ習得の進捗俯瞰（道標§五 #30）。
-  Widget _buildSkillProgressionCard(Player player) {
+  Widget _buildSkillProgressionCard(BuildContext context, Player player) {
+    final palette = GamePalette.of(context);
     final report = SkillProgressionService.compute(player);
     return Container(
       key: AppKeys.templeProgressionSection,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
+        color: palette.usesBackdropImage
+            ? Colors.black.withValues(alpha: 0.3)
+            : palette.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
+        border: Border.all(
+            color: palette.usesBackdropImage
+                ? Colors.amber.withValues(alpha: 0.5)
+                : palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              const Icon(Icons.timeline, color: Colors.amber, size: 20),
+              Icon(Icons.timeline,
+                  color: palette.readable(Colors.amber), size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   '修行の道標（スキル ${report.totalUnlocked}/${report.totalNodes}'
                   '・残りポイント ${report.skillPoints}）',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.amber,
+                    color: palette.readable(Colors.amber),
                   ),
                 ),
               ),
@@ -514,15 +583,19 @@ class TempleScreen extends StatelessWidget {
                   SizedBox(
                     width: 64,
                     child: Text(label,
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 12)),
+                        style: TextStyle(
+                            color: palette.onSurface, fontSize: 12)),
                   ),
                   Expanded(
                     child: LinearProgressIndicator(
                       key: AppKeys.templeProgressionJobBar(j.job),
                       value: j.progressRatio,
-                      backgroundColor: Colors.white24,
-                      color: j.isMastered ? Colors.amber : Colors.tealAccent,
+                      backgroundColor: palette.usesBackdropImage
+                          ? Colors.white24
+                          : palette.track,
+                      color: j.isMastered
+                          ? palette.readable(Colors.amber)
+                          : palette.readable(Colors.tealAccent),
                       minHeight: 6,
                     ),
                   ),
@@ -532,7 +605,11 @@ class TempleScreen extends StatelessWidget {
                         ? '習得済み'
                         : 'Lv.${j.level}/習得まであと${j.levelsToMaster}',
                     style: TextStyle(
-                      color: j.isMastered ? Colors.amber : Colors.white60,
+                      color: j.isMastered
+                          ? palette.readable(Colors.amber)
+                          : (palette.usesBackdropImage
+                              ? Colors.white60
+                              : palette.onSurfaceMuted),
                       fontSize: 11,
                     ),
                   ),
@@ -543,9 +620,9 @@ class TempleScreen extends StatelessWidget {
           const SizedBox(height: 8),
           // 次に解放できるスキルノード
           if (report.trees.any((t) => t.hasNextNode)) ...[
-            const Text('次に解放できる技:',
+            Text('次に解放できる技:',
                 style: TextStyle(
-                    color: Colors.tealAccent,
+                    color: palette.readable(Colors.tealAccent),
                     fontSize: 12,
                     fontWeight: FontWeight.bold)),
             ...report.trees.where((t) => t.hasNextNode).map((t) {
@@ -561,15 +638,17 @@ class TempleScreen extends StatelessWidget {
                           : Icons.lock_outline,
                       size: 14,
                       color: t.nextNodeAffordable
-                          ? Colors.greenAccent
-                          : Colors.grey,
+                          ? palette.readable(Colors.greenAccent)
+                          : (palette.usesBackdropImage
+                              ? Colors.grey
+                              : palette.onSurfaceFaint),
                     ),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         '$treeLabel・${node.name}（${node.pointCost}pt）',
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 12),
+                        style: TextStyle(
+                            color: palette.onSurface, fontSize: 12),
                       ),
                     ),
                     Text(
@@ -578,8 +657,8 @@ class TempleScreen extends StatelessWidget {
                           : 'あと${t.pointsShortfall}pt',
                       style: TextStyle(
                         color: t.nextNodeAffordable
-                            ? Colors.greenAccent
-                            : Colors.redAccent,
+                            ? palette.readable(Colors.greenAccent)
+                            : palette.readable(Colors.redAccent),
                         fontSize: 11,
                       ),
                     ),
@@ -588,10 +667,11 @@ class TempleScreen extends StatelessWidget {
               );
             }),
           ] else
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 4),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
               child: Text('全ての技を極めた！',
-                  style: TextStyle(color: Colors.amber, fontSize: 12)),
+                  style: TextStyle(
+                      color: palette.readable(Colors.amber), fontSize: 12)),
             ),
         ],
       ),
@@ -599,12 +679,19 @@ class TempleScreen extends StatelessWidget {
   }
 
   Widget _buildBackupSection(BuildContext context, PlayerViewModel playerVM) {
+    final palette = GamePalette.of(context);
+    final onScene = palette.usesBackdropImage;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
+        color: onScene
+            ? Colors.black.withValues(alpha: 0.3)
+            : palette.cardBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blueGrey.withValues(alpha: 0.5)),
+        border: Border.all(
+            color: onScene
+                ? Colors.blueGrey.withValues(alpha: 0.5)
+                : palette.border),
       ),
       child: Column(
         children: [
@@ -616,7 +703,9 @@ class TempleScreen extends StatelessWidget {
                   icon: const Icon(Icons.backup, size: 20),
                   label: const Text('データバックアップ'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blueGrey.withValues(alpha: 0.4),
+                    backgroundColor: onScene
+                        ? Colors.blueGrey.withValues(alpha: 0.4)
+                        : Colors.blueGrey.shade700,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
@@ -652,7 +741,9 @@ class TempleScreen extends StatelessWidget {
                   icon: const Icon(Icons.restore, size: 20),
                   label: const Text('データ復元'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal.withValues(alpha: 0.4),
+                    backgroundColor: onScene
+                        ? Colors.teal.withValues(alpha: 0.4)
+                        : Colors.teal.shade700,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
@@ -720,7 +811,9 @@ class TempleScreen extends StatelessWidget {
               icon: const Icon(Icons.table_view, size: 20),
               label: const Text('クエストをCSVで書き出す'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.teal.withValues(alpha: 0.35),
+                backgroundColor: onScene
+                    ? Colors.teal.withValues(alpha: 0.35)
+                    : Colors.teal.shade700,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
               ),
@@ -805,6 +898,8 @@ class TempleScreen extends StatelessWidget {
     Key cardKey,
   ) {
     final player = viewModel.player;
+    final palette = GamePalette.of(context);
+    final onScene = palette.usesBackdropImage;
     final level = player.jobLevels[job] ?? 1;
     final isMastered = player.isMastered(job);
     final isSkillActive = player.activeSkills.contains(job);
@@ -848,7 +943,10 @@ class TempleScreen extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                       child: Icon(icon,
-                          size: 32, color: isUnlocked ? color : Colors.grey),
+                          size: 32,
+                          color: isUnlocked
+                              ? palette.readable(color)
+                              : (onScene ? Colors.grey : palette.onSurfaceFaint)),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -864,8 +962,12 @@ class TempleScreen extends StatelessWidget {
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
                                     color: isUnlocked
-                                        ? (isSelected ? color : Colors.white)
-                                        : Colors.grey,
+                                        ? (isSelected
+                                            ? palette.readable(color)
+                                            : palette.onSurface)
+                                        : (onScene
+                                            ? Colors.grey
+                                            : palette.onSurfaceFaint),
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
@@ -873,7 +975,7 @@ class TempleScreen extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Text("Lv.$level",
-                                  style: const TextStyle(color: Colors.white)),
+                                  style: TextStyle(color: palette.onSurface)),
                               if (isMastered) ...[
                                 const SizedBox(width: 8),
                                 Container(
@@ -895,24 +997,29 @@ class TempleScreen extends StatelessWidget {
                           Text(
                             description,
                             style: TextStyle(
-                                color:
-                                    isUnlocked ? Colors.white70 : Colors.grey),
+                                color: isUnlocked
+                                    ? palette.onSurfaceMuted
+                                    : (onScene
+                                        ? Colors.grey
+                                        : palette.onSurfaceFaint)),
                           ),
                           if (!isUnlocked)
                             Text(
                               (player.jobLevels[Job.adventurer] ?? 1) < 10
                                   ? '浪人Lv.10 解放'
                                   : '現在の職業でLv.10 解放',
-                              style: const TextStyle(
-                                  color: Colors.redAccent,
+                              style: TextStyle(
+                                  color: palette.readable(Colors.redAccent),
                                   fontWeight: FontWeight.bold),
                             ),
                         ],
                       ),
                     ),
-                    if (isSelected) Icon(Icons.check_circle, color: color),
+                    if (isSelected)
+                      Icon(Icons.check_circle, color: palette.readable(color)),
                     if (!isSelected && !isUnlocked)
-                      const Icon(Icons.lock, color: Colors.grey),
+                      Icon(Icons.lock,
+                          color: onScene ? Colors.grey : palette.onSurfaceFaint),
                   ],
                 ),
                 // Skill Toggle for Mastered Jobs (if not current job)
@@ -937,7 +1044,7 @@ class TempleScreen extends StatelessWidget {
                             viewModel.toggleSkill(job);
                             context.read<PlayerViewModel>().save();
                           },
-                          activeColor: color,
+                          activeColor: palette.readable(color),
                         ),
                       )
                     ],
@@ -945,12 +1052,16 @@ class TempleScreen extends StatelessWidget {
                 ],
                 if (isMastered && job == Job.adventurer && !isSelected) ...[
                   const Divider(),
-                  const Row(
+                  Row(
                     children: [
-                      Icon(Icons.star, size: 16, color: Colors.amber),
-                      SizedBox(width: 4),
+                      Icon(Icons.star,
+                          size: 16, color: palette.readable(Colors.amber)),
+                      const SizedBox(width: 4),
                       Text("常時スキル発動中 (ランク・枠数)",
-                          style: TextStyle(color: Colors.grey))
+                          style: TextStyle(
+                              color: onScene
+                                  ? Colors.grey
+                                  : palette.onSurfaceFaint))
                     ],
                   )
                 ]

@@ -5,6 +5,12 @@ import 'package:rpg_todo/core/widgets/empty_state.dart';
 import 'package:rpg_todo/features/crossapp/domain/cross_app_title_collection.dart';
 import 'package:rpg_todo/features/crossapp/domain/cross_app_title_definition.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
+
+/// 図鑑の金アクセント。ダークは従来の [Colors.amber] を厳密に保ち、
+/// ライトだけ和紙白地で読める濃金（[GamePalette.accent]）へ落とす。
+Color _gold(GamePalette palette) =>
+    palette.isLight ? palette.accent : Colors.amber;
 
 /// クロスアプリ称号図鑑（tsundoku-quest 連携称号の一覧・獲得状況）
 ///
@@ -34,6 +40,7 @@ class _CrossAppTitleEncyclopediaScreenState
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     // widget 差し替えに追従するため、State へ捕捉せず毎 build 解決する。
     final ownedTitles = widget.ownedTitles ??
         context.watch<PlayerViewModel>().player.titles;
@@ -42,13 +49,19 @@ class _CrossAppTitleEncyclopediaScreenState
       definitions: widget.definitions,
     );
     final filtered = collection.filter(_filter);
+    // 図鑑は元は常時ダーク（#121212）だった。ライトでは和紙白地へ合わせる。
+    final screenColor = palette.isLight
+        ? Theme.of(context).scaffoldBackgroundColor
+        : const Color(0xFF121212);
 
     return Scaffold(
       key: AppKeys.crossAppTitleEncyclopediaScreen,
-      backgroundColor: const Color(0xFF121212),
+      backgroundColor: screenColor,
       appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        backgroundColor: palette.isLight
+            ? Theme.of(context).scaffoldBackgroundColor
+            : Colors.black,
+        foregroundColor: palette.isLight ? palette.onSurface : Colors.white,
         title: const Text('📖 クロスアプリ称号図鑑'),
       ),
       body: ListView(
@@ -62,7 +75,8 @@ class _CrossAppTitleEncyclopediaScreenState
             EmptyStateView(
               key: AppKeys.crossAppTitleEmpty,
               padding: const EdgeInsets.symmetric(vertical: 32),
-              titleStyle: const TextStyle(fontSize: 14, color: Colors.white54),
+              titleStyle:
+                  TextStyle(fontSize: 14, color: palette.onSurfaceFaint),
               spec: EmptyStateSpec(
                 title: '該当する称号はありません',
                 actionLabel: _filter == CrossAppTitleFilter.all ? null : '絞り込みを解除',
@@ -79,12 +93,13 @@ class _CrossAppTitleEncyclopediaScreenState
   }
 
   Widget _buildSummaryCard(CrossAppTitleCollection collection) {
+    final palette = GamePalette.of(context);
     return Card(
       key: AppKeys.crossAppTitleSummary,
-      color: Colors.black54,
+      color: palette.isLight ? palette.cardBackgroundStrong : Colors.black54,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
-        side: const BorderSide(color: Colors.white12),
+        side: BorderSide(color: palette.border),
       ),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -93,24 +108,24 @@ class _CrossAppTitleEncyclopediaScreenState
           children: [
             Row(
               children: [
-                const Icon(Icons.emoji_events, color: Colors.amber, size: 20),
+                Icon(Icons.emoji_events, color: _gold(palette), size: 20),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     collection.summaryLabel,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: palette.onSurface,
                     ),
                   ),
                 ),
                 Text(
                   collection.ratioLabel,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.amber,
+                    color: _gold(palette),
                   ),
                 ),
               ],
@@ -119,8 +134,8 @@ class _CrossAppTitleEncyclopediaScreenState
             LinearProgressIndicator(
               value: collection.achievementRatio,
               minHeight: 6,
-              backgroundColor: Colors.white12,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.amber),
+              backgroundColor: palette.grid,
+              valueColor: AlwaysStoppedAnimation<Color>(_gold(palette)),
             ),
           ],
         ),
@@ -129,6 +144,7 @@ class _CrossAppTitleEncyclopediaScreenState
   }
 
   Widget _buildFilterChips() {
+    final palette = GamePalette.of(context);
     return Wrap(
       spacing: 8,
       children: CrossAppTitleFilter.values.map((filter) {
@@ -136,12 +152,18 @@ class _CrossAppTitleEncyclopediaScreenState
           key: AppKeys.crossAppTitleFilterChip(filter.name),
           label: Text(filter.label),
           selected: _filter == filter,
-          selectedColor: Colors.amber.withValues(alpha: 0.3),
-          checkmarkColor: Colors.amber,
-          backgroundColor: Colors.black45,
+          selectedColor: palette.isLight
+              ? palette.accent.withValues(alpha: 0.18)
+              : Colors.amber.withValues(alpha: 0.3),
+          checkmarkColor: _gold(palette),
+          backgroundColor:
+              palette.isLight ? palette.cardBackgroundStrong : Colors.black45,
           labelStyle: TextStyle(
             fontSize: 12,
-            color: _filter == filter ? Colors.amber : Colors.white70,
+            // 選択中の明地では影付きの金が見えないため、墨色＋チェックで示す。
+            color: _filter == filter
+                ? (palette.isLight ? palette.onSurface : Colors.amber)
+                : palette.onSurfaceMuted,
           ),
           onSelected: (_) => setState(() => _filter = filter),
         );
@@ -162,6 +184,7 @@ class _CrossAppTitleEncyclopediaScreenState
   }
 
   Widget _buildGroupHeader(CrossAppTitleGroup group) {
+    final palette = GamePalette.of(context);
     final earned = group.entries.where((e) => e.isEarned).length;
     return Padding(
       padding: const EdgeInsets.only(left: 4, top: 4, bottom: 6),
@@ -170,16 +193,17 @@ class _CrossAppTitleEncyclopediaScreenState
           Expanded(
             child: Text(
               group.label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: palette.onSurface,
               ),
             ),
           ),
           Text(
             '獲得 $earned / ${group.entries.length}',
-            style: const TextStyle(fontSize: 11, color: Colors.white54),
+            style:
+                TextStyle(fontSize: 11, color: palette.onSurfaceFaint),
           ),
         ],
       ),
@@ -187,15 +211,16 @@ class _CrossAppTitleEncyclopediaScreenState
   }
 
   Widget _buildEntryRow(CrossAppTitleEntry entry) {
+    final palette = GamePalette.of(context);
     final earned = entry.isEarned;
     return Card(
       key: AppKeys.crossAppTitleRow(entry.id),
-      color: Colors.black45,
+      color: palette.isLight ? palette.cardBackgroundStrong : Colors.black45,
       margin: const EdgeInsets.symmetric(vertical: 3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(
-          color: earned ? Colors.amber.withValues(alpha: 0.6) : Colors.white12,
+          color: earned ? _gold(palette).withValues(alpha: 0.6) : palette.border,
         ),
       ),
       child: Padding(
@@ -204,7 +229,7 @@ class _CrossAppTitleEncyclopediaScreenState
           children: [
             Icon(
               earned ? Icons.military_tech : Icons.lock_outline,
-              color: earned ? Colors.amber : Colors.white38,
+              color: earned ? _gold(palette) : palette.onSurfaceFaintest,
               size: 20,
             ),
             const SizedBox(width: 10),
@@ -217,14 +242,17 @@ class _CrossAppTitleEncyclopediaScreenState
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: earned ? Colors.orange : Colors.white38,
+                      // ダークの獲得行は従来のオレンジ（金とは別色）を保つ。
+                      color: earned
+                          ? (palette.isLight ? palette.accent : Colors.orange)
+                          : palette.onSurfaceFaintest,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     entry.conditionLabel,
-                    style: const TextStyle(
-                        fontSize: 11, color: Colors.white54),
+                    style: TextStyle(
+                        fontSize: 11, color: palette.onSurfaceFaint),
                   ),
                 ],
               ),
@@ -234,7 +262,7 @@ class _CrossAppTitleEncyclopediaScreenState
               entry.statusLabel,
               style: TextStyle(
                 fontSize: 11,
-                color: earned ? Colors.amber : Colors.white38,
+                color: earned ? _gold(palette) : palette.onSurfaceFaintest,
               ),
             ),
           ],
