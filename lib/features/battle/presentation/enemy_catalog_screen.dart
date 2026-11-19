@@ -11,6 +11,7 @@ import 'package:rpg_todo/features/battle/data/battle_record_repository.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record.dart';
 import 'package:rpg_todo/features/battle/domain/enemy_catalog.dart';
 import 'package:rpg_todo/features/battle/presentation/battle_record_screen.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 /// 敵討伐図鑑画面。
 ///
@@ -77,6 +78,7 @@ class _EnemyCatalogScreenState extends State<EnemyCatalogScreen> {
   }
 
   void _openDetailDialog(EnemyCatalogEntry entry) {
+    final palette = GamePalette.of(context);
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -105,6 +107,9 @@ class _EnemyCatalogScreenState extends State<EnemyCatalogScreen> {
             TextButton(
               key: AppKeys.closeButton,
               onPressed: () => Navigator.of(dialogContext).pop(),
+              // テーマ既定の TextButton 前景（金）はライトの和紙白で 2.1:1。
+              // パレットの強調金で担保する（ダークは従来と同値）。
+              style: TextButton.styleFrom(foregroundColor: palette.accentStrong),
               child: const Text('閉じる'),
             ),
           ],
@@ -138,10 +143,11 @@ class _EnemyCatalogScreenState extends State<EnemyCatalogScreen> {
     int rareTotal,
   ) {
     if (full.entries.isEmpty) {
+      final palette = GamePalette.of(context);
       return EmptyStateView(
         key: AppKeys.enemyCatalogEmpty,
-        icon: const Icon(Icons.menu_book, size: 64, color: Colors.grey),
-        titleStyle: const TextStyle(fontSize: 16, color: Colors.grey),
+        icon: Icon(Icons.menu_book, size: 64, color: palette.onSurfaceFaint),
+        titleStyle: TextStyle(fontSize: 16, color: palette.onSurfaceFaint),
         spec: EmptyStateSpec(title: '図鑑の情報がありません。'),
       );
     }
@@ -207,18 +213,19 @@ class _EnemyCatalogScreenState extends State<EnemyCatalogScreen> {
   }
 
   Widget _buildGrid(EnemyCatalog catalog) {
+    final palette = GamePalette.of(context);
     if (catalog.entries.isEmpty) {
       return Center(
         child: Column(
           key: AppKeys.enemyCatalogEmpty,
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.menu_book, size: 64, color: Colors.grey),
-            SizedBox(height: 16),
+          children: [
+            Icon(Icons.menu_book, size: 64, color: palette.onSurfaceFaint),
+            const SizedBox(height: 16),
             Text(
               '該当する敵がいません。',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 16, color: Colors.grey),
+              style: TextStyle(fontSize: 16, color: palette.onSurfaceFaint),
             ),
           ],
         ),
@@ -294,9 +301,9 @@ class _EnemyCatalogScreenState extends State<EnemyCatalogScreen> {
                       entry.rarityLabel,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 10,
-                        color: Colors.deepPurple,
+                        color: palette.readable(Colors.deepPurple),
                       ),
                     ),
                 ],

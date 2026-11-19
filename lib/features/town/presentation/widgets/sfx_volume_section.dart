@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/battle/domain/sfx_volume.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 
 /// 町画面の「茶屋 — 音の設定」セクション（改善提案#67 効果音の音量調整）。
@@ -13,6 +14,7 @@ class SfxVolumeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final settingsVM = context.watch<SettingsViewModel>();
     final setting = SfxVolumeSetting(settingsVM.sfxVolume);
 
@@ -20,20 +22,20 @@ class SfxVolumeSection extends StatelessWidget {
       key: AppKeys.sfxVolumeSection,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.volume_up, color: Colors.white),
-            SizedBox(width: 8),
+            Icon(Icons.volume_up, color: palette.onSurface),
+            const SizedBox(width: 8),
             Text('音の設定 (効果音)',
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white)),
+                    color: palette.onSurface)),
           ],
         ),
         const SizedBox(height: 12),
         Card(
-          color: Colors.black54,
+          color: palette.isLight ? palette.cardBackgroundStrong : Colors.black54,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Column(
@@ -43,7 +45,7 @@ class SfxVolumeSection extends StatelessWidget {
                   children: [
                     Icon(
                       setting.isMuted ? Icons.volume_off : Icons.volume_down,
-                      color: Colors.white70,
+                      color: palette.onSurfaceMuted,
                       size: 20,
                     ),
                     Expanded(
@@ -54,7 +56,7 @@ class SfxVolumeSection extends StatelessWidget {
                         max: SfxVolumeSetting.maxValue,
                         divisions: 20,
                         label: setting.percentLabel,
-                        activeColor: Colors.amberAccent,
+                        activeColor: palette.readable(Colors.amberAccent),
                         onChanged: (v) => settingsVM.setSfxVolume(v),
                       ),
                     ),
@@ -66,8 +68,8 @@ class SfxVolumeSection extends StatelessWidget {
                             : '${setting.percentLabel} ${setting.label}',
                         key: AppKeys.sfxVolumeValueLabel,
                         textAlign: TextAlign.end,
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 13),
+                        style: TextStyle(
+                            color: palette.onSurface, fontSize: 13),
                       ),
                     ),
                   ],

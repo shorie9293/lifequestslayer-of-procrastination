@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 知識クエスト設定ダイアログ
@@ -17,6 +18,7 @@ class _KnowledgeQuestDialogState extends State<KnowledgeQuestDialog> {
   Widget build(BuildContext context) {
     final settingsVM = Provider.of<SettingsViewModel>(context, listen: false);
     final enabled = settingsVM.isKnowledgeQuestEnabled;
+    final palette = GamePalette.of(context);
 
     return AlertDialog(
       title: const Row(
@@ -30,9 +32,9 @@ class _KnowledgeQuestDialogState extends State<KnowledgeQuestDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'クエストを仕留めた後に30%の確率でクイズが出題されます。\n正解するとEXPボーナスがもらえます！',
-            style: TextStyle(fontSize: 13, color: Colors.black54),
+            style: TextStyle(fontSize: 13, color: palette.onSurfaceFaint),
           ),
           const SizedBox(height: 16),
           SemanticHelper.toggle(
@@ -48,11 +50,11 @@ class _KnowledgeQuestDialogState extends State<KnowledgeQuestDialog> {
                     : '無効：クイズは表示されません',
                 style: TextStyle(
                   fontSize: 12,
-                  color: enabled ? Colors.green[700] : Colors.grey,
+                  color: enabled ? palette.success : palette.onSurfaceFaint,
                 ),
               ),
               value: enabled,
-              activeColor: Colors.amber[700],
+              activeColor: palette.accent,
               onChanged: (v) {
                 settingsVM.setKnowledgeQuestEnabled(v);
                 setState(() {});

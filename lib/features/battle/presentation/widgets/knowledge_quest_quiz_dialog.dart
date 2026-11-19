@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/features/battle/data/quiz_data.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -67,16 +68,18 @@ class _KnowledgeQuestQuizDialogState extends State<KnowledgeQuestQuizDialog> {
   }
 
   Color _choiceColor(int index) {
-    if (!_answered) return Colors.white10;
+    final palette = GamePalette.of(context);
+    if (!_answered) return palette.track;
     if (index == widget.quest.correctIndex) {
       return Colors.green.withValues(alpha: 0.6);
     }
     if (index == _selectedIndex) return Colors.red.withValues(alpha: 0.5);
-    return Colors.white10;
+    return palette.track;
   }
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final quest = widget.quest;
     final isCorrect = _answered && _selectedIndex == quest.correctIndex;
 
@@ -84,7 +87,8 @@ class _KnowledgeQuestQuizDialogState extends State<KnowledgeQuestQuizDialog> {
       testId: '${SemanticTypes.dialog}_knowledge_quest',
       child: Dialog(
         key: AppKeys.confirmDialog,
-        backgroundColor: const Color(0xFF1A1A2E),
+        // ダークは従来の暗幕色のまま、ライトはテーマ既定の明るい面へ。
+        backgroundColor: palette.isLight ? null : const Color(0xFF1A1A2E),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: const BorderSide(color: Colors.purpleAccent, width: 1.5),
@@ -104,18 +108,18 @@ class _KnowledgeQuestQuizDialogState extends State<KnowledgeQuestQuizDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           '知識クエスト！',
                           style: TextStyle(
-                            color: Colors.purpleAccent,
+                            color: palette.readable(Colors.purpleAccent),
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
                           ),
                         ),
                         Text(
                           '正解で EXP +${quest.expBonusPercent}% ボーナス！',
-                          style: const TextStyle(
-                              color: Colors.amber, fontSize: 11),
+                          style: TextStyle(
+                              color: palette.accent, fontSize: 11),
                         ),
                       ],
                     ),
@@ -127,9 +131,9 @@ class _KnowledgeQuestQuizDialogState extends State<KnowledgeQuestQuizDialog> {
               // 問題文
               Text(
                 quest.question,
-                style: const TextStyle(
+                style: TextStyle(
                     fontSize: 15,
-                    color: Colors.white,
+                    color: palette.onSurface,
                     fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
@@ -154,30 +158,31 @@ class _KnowledgeQuestQuizDialogState extends State<KnowledgeQuestQuizDialog> {
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color: _answered && i == quest.correctIndex
-                                ? Colors.green
-                                : Colors.white24,
+                                ? palette.success
+                                : palette.border,
                           ),
                         ),
                         child: Row(
                           children: [
                             Text('$label. ',
-                                style: const TextStyle(
-                                    color: Colors.white54, fontSize: 13)),
+                                style: TextStyle(
+                                    color: palette.onSurfaceFaint,
+                                    fontSize: 13)),
                             Expanded(
                               child: Text(
                                 quest.choices[i],
-                                style: const TextStyle(
-                                    color: Colors.white, fontSize: 13),
+                                style: TextStyle(
+                                    color: palette.onSurface, fontSize: 13),
                               ),
                             ),
                             if (_answered && i == quest.correctIndex)
-                              const Icon(Icons.check_circle,
-                                  color: Colors.greenAccent, size: 18),
+                              Icon(Icons.check_circle,
+                                  color: palette.success, size: 18),
                             if (_answered &&
                                 i == _selectedIndex &&
                                 i != quest.correctIndex)
-                              const Icon(Icons.cancel,
-                                  color: Colors.redAccent, size: 18),
+                              Icon(Icons.cancel,
+                                  color: palette.danger, size: 18),
                           ],
                         ),
                       ),
@@ -206,7 +211,7 @@ class _KnowledgeQuestQuizDialogState extends State<KnowledgeQuestQuizDialog> {
                             : '❌ 残念… 正解は「${quest.choices[quest.correctIndex]}」',
                         style: TextStyle(
                           color:
-                              isCorrect ? Colors.greenAccent : Colors.redAccent,
+                              isCorrect ? palette.success : palette.danger,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),
@@ -215,8 +220,8 @@ class _KnowledgeQuestQuizDialogState extends State<KnowledgeQuestQuizDialog> {
                         const SizedBox(height: 4),
                         Text(
                           '💡 ${quest.explanation}',
-                          style: const TextStyle(
-                              color: Colors.amber, fontSize: 11),
+                          style:
+                              TextStyle(color: palette.accent, fontSize: 11),
                         ),
                       ],
                     ],
@@ -239,9 +244,10 @@ class _KnowledgeQuestQuizDialogState extends State<KnowledgeQuestQuizDialog> {
                           widget.onSkip();
                           Navigator.of(context).pop();
                         },
-                        child: const Text(
+                        child: Text(
                           'スキップ（ボーナスなし）',
-                          style: TextStyle(color: Colors.white38, fontSize: 12),
+                          style: TextStyle(
+                              color: palette.onSurfaceFaintest, fontSize: 12),
                         ),
                       ),
                     ),
@@ -253,7 +259,9 @@ class _KnowledgeQuestQuizDialogState extends State<KnowledgeQuestQuizDialog> {
                         key: AppKeys.closeButton,
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.purpleAccent,
-                          foregroundColor: Colors.white,
+                          // 彩度の高い塗りの上なので、テーマの onPrimary で担保する。
+                          foregroundColor:
+                              Theme.of(context).colorScheme.onPrimary,
                         ),
                         onPressed: () => Navigator.of(context).pop(),
                         child: const Text('閉じる'),

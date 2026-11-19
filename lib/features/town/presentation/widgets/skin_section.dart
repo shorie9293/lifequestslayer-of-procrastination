@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/features/character_customization/presentation/widgets/avatar_preview_widget.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/presentation/widgets/shop_item.dart';
@@ -59,18 +60,21 @@ class SkinSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
+    final cardColor =
+        palette.isLight ? palette.cardBackgroundStrong : Colors.black54;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.person, color: Colors.white),
-            SizedBox(width: 8),
+            Icon(Icons.person, color: palette.onSurface),
+            const SizedBox(width: 8),
             Text("キャラクリエイト (装飾)",
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white)),
+                    color: palette.onSurface)),
           ],
         ),
         const SizedBox(height: 12),
@@ -90,8 +94,8 @@ class SkinSection extends StatelessWidget {
                   player.equippedSkin != null
                       ? '装備中: ${_skinName(player.equippedSkin)}'
                       : '装備なし',
-                  style: const TextStyle(
-                    color: Color(0xFFFFD700),
+                  style: TextStyle(
+                    color: palette.accentStrong,
                     fontSize: 13,
                   ),
                 ),
@@ -103,15 +107,16 @@ class SkinSection extends StatelessWidget {
           final isOwned = player.homeItems.contains(item.id);
           final isEquipped = player.equippedSkin == item.id;
           return Card(
-            color: Colors.black54,
+            color: cardColor,
             child: ListTile(
               title: Text(item.name,
                   style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(item.description),
               trailing: isEquipped
-                  ? const Text("装備中",
+                  ? Text("装備中",
                       style: TextStyle(
-                          color: Colors.orange, fontWeight: FontWeight.bold))
+                          color: palette.readable(Colors.orange),
+                          fontWeight: FontWeight.bold))
                   : isOwned
                       ? _buildEquipButton(context, item)
                       : buildBuyButton(context, player, viewModel, item),
@@ -120,7 +125,7 @@ class SkinSection extends StatelessWidget {
         }),
         if (player.equippedSkin != null)
           Card(
-            color: Colors.black54,
+            color: cardColor,
             child: ListTile(
               title: const Text("装備を外す",
                   style: TextStyle(fontWeight: FontWeight.bold)),

@@ -9,6 +9,13 @@ import 'package:rpg_todo/features/battle/presentation/widgets/combat_vfx_control
 import 'package:rpg_todo/features/battle/presentation/widgets/particle_effect.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
+// 戦闘演出の暗幕グラデーション（#1A0A2E → #0D0D0D）と討伐失敗パネル（黒 82%）は、
+// 明度テーマに依らず「暗幕固定の面」である。その上の前景は白系が正しく
+// （黒地对白で実測 12:1 超）、パレットの onSurface を当てるとライトで潰れる。
+const Color _onDark = Color(0xFFFFFFFF); // 旧 white
+const Color _onDark80 = Color(0xCCFFFFFF); // 旧 white.withAlpha(200)（80%）
+const Color _onDark70 = Color(0xB3FFFFFF); // 旧 white70
+
 /// The combat phase orchestration widget — per roadmap v2.1 ①.
 ///
 /// Manages the full RPG combat visual sequence:
@@ -209,10 +216,10 @@ class _BattlePhaseWidgetState extends State<BattlePhaseWidget>
           ),
         ),
         const SizedBox(height: 8),
-        Text(
+        const Text(
           '冒険者',
           style: TextStyle(
-            color: Colors.white.withAlpha(200),
+            color: _onDark80,
             fontSize: 14,
           ),
         ),
@@ -397,7 +404,7 @@ class DefeatSubTaskPanel extends StatelessWidget {
                 const Text(
                   '⚔️ 討伐失敗',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: _onDark,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -417,7 +424,7 @@ class DefeatSubTaskPanel extends StatelessWidget {
             const SizedBox(height: 4),
             const Text(
               '残りのサブクエストを仕留めよう',
-              style: TextStyle(color: Colors.white70, fontSize: 12),
+              style: TextStyle(color: _onDark70, fontSize: 12),
             ),
             const SizedBox(height: 8),
             Flexible(
@@ -441,7 +448,7 @@ class DefeatSubTaskPanel extends StatelessWidget {
                       ),
                       title: Text(
                         '・${sub.title}',
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: _onDark),
                       ),
                       onTap: () => onSubTaskTap(sub),
                     ),

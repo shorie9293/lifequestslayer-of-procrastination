@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 /// 疲労警告セクション
 class FatigueWarningSection extends StatelessWidget {
@@ -8,6 +9,7 @@ class FatigueWarningSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -23,8 +25,8 @@ class FatigueWarningSection extends StatelessWidget {
             child: Text(
               fatigueWarning ??
                   '疲労が蓄積しています。宿屋で休むことをお勧めします。',
-              style: const TextStyle(
-                color: Colors.orangeAccent,
+              style: TextStyle(
+                color: palette.readable(Colors.orangeAccent),
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),

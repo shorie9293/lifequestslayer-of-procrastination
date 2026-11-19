@@ -3,6 +3,13 @@ import 'package:rpg_todo/features/battle/domain/battle_action.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
+// この操作バーは黒 87%→95% の暗幕固定（戦闘演出の一部）。その上の前景は白系が
+// 正しく（黒地对白で実測 12:1 超）、パレットの onSurface を当てるとライトで潰れる。
+const Color _onDark = Color(0xFFFFFFFF); // 旧 white
+const Color _onDarkFaint = Color(0x8AFFFFFF); // 旧 white54
+const Color _onDarkMuted = Color(0x99FFFFFF); // 旧 white60
+const Color _onDarkBorder = Color(0x3DFFFFFF); // 旧 white24
+
 /// 戦術選択バー — Attack / Defend / Skill の3択UI
 ///
 /// 修練場の討伐フェイズで表示される戦術選択インターフェース。
@@ -47,7 +54,7 @@ class CombatSelectionBar extends StatelessWidget {
           ],
         ),
         border: const Border(
-          top: BorderSide(color: Colors.white24, width: 1),
+          top: BorderSide(color: _onDarkBorder, width: 1),
         ),
       ),
       padding: EdgeInsets.only(
@@ -167,7 +174,7 @@ class _ActionButton extends StatelessWidget {
                   Text(
                     action.label,
                     style: TextStyle(
-                      color: isEnabled ? Colors.white : Colors.white54,
+                      color: isEnabled ? _onDark : _onDarkFaint,
                       fontSize: compact ? 13 : 15,
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.w600,
@@ -180,7 +187,7 @@ class _ActionButton extends StatelessWidget {
                       action.description,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        color: Colors.white60,
+                        color: _onDarkMuted,
                         fontSize: 10,
                         height: 1.2,
                       ),

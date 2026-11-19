@@ -16,6 +16,9 @@ class LevelUpSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 金の帯（#7B5C00 → #FFD700）の上は、明度テーマに依らず濃色の前景が正しい。
+    // ライトの onPrimary は墨色、ダークは黒で、いずれも金地に対して 4.5:1 以上。
+    final onGold = Theme.of(context).colorScheme.onPrimary;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -36,23 +39,24 @@ class LevelUpSection extends StatelessWidget {
             'LEVEL UP!',
             style: GoogleFonts.pressStart2p(
               fontSize: 20,
-              color: Colors.white,
+              color: onGold,
               shadows: const [Shadow(color: Colors.black54, blurRadius: 8)],
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'Lv.$previousLevel → Lv.$newLevel',
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
-              color: Colors.white,
+              color: onGold,
               fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             '次のレベルまで $expToNextLevel EXP',
-            style: const TextStyle(fontSize: 12, color: Colors.white70),
+            style: TextStyle(
+                fontSize: 12, color: onGold.withValues(alpha: 0.85)),
           ),
         ],
       ),

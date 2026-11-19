@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/town/presentation/gem_shop_screen.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -11,32 +12,35 @@ class CoinGemBalanceBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
+    final coinColor = palette.readable(Colors.amber);
+    final gemColor = palette.readable(Colors.purpleAccent);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: Colors.black45,
+      color: palette.isLight ? palette.cardBackgroundStrong : Colors.black45,
       child: Row(
         children: [
-          const Icon(Icons.monetization_on, color: Colors.amber, size: 28),
+          Icon(Icons.monetization_on, color: coinColor, size: 28),
           const SizedBox(width: 6),
           Text(
             key: AppKeys.townCoinBalance,
             "${player.coins} 文",
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.amber,
+              color: coinColor,
             ),
           ),
           const Spacer(),
-          const Icon(Icons.diamond, color: Colors.purpleAccent, size: 24),
+          Icon(Icons.diamond, color: gemColor, size: 24),
           const SizedBox(width: 4),
           Text(
             key: AppKeys.townGemBalance,
             "${player.gems} 宝石",
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.purpleAccent,
+              color: gemColor,
             ),
           ),
           const SizedBox(width: 8),

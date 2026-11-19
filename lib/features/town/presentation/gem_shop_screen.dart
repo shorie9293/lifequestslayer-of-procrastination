@@ -5,6 +5,7 @@ import 'package:rpg_todo/core/infrastructure/iap_service.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -91,7 +92,9 @@ class _GemShopScreenState extends State<GemShopScreen> {
               label: Text('${player.gems}'),
               backgroundColor: Colors.purple[900],
               labelStyle: const TextStyle(
-                  fontWeight: FontWeight.bold, color: Colors.white),
+                  fontWeight: FontWeight.bold,
+                  // 濃紫(#4A148C)上の白は 15.6:1。明暗どちらでも可読。
+                  color: Colors.white),
             ),
           ),
         ],
@@ -109,30 +112,36 @@ class _GemShopScreenState extends State<GemShopScreen> {
 
   // ── 宝石パック購入 ──────────────────────────────────
   Widget _buildPurchaseSection(BuildContext context, IAPService iap, player) {
+    final palette = GamePalette.of(context);
+    final cardColor =
+        palette.isLight ? palette.cardBackgroundStrong : Colors.black54;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.diamond, color: Colors.purpleAccent),
-            SizedBox(width: 8),
-            Text('宝石を購入',
+            Icon(Icons.diamond, color: palette.readable(Colors.purpleAccent)),
+            const SizedBox(width: 8),
+            const Text('宝石を購入',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ],
         ),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           '宝石はゲーム内の特別な機能に使えます。\n購入した宝石は端末に保存されます。',
-          style: TextStyle(fontSize: 12, color: Colors.white60),
+          style: TextStyle(fontSize: 12, color: palette.onSurfaceFaint),
         ),
         const SizedBox(height: 12),
         if (!iap.available)
-          const Card(
-            color: Colors.black45,
+          Card(
+            color: cardColor,
             child: ListTile(
-              leading: Icon(Icons.store_mall_directory, color: Colors.grey),
-              title: Text('ストアに接続できません'),
-              subtitle: Text('ネットワーク接続を確認してください'),
+              leading: Icon(Icons.store_mall_directory,
+                  color: palette.isLight
+                      ? palette.onSurfaceFaint
+                      : Colors.grey),
+              title: const Text('ストアに接続できません'),
+              subtitle: const Text('ネットワーク接続を確認してください'),
             ),
           )
         else if (iap.loading)
@@ -142,9 +151,9 @@ class _GemShopScreenState extends State<GemShopScreen> {
             child: CircularProgressIndicator(),
           ))
         else if (iap.products.isEmpty)
-          const Card(
-            color: Colors.black45,
-            child: ListTile(
+          Card(
+            color: cardColor,
+            child: const ListTile(
               title: Text('商品を読み込めませんでした'),
               subtitle: Text('しばらくしてから再度お試しください'),
             ),
@@ -158,13 +167,16 @@ class _GemShopScreenState extends State<GemShopScreen> {
 
   Widget _buildProductCard(
       BuildContext context, IAPService iap, ProductDetails product) {
+    final palette = GamePalette.of(context);
     final info = _gemTierInfo[product.id];
     final label = info?.label ?? product.title;
     final bonus = info?.bonus ?? '';
     final isPopular = product.id == 'gems_tier3';
 
     return Card(
-      color: isPopular ? Colors.purple[900] : Colors.black54,
+      color: isPopular
+          ? Colors.purple[900]
+          : (palette.isLight ? palette.cardBackgroundStrong : Colors.black54),
       margin: const EdgeInsets.only(bottom: 8),
       shape: isPopular
           ? RoundedRectangleBorder(
@@ -173,11 +185,17 @@ class _GemShopScreenState extends State<GemShopScreen> {
             )
           : null,
       child: ListTile(
-        leading:
-            const Icon(Icons.diamond, color: Colors.purpleAccent, size: 32),
+        leading: Icon(Icons.diamond,
+            color: isPopular
+                ? Colors.purpleAccent
+                : palette.readable(Colors.purpleAccent),
+            size: 32),
         title: Row(
           children: [
-            Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(label,
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isPopular ? Colors.white : palette.onSurface)),
             if (isPopular) ...[
               const SizedBox(width: 8),
               Container(
@@ -195,7 +213,11 @@ class _GemShopScreenState extends State<GemShopScreen> {
           ],
         ),
         subtitle: bonus.isNotEmpty
-            ? Text(bonus, style: const TextStyle(color: Colors.amberAccent))
+            ? Text(bonus,
+                style: TextStyle(
+                    color: isPopular
+                        ? Colors.amberAccent
+                        : palette.readable(Colors.amberAccent)))
             : null,
         trailing: SemanticHelper.interactive(
           testId: SemanticHelper.createTestId(
@@ -253,14 +275,16 @@ class _GemShopScreenState extends State<GemShopScreen> {
   // ── 宝石の使いみち ───────────────────────────────────
   Widget _buildUseSection(
       BuildContext context, player) {
+    final palette = GamePalette.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.auto_fix_high, color: Colors.amberAccent),
-            SizedBox(width: 8),
-            Text('宝石の使いみち',
+            Icon(Icons.auto_fix_high,
+                color: palette.readable(Colors.amberAccent)),
+            const SizedBox(width: 8),
+            const Text('宝石の使いみち',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ],
         ),
@@ -269,7 +293,7 @@ class _GemShopScreenState extends State<GemShopScreen> {
         _buildUseCard(
           key: AppKeys.gemShopExchangeCoin,
           icon: Icons.monetization_on,
-          iconColor: Colors.amber,
+          iconColor: palette.readable(Colors.amber),
           title: '文に両替',
           description: '10宝石 → 1,000文',
           cost: 10,
@@ -286,7 +310,7 @@ class _GemShopScreenState extends State<GemShopScreen> {
         _buildUseCard(
           key: AppKeys.gemShopResetFatigue,
           icon: Icons.local_hospital,
-          iconColor: Colors.greenAccent,
+          iconColor: palette.readable(Colors.greenAccent),
           title: '疲労を即時回復',
           description: '50宝石 → 今日の疲労度をリセット',
           cost: 50,
@@ -312,10 +336,11 @@ class _GemShopScreenState extends State<GemShopScreen> {
     required int playerGems,
     required VoidCallback onConfirm,
   }) {
+    final palette = GamePalette.of(context);
     final canAfford = playerGems >= cost;
     return Card(
       key: key,
-      color: Colors.black54,
+      color: palette.isLight ? palette.cardBackgroundStrong : Colors.black54,
       child: ListTile(
         leading: Icon(icon, color: iconColor, size: 32),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -328,7 +353,9 @@ class _GemShopScreenState extends State<GemShopScreen> {
           icon: const Text('💎'),
           label: Text('$cost'),
           style: ElevatedButton.styleFrom(
-            backgroundColor: canAfford ? Colors.purple[700] : Colors.grey,
+            backgroundColor: canAfford
+                ? Colors.purple[700]
+                : (palette.isLight ? palette.onSurfaceFaintest : Colors.grey),
             foregroundColor: Colors.white,
           ),
           onPressed: canAfford

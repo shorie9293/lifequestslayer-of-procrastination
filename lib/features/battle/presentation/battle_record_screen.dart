@@ -6,6 +6,7 @@ import 'package:rpg_todo/features/battle/domain/battle_record_summary.dart';
 import 'package:rpg_todo/features/battle/domain/battle_record_service.dart';
 import 'package:rpg_todo/features/battle/data/battle_record_repository.dart';
 import 'package:rpg_todo/features/battle/presentation/enemy_catalog_screen.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/shared/widgets/load_state_views.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 
@@ -131,6 +132,7 @@ class _BattleRecordScreenState extends State<BattleRecordScreen> {
   }
 
   Widget _buildBody(BattleRecordSummary summary, List<BattleRecord> visible) {
+    final palette = GamePalette.of(context);
     if (_state.isLoading) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -146,16 +148,18 @@ class _BattleRecordScreenState extends State<BattleRecordScreen> {
           Container(
             key: const ValueKey('load_error_banner'),
             width: double.infinity,
-            color: Colors.red.shade50,
+            color: palette.isLight
+                ? const Color(0xFFFDECEA)
+                : Colors.red.shade50,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             child: Row(
               children: [
-                const Icon(Icons.error_outline, color: Colors.redAccent),
+                Icon(Icons.error_outline, color: palette.danger),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     message,
-                    style: const TextStyle(color: Colors.redAccent),
+                    style: TextStyle(color: palette.danger),
                   ),
                 ),
                 if (retry != null)
@@ -325,7 +329,8 @@ class _BattleRecordScreenState extends State<BattleRecordScreen> {
   }
 
   Widget _buildRecordTile(BattleRecord record) {
-    final color = record.isVictory ? Colors.green : Colors.red;
+    final palette = GamePalette.of(context);
+    final color = record.isVictory ? palette.success : palette.danger;
     final mark = record.isVictory ? '⚔ 勝利' : '💀 敗北';
     return Card(
       child: ListTile(

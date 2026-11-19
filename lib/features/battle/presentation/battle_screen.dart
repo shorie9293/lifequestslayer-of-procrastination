@@ -10,6 +10,7 @@ import 'package:rpg_todo/features/battle/presentation/battle_record_screen.dart'
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/shared/widgets/player_status_header.dart';
 import 'package:rpg_todo/features/guild/presentation/widgets/task_card.dart';
 import 'widgets/battle_report_dialog.dart';
@@ -391,6 +392,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final taskVM = context.watch<TaskViewModel>();
     final tasks = taskVM.activeTasks;
 
@@ -443,8 +445,8 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
                       ? Icons.volume_up
                       : Icons.volume_off,
                   color: settings.isSfxEnabled
-                      ? Colors.amberAccent
-                      : Colors.grey,
+                      ? palette.accent
+                      : palette.onSurfaceFaint,
                   size: 20,
                 ),
                 tooltip: settings.isSfxEnabled
@@ -466,8 +468,8 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
                       ? Icons.sports_kabaddi
                       : Icons.flash_on,
                   color: settings.isBattleSceneEnabled
-                      ? Colors.amberAccent
-                      : Colors.orangeAccent,
+                      ? palette.accent
+                      : palette.accentStrong,
                   size: 20,
                 ),
                 tooltip: settings.isBattleSceneEnabled
@@ -488,13 +490,16 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
         ],
       ),
       body: Container(
+        // ライトでは和紙無地（画像の黒スクリムはライトで文字が沈むため敷かない）。
         decoration: BoxDecoration(
-          image: DecorationImage(
-            image: const AssetImage('assets/images/home_bg.png'),
-            fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-                Colors.black.withValues(alpha: 0.7), BlendMode.darken),
-          ),
+          image: palette.usesBackdropImage
+              ? DecorationImage(
+                  image: const AssetImage('assets/images/home_bg.png'),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                      palette.scrim, BlendMode.darken),
+                )
+              : null,
         ),
         child: Column(
           children: [
@@ -508,12 +513,13 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
                 switchInCurve: Curves.easeOut,
                 switchOutCurve: Curves.easeIn,
                 child: tasks.isEmpty
-                    ? const Center(
+                    ? Center(
                         key: AppKeys.battleEmptyState,
                         child: Text(
                           "クエストがありません。\n寄合所で受注してください！",
                           textAlign: TextAlign.center,
-                          style: TextStyle(fontSize: 20, color: Colors.grey),
+                          style: TextStyle(
+                              fontSize: 20, color: palette.onSurfaceFaint),
                         ),
                       )
                     : Column(
@@ -525,7 +531,7 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
                               width: double.infinity,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 20, vertical: 8),
-                              color: Colors.black26,
+                              color: palette.cardBackground,
                               child: Row(
                                 children: [
                                   const Text("📊",
@@ -533,9 +539,9 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
                                   const SizedBox(width: 8),
                                   Text(
                                     "今日の戦い（見積もり）: ${taskVM.dailyEstimatedMinutes}分",
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14,
-                                      color: Colors.amberAccent,
+                                      color: palette.accent,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -573,8 +579,8 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
                                         label: 'クエストを寄合所に戻す',
                                         child: IconButton(
                                           key: AppKeys.battleCancel,
-                                          icon: const Icon(Icons.undo,
-                                              color: Colors.grey),
+                                          icon: Icon(Icons.undo,
+                                              color: palette.onSurfaceFaint),
                                           onPressed: () {
                                             showDialog(
                                               context: context,
@@ -609,11 +615,12 @@ class _BattleScreenState extends State<BattleScreen> with WidgetsBindingObserver
                                                                 "クエストを寄合所に戻しました（体力を消耗した…）")),
                                                       );
                                                     },
-                                                    child: const Text(
+                                                    child: Text(
                                                         "戻す（体力消費）",
                                                         style: TextStyle(
-                                                            color: Colors
-                                                                .orange)),
+                                                            color: palette
+                                                                .readable(Colors
+                                                                    .orange))),
                                                   ),
                                                 ],
                                               ),

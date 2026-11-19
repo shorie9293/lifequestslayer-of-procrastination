@@ -5,7 +5,13 @@ import 'package:rpg_todo/domain/models/reflection.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart';
+
+/// 塗りボタン（#C62828 / #37474F）の上の前景。暗色の塗りなので明度テーマに
+/// 依らず白系が正しい（実測 7:1 以上）。
+const Color _onFilledButton = Color(0xFFFFFFFF);
+const Color _onFilledButtonMuted = Color(0xB3FFFFFF); // 旧 white70
 
 /// 残心【初段】— 侍系プレイヤーの戦後ダイアログ。
 ///
@@ -143,13 +149,16 @@ class _ZanshinDialogState extends State<ZanshinDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return SemanticHelper.container(
       testId: '${SemanticTypes.dialog}_zanshin',
       child: Dialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        // ダークは従来の暗幕色のまま、ライトはテーマ既定の明るい面へ。
+        backgroundColor: palette.isLight ? null : const Color(0xFF1A1A2E),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFFC62828), width: 1.5),
+          side: BorderSide(
+              color: palette.readable(const Color(0xFFC62828)), width: 1.5),
         ),
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 60),
         child: SingleChildScrollView(
@@ -160,29 +169,29 @@ class _ZanshinDialogState extends State<ZanshinDialog> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Header
-                const Text(
+                Text(
                   '⚔️ 残心の刻',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFFC62828),
+                    color: palette.readable(const Color(0xFFC62828)),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   '「${widget.taskTitle}」の討伐、見事なり。',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white70,
+                    color: palette.onSurfaceMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   '太刀を収める前に、己が心を省みよ。',
                   style: TextStyle(
                     fontSize: 13,
-                    color: Color(0xFFEF9A9A),
+                    color: palette.readable(const Color(0xFFEF9A9A)),
                     fontStyle: FontStyle.italic,
                   ),
                 ),
@@ -204,7 +213,7 @@ class _ZanshinDialogState extends State<ZanshinDialog> {
                             style: TextStyle(fontSize: 16)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFC62828),
-                          foregroundColor: Colors.white,
+                          foregroundColor: _onFilledButton,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -230,8 +239,8 @@ class _ZanshinDialogState extends State<ZanshinDialog> {
                         const SizedBox(width: 6),
                         Text(
                           '+${widget.inputBonusExp} EXP ボーナス',
-                          style: const TextStyle(
-                            color: Color(0xFFEF9A9A),
+                          style: TextStyle(
+                            color: palette.readable(const Color(0xFFEF9A9A)),
                             fontSize: 12,
                           ),
                         ),
@@ -254,7 +263,7 @@ class _ZanshinDialogState extends State<ZanshinDialog> {
                             style: TextStyle(fontSize: 16)),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF37474F),
-                          foregroundColor: Colors.white70,
+                          foregroundColor: _onFilledButtonMuted,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -265,25 +274,25 @@ class _ZanshinDialogState extends State<ZanshinDialog> {
                   ),
                 ] else ...[
                   // ━━━ 戒め入力フォーム ━━━
-                  const Align(
+                  Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       '💧 戒めを刻む',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF90A4AE),
+                        color: palette.readable(const Color(0xFF90A4AE)),
                       ),
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Align(
+                  Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
                       '次に活かすために、心に留めておくことを記せ。',
                       style: TextStyle(
                         fontSize: 13,
-                        color: Colors.white54,
+                        color: palette.onSurfaceFaint,
                       ),
                     ),
                   ),
@@ -294,28 +303,30 @@ class _ZanshinDialogState extends State<ZanshinDialog> {
                     maxLines: 3,
                     maxLength: 100,
                     autofocus: true,
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(color: palette.onSurface, fontSize: 14),
                     decoration: InputDecoration(
                       hintText: '例: 準備を怠らぬこと',
-                      hintStyle:
-                          const TextStyle(color: Colors.white30, fontSize: 13),
+                      hintStyle: TextStyle(
+                          color: palette.onSurfaceFaintest, fontSize: 13),
                       filled: true,
-                      fillColor: Colors.black26,
+                      fillColor: palette.cardBackground,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide:
-                            const BorderSide(color: Color(0xFF90A4AE)),
+                        borderSide: BorderSide(
+                            color: palette.readable(const Color(0xFF90A4AE))),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(color: Colors.white12),
+                        borderSide: BorderSide(color: palette.border),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
-                        borderSide: const BorderSide(
-                            color: Color(0xFF90A4AE), width: 2),
+                        borderSide: BorderSide(
+                            color: palette.readable(const Color(0xFF90A4AE)),
+                            width: 2),
                       ),
-                      counterStyle: const TextStyle(color: Colors.white30),
+                      counterStyle:
+                          TextStyle(color: palette.onSurfaceFaintest),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -333,10 +344,10 @@ class _ZanshinDialogState extends State<ZanshinDialog> {
                       children: [
                         const Text('🧠', style: TextStyle(fontSize: 16)),
                         const SizedBox(width: 6),
-                        const Text(
+                        Text(
                           '戒めを刻むと 知恵ポイント +1',
                           style: TextStyle(
-                            color: Color(0xFF90A4AE),
+                            color: palette.readable(const Color(0xFF90A4AE)),
                             fontSize: 13,
                           ),
                         ),
@@ -360,7 +371,7 @@ class _ZanshinDialogState extends State<ZanshinDialog> {
                                 height: 16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: _onFilledButton,
                                 ),
                               )
                             : const Text('💧',
@@ -368,7 +379,7 @@ class _ZanshinDialogState extends State<ZanshinDialog> {
                         label: const Text('戒めを刻む'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF37474F),
-                          foregroundColor: Colors.white,
+                          foregroundColor: _onFilledButton,
                           padding: const EdgeInsets.symmetric(
                               vertical: 14),
                           shape: RoundedRectangleBorder(

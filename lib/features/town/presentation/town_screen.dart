@@ -13,6 +13,7 @@ import 'package:rpg_todo/features/account_deletion/presentation/production_accou
 import 'package:rpg_todo/features/adventurer/presentation/adventurer_chart_screen.dart';
 import 'package:rpg_todo/features/character_customization/presentation/equipment_tab.dart';
 import 'package:rpg_todo/features/shared/presentation/settings_write_error_listener.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/features/town/domain/random_event.dart';
 import 'package:rpg_todo/features/town/domain/town_event_reward.dart';
@@ -50,6 +51,7 @@ class TownScreen extends StatelessWidget {
     final hd = homeData(player);
     final next = scale.nextScale;
     final nextLv = scale.nextLevelForUpgrade;
+    final palette = GamePalette.of(context);
 
     return TownEventGate(
       checkEvent: eventChecker,
@@ -95,11 +97,11 @@ class TownScreen extends StatelessWidget {
               ),
             ),
           ],
-          bottom: const TabBar(
-            labelColor: Color(0xFFFFD700),
-            unselectedLabelColor: Colors.white54,
-            indicatorColor: Color(0xFFFFD700),
-            tabs: [
+          bottom: TabBar(
+            labelColor: palette.accentStrong,
+            unselectedLabelColor: palette.onSurfaceFaint,
+            indicatorColor: palette.accentStrong,
+            tabs: const [
               Tab(icon: Icon(Icons.location_city), text: '町'),
               Tab(icon: Icon(Icons.face), text: '装備'),
             ],
@@ -183,14 +185,20 @@ class _TownTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Container(
       decoration: BoxDecoration(
-        color: _backgroundColor(scale),
-        image: DecorationImage(
-          image: AssetImage(hd['image']!),
-          fit: BoxFit.cover,
-          colorFilter: ColorFilter.mode(Colors.black.withValues(alpha: 0.6), BlendMode.darken),
-        ),
+        // ライトでは和紙無地（暗い情景画像の上に墨文字は沈むため敷かない）。
+        color: palette.usesBackdropImage
+            ? _backgroundColor(scale)
+            : Theme.of(context).scaffoldBackgroundColor,
+        image: palette.usesBackdropImage
+            ? DecorationImage(
+                image: AssetImage(hd['image']!),
+                fit: BoxFit.cover,
+                colorFilter: ColorFilter.mode(palette.scrim, BlendMode.darken),
+              )
+            : null,
       ),
       child: Column(
         children: [
@@ -282,19 +290,22 @@ class _TownXpHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      color: Colors.blueGrey.withValues(alpha: 0.2),
-      child: const Row(
+      color: palette.usesBackdropImage
+          ? Colors.blueGrey.withValues(alpha: 0.2)
+          : palette.cardBackgroundStrong,
+      child: Row(
         children: [
-          Icon(Icons.emoji_events, color: Color(0xFFFFD700), size: 14),
-          SizedBox(width: 6),
+          Icon(Icons.emoji_events, color: palette.accentStrong, size: 14),
+          const SizedBox(width: 6),
           Expanded(
             child: Text(
               'クエスト討伐で町XPを獲得できます',
               style: TextStyle(
-                color: Color(0xFFFFD700),
+                color: palette.accentStrong,
                 fontSize: 12,
               ),
             ),
@@ -319,44 +330,53 @@ class _TownScaleBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.brown.withValues(alpha: 0.7),
-        border: const Border(
-          bottom: BorderSide(color: Color(0xFFD4A574), width: 1),
+        color: palette.usesBackdropImage
+            ? Colors.brown.withValues(alpha: 0.7)
+            : palette.cardBackgroundStrong,
+        border: Border(
+          bottom: BorderSide(
+            color: palette.usesBackdropImage
+                ? const Color(0xFFD4A574)
+                : palette.border,
+            width: 1,
+          ),
         ),
       ),
       child: Row(
         children: [
-          const Icon(Icons.location_city, color: Color(0xFFFFD700), size: 18),
+          Icon(Icons.location_city, color: palette.accentStrong, size: 18),
           const SizedBox(width: 8),
           Text(
             scale.displayName,
-            style: const TextStyle(
-              color: Color(0xFFFFD700),
+            style: TextStyle(
+              color: palette.accentStrong,
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
           ),
           const Spacer(),
           if (nextScale != null && nextLevel != null) ...[
-            const Icon(Icons.arrow_forward, color: Colors.white54, size: 14),
+            Icon(Icons.arrow_forward,
+                color: palette.onSurfaceFaint, size: 14),
             const SizedBox(width: 4),
             Text(
               '次の発展: ${nextScale?.displayName} （Lv.$nextLevel）',
-              style: const TextStyle(
-                color: Colors.white54,
+              style: TextStyle(
+                color: palette.onSurfaceFaint,
                 fontSize: 11,
               ),
             ),
           ] else ...[
-            const Icon(Icons.star, color: Color(0xFFFFD700), size: 14),
+            Icon(Icons.star, color: palette.accentStrong, size: 14),
             const SizedBox(width: 4),
-            const Text(
+            Text(
               '最大発展',
-              style: TextStyle(color: Color(0xFFFFD700), fontSize: 11),
+              style: TextStyle(color: palette.accentStrong, fontSize: 11),
             ),
           ],
         ],
@@ -379,14 +399,23 @@ class _TownLevelBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
+    final labelColor = palette.readable(const Color(0xFF4FC3F7));
     final progress = xpToNext > 0 ? (xp / xpToNext).clamp(0.0, 1.0) : 1.0;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.blueGrey.withValues(alpha: 0.5),
-        border: const Border(
-          bottom: BorderSide(color: Color(0xFF607D8B), width: 1),
+        color: palette.usesBackdropImage
+            ? Colors.blueGrey.withValues(alpha: 0.5)
+            : palette.cardBackgroundStrong,
+        border: Border(
+          bottom: BorderSide(
+            color: palette.usesBackdropImage
+                ? const Color(0xFF607D8B)
+                : palette.border,
+            width: 1,
+          ),
         ),
       ),
       child: Column(
@@ -394,12 +423,12 @@ class _TownLevelBar extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.home_work, color: Color(0xFF4FC3F7), size: 16),
+              Icon(Icons.home_work, color: labelColor, size: 16),
               const SizedBox(width: 6),
               Text(
                 '町 Lv.$level',
-                style: const TextStyle(
-                  color: Color(0xFF4FC3F7),
+                style: TextStyle(
+                  color: labelColor,
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
@@ -407,8 +436,8 @@ class _TownLevelBar extends StatelessWidget {
               const Spacer(),
               Text(
                 '$xp / $xpToNext XP',
-                style: const TextStyle(
-                  color: Colors.white54,
+                style: TextStyle(
+                  color: palette.onSurfaceFaint,
                   fontSize: 11,
                 ),
               ),
@@ -419,8 +448,10 @@ class _TownLevelBar extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: progress,
-              backgroundColor: Colors.grey[800],
-              valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF4FC3F7)),
+              backgroundColor: palette.usesBackdropImage
+                  ? Colors.grey[800]
+                  : palette.track,
+              valueColor: AlwaysStoppedAnimation<Color>(labelColor),
               minHeight: 6,
             ),
           ),
@@ -446,17 +477,18 @@ class _BuildingsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.store, color: Color(0xFFFFD700), size: 18),
-            SizedBox(width: 6),
+            Icon(Icons.store, color: palette.accentStrong, size: 18),
+            const SizedBox(width: 6),
             Text(
               '町の施設',
               style: TextStyle(
-                color: Color(0xFFFFD700),
+                color: palette.accentStrong,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -513,41 +545,55 @@ class _BuildingTile extends StatelessWidget {
     }
   }
 
-  Color get _iconColor {
-    if (!unlocked) return Colors.grey;
+  Color _iconColor(GamePalette palette) {
+    if (!unlocked) {
+      return palette.usesBackdropImage ? Colors.grey : palette.onSurfaceFaint;
+    }
     switch (building) {
       case Building.inn:
-        return const Color(0xFF81C784); // 緑
+        return palette.readable(const Color(0xFF81C784)); // 緑
       case Building.shop:
-        return const Color(0xFFFFD54F); // 黄
+        return palette.readable(const Color(0xFFFFD54F)); // 黄
       case Building.blacksmith:
-        return const Color(0xFFFF8A65); // 橙
+        return palette.readable(const Color(0xFFFF8A65)); // 橙
       case Building.watchtower:
-        return const Color(0xFF64B5F6); // 青
+        return palette.readable(const Color(0xFF64B5F6)); // 青
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
+    final onScene = palette.usesBackdropImage;
     final canAfford = playerCoins >= state.upgradeCoinCost;
     final canUpgrade = unlocked && state.canUpgrade && canAfford;
+    // 強化ボタンの地は濃緑（可）／灰（不可）。ライトの灰 #6B6B6B 上でも
+    // 沈まないよう白、ダークは従来どおり white70 を保つ。
+    final upLabelColor =
+        (canAfford || palette.isLight) ? Colors.white : palette.onSurfaceMuted;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: unlocked
-            ? Colors.brown.withValues(alpha: 0.4)
-            : Colors.grey.withValues(alpha: 0.2),
+            ? (onScene
+                ? Colors.brown.withValues(alpha: 0.4)
+                : palette.cardBackgroundStrong)
+            : (onScene
+                ? Colors.grey.withValues(alpha: 0.2)
+                : palette.cardBackground),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
-          color: unlocked ? const Color(0xFF8D6E63) : Colors.grey[700]!,
+          color: unlocked
+              ? (onScene ? const Color(0xFF8D6E63) : palette.border)
+              : (onScene ? Colors.grey[700]! : palette.border),
           width: 0.5,
         ),
       ),
       child: Row(
         children: [
-          Icon(_icon, color: _iconColor, size: 24),
+          Icon(_icon, color: _iconColor(palette), size: 24),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -558,7 +604,9 @@ class _BuildingTile extends StatelessWidget {
                     Text(
                       building.displayName,
                       style: TextStyle(
-                        color: unlocked ? Colors.white : Colors.grey,
+                        color: unlocked
+                            ? palette.onSurface
+                            : palette.onSurfaceFaint,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
@@ -575,7 +623,9 @@ class _BuildingTile extends StatelessWidget {
                       ? state.getEffect()
                       : '町Lv.${building.unlockTownLevel}で解放',
                   style: TextStyle(
-                    color: unlocked ? Colors.white54 : Colors.grey[600],
+                    color: unlocked
+                        ? palette.onSurfaceFaint
+                        : palette.onSurfaceFaintest,
                     fontSize: 11,
                   ),
                 ),
@@ -583,7 +633,11 @@ class _BuildingTile extends StatelessWidget {
             ),
           ),
           if (!unlocked)
-            Icon(Icons.lock, color: Colors.grey[600], size: 18)
+            Icon(
+              Icons.lock,
+              color: onScene ? Colors.grey[600] : palette.onSurfaceFaintest,
+              size: 18,
+            )
           else if (state.canUpgrade)
             SemanticHelper.interactive(
               testId: SemanticHelper.createTestId(
@@ -597,14 +651,16 @@ class _BuildingTile extends StatelessWidget {
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: canAfford
-                        ? const Color(0xFF4CAF50)
-                        : Colors.grey[700],
+                        ? palette.readable(palette.success)
+                        : (onScene
+                            ? Colors.grey[700]
+                            : palette.onSurfaceFaintest),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     'UP ${state.upgradeCoinCost}文',
                     style: TextStyle(
-                      color: canAfford ? Colors.white : Colors.grey,
+                      color: upLabelColor,
                       fontSize: 11,
                     ),
                   ),
@@ -612,7 +668,7 @@ class _BuildingTile extends StatelessWidget {
               ),
             )
           else
-            const Icon(Icons.check_circle, color: Color(0xFF4CAF50), size: 20),
+            Icon(Icons.check_circle, color: palette.success, size: 20),
         ],
       ),
     );
@@ -627,11 +683,16 @@ class _LevelStars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Row(
       children: List.generate(5, (i) {
         return Icon(
           i < level ? Icons.star : Icons.star_border,
-          color: i < level ? const Color(0xFFFFD700) : Colors.grey[600],
+          color: i < level
+              ? palette.accentStrong
+              : (palette.usesBackdropImage
+                  ? Colors.grey[600]
+                  : palette.onSurfaceFaintest),
           size: 12,
         );
       }),

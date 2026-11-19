@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -54,7 +55,8 @@ void showBuyConfirmDialog(
                 SnackBar(content: Text("「${item.name}」を手に入れた！")),
               );
             },
-            child: const Text("購入", style: TextStyle(color: Colors.white)),
+            child: Text("購入",
+                style: TextStyle(color: GamePalette.of(ctx).onSurface)),
           ),
         ),
       ],
@@ -69,6 +71,8 @@ Widget buildBuyButton(
   ShopViewModel viewModel,
   ShopItem item,
 ) {
+  final palette = GamePalette.of(context);
+  final hasEnough = player.coins >= item.price;
   return SemanticHelper.interactive(
     testId: SemanticHelper.createTestId(SemanticTypes.button, 'buy_${item.id}'),
     label: '${item.name}を${item.price}文で購入',
@@ -76,9 +80,14 @@ Widget buildBuyButton(
       icon: const Icon(Icons.shopping_cart, size: 16),
       label: Text("${item.price}"),
       style: ElevatedButton.styleFrom(
-        backgroundColor:
-            player.coins >= item.price ? Colors.amber[700] : Colors.grey,
-        foregroundColor: Colors.white,
+        backgroundColor: hasEnough
+            ? Colors.amber[700]
+            : (palette.isLight ? palette.onSurfaceFaintest : Colors.grey),
+        // 金地(#FFA000)はライトでは墨、ダークでは白（従来どおり）。
+        // 買えない時（灰地）はライトのみ白：墨(#2B2B2B) on #6B6B6B は 2.66:1 で不足する。
+        foregroundColor: hasEnough
+            ? palette.onSurface
+            : (palette.isLight ? Colors.white : palette.onSurface),
       ),
       onPressed: () {
         if (player.coins >= item.price) {

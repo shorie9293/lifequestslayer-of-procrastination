@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/battle/data/quiz_data.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'battle_result_header.dart';
 import 'bonus_message_list.dart';
 import 'level_up_section.dart';
@@ -128,15 +129,18 @@ class _BattleReportDialogState extends State<BattleReportDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final hasReflection = widget.taskId != null && (widget.player?.isSamuraiLine ?? true);
 
     return SemanticHelper.container(
       testId: '${SemanticTypes.dialog}_battle_report',
       child: Dialog(
-        backgroundColor: const Color(0xFF1A1A2E),
+        // ダークは従来の暗幕色のまま、ライトはテーマ既定の明るい面へ。
+        backgroundColor: palette.isLight ? null : const Color(0xFF1A1A2E),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFF4A90D9), width: 1.5),
+          side: BorderSide(
+              color: palette.readable(const Color(0xFF4A90D9)), width: 1.5),
         ),
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
         child: SingleChildScrollView(
@@ -207,8 +211,8 @@ class _BattleReportDialogState extends State<BattleReportDialog> {
                       icon: const Text('🌳', style: TextStyle(fontSize: 18)),
                       label: const Text('戦後の一息を記す'),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4CAF50),
-                        foregroundColor: Colors.white,
+                        backgroundColor: palette.success,
+                        foregroundColor: const Color(0xFFFFFFFF),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 24, vertical: 12),
                       ),

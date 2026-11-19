@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/features/battle/data/quiz_data.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart';
 
 /// 戦果報告書内にインライン表示される知識クエストセクション
@@ -40,16 +41,18 @@ class _KnowledgeQuestSectionState extends State<KnowledgeQuestSection> {
   }
 
   Color _choiceColor(int index) {
-    if (!_quizAnswered) return Colors.white10;
+    final palette = GamePalette.of(context);
+    if (!_quizAnswered) return palette.track;
     if (index == widget.quizQuestion.correctIndex) {
       return Colors.green.withValues(alpha: 0.6);
     }
     if (index == _selectedIndex) return Colors.red.withValues(alpha: 0.5);
-    return Colors.white10;
+    return palette.track;
   }
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final quest = widget.quizQuestion;
     final isCorrect = _quizAnswered && _selectedIndex == quest.correctIndex;
     final isBoss = widget.isOverdueBoss;
@@ -81,20 +84,25 @@ class _KnowledgeQuestSectionState extends State<KnowledgeQuestSection> {
                     Text(
                       isBoss ? '⚔️ 刻の番人との戦い！' : '知識クエスト！',
                       style: TextStyle(
-                        color: isBoss ? Colors.redAccent : Colors.purpleAccent,
+                        color: isBoss
+                            ? palette.danger
+                            : palette.readable(Colors.purpleAccent),
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
                     ),
                     if (isBoss)
-                      const Text(
+                      Text(
                         '誤答すると追加ペナルティ！正解で討伐！',
-                        style: TextStyle(color: Colors.orangeAccent, fontSize: 10),
+                        style: TextStyle(
+                            color: palette.readable(Colors.orangeAccent),
+                            fontSize: 10),
                       )
                     else
                       Text(
                         '正解で EXP +${quest.expBonusPercent}% ボーナス！',
-                        style: const TextStyle(color: Colors.amber, fontSize: 10),
+                        style:
+                            TextStyle(color: palette.accent, fontSize: 10),
                       ),
                   ],
                 ),
@@ -104,9 +112,9 @@ class _KnowledgeQuestSectionState extends State<KnowledgeQuestSection> {
           const SizedBox(height: 10),
           Text(
             quest.question,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 13,
-              color: Colors.white,
+              color: palette.onSurface,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -131,22 +139,25 @@ class _KnowledgeQuestSectionState extends State<KnowledgeQuestSection> {
                     borderRadius: BorderRadius.circular(8),
                     border: Border.all(
                       color: _quizAnswered && i == quest.correctIndex
-                          ? Colors.green
-                          : Colors.white24,
+                          ? palette.success
+                          : palette.border,
                     ),
                   ),
                   child: Row(
                     children: [
                       Text('$label. ',
-                          style: const TextStyle(color: Colors.white54, fontSize: 11)),
+                          style: TextStyle(
+                              color: palette.onSurfaceFaint, fontSize: 11)),
                       Expanded(
                         child: Text(quest.choices[i],
-                            style: const TextStyle(color: Colors.white, fontSize: 11)),
+                            style: TextStyle(
+                                color: palette.onSurface, fontSize: 11)),
                       ),
                       if (_quizAnswered && i == quest.correctIndex)
-                        const Icon(Icons.check_circle, color: Colors.greenAccent, size: 16),
+                        Icon(Icons.check_circle,
+                            color: palette.success, size: 16),
                       if (_quizAnswered && i == _selectedIndex && i != quest.correctIndex)
-                        const Icon(Icons.cancel, color: Colors.redAccent, size: 16),
+                        Icon(Icons.cancel, color: palette.danger, size: 16),
                     ],
                   ),
               ),
@@ -176,7 +187,7 @@ class _KnowledgeQuestSectionState extends State<KnowledgeQuestSection> {
                             ? '💀 刻の番人の呪い！追加ペナルティ！正解は「${quest.choices[quest.correctIndex]}」'
                             : '❌ 残念… 正解は「${quest.choices[quest.correctIndex]}」'),
                     style: TextStyle(
-                      color: isCorrect ? Colors.greenAccent : Colors.redAccent,
+                      color: isCorrect ? palette.success : palette.danger,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
@@ -184,7 +195,8 @@ class _KnowledgeQuestSectionState extends State<KnowledgeQuestSection> {
                   if (quest.explanation != null) ...[
                     const SizedBox(height: 4),
                     Text('💡 ${quest.explanation}',
-                        style: const TextStyle(color: Colors.amber, fontSize: 10)),
+                        style:
+                            TextStyle(color: palette.accent, fontSize: 10)),
                   ],
                 ],
               ),
@@ -199,8 +211,9 @@ class _KnowledgeQuestSectionState extends State<KnowledgeQuestSection> {
                   label: '次の問題へ',
                   child: TextButton(
                     onPressed: () {},
-                    child: const Text('次へ',
-                        style: TextStyle(color: Colors.white38, fontSize: 11)),
+                    child: Text('次へ',
+                        style: TextStyle(
+                            color: palette.onSurfaceFaintest, fontSize: 11)),
                   ),
                 ),
               ),

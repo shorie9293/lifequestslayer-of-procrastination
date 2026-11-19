@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
 
+// 敵スプライトは Canvas 描画。牙・ハイライト等の「絵の具」としての白は
+// 明度テーマに依らず白で確定（面ではなく描画色なので 3.0:1 判定の対象外）。
+const Color _spriteInk = Color(0xFFFFFFFF); // 旧 white
+
 /// Enemy sprite appearance configuration per rank.
 ///
 /// Rank-based sprites give each quest tier a distinct visual identity:
@@ -288,7 +292,7 @@ class EnemyPainter extends CustomPainter {
     canvas.drawPath(rightWing, p);
 
     // Fangs
-    p.color = Colors.white;
+    p.color = _spriteInk;
     canvas.drawRect(
         Rect.fromLTWH(
             center.dx - w * 0.06, center.dy - h * 0.1, 4, 8),
@@ -388,7 +392,7 @@ class EnemyPainter extends CustomPainter {
         Offset(center.dx - w * 0.1, center.dy - h * 0.1), w * 0.1, p);
 
     // Eyes
-    p.color = Colors.white;
+    p.color = _spriteInk;
     canvas.drawCircle(
         Offset(center.dx - w * 0.1, center.dy - h * 0.08), 6, p);
     canvas.drawCircle(

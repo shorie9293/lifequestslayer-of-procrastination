@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 
 /// 町画面の「茶屋 — 表示設定」セクション（テーマ切替 #45）
@@ -9,6 +10,7 @@ class ThemeSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final settingsVM = context.watch<SettingsViewModel>();
     final isLight = settingsVM.themeMode == ThemeMode.light;
 
@@ -16,20 +18,20 @@ class ThemeSection extends StatelessWidget {
       key: AppKeys.themeSection,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.palette, color: Colors.white),
-            SizedBox(width: 8),
+            Icon(Icons.palette, color: palette.onSurface),
+            const SizedBox(width: 8),
             Text('表示設定 (ライト/ダーク)',
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white)),
+                    color: palette.onSurface)),
           ],
         ),
         const SizedBox(height: 12),
         Card(
-          color: Colors.black54,
+          color: palette.isLight ? palette.cardBackgroundStrong : Colors.black54,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(

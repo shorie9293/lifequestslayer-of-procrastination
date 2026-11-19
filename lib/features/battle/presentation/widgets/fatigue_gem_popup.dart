@@ -4,7 +4,15 @@ import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/features/town/presentation/gem_shop_screen.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
+
+/// 暗色の塗りボタン（purple 700 / blueGrey 700 等）の上の前景。
+///
+/// パレットは「面の上の文字」を解決する道具で、塗りボタンの上は明度テーマに
+/// 依らず白が正しい（実測 7:1 前後）。パレットに白トークンが無いため、
+/// 塗り専用の前景としてここに固定する。
+const Color _onFilledButton = Color(0xFFFFFFFF);
 
 /// 疲労MAX到達時に表示するポップアップ（1日1回）
 ///
@@ -25,6 +33,7 @@ class _FatigueGemDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final playerVM = context.watch<PlayerViewModel>();
     final gems = playerVM.player.gems;
     final canAfford = gems >= 50;
@@ -33,21 +42,22 @@ class _FatigueGemDialog extends StatelessWidget {
       testId: '${SemanticTypes.dialog}_fatigue_gem',
       child: AlertDialog(
         key: AppKeys.confirmDialog,
-        backgroundColor: const Color(0xFF1C1C2E),
+        // ダークは従来の暗幕色のまま、ライトはテーマ既定の明るい面へ。
+        backgroundColor: palette.isLight ? null : const Color(0xFF1C1C2E),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(color: Colors.blueGrey.shade700, width: 1),
         ),
-        title: const Column(
+        title: Column(
           children: [
-            Text('🌙',
+            const Text('🌙',
                 style: TextStyle(fontSize: 40), textAlign: TextAlign.center),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             Text(
               '今日の冒険、お疲れ様！',
               textAlign: TextAlign.center,
               style: TextStyle(
-                  color: Colors.white,
+                  color: palette.onSurface,
                   fontWeight: FontWeight.bold,
                   fontSize: 17),
             ),
@@ -56,18 +66,20 @@ class _FatigueGemDialog extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
+            Text(
               '疲労がMAXに達しました。\n今日はここまでにしましょう。',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, fontSize: 13),
+              style:
+                  TextStyle(color: palette.onSurfaceMuted, fontSize: 13),
             ),
             const SizedBox(height: 16),
-            const Divider(color: Colors.white12),
+            Divider(color: palette.border),
             const SizedBox(height: 12),
-            const Text(
+            Text(
               '続けたい場合は宝石で疲労を回復できます',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white54, fontSize: 12),
+              style:
+                  TextStyle(color: palette.onSurfaceFaint, fontSize: 12),
             ),
             const SizedBox(height: 12),
             Container(
@@ -77,15 +89,16 @@ class _FatigueGemDialog extends StatelessWidget {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: Colors.purple.withValues(alpha: 0.4)),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.diamond, color: Colors.purpleAccent, size: 20),
-                  SizedBox(width: 8),
+                  Icon(Icons.diamond,
+                      color: palette.readable(Colors.purpleAccent), size: 20),
+                  const SizedBox(width: 8),
                   Text(
                     '50宝石で疲労リセット',
                     style: TextStyle(
-                      color: Colors.purpleAccent,
+                      color: palette.readable(Colors.purpleAccent),
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
                     ),
@@ -97,11 +110,12 @@ class _FatigueGemDialog extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.diamond, color: Colors.white38, size: 14),
+                Icon(Icons.diamond,
+                    color: palette.onSurfaceFaintest, size: 14),
                 const SizedBox(width: 4),
                 Text('所持: $gems 宝石',
                     style:
-                        const TextStyle(color: Colors.white54, fontSize: 12)),
+                        TextStyle(color: palette.onSurfaceFaint, fontSize: 12)),
               ],
             ),
           ],
@@ -113,8 +127,8 @@ class _FatigueGemDialog extends StatelessWidget {
             label: '今日は休む',
             child: TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('今日は休む',
-                  style: TextStyle(color: Colors.white54)),
+              child: Text('今日は休む',
+                  style: TextStyle(color: palette.onSurfaceFaint)),
             ),
           ),
           SemanticHelper.interactive(
@@ -127,7 +141,7 @@ class _FatigueGemDialog extends StatelessWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor:
                     canAfford ? Colors.purple[700] : Colors.blueGrey[700],
-                foregroundColor: Colors.white,
+                foregroundColor: _onFilledButton,
               ),
               onPressed: () {
                 if (canAfford) {

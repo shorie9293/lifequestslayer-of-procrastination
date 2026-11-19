@@ -5,6 +5,7 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/reflection_badge.dart';
 import 'package:rpg_todo/domain/services/reflection_badge_collection.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 
 /// 内省バッジのコレクション画面。
@@ -66,6 +67,7 @@ class _ReflectionBadgeCollectionScreenState
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Scaffold(
       key: AppKeys.reflectionBadgeCollectionScreen,
       appBar: AppBar(
@@ -79,25 +81,25 @@ class _ReflectionBadgeCollectionScreenState
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
-          : _buildBody(),
+          : _buildBody(palette),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(GamePalette palette) {
     final tiers = ReflectionBadgeCollection.groupByTier(_progress);
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildSummaryCard(),
+          _buildSummaryCard(palette),
           const SizedBox(height: 20),
           for (final entry in tiers.entries) ...[
             KeyedSubtree(
               key: AppKeys.reflectionBadgeTierSection(entry.key),
-              child: _buildTierHeader(entry.key),
+              child: _buildTierHeader(entry.key, palette),
             ),
             const SizedBox(height: 8),
-            ...entry.value.map(_buildBadgeRow),
+            ...entry.value.map((p) => _buildBadgeRow(p, palette)),
             const SizedBox(height: 16),
           ],
         ],
@@ -105,7 +107,7 @@ class _ReflectionBadgeCollectionScreenState
     );
   }
 
-  Widget _buildSummaryCard() {
+  Widget _buildSummaryCard(GamePalette palette) {
     final summary = ReflectionBadgeCollection.summaryLabel(_progress);
     final earned = ReflectionBadgeCollection.earnedCount(_progress);
     final total = _progress.length;
@@ -114,19 +116,19 @@ class _ReflectionBadgeCollectionScreenState
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.black38,
+          color: palette.cardBackgroundStrong,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(color: palette.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               summary,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: Colors.white,
+                color: palette.onSurface,
               ),
             ),
             const SizedBox(height: 8),
@@ -142,20 +144,23 @@ class _ReflectionBadgeCollectionScreenState
     );
   }
 
-  Widget _buildTierHeader(int tier) {
+  Widget _buildTierHeader(int tier, GamePalette palette) {
     return Text(
       '— ${reflectionBadgeTierLabel(tier)} —',
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 15,
         fontWeight: FontWeight.bold,
-        color: Color(0xFF4CAF50),
+        color: palette.success,
       ),
     );
   }
 
-  Widget _buildBadgeRow(ReflectionBadgeProgress p) {
+  Widget _buildBadgeRow(ReflectionBadgeProgress p, GamePalette palette) {
     final unlocked = p.isUnlocked;
-    final rowColor = unlocked ? Colors.white : Colors.white30;
+    // 未獲得行は Opacity 0.55 で減光する（無効状態の演出）。色はその手前で
+    // 明背景でも沈まない濃さにしておく。
+    final rowColor =
+        unlocked ? palette.onSurface : palette.onSurfaceMuted;
     return KeyedSubtree(
       key: AppKeys.reflectionBadgeRow(p.def.id),
       child: Opacity(
@@ -164,10 +169,10 @@ class _ReflectionBadgeCollectionScreenState
           margin: const EdgeInsets.only(bottom: 8),
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.black38,
+            color: palette.cardBackgroundStrong,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: unlocked ? const Color(0xFF4CAF50) : Colors.white12,
+              color: unlocked ? palette.success : palette.border,
             ),
           ),
           child: Row(
@@ -194,16 +199,16 @@ class _ReflectionBadgeCollectionScreenState
                           unlocked ? Icons.check_circle : Icons.lock_outline,
                           size: 18,
                           color: unlocked
-                              ? const Color(0xFF4CAF50)
-                              : Colors.white24,
+                              ? palette.success
+                              : palette.onSurfaceFaintest,
                         ),
                       ],
                     ),
                     const SizedBox(height: 2),
                     Text(
                       p.def.description,
-                      style:
-                          const TextStyle(fontSize: 11, color: Colors.white54),
+                      style: TextStyle(
+                          fontSize: 11, color: palette.onSurfaceFaint),
                     ),
                     const SizedBox(height: 6),
                     Row(

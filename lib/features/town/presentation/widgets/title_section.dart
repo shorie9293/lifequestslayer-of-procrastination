@@ -5,6 +5,7 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/crossapp/presentation/cross_app_title_encyclopedia_screen.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// 称号セクション
@@ -20,6 +21,9 @@ class TitleSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
+    final cardColor =
+        palette.isLight ? palette.cardBackgroundStrong : Colors.black54;
     final titleProgress = viewModel.titleProgressList;
     final unlockedCount = titleProgress.where((e) => e.isUnlocked).length;
 
@@ -28,14 +32,14 @@ class TitleSection extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Icon(Icons.military_tech, color: Colors.white),
+            Icon(Icons.military_tech, color: palette.onSurface),
             const SizedBox(width: 8),
-            const Expanded(
+            Expanded(
               child: Text("称号セット (EXP+5%ボーナス)",
                   style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white)),
+                      color: palette.onSurface)),
             ),
             SemanticHelper.interactive(
               testId: SemanticHelper.createTestId(
@@ -44,7 +48,7 @@ class TitleSection extends StatelessWidget {
               child: IconButton(
                 key: AppKeys.crossAppTitleEncyclopediaEntry,
                 tooltip: 'クロスアプリ称号図鑑',
-                icon: const Icon(Icons.menu_book, color: Colors.white),
+                icon: Icon(Icons.menu_book, color: palette.onSurface),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -62,17 +66,26 @@ class TitleSection extends StatelessWidget {
         const SizedBox(height: 12),
         // 現在装備中
         Card(
-          color: Colors.black54,
+          color: cardColor,
           child: ListTile(
             title: Text(player.equippedTitle ?? "称号なし",
-                style: const TextStyle(
-                    fontWeight: FontWeight.bold, color: Colors.orange)),
+                style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: palette.readable(Colors.orange))),
             subtitle: const Text("現在装備中の称号"),
             trailing: SemanticHelper.interactive(
               testId: SemanticHelper.createTestId(
                   SemanticTypes.button, 'change_title'),
               label: '称号を変更する',
               child: ElevatedButton(
+                // ライトでは既定の前景色（primary=金 #D4A038）が淡色地に沈む（実測 1.95:1）。
+                // ダークは既定のまま（見た目不変）。
+                style: palette.isLight
+                    ? ElevatedButton.styleFrom(
+                        backgroundColor: palette.cardBackgroundStrong,
+                        foregroundColor: palette.onSurface,
+                      )
+                    : null,
                 child: const Text("変更する"),
                 onPressed: () =>
                     _showTitleSelectDialog(context),
@@ -85,18 +98,18 @@ class TitleSection extends StatelessWidget {
         Theme(
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
-            backgroundColor: Colors.black38,
-            collapsedBackgroundColor: Colors.black38,
+            backgroundColor: palette.cardBackgroundStrong,
+            collapsedBackgroundColor: palette.cardBackgroundStrong,
             shape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             collapsedShape:
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
             title: Text(
               "📜 称号アーカイブ  $unlockedCount / ${kAllTitles.length}",
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white),
+                  color: palette.onSurface),
             ),
             children: titleProgress.map((entry) {
               return _buildTitleProgressCard(
@@ -130,16 +143,19 @@ class TitleSection extends StatelessWidget {
   }) {
     final progressRate = (currentProgress / def.requiredCount).clamp(0.0, 1.0);
     final isNearlyDone = progressRate >= 0.9;
+    final palette = GamePalette.of(context);
+    final accentOrange = palette.readable(Colors.orange);
+    final accentAmber = palette.readable(Colors.amber);
 
     return Card(
-      color: Colors.black45,
+      color: palette.isLight ? palette.cardBackgroundStrong : Colors.black45,
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(
           color: isUnlocked
               ? Colors.amber.withValues(alpha: 0.6)
-              : Colors.white12,
+              : palette.border,
           width: 1,
         ),
       ),
@@ -152,7 +168,7 @@ class TitleSection extends StatelessWidget {
               children: [
                 Icon(
                   isUnlocked ? Icons.military_tech : Icons.lock_outline,
-                  color: isUnlocked ? Colors.amber : Colors.white38,
+                  color: isUnlocked ? accentAmber : palette.onSurfaceFaintest,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
@@ -162,7 +178,9 @@ class TitleSection extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
-                      color: isUnlocked ? Colors.orange : Colors.white38,
+                      color: isUnlocked
+                          ? accentOrange
+                          : palette.onSurfaceFaintest,
                     ),
                   ),
                 ),
@@ -171,13 +189,13 @@ class TitleSection extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.2),
+                      color: accentOrange.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.orange, width: 1),
+                      border: Border.all(color: accentOrange, width: 1),
                     ),
-                    child: const Text("装備中",
+                    child: Text("装備中",
                         style:
-                            TextStyle(fontSize: 10, color: Colors.orange)),
+                            TextStyle(fontSize: 10, color: accentOrange)),
                   )
                 else if (isUnlocked)
                   SemanticHelper.interactive(
@@ -192,8 +210,8 @@ class TitleSection extends StatelessWidget {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                       onPressed: onEquip,
-                      child: const Text("装備",
-                          style: TextStyle(color: Colors.amber)),
+                      child: Text("装備",
+                          style: TextStyle(color: accentAmber)),
                     ),
                   ),
               ],
@@ -201,22 +219,25 @@ class TitleSection extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               def.condition,
-              style: const TextStyle(fontSize: 11, color: Colors.white54),
+              style: TextStyle(fontSize: 11, color: palette.onSurfaceFaint),
             ),
             if (!isUnlocked) ...[
               const SizedBox(height: 6),
               LinearProgressIndicator(
                 value: progressRate,
                 minHeight: 6,
-                backgroundColor: Colors.white12,
+                backgroundColor: palette.border,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  isNearlyDone ? Colors.orangeAccent : Colors.amber,
+                  isNearlyDone
+                      ? palette.readable(Colors.orangeAccent)
+                      : accentAmber,
                 ),
               ),
               const SizedBox(height: 3),
               Text(
                 "$currentProgress / ${def.requiredCount}",
-                style: const TextStyle(fontSize: 10, color: Colors.white54),
+                style:
+                    TextStyle(fontSize: 10, color: palette.onSurfaceFaint),
               ),
             ],
           ],
@@ -226,6 +247,7 @@ class TitleSection extends StatelessWidget {
   }
 
   void _showTitleSelectDialog(BuildContext context) {
+    final palette = GamePalette.of(context);
     showDialog(
       context: context,
       builder: (ctx) {
@@ -250,8 +272,8 @@ class TitleSection extends StatelessWidget {
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
                         color: t == player.equippedTitle
-                            ? Colors.orange
-                            : Colors.white,
+                            ? palette.readable(Colors.orange)
+                            : palette.onSurface,
                       ),
                     ),
                     onTap: () {

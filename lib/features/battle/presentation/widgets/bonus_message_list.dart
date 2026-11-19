@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 /// 討伐ボーナスメッセージリスト
 class BonusMessageList extends StatelessWidget {
@@ -8,6 +9,7 @@ class BonusMessageList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -18,10 +20,10 @@ class BonusMessageList extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             '🎉 ボーナス',
             style: TextStyle(
-              color: Colors.amber,
+              color: palette.accent,
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),
@@ -32,8 +34,8 @@ class BonusMessageList extends StatelessWidget {
               padding: const EdgeInsets.only(bottom: 3),
               child: Text(
                 msg,
-                style: const TextStyle(
-                  color: Colors.amberAccent,
+                style: TextStyle(
+                  color: palette.accentStrong,
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),

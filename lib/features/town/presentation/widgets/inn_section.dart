@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -16,19 +17,20 @@ class InnSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Column(
       key: AppKeys.townInnSection,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.hotel, color: Colors.white),
-            SizedBox(width: 8),
+            Icon(Icons.hotel, color: palette.onSurface),
+            const SizedBox(width: 8),
             Text("宿屋 (疲労軽減バフ)",
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white)),
+                    color: palette.onSurface)),
           ],
         ),
         const SizedBox(height: 12),
@@ -42,8 +44,10 @@ class InnSection extends StatelessWidget {
 
   Widget _buildInnItem(
       BuildContext context, int type, String name, int price, String desc) {
+    final palette = GamePalette.of(context);
+    final hasEnough = player.coins >= price;
     return Card(
-      color: Colors.black54,
+      color: palette.isLight ? palette.cardBackgroundStrong : Colors.black54,
       child: ListTile(
         title: Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
         subtitle: Text(desc),
@@ -55,9 +59,18 @@ class InnSection extends StatelessWidget {
             icon: const Icon(Icons.bed, size: 16),
             label: Text("$price"),
             style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  player.coins >= price ? Colors.amber[700] : Colors.grey,
-              foregroundColor: Colors.white,
+              backgroundColor: hasEnough
+                  ? Colors.amber[700]
+                  : (palette.isLight
+                      ? palette.onSurfaceFaintest
+                      : Colors.grey),
+              // 金地(#FFA000)はライトでは墨、ダークでは白（従来どおり）。
+              // ジョブ別テーマの onPrimary は侍/法師で白になり金地に沈むため、
+              // 明度トークンで解決する。
+              // 泊まれない時（灰地）はライトのみ白：墨 on #6B6B6B は 2.66:1 で不足。
+              foregroundColor: hasEnough
+                  ? palette.onSurface
+                  : (palette.isLight ? Colors.white : palette.onSurface),
             ),
             onPressed: () {
               if (player.coins >= price) {
@@ -113,8 +126,8 @@ class InnSection extends StatelessWidget {
                   );
                 }
               },
-              child: const Text("泊まる",
-                  style: TextStyle(color: Colors.white)),
+              child: Text("泊まる",
+                  style: TextStyle(color: GamePalette.of(ctx).onSurface)),
             ),
           ),
         ],

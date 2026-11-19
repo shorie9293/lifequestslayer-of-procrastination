@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 /// 戦果報告書のヘッダー（タイトル＋獲得金貨）
 class BattleResultHeader extends StatelessWidget {
@@ -8,13 +9,15 @@ class BattleResultHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
+    final titleColor = palette.readable(const Color(0xFF4A90D9));
     return Column(
       children: [
-        const Text(
+        Text(
           '⚔️ 戦果報告書',
           style: TextStyle(
             fontSize: 24,
-            color: Color(0xFF4A90D9),
+            color: titleColor,
             fontWeight: FontWeight.bold,
             letterSpacing: 2,
           ),
@@ -23,7 +26,7 @@ class BattleResultHeader extends StatelessWidget {
         Container(
           height: 2,
           width: 120,
-          color: const Color(0xFF4A90D9).withValues(alpha: 0.5),
+          color: titleColor.withValues(alpha: 0.5),
         ),
         const SizedBox(height: 20),
         Row(
@@ -33,9 +36,9 @@ class BattleResultHeader extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               '$coinsGained 文 を獲得！',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
-                color: Colors.amberAccent,
+                color: palette.accent,
                 fontWeight: FontWeight.bold,
               ),
             ),

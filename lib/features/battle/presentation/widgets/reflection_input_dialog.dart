@@ -6,7 +6,11 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart';
+
+/// 緑の塗りボタン（背景 #4CAF50 / ライトは #1B5E20）の上の前景。
+const Color _onFilledButton = Color(0xFFFFFFFF);
 
 /// 討伐後の一息——振り返り入力ダイアログ。
 ///
@@ -161,13 +165,15 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return SemanticHelper.container(
       testId: '${SemanticTypes.dialog}_reflection_input',
       child: Dialog(
-        backgroundColor: const Color(0xFF1A2A1A),
+        // ダークは従来の暗幕色のまま、ライトはテーマ既定の明るい面へ。
+        backgroundColor: palette.isLight ? null : const Color(0xFF1A2A1A),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: Color(0xFF4CAF50), width: 1.5),
+          side: BorderSide(color: palette.success, width: 1.5),
         ),
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 60),
         child: SingleChildScrollView(
@@ -178,41 +184,41 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // Header
-                const Text(
+                Text(
                   '🌳 戦後の一息',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF4CAF50),
+                    color: palette.success,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   '「${widget.taskTitle}」の討伐、見事なり。',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white70,
+                    color: palette.onSurfaceMuted,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'グリフォンの見立て: $_aiDifficultyLabel',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: Color(0xFF8BC34A),
+                    color: palette.readable(const Color(0xFF8BC34A)),
                   ),
                 ),
                 const SizedBox(height: 16),
 
                 // Content input
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'このクエストで何を学んだ？',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white,
+                      color: palette.onSurface,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -222,38 +228,40 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
                   controller: _contentController,
                   maxLines: 3,
                   maxLength: 200,
-                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                  style: TextStyle(color: palette.onSurface, fontSize: 14),
                   decoration: InputDecoration(
                     hintText: '例: 小さく始める勇気が大事だと気づいた',
-                    hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
+                    hintStyle: TextStyle(
+                        color: palette.onSurfaceFaintest, fontSize: 13),
                     filled: true,
-                    fillColor: Colors.black26,
+                    fillColor: palette.cardBackground,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Color(0xFF4CAF50)),
+                      borderSide: BorderSide(color: palette.success),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
-                      borderSide: const BorderSide(color: Colors.white12),
+                      borderSide: BorderSide(color: palette.border),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide:
-                          const BorderSide(color: Color(0xFF4CAF50), width: 2),
+                          BorderSide(color: palette.success, width: 2),
                     ),
-                    counterStyle: const TextStyle(color: Colors.white30),
+                    counterStyle:
+                        TextStyle(color: palette.onSurfaceFaintest),
                   ),
                 ),
                 const SizedBox(height: 20),
 
                 // Self difficulty slider
-                const Align(
+                Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'このクエストの体感難易度は？',
                     style: TextStyle(
                       fontSize: 14,
-                      color: Colors.white,
+                      color: palette.onSurface,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -261,28 +269,32 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Text('易', style: TextStyle(color: Colors.white38, fontSize: 12)),
+                    Text('易',
+                        style: TextStyle(
+                            color: palette.onSurfaceFaint, fontSize: 12)),
                     Expanded(
                       child: Slider(
                         value: _selfDifficulty.toDouble(),
                         min: 1,
                         max: 5,
                         divisions: 4,
-                        activeColor: const Color(0xFF4CAF50),
-                        inactiveColor: Colors.white12,
+                        activeColor: palette.success,
+                        inactiveColor: palette.border,
                         onChanged: (v) =>
                             setState(() => _selfDifficulty = v.round()),
                       ),
                     ),
-                    const Text('難', style: TextStyle(color: Colors.white38, fontSize: 12)),
+                    Text('難',
+                        style: TextStyle(
+                            color: palette.onSurfaceFaint, fontSize: 12)),
                   ],
                 ),
                 Center(
                   child: Text(
                     _difficultyLabel,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
-                      color: Color(0xFF4CAF50),
+                      color: palette.success,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -294,15 +306,15 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: Colors.black26,
+                    color: palette.cardBackground,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.white12),
+                    border: Border.all(color: palette.border),
                   ),
                   child: Text(
                     'AI推定: $_aiDifficultyLabel  /  あなた: $_selfDifficulty',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white54,
+                      color: palette.onSurfaceFaint,
                     ),
                   ),
                 ),
@@ -313,7 +325,7 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
+                    color: palette.success.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
@@ -323,8 +335,8 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
                       const SizedBox(width: 6),
                       Text(
                         '振り返りを記すと +${widget.inputBonusExp} EXP',
-                        style: const TextStyle(
-                          color: Color(0xFF4CAF50),
+                        style: TextStyle(
+                          color: palette.success,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
@@ -345,7 +357,7 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
                       child: TextButton(
                         onPressed: _isSaving ? null : _skip,
                         style: TextButton.styleFrom(
-                          foregroundColor: Colors.white38,
+                          foregroundColor: palette.onSurfaceFaint,
                         ),
                         child: const Text('スキップ'),
                       ),
@@ -362,14 +374,14 @@ class _ReflectionInputDialogState extends State<ReflectionInputDialog> {
                                 height: 16,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: _onFilledButton,
                                 ),
                               )
                             : const Text('📝', style: TextStyle(fontSize: 18)),
                         label: const Text('記す'),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF4CAF50),
-                          foregroundColor: Colors.white,
+                          backgroundColor: palette.success,
+                          foregroundColor: _onFilledButton,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 24, vertical: 12),
                         ),

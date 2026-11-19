@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/features/town/presentation/widgets/shop_item.dart';
 
@@ -38,33 +39,37 @@ class HomeShopSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
+    final cardColor =
+        palette.isLight ? palette.cardBackgroundStrong : Colors.black54;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(
+        Row(
           children: [
-            Icon(Icons.home, color: Colors.white),
-            SizedBox(width: 8),
+            Icon(Icons.home, color: palette.onSurface),
+            const SizedBox(width: 8),
             Text("拠点拡張 (家づくり)",
                 style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white)),
+                    color: palette.onSurface)),
           ],
         ),
         const SizedBox(height: 12),
         ..._items.map((item) {
           final isOwned = player.homeItems.contains(item.id);
           return Card(
-            color: Colors.black54,
+            color: cardColor,
             child: ListTile(
               title: Text(item.name,
                   style: const TextStyle(fontWeight: FontWeight.bold)),
               subtitle: Text(item.description),
               trailing: isOwned
-                  ? const Text("所有済",
+                  ? Text("所有済",
                       style: TextStyle(
-                          color: Colors.grey, fontWeight: FontWeight.bold))
+                          color: palette.onSurfaceFaint,
+                          fontWeight: FontWeight.bold))
                   : buildBuyButton(context, player, viewModel, item),
             ),
           );
