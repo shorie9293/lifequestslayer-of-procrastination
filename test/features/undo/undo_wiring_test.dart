@@ -143,6 +143,33 @@ void main() {
       expect(vms.task.tasks.map((t) => t.id).toSet(), {'g1', 'g2', 'g3'});
     });
 
+    testWidgets('破棄 → SnackBar は5秒経過で自動的に消える（persist 無効）', (tester) async {
+      final vms = _createViewModels();
+      vms.task.setTasks([
+        Task(id: 'g1', title: 'クエストA', status: TaskStatus.inGuild),
+      ]);
+
+      await tester.pumpWidget(_wrap(
+        GuildBulkActionScreen(tasksOverride: vms.task.guildTasks),
+        task: vms.task,
+        player: vms.player,
+      ));
+      await tester.pump();
+
+      await tester.tap(find.byKey(AppKeys.guildBulkSelectAll));
+      await tester.pump();
+      await tester.tap(find.byKey(AppKeys.guildBulkActionDelete));
+      await tester.pumpAndSettle();
+
+      expect(find.text('クエストを削除しました'), findsOneWidget);
+
+      // 破棄Undoバーは有限時間で消える（action 付きでも persist しない）
+      await tester.pump(const Duration(seconds: 6));
+      await tester.pumpAndSettle();
+      expect(find.text('クエストを削除しました'), findsNothing);
+      expect(find.byKey(undoActionKey), findsNothing);
+    });
+
     testWidgets('Undo を押さずに破棄すれば復元されない', (tester) async {
       final vms = _createViewModels();
       vms.task.setTasks([
