@@ -98,6 +98,32 @@ class GamePalette {
     return current;
   }
 
+  /// 与えられた**背景色**に対して [color] を可読化する。
+  ///
+  /// [readable] と異なり、明度を問わず実効背景との比を評価する。ダークでは
+  /// 濃色（例: Colors.brown）が暗い地に沈むため、白方向へ寄せる必要がある。
+  /// - ライト: 墨 #1A1A1A 方向へ寄せる
+  /// - ダーク: 白 #FFFFFF 方向へ寄せる
+  ///
+  /// [minRatio] を満たすまで 0.05 刻みで寄せ、最初に満たした色を返す。
+  /// 乱数・時刻を使わない決定的な純粋関数。
+  Color readableOn(Color color, Color background, {double minRatio = 4.5}) {
+    if (_contrastRatio(Color.alphaBlend(color, background), background) >=
+        minRatio) {
+      return color;
+    }
+    final target = isLight ? const Color(0xFF1A1A1A) : const Color(0xFFFFFFFF);
+    var current = color;
+    for (double t = 0.05; t <= 0.95; t += 0.05) {
+      current = Color.lerp(color, target, t)!;
+      if (_contrastRatio(Color.alphaBlend(current, background), background) >=
+          minRatio) {
+        return current;
+      }
+    }
+    return current;
+  }
+
   static const _lightCardReference = Color(0xFFF4F1E6);
 
   static double _contrastRatio(Color a, Color b) {

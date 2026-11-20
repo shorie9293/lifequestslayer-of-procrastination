@@ -95,7 +95,7 @@ class _EquipmentTabState extends State<EquipmentTab> {
                 padding: const EdgeInsets.only(right: 8),
                 child: SemanticHelper.interactive(
                   testId: SemanticHelper.createTestId(
-                    SemanticTypes.button, 'equip_slot_${slot.name}'),
+                      SemanticTypes.button, 'equip_slot_${slot.name}'),
                   label: '${slot.displayName}を選択',
                   child: ChoiceChip(
                     label: Row(
@@ -141,8 +141,7 @@ class _EquipmentTabState extends State<EquipmentTab> {
             child: Center(
               child: Text(
                 '装備部位を選んでね',
-                style: TextStyle(
-                    color: palette.onSurfaceFaint, fontSize: 16),
+                style: TextStyle(color: palette.onSurfaceFaint, fontSize: 16),
               ),
             ),
           ),
@@ -189,8 +188,7 @@ class _EquipmentTabState extends State<EquipmentTab> {
             padding: const EdgeInsets.symmetric(vertical: 8),
             child: Text(
               '── 未解放 ──',
-              style: TextStyle(
-                  color: palette.onSurfaceFaintest, fontSize: 12),
+              style: TextStyle(color: palette.onSurfaceFaintest, fontSize: 12),
             ),
           ),
           ...locked.map((skin) {
@@ -216,6 +214,11 @@ class _EquipmentTabState extends State<EquipmentTab> {
             ? Colors.amber.withValues(alpha: 0.25)
             : Colors.amber.shade900.withValues(alpha: 0.4))
         : (palette.isLight ? palette.cardBackgroundStrong : Colors.black54);
+    // 未解放の注記・鍵アイコン。ダークの旧リテラル Colors.white30 は
+    // near-black カード上で 2.57:1 と読めないため、トークン（白54）へ上げる。
+    // ライトは従来の #6B6B6B を維持する。
+    final lockedNoteColor =
+        palette.isLight ? palette.onSurfaceFaintest : palette.onSurfaceFaint;
     return Card(
       color: cardColor,
       margin: const EdgeInsets.only(bottom: 8),
@@ -229,72 +232,62 @@ class _EquipmentTabState extends State<EquipmentTab> {
               },
         borderRadius: BorderRadius.circular(12),
         child: ListTile(
-        leading: Text(skin.icon, style: const TextStyle(fontSize: 28)),
-        title: Text(
-          skin.name,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color:
-                locked ? palette.onSurfaceFaintest : palette.onSurface,
+          leading: Text(skin.icon, style: const TextStyle(fontSize: 28)),
+          title: Text(
+            skin.name,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: locked ? palette.onSurfaceFaintest : palette.onSurface,
+            ),
           ),
-        ),
-        subtitle: Text(
-          locked ? skin.unlockConditionDescription : skin.description,
-          style: TextStyle(
-            // ダークの未解放は従来の白30%（トークンの白38%より淡い）。
-            color: locked
-                ? (palette.isLight
-                    ? palette.onSurfaceFaintest
-                    : Colors.white30)
-                : palette.onSurfaceFaint,
-            fontSize: 12,
+          subtitle: Text(
+            locked ? skin.unlockConditionDescription : skin.description,
+            style: TextStyle(
+              color: locked ? lockedNoteColor : palette.onSurfaceFaint,
+              fontSize: 12,
+            ),
           ),
-        ),
-        trailing: locked
-            ? Icon(Icons.lock,
-                color: palette.isLight
-                    ? palette.onSurfaceFaintest
-                    : Colors.white30,
-                size: 20)
-            : isEquipped
-                ? Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.shade700,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Text(
-                      '装備中',
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
+          trailing: locked
+              ? Icon(Icons.lock, color: lockedNoteColor, size: 20)
+              : isEquipped
+                  ? Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade700,
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Text(
+                        '装備中',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    )
+                  : SemanticHelper.interactive(
+                      testId: SemanticHelper.createTestId(
+                          SemanticTypes.button, 'equip_${skin.id}'),
+                      label: '${skin.name}を装備する',
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.amber.shade700,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 4),
+                          textStyle: const TextStyle(fontSize: 12),
+                        ),
+                        child: const Text('装備'),
+                        onPressed: () {
+                          widget.onEquip(skin.slot, skin.id);
+                          setState(() {
+                            _previewSkinId = skin.id;
+                          });
+                        },
                       ),
                     ),
-                  )
-                : SemanticHelper.interactive(
-                    testId: SemanticHelper.createTestId(
-                      SemanticTypes.button, 'equip_${skin.id}'),
-                    label: '${skin.name}を装備する',
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.amber.shade700,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 4),
-                        textStyle: const TextStyle(fontSize: 12),
-                      ),
-                      child: const Text('装備'),
-                      onPressed: () {
-                        widget.onEquip(skin.slot, skin.id);
-                        setState(() {
-                          _previewSkinId = skin.id;
-                        });
-                      },
-                    ),
-                  ),
-      ),
+        ),
       ),
     );
   }

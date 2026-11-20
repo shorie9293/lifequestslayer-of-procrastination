@@ -987,7 +987,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             const Text("寄合所"),
             const SizedBox(width: 8),
-            Text("v1.5.88+184",
+            Text("v1.5.89+185",
                 style: TextStyle(
                     fontSize: 10,
                     // ライトの和紙地では #888 が 2.9:1。墨へ寄せる。

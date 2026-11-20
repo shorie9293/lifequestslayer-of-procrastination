@@ -318,8 +318,8 @@ class TempleScreen extends StatelessWidget {
                       Expanded(
                         child: Text(
                           "${_jobDisplayName(eqSkill!.skill.job)}・${eqSkill.skill.displayName}",
-                          style: TextStyle(
-                              color: palette.onSurface, fontSize: 13),
+                          style:
+                              TextStyle(color: palette.onSurface, fontSize: 13),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -583,8 +583,8 @@ class TempleScreen extends StatelessWidget {
                   SizedBox(
                     width: 64,
                     child: Text(label,
-                        style: TextStyle(
-                            color: palette.onSurface, fontSize: 12)),
+                        style:
+                            TextStyle(color: palette.onSurface, fontSize: 12)),
                   ),
                   Expanded(
                     child: LinearProgressIndicator(
@@ -647,8 +647,8 @@ class TempleScreen extends StatelessWidget {
                     Expanded(
                       child: Text(
                         '$treeLabel・${node.name}（${node.pointCost}pt）',
-                        style: TextStyle(
-                            color: palette.onSurface, fontSize: 12),
+                        style:
+                            TextStyle(color: palette.onSurface, fontSize: 12),
                       ),
                     ),
                     Text(
@@ -903,6 +903,15 @@ class TempleScreen extends StatelessWidget {
     final level = player.jobLevels[job] ?? 1;
     final isMastered = player.isMastered(job);
     final isSkillActive = player.activeSkills.contains(job);
+    // 選択カードの実効地（職業色 20% を画面地に重ねた色）。職業色は濃色
+    // （例: 浪人の Colors.brown）でダーク地では 2.55:1 まで沈むため、
+    // 無変換の readable() ではなく地に対して解決する readableOn() を使う。
+    final selectedCardBackground = Color.alphaBlend(
+        color.withValues(alpha: 0.2),
+        Theme.of(context).scaffoldBackgroundColor);
+    final accentOnSelectedCard = palette.isLight
+        ? palette.readable(color)
+        : palette.readableOn(color, selectedCardBackground);
 
     return Card(
       key: cardKey,
@@ -945,8 +954,10 @@ class TempleScreen extends StatelessWidget {
                       child: Icon(icon,
                           size: 32,
                           color: isUnlocked
-                              ? palette.readable(color)
-                              : (onScene ? Colors.grey : palette.onSurfaceFaint)),
+                              ? accentOnSelectedCard
+                              : (onScene
+                                  ? Colors.grey
+                                  : palette.onSurfaceFaint)),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -963,7 +974,7 @@ class TempleScreen extends StatelessWidget {
                                     fontWeight: FontWeight.bold,
                                     color: isUnlocked
                                         ? (isSelected
-                                            ? palette.readable(color)
+                                            ? accentOnSelectedCard
                                             : palette.onSurface)
                                         : (onScene
                                             ? Colors.grey
@@ -1016,10 +1027,11 @@ class TempleScreen extends StatelessWidget {
                       ),
                     ),
                     if (isSelected)
-                      Icon(Icons.check_circle, color: palette.readable(color)),
+                      Icon(Icons.check_circle, color: accentOnSelectedCard),
                     if (!isSelected && !isUnlocked)
                       Icon(Icons.lock,
-                          color: onScene ? Colors.grey : palette.onSurfaceFaint),
+                          color:
+                              onScene ? Colors.grey : palette.onSurfaceFaint),
                   ],
                 ),
                 // Skill Toggle for Mastered Jobs (if not current job)

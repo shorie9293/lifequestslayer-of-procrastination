@@ -49,10 +49,17 @@ Color _effectiveBackground(Element element, Color scaffoldColor) {
       layers.add(widget.color);
     } else if (widget is Material && widget.color != null) {
       layers.add(widget.color!);
-    } else if (widget is RawChip && widget.backgroundColor != null) {
+    } else if (widget is RawChip) {
       // Chip の背景は Material.color ではなく _RenderChip.paint が描く
       // （SDK chip.dart:1404 の Material は color を渡さない）ため、ここで拾う。
-      layers.add(widget.backgroundColor!);
+      // ただし選択中のチップは backgroundColor ではなく selectedColor が塗られる
+      // （SDK chip.dart:1528-1542 `_IndividualOverrides.resolve`:
+      //   states に selected を含む → selectedColor、未選択のみ backgroundColor）。
+      // 無条件に backgroundColor を積むと選択中チップを誤って濃地と評価する。
+      final chipColor = widget.selected && widget.selectedColor != null
+          ? widget.selectedColor
+          : widget.backgroundColor;
+      if (chipColor != null) layers.add(chipColor);
     }
     return true;
   });
@@ -183,6 +190,7 @@ void main() {
     // ignore: avoid_print
     print('EQUIP DARK $scan');
     expect(scan.measurable, greaterThanOrEqualTo(30));
+    expect(scan.violations, 0, reason: 'ダーク（既定テーマ）で読めない文字: $scan');
     expect(scan.colors, contains(0xFFFFFFFF), reason: 'ダークの白系文字が失われている');
     for (final argb in const [0xFF2B2B2B, 0xFF4A4A4A, 0xFF5A5A5A, 0xFF6B6B6B]) {
       expect(scan.colors.contains(argb), isFalse,

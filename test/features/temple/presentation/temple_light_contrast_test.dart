@@ -54,8 +54,8 @@ double _contrast(Color a, Color b) {
   return (hi + 0.05) / (lo + 0.05);
 }
 
-Color _darkestOf(List<Color> colors) =>
-    colors.reduce((a, b) => a.computeLuminance() <= b.computeLuminance() ? a : b);
+Color _darkestOf(List<Color> colors) => colors
+    .reduce((a, b) => a.computeLuminance() <= b.computeLuminance() ? a : b);
 
 /// 祖先の塗り（BoxDecoration / グラデーション / ColoredBox / Material）を
 /// 外側から合成し、文字が実際に載っている実効背景色を求める。
@@ -209,6 +209,7 @@ void main() {
     // ignore: avoid_print
     print('TEMPLE DARK $scan');
     expect(scan.measurable, greaterThanOrEqualTo(20));
+    expect(scan.violations, 0, reason: 'ダーク（既定テーマ）で読めない文字: $scan');
     for (final argb in const [
       0xFF2B2B2B,
       0xFF4A4A4A,
