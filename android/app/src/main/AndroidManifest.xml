@@ -45,6 +45,13 @@
                 <category android:name="android.intent.category.BROWSABLE"/>
                 <data android:scheme="app" android:host="cross-reward"/>
             </intent-filter>
+            <!-- Deep link: app://google-todo?status=<linked|denied|error>（Google ToDo 連携の戻り） -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="app" android:host="google-todo"/>
+            </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->

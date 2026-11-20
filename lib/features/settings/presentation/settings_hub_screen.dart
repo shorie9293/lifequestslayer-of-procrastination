@@ -19,6 +19,8 @@ import 'package:rpg_todo/features/auto_backup/domain/auto_backup_status.dart';
 import 'package:rpg_todo/features/auto_backup/presentation/auto_backup_app_keys.dart';
 import 'package:rpg_todo/features/auto_backup/presentation/auto_backup_screen.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/google_todo/presentation/google_todo_keys.dart';
+import 'package:rpg_todo/features/google_todo/presentation/google_todo_link_screen.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/reminder/presentation/quiet_hours_settings_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
@@ -284,6 +286,18 @@ class SettingsHubScreen extends StatelessWidget {
               MaterialPageRoute(
                 builder: crossAppLinkStatusScreenBuilder ??
                     (_) => const CrossAppLinkStatusScreen(),
+              ),
+            ),
+          ),
+          // 末尾追加: Google ToDo 連携（双方向同期）
+          ListTile(
+            key: GoogleTodoKeys.entryFromSettings,
+            title: const Text('Google ToDo 連携'),
+            subtitle: const Text('札「GoogleToDo」のクエストを双方向に同期'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const GoogleTodoLinkScreen(),
               ),
             ),
           ),
