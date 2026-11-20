@@ -47,10 +47,11 @@ class SupabasePlayerRepository implements IPlayerRepository {
       return;
     }
     try {
-      await _client.from('rpg_players').upsert({
-        'user_id': userId,
-        'data': player.toJson(),
-        'updated_at': DateTime.now().toIso8601String(),
+      // 部分マージで保存する（サーバー側 `rpg_player_merge` が data || patch）。
+      // 以前は data 全体を置換していたため、同じ JSONB に入っている
+      // townData（町レベル・建物）がプレイヤー保存のたびに消えていた。
+      await _client.rpc('rpg_player_merge', params: {
+        'p_patch': player.toJson(),
       });
     } catch (e) {
       appLog.warn('[SupabasePlayerRepo] savePlayer failed: $e');

@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rpg_todo/features/town/domain/town_level.dart';
 import 'package:rpg_todo/features/town/domain/building.dart';
 import 'package:rpg_todo/features/town/domain/town_scale.dart';
+import 'package:rpg_todo/features/town/domain/town_sync_merge.dart';
 import 'package:injectable/injectable.dart';
 
 /// 町の発展を管理するViewModel。
@@ -141,17 +142,20 @@ class TownViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 町データの JSON 表現（Hive と Supabase で共通）。
+  Map<String, dynamic> _townDataJson() => <String, dynamic>{
+        'townLevel': _townLevel.toJson(),
+        'buildings': _buildings.map(
+          (key, value) => MapEntry(key.name, value.toJson()),
+        ),
+      };
+
   /// 町データを Hive に保存する。
   Future<void> save() async {
     final box = await _getBox();
     if (box == null) return;
 
-    final data = <String, dynamic>{
-      'townLevel': _townLevel.toJson(),
-      'buildings': _buildings.map(
-        (key, value) => MapEntry(key.name, value.toJson()),
-      ),
-    };
+    final data = _townDataJson();
     await box.put(_key, data);
     await box.flush();
 
@@ -160,7 +164,10 @@ class TownViewModel extends ChangeNotifier {
   }
 
   /// 町データを Supabase の rpg_players.data->'townData' に同期する。
-  /// 既存のPlayerデータを保持したまま townData キーのみ更新する。
+  ///
+  /// サーバー側の `rpg_player_merge` で JSONB を部分マージする（`||`）。
+  /// 以前は read-modify-write で全 `data` を上書きしていたため、
+  /// プレイヤー保存（coins/XP更新）と競合して町データが消えていた。
   Future<void> _syncTownToSupabase(Map<String, dynamic> townData) async {
     final client = _supabaseClient;
     if (client == null) return;
@@ -168,23 +175,8 @@ class TownViewModel extends ChangeNotifier {
     if (userId == null) return;
 
     try {
-      // 現在のPlayerデータを取得してマージ
-      final response = await client
-          .from('rpg_players')
-          .select('data')
-          .eq('user_id', userId)
-          .maybeSingle();
-
-      final resp = response;
-      final existingData = (resp is Map<String, dynamic>)
-          ? Map<String, dynamic>.from(resp['data'] as Map? ?? {})
-          : <String, dynamic>{};
-      existingData['townData'] = townData;
-
-      await client.from('rpg_players').upsert({
-        'user_id': userId,
-        'data': existingData,
-        'updated_at': DateTime.now().toIso8601String(),
+      await client.rpc('rpg_player_merge', params: {
+        'p_patch': {'townData': townData},
       });
     } catch (e) {
       debugPrint('[TownVM] Supabase sync failed: $e');
@@ -264,13 +256,25 @@ class TownViewModel extends ChangeNotifier {
       final townData = playerData['townData'];
       if (townData == null || townData is! Map) return;
 
-      // 町レベルをリストア
+      // 町レベルは「進んでいる方」を採用する（オフライン育成を巻き戻さない）
       final tLevel = townData['townLevel'];
       if (tLevel != null && tLevel is Map) {
-        _townLevel = TownLevel.fromJson(Map<String, dynamic>.from(tLevel));
+        final cloud = TownLevel.fromJson(Map<String, dynamic>.from(tLevel));
+        final decision = decideTownSync(
+          localLevel: _townLevel.level,
+          localXp: _townLevel.xp,
+          cloudLevel: cloud.level,
+          cloudXp: cloud.xp,
+        );
+        if (decision.takeCloud) {
+          _townLevel = cloud;
+        } else if (decision.pushLocal) {
+          // ローカルの方が進んでいる → クラウドへ書き戻して端末間を揃える
+          await _syncTownToSupabase(_townDataJson());
+        }
       }
 
-      // 建物レベルをリストア
+      // 建物レベルは建物ごとに高い方を採る
       final bData = townData['buildings'];
       if (bData != null && bData is Map) {
         for (final entry in Map<String, dynamic>.from(bData).entries) {
@@ -279,7 +283,14 @@ class TownViewModel extends ChangeNotifier {
             final state = BuildingState.fromJson(
               Map<String, dynamic>.from(entry.value as Map),
             );
-            _buildings[building] = state;
+            final local = _buildings[building];
+            if (local == null ||
+                shouldTakeCloudBuilding(
+                  localLevel: local.level,
+                  cloudLevel: state.level,
+                )) {
+              _buildings[building] = state;
+            }
           } catch (e) {
             debugPrint('[TownVM] Supabase building entry skipped: $e');
           }
