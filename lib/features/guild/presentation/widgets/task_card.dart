@@ -236,16 +236,13 @@ class _TaskCardState extends State<TaskCard>
     final palette = GamePalette.of(context);
     // ライトは地を漆色へ（中間調の札では白/墨どちらも沈む）。ダークは不変。
     final cardColor = palette.isLight ? _lacquer(baseCardColor) : baseCardColor;
-    final textColor = cardColor.computeLuminance() < 0.5
-        ? Colors.white
-        : Colors.black87;
-    // ライトでも地が濃色になったため、白が勝てば白を採る（実コントラスト判定）。
-    final cardTextColor = palette.isLight
-        ? (_contrastRatio(Colors.black87, cardColor) >
+    // 地の明暗で文字色を決める。ダークでも金/銀の札は白が負ける（実測 2.4:1）
+    // ため、ライトと同じ「実コントラストで勝った方」を採る。
+    final cardTextColor =
+        _contrastRatio(Colors.black87, cardColor) >
                 _contrastRatio(Colors.white, cardColor)
             ? Colors.black87
-            : Colors.white)
-        : textColor;
+            : Colors.white;
     final urgencyBorderColor = _currentUrgencyColor;
 
     return SemanticHelper.container(
@@ -367,11 +364,10 @@ class _TaskCardState extends State<TaskCard>
                           _countdownText,
                           style: TextStyle(
                             // ライトでは青/黄/赤の緊急色が札の地で沈むため濃色化。
+                            // 緊急色は地の色に対して読みやすい濃淡へ寄せる（両テーマ）。
                             color: _currentUrgencyColor == null
                                 ? palette.onSurfaceMuted
-                                : (palette.isLight
-                                    ? palette.readable(_currentUrgencyColor!)
-                                    : _currentUrgencyColor!),
+                                : palette.readable(_currentUrgencyColor!),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
