@@ -60,6 +60,9 @@
 4. 通知・課金・カレンダー等の端末APIは抽象越しに呼び、UI とロジックを分離する。
 5. 全操作可能要素に `Semantics` を付与する（アクセシビリティは機能要件）。
 6. Hive の TypeAdapter typeId は既存値を再利用しない（破壊的変更になる）。
+7. 削除Undoの SnackBar は `persist: false` を明示し、`duration`（5秒）経過で必ず自動的に消える。
+   （Flutter 3.47 以降、`action` 付き SnackBar は `persist` 既定 true＝押すまで残るため、明示が必須）
+8. クエスト削除は町XP/町レベルを巻き戻さない（町XPは討伐完了時のみ加算。削除は討伐実績を取り消さない）。
 
 ## 7. バージョンとリリース
 - `pubspec.yaml` の `version: 1.5.xx+NNN` が正。AppBar 表示（`guild_screen.dart`）も同期させる。

@@ -484,6 +484,8 @@ void main() {
       await tester.tap(find.text('破棄する'));
       await tester.pumpAndSettle();
 
+      // 確認ダイアログは「破棄する」で閉じる（閉じ残しの回帰防止）
+      expect(find.text('クエストを破棄'), findsNothing);
       // タスクが消え、緊急セクションも非表示になる
       expect(find.textContaining('期限切れ破棄対象クエスト'), findsNothing);
       expect(find.byKey(AppKeys.guildUrgentSection), findsNothing);
