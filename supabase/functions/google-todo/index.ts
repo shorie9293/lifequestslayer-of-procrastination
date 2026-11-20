@@ -165,13 +165,28 @@ async function handleCallback(req: Request) {
   }
 
   let sub: string | null = null;
+  let email: string | null = (token.email as string | undefined) ?? null;
   if (token.id_token) {
     try {
       const payload = JSON.parse(
         atob(token.id_token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')),
       );
       sub = payload.sub ?? null;
+      email = email ?? (payload.email ?? null);
     } catch (_) { /* id_token は任意 */ }
+  }
+  // id_token が無い場合は userinfo で補う（画面にアカウントを出すため）
+  if (!email || !sub) {
+    try {
+      const infoRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+        headers: { Authorization: `Bearer ${token.access_token}` },
+      });
+      if (infoRes.ok) {
+        const info = await infoRes.json();
+        sub = sub ?? (info.sub ?? null);
+        email = email ?? (info.email ?? null);
+      }
+    } catch (_) { /* 表示用の補完。失敗しても連携は成立する */ }
   }
 
   const { error: upsertErr } = await db.from('google_todo_accounts').upsert({
