@@ -295,7 +295,13 @@ class _GuildScreenState extends State<GuildScreen> {
   }
 
   /// 期日 / ランク の切替バー。
+  ///
+  /// チップの文字色は明示する。既定の labelStyle はダークで黒文字になり、
+  /// 背景（#0d0d1a）に対して 1.09:1 ＝ ほぼ読めなくなる。
   Widget _buildGroupModeBar(BuildContext context, bool isLight) {
+    final fg = isLight ? const Color(0xFF2E2A24) : const Color(0xFFF0E8DA);
+    final selectedBg =
+        isLight ? const Color(0xFFE8DFCC) : const Color(0xFF2A2633);
     return Container(
       key: QuestGroupKeys.modeToggle,
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
@@ -310,9 +316,16 @@ class _GuildScreenState extends State<GuildScreen> {
                 selected: _groupMode == mode,
                 onSelected: (_) => _setGroupMode(mode),
                 visualDensity: VisualDensity.compact,
+                backgroundColor: Colors.transparent,
+                selectedColor: selectedBg,
+                side: BorderSide(
+                  color: fg.withValues(alpha: isLight ? 0.28 : 0.35),
+                ),
                 labelStyle: TextStyle(
                   fontSize: 12,
-                  fontWeight: _groupMode == mode ? FontWeight.bold : FontWeight.normal,
+                  color: fg,
+                  fontWeight:
+                      _groupMode == mode ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
             ),
@@ -763,7 +776,6 @@ class _GuildScreenState extends State<GuildScreen> {
             final timeStr = _formatTimeRemaining(diff);
             final isExpired = diff.isNegative;
             final snoozeBadge = snooze.badgeLabel(player.snoozedTasks, task.id);
-            final pal = GamePalette.of(context);
 
             return Container(
               margin: const EdgeInsets.only(bottom: 6),
@@ -842,10 +854,8 @@ class _GuildScreenState extends State<GuildScreen> {
                     child: Text(
                       timeStr,
                       style: TextStyle(
-                        // ライトでは琥珀 on 橙地が 2.3:1。地が暗赤なので白へ。
-                        color: pal.isLight
-                            ? _onDarkFill
-                            : (isExpired ? Colors.redAccent : Colors.amber),
+                        // 琥珀 on 橙地は 2.3:1（両テーマ共通）。地が暗橙/暗赤なので白へ。
+                        color: _onDarkFill,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -864,9 +874,8 @@ class _GuildScreenState extends State<GuildScreen> {
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           // ライトでは琥珀地に白が 2.3:1。地を濃金へ落とす。
-                          color: pal.isLight
-                              ? const Color(0xFF8A5A00)
-                              : Colors.amber.shade800,
+                          // ダークでも白文字が沈むため、地は漆色に寄せる
+                          color: const Color(0xFF8A5A00),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: const Row(
@@ -978,7 +987,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             const Text("寄合所"),
             const SizedBox(width: 8),
-            Text("v1.5.87+183",
+            Text("v1.5.88+184",
                 style: TextStyle(
                     fontSize: 10,
                     // ライトの和紙地では #888 が 2.9:1。墨へ寄せる。

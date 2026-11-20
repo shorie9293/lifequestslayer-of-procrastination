@@ -284,4 +284,18 @@ void main() {
           reason: 'ダークにライト専用の墨色 ${argb.toRadixString(16)} が漏れている');
     }
   });
+
+  testWidgets('寄合所: ダーク実描画でも 3.0:1 未満が 0 件', (tester) async {
+    tester.view.physicalSize = const Size(1000, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await _pump(tester, GameThemes.forJob(Job.adventurer));
+    final scan = _scan(tester);
+    // ignore: avoid_print
+    print('GUILD DARK CONTRAST $scan');
+    expect(scan.measurable, greaterThanOrEqualTo(30));
+    expect(scan.violations, 0, reason: 'ダークで読めない文字: $scan');
+  });
 }
