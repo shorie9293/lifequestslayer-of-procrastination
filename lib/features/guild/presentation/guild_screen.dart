@@ -548,7 +548,8 @@ class _GuildScreenState extends State<GuildScreen> {
       details += " | 繰り返し: ${task.repeatInterval.name}";
     }
     if (task.subTasks.isNotEmpty) {
-      details += " | サブクエスト: ${task.subTasks.length}個";
+      final done = task.subTasks.where((s) => s.isCompleted).length;
+      details += " | サブクエスト: $done/${task.subTasks.length}";
     }
     if (task.deadline != null) {
       final d = task.deadline!;
@@ -977,7 +978,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             const Text("寄合所"),
             const SizedBox(width: 8),
-            Text("v1.5.86+182",
+            Text("v1.5.87+183",
                 style: TextStyle(
                     fontSize: 10,
                     // ライトの和紙地では #888 が 2.9:1。墨へ寄せる。

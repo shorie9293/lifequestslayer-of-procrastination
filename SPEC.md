@@ -109,6 +109,9 @@
   - 取り込んだクエストは `status = inGuild`（未受注）・`rank = B`・見積なし・札 `GoogleToDo`。
   - Google側で完了 → ローカルも完了。ローカルで完了 → Google も完了（**完了は単調**。巻き戻さない）。
   - Google側で削除 → ローカルの `cancelledAt`（取消。再配備抑制の既存機構）。ローカルで取消/札を外す → Google 側を削除。
+  - **サブタスク（親子）**: Google の子タスク（`parent` 付き）は単独クエストにせず、**親クエストの `subTasks`（チェックリスト）**として取り込む。
+    並びは `position` 昇順、`status=completed` はサブタスクの `isCompleted` へ写す。子の追加・完了変更は次回同期で反映する。
+    親が同期リストに居ない孤児の子は、取りこぼしを避けて単独クエストとして取り込む。ローカルの `subTasks` 変更は Google へは書き戻さない（子の所有者は Google）。
 - 競合: `updatedAt` と `updated` の last-write-wins。差が60秒以内は **Google を優先**（外部編集を尊重）。
   更新・削除は ETag（`If-Match`）付きで行い、412 は再取得のうえ1回だけ再適用する。
 - 認証: アプリは Edge Function に Supabase JWT を渡す。Google の認可は PKCE（`/start` → `/callback`）で行い、

@@ -10,6 +10,9 @@ export const GOOGLE_TODO_TAG = 'GoogleToDo';
 export const TIE_WINDOW_MS = 60 * 1000;
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000;
 
+/** Google のサブタスクを表す最小情報（ローカルの subTasks と同じ形） */
+export type GoogleSubTask = { title: string; isCompleted: boolean };
+
 export type LocalTask = {
   id: string;
   title: string;
@@ -20,6 +23,7 @@ export type LocalTask = {
   cancelledAt: string | null;
   tags: string[];
   repeatInterval: string;
+  subTasks?: GoogleSubTask[];
 };
 
 export type GoogleTask = {
@@ -31,6 +35,10 @@ export type GoogleTask = {
   deleted?: boolean;
   hidden?: boolean;
   etag?: string | null;
+  /** 親タスクの Google タスクID（サブタスクのときだけ入る） */
+  parent?: string | null;
+  /** 並び順（Google が発行する辞書順ソート可能な文字列） */
+  position?: string | null;
 };
 
 export type Link = {
@@ -70,6 +78,8 @@ export type SyncOp =
     deadline: string | null;
     completed: boolean;
     etag: string | null;
+    /** 子タスクをチェックリストとして持ち込む（空なら省略） */
+    subTasks?: GoogleSubTask[];
   }
   | {
     type: 'update_local';
@@ -79,6 +89,8 @@ export type SyncOp =
     deadline: string | null;
     completed: boolean;
     etag: string | null;
+    /** Google 由来のチェックリスト（サブタスクが1件以上あるときだけ入る） */
+    subTasks?: GoogleSubTask[];
   }
   | {
     type: 'cancel_local';
@@ -110,6 +122,31 @@ function toMs(iso: string | null | undefined): number | null {
   if (!iso) return null;
   const t = new Date(iso).getTime();
   return Number.isNaN(t) ? null : t;
+}
+
+/** 指定タスクの子タスクを並び順で取り出す（削除・非表示は除く） */
+export function googleSubtasksOf(
+  googleTasks: GoogleTask[],
+  parentGoogleId: string,
+): GoogleSubTask[] {
+  return googleTasks
+    .filter((g) => g.parent === parentGoogleId && !g.deleted && !g.hidden)
+    .sort((a, b) => (a.position ?? '').localeCompare(b.position ?? ''))
+    .map((g) => ({
+      title: (g.title ?? '').trim() || '（無題のタスク）',
+      isCompleted: g.status === 'completed',
+    }));
+}
+
+/** チェックリストが同じ内容か（毎回の push を避けるための比較） */
+export function sameSubTasks(
+  local: GoogleSubTask[] | undefined,
+  remote: GoogleSubTask[],
+): boolean {
+  const a = local ?? [];
+  const b = remote ?? [];
+  if (a.length !== b.length) return false;
+  return a.every((s, i) => s.title === b[i].title && s.isCompleted === b[i].isCompleted);
 }
 
 /** ローカルが同期対象（札あり・繰り返しなし）か */
@@ -162,6 +199,9 @@ export function planSync(
     // 繰り返しクエストは初版では同期しない
     if (local.repeatInterval !== 'none') continue;
 
+    // Google 側の子タスク（＝ローカルのチェックリスト）
+    const childSubs = googleSubtasksOf(googleTasks, google.id);
+
     const googleCompleted = google.status === 'completed';
     const localDueDate = local.deadline
       ? (deadlineToGoogleDue(local.deadline) ?? '').slice(0, 10) || null
@@ -185,6 +225,19 @@ export function planSync(
     }
 
     if (titleMatches && dueMatches && local.isCompleted === googleCompleted) {
+      // タイトル・期限・完了が同じでも、子タスクの構成が違えば持ち込む
+      if (!sameSubTasks(local.subTasks, childSubs)) {
+        ops.push({
+          type: 'update_local',
+          localId: local.id,
+          googleTaskId: google.id,
+          title: local.title,
+          deadline: local.deadline,
+          completed: local.isCompleted,
+          etag: google.etag ?? link.etag ?? null,
+          ...(childSubs.length ? { subTasks: childSubs } : {}),
+        });
+      }
       continue; // 無変更
     }
 
@@ -220,6 +273,7 @@ export function planSync(
         deadline: googleDueToDeadline(google.due),
         completed: googleCompleted,
         etag: google.etag ?? link.etag ?? null,
+        ...(childSubs.length ? { subTasks: childSubs } : {}),
       });
     }
   }
@@ -243,6 +297,10 @@ export function planSync(
   for (const google of googleTasks) {
     if (linkedGoogle.has(google.id)) continue;
     if (google.deleted || google.hidden) continue;
+    // 子タスクは親クエストのチェックリストとして持ち込むため、単独クエストにしない。
+    // ただし親が一覧に居ない（孤児）場合は取りこぼしを避けて単独クエストにする。
+    if (google.parent && googleById.has(google.parent)) continue;
+    const childSubs = googleSubtasksOf(googleTasks, google.id);
     ops.push({
       type: 'create_local',
       googleTaskId: google.id,
@@ -250,6 +308,7 @@ export function planSync(
       deadline: googleDueToDeadline(google.due),
       completed: google.status === 'completed',
       etag: google.etag ?? null,
+      ...(childSubs.length ? { subTasks: childSubs } : {}),
     });
   }
 

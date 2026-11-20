@@ -313,6 +313,13 @@ function toLocalTask(row: LocalRow): LocalTask {
     cancelledAt: (d.cancelledAt as string | null) ?? null,
     tags: Array.isArray(d.tags) ? (d.tags as string[]) : [],
     repeatInterval: String(d.repeatInterval ?? 'none'),
+    subTasks: Array.isArray(d.subTasks)
+      ? (d.subTasks as { title?: unknown; isCompleted?: unknown }[])
+        .map((st) => ({
+          title: String(st.title ?? ''),
+          isCompleted: st.isCompleted === true,
+        }))
+      : [],
   };
 }
 
@@ -327,7 +334,7 @@ function newLocalData(op: Extract<SyncOp, { type: 'create_local' }>) {
     repeatInterval: 'none',
     repeatWeekdays: [],
     lastCompletedAt: null,
-    subTasks: [],
+    subTasks: op.subTasks ?? [],
     targetTimeMinutes: null,
     activeAt: null,
     deadline: op.deadline,
@@ -460,7 +467,13 @@ async function handleSync(req: Request, userId: string, dryRun: boolean) {
         pulled++;
       } else if (op.type === 'update_local') {
         const row = (tasksRes.data as LocalRow[]).find((r) => r.id === op.localId);
-        const data = { ...(row?.data ?? {}), title: op.title, deadline: op.deadline, isCompleted: op.completed };
+        const data = {
+          ...(row?.data ?? {}),
+          title: op.title,
+          deadline: op.deadline,
+          isCompleted: op.completed,
+          ...(op.subTasks ? { subTasks: op.subTasks } : {}),
+        };
         const { error } = await db.from('rpg_tasks').update({ data, updated_at: nowIso })
           .eq('id', op.localId).eq('user_id', userId);
         if (error) throw new Error(error.message);

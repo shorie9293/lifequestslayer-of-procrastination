@@ -174,3 +174,78 @@ Deno.test('競合: Google の方が新しい → ローカルを更新（期限�
 Deno.test('完了済みクエストは新規作成しない（履歴を持ち込まない）', () => {
   assertEquals(planSync([local({ isCompleted: true })], [], []), []);
 });
+
+// ───────────────────────── サブタスク（Google の親子関係）
+
+Deno.test('子タスクは独立クエストにならず、親のサブタスクとして取り込まれる', () => {
+  const parent = google({ id: 'G1', title: '旅行の準備' });
+  const child1 = google({ id: 'G2', title: '航空券', parent: 'G1', position: '00000000000000000001' });
+  const child2 = google({
+    id: 'G3',
+    title: 'ホテル',
+    parent: 'G1',
+    status: 'completed',
+    position: '00000000000000000002',
+  });
+
+  const ops = planSync([], [child1, child2, parent], []);
+  const creates = ops.filter((o) => o.type === 'create_local');
+
+  // 親だけがクエストになる（子はクエストにしない）
+  assertEquals(creates.length, 1);
+  const c = creates[0] as Extract<typeof creates[number], { type: 'create_local' }>;
+  assertEquals(c.googleTaskId, 'G1');
+  assertEquals(c.subTasks, [
+    { title: '航空券', isCompleted: false },
+    { title: 'ホテル', isCompleted: true },
+  ]);
+});
+
+Deno.test('親が一覧に無い孤児の子は、独立クエストとして取り込む（取りこぼし防止）', () => {
+  const orphan = google({ id: 'G9', title: '親なし子', parent: 'GONE' });
+  const ops = planSync([], [orphan], []);
+  const creates = ops.filter((o) => o.type === 'create_local');
+  assertEquals(creates.length, 1);
+  assertEquals((creates[0] as Extract<typeof creates[number], { type: 'create_local' }>).googleTaskId, 'G9');
+});
+
+Deno.test('紐付け済みの親にサブタスクが増えたら update_local で同期する', () => {
+  const parent = google({ id: 'G1', title: 'レポート提出' });
+  const child = google({ id: 'G2', title: '序章', parent: 'G1', position: '00000000000000000001' });
+  const localParent = local({ subTasks: [] });
+
+  const ops = planSync([localParent], [parent, child], [link()]);
+  const updates = ops.filter((o) => o.type === 'update_local');
+  assertEquals(updates.length, 1);
+  assertEquals((updates[0] as Extract<typeof updates[number], { type: 'update_local' }>).subTasks, [
+    { title: '序章', isCompleted: false },
+  ]);
+});
+
+Deno.test('サブタスクが同じなら無変更として何も出さない（毎回pushしない）', () => {
+  const parent = google({ id: 'G1', title: 'レポート提出' });
+  const child = google({ id: 'G2', title: '序章', parent: 'G1', position: '00000000000000000001' });
+  const localParent = local({ subTasks: [{ title: '序章', isCompleted: false }] });
+
+  const ops = planSync([localParent], [parent, child], [link()]);
+  assertEquals(ops, []);
+});
+
+Deno.test('サブタスクの完了状態が変われば update_local が出る', () => {
+  const parent = google({ id: 'G1', title: 'レポート提出' });
+  const child = google({
+    id: 'G2',
+    title: '序章',
+    parent: 'G1',
+    status: 'completed',
+    position: '00000000000000000001',
+  });
+  const localParent = local({ subTasks: [{ title: '序章', isCompleted: false }] });
+
+  const ops = planSync([localParent], [parent, child], [link()]);
+  const updates = ops.filter((o) => o.type === 'update_local');
+  assertEquals(updates.length, 1);
+  assertEquals((updates[0] as Extract<typeof updates[number], { type: 'update_local' }>).subTasks, [
+    { title: '序章', isCompleted: true },
+  ]);
+});
