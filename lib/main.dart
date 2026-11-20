@@ -12,6 +12,7 @@ import 'package:rpg_todo/features/shared/domain/reduce_motion_setting.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/google_todo/data/google_todo_auto_sync.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
 import 'package:rpg_todo/core/di/injection.dart';
@@ -339,6 +340,9 @@ class _RPGTodoAppState extends State<RPGTodoApp> {
 
     // アプリ起動前にタップされた通知の遷移先を1度だけ取り出して遷移する。
     notificationTapRouter.consumePendingRoute();
+
+    // Google ToDo との双方向同期を静かに1回走らせる（未連携なら何もしない）。
+    unawaited(GoogleTodoAutoSync().runOnce());
   }
 
   @override

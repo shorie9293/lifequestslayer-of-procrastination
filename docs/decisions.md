@@ -48,3 +48,8 @@
 - 判断: OS の共有シートで .ics を渡す方式。カレンダーへの直接書き込みはしない。
 - 理由: 権限も OAuth も要らず、どのカレンダーアプリにも渡せる。プラットフォーム非依存。
 - 根拠: `lib/features/calendar_export/`
+
+## 2026-11-20 Google ToDo 同期はサーバー主導（Edge Function）＋札で対象を選ぶ
+- 判断: 同期の実行主体を Edge Function に置き、refresh token はサーバー側だけに保存する。対象は「札 `GoogleToDo` を持つクエスト」に限定する。
+- 理由: access token は1時間で失効し、アプリを閉じている間の外部編集を取りこぼす。client secret をアプリに置かない。全クエストを自動ミラーすると Google 側が肥大し、利用者の意思と無関係にタスクが増える。
+- 根拠: `supabase/functions/google-todo/`、`lib/features/google_todo/`、仕様は SPEC.md §11

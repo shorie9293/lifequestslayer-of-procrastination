@@ -175,6 +175,8 @@ void main() {
           settingsVM: vms.settings);
       await _expandCard(tester, task.id);
 
+      await tester.ensureVisible(find.byKey(AppKeys.questSnoozeButton(task.id)));
+      await tester.pump();
       await tester.tap(find.byKey(AppKeys.questSnoozeButton(task.id)));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
@@ -205,6 +207,8 @@ void main() {
           settingsVM: vms.settings);
       await _expandCard(tester, task.id);
 
+      await tester.ensureVisible(find.byKey(AppKeys.questSnoozeButton(task.id)));
+      await tester.pump();
       await tester.tap(find.byKey(AppKeys.questSnoozeButton(task.id)));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
@@ -286,6 +290,8 @@ void main() {
           playerVM: vms.player,
           settingsVM: vms.settings);
 
+      await tester.ensureVisible(find.byKey(AppKeys.questSnoozeButton(task.id)));
+      await tester.pump();
       await tester.tap(find.byKey(AppKeys.questSnoozeButton(task.id)));
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
@@ -384,7 +390,11 @@ void main() {
 
 /// 寄合所のカードを展開して actions（実行導線）を可視化する。
 Future<void> _expandCard(WidgetTester tester, String taskId) async {
-  await tester.tap(find.byKey(Key('card_task_$taskId')));
+  final card = find.byKey(Key('card_task_$taskId'));
+  // 寄合所はグルーピング見出しのぶん下にずれるため、必ず見える位置へ送る
+  await tester.ensureVisible(card);
+  await tester.pump();
+  await tester.tap(card);
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 400));
 }

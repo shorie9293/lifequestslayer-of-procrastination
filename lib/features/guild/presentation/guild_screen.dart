@@ -14,6 +14,10 @@ import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/core/testing/tutorial_keys.dart';
 import 'package:rpg_todo/features/shared/widgets/player_status_header.dart';
 import 'widgets/task_card.dart';
+import 'widgets/quest_group_header.dart';
+import 'quest_group_keys.dart';
+import 'package:rpg_todo/features/guild/domain/quest_grouping.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/core/widgets/empty_state.dart';
@@ -239,6 +243,83 @@ class _JobSkillChip extends StatelessWidget {
 
 class _GuildScreenState extends State<GuildScreen> {
   bool _isDialogOpen = false;
+
+  /// 寄合所の束ね方（期日 / ランク）。既定は期日。
+  QuestGroupMode _groupMode = QuestGroupMode.deadline;
+
+  /// たたんだパネル（band.name）。
+  final Set<String> _collapsedGroups = <String>{};
+
+  static const String _groupModePrefKey = 'guild.groupMode';
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreGroupMode();
+  }
+
+  /// 前回の束ね方を復元する（壊れていれば既定の期日）。
+  Future<void> _restoreGroupMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_groupModePrefKey);
+      final mode = QuestGroupMode.values
+          .where((m) => m.name == raw)
+          .cast<QuestGroupMode?>()
+          .firstWhere((m) => m != null, orElse: () => null);
+      if (mode != null && mounted) {
+        setState(() => _groupMode = mode);
+      }
+    } catch (_) {
+      // 復元失敗は既定のまま（起動を妨げない）
+    }
+  }
+
+  Future<void> _setGroupMode(QuestGroupMode mode) async {
+    if (mode == _groupMode) return;
+    setState(() => _groupMode = mode);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_groupModePrefKey, mode.name);
+    } catch (_) {
+      // 保存失敗は無視（次回は既定に戻るだけ）
+    }
+  }
+
+  void _toggleGroup(QuestGroup group) {
+    setState(() {
+      if (!_collapsedGroups.remove(group.id)) {
+        _collapsedGroups.add(group.id);
+      }
+    });
+  }
+
+  /// 期日 / ランク の切替バー。
+  Widget _buildGroupModeBar(BuildContext context, bool isLight) {
+    return Container(
+      key: QuestGroupKeys.modeToggle,
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+      child: Row(
+        children: [
+          for (final mode in QuestGroupMode.values)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                key: QuestGroupKeys.modeButton(mode),
+                label: Text(mode.label),
+                selected: _groupMode == mode,
+                onSelected: (_) => _setGroupMode(mode),
+                visualDensity: VisualDensity.compact,
+                labelStyle: TextStyle(
+                  fontSize: 12,
+                  fontWeight: _groupMode == mode ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
 
   /// 削除Undo用バッファ（呼出側 State に保持・一度だけ復元）。
   final _undoBuffer = UndoBuffer<Task>();
@@ -467,7 +548,8 @@ class _GuildScreenState extends State<GuildScreen> {
       details += " | 繰り返し: ${task.repeatInterval.name}";
     }
     if (task.subTasks.isNotEmpty) {
-      details += " | サブクエスト: ${task.subTasks.length}個";
+      final done = task.subTasks.where((s) => s.isCompleted).length;
+      details += " | サブクエスト: $done/${task.subTasks.length}";
     }
     if (task.deadline != null) {
       final d = task.deadline!;
@@ -506,6 +588,135 @@ class _GuildScreenState extends State<GuildScreen> {
       return 'あと$minutes分';
     }
     return 'まもなく締切';
+  }
+
+  /// 寄合所のクエスト1件分の行。パネルの中身として使う。
+  Widget _buildQuestCard(
+    BuildContext context,
+    Task task,
+    int index,
+    GamePalette palette,
+  ) {
+    final taskVM = context.read<TaskViewModel>();
+    final player = context.read<PlayerViewModel>().player;
+    const snooze = QuestSnoozeService();
+    final canSnooze = player.hasSkill(JobSkill.monkSnooze);
+
+    final isUrgent = task.deadline != null &&
+        task.deadline!.isBefore(DateTime.now().add(const Duration(days: 1)));
+    return SemanticHelper.listItem(
+      testId: SemanticHelper.createTestId(
+          SemanticTypes.listItem, 'task_$index'),
+      index: index,
+      child: TaskCard(
+        task: task,
+        isUrgent: isUrgent,
+        color: _getRankColor(task.rank),
+        titleOverride: _getCompactTitle(task),
+        hideCountdown: true,
+        isSnoozed: snooze.isSnoozed(player.snoozedTasks, task.id),
+        snoozeLabel:
+            snooze.badgeLabel(player.snoozedTasks, task.id),
+        expandedDetails: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '[${task.rank.name}] ${task.title}',
+              style: const TextStyle(
+                // 札の地はライトでも漆色（暗）＝白が正しい。
+                color: _onDarkFill,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 6),
+            if (task.targetTimeMinutes != null)
+              Text(
+                '⏱ 見積もり: ${task.targetTimeMinutes}分',
+                style: const TextStyle(
+                  color: _onDarkFillMuted,
+                  fontSize: 13,
+                ),
+              ),
+            Text(
+              _getTaskDetails(task),
+              style: const TextStyle(
+                color: _onDarkFillMuted,
+                fontSize: 13,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          SemanticHelper.interactive(
+            testId: SemanticHelper.createTestId(SemanticTypes.button, 'edit_task'),
+            label: 'クエストを編集',
+            child: TextButton(
+              onPressed: () =>
+                  _showEditTaskDialog(context, task),
+              child: Text("編集",
+                  style: TextStyle(
+                      color: palette.isLight
+                          ? _onDarkFillMuted
+                          : Colors.grey)),
+            ),
+          ),
+          SemanticHelper.interactive(
+            testId: SemanticHelper.createTestId(SemanticTypes.button, 'delete_task'),
+            label: 'クエストを破棄',
+            child: TextButton(
+              key: AppKeys.taskCardDelete,
+              onPressed: () => _deleteTask(context, task.id),
+              child: Text("破棄",
+                  style: TextStyle(
+                      color: palette.isLight
+                          ? _onDarkFillMuted
+                          : Colors.grey)),
+            ),
+          ),
+          const SizedBox(width: 8),
+          SemanticHelper.interactive(
+            testId: SemanticHelper.createTestId(SemanticTypes.button, 'accept_task'),
+            label: 'クエストを受注して出発',
+            child: ElevatedButton(
+              key: index == 0
+                  ? TutorialKeys.acceptTaskKey
+                  : null,
+              onPressed: () =>
+                  _acceptTask(context, task.id),
+              style: ElevatedButton.styleFrom(
+                // ライトでは琥珀地に白が 2.2:1。地を濃金へ落とす。
+                backgroundColor: palette.isLight
+                    ? const Color(0xFF8A5A00)
+                    : Colors.amber[700],
+                foregroundColor: _onDarkFill,
+                textStyle: const TextStyle(
+                    fontWeight: FontWeight.bold),
+              ),
+              child: const Text("出発する"),
+            ),
+          ),
+          if (canSnooze)
+            SemanticHelper.interactive(
+              testId: SemanticHelper.createTestId(
+                  SemanticTypes.button, 'snooze_quest'),
+              label: '微睡みの加護',
+              child: TextButton(
+                key: AppKeys.questSnoozeButton(task.id),
+                onPressed: () =>
+                    _showSnoozeDialog(context, taskVM, task),
+                child: const Text(
+                  '微睡みの加護',
+                  style: TextStyle(
+                      color: Colors.indigoAccent,
+                      fontSize: 12),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   /// 緊急セクションウィジェット（24時間以内の期限クエスト）
@@ -758,9 +969,6 @@ class _GuildScreenState extends State<GuildScreen> {
         t.deadline!.isBefore(now.add(const Duration(days: 1)))).toList();
 
     // 微睡みの加護（Monk Lv5）: バッジ表示と実行導線の可否
-    const snooze = QuestSnoozeService();
-    final player = playerVM.player;
-    final canSnooze = player.hasSkill(JobSkill.monkSnooze);
     final palette = GamePalette.of(context);
 
     return Scaffold(
@@ -770,7 +978,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             const Text("寄合所"),
             const SizedBox(width: 8),
-            Text("v1.5.86+182",
+            Text("v1.5.87+183",
                 style: TextStyle(
                     fontSize: 10,
                     // ライトの和紙地では #888 が 2.9:1。墨へ寄せる。
@@ -1183,6 +1391,8 @@ class _GuildScreenState extends State<GuildScreen> {
                   ],
                 ),
               ),
+            // 期日 / ランク の束ね方
+            _buildGroupModeBar(context, palette.isLight),
             // Kozuchi試練セクション
             Expanded(
               child: Builder(
@@ -1192,9 +1402,18 @@ class _GuildScreenState extends State<GuildScreen> {
                   final remainingTasks = hasUrgent
                       ? tasks.where((t) => !urgentTasks.contains(t)).toList()
                       : tasks;
+                  final groups = groupQuests(remainingTasks, mode: _groupMode);
+                  // 見出しと行を平坦化（閉じたパネルは見出し1行だけ残す）
+                  final flat = <Object>[];
+                  for (final group in groups) {
+                    flat.add(group);
+                    if (!_collapsedGroups.contains(group.id)) {
+                      flat.addAll(group.tasks);
+                    }
+                  }
                   final itemCount = (hasKozuchiQuest ? 1 : 0) +
                       (hasUrgent ? 1 : 0) +
-                      (remainingTasks.isEmpty ? 1 : remainingTasks.length);
+                      (remainingTasks.isEmpty ? 1 : flat.length);
 
                   return ListView.builder(
                     key: tasks.isEmpty && !hasKozuchiQuest && !hasUrgent
@@ -1245,123 +1464,19 @@ class _GuildScreenState extends State<GuildScreen> {
                         );
                       }
 
-                      // Task card (非緊急: コンパクト表示)
-                      final task = remainingTasks[adjustedIndex];
-                      final isUrgent = task.deadline != null &&
-                          task.deadline!.isBefore(DateTime.now().add(const Duration(days: 1)));
-                      return SemanticHelper.listItem(
-                        testId: SemanticHelper.createTestId(
-                            SemanticTypes.listItem, 'task_$adjustedIndex'),
-                        index: adjustedIndex,
-                        child: TaskCard(
-                          task: task,
-                          isUrgent: isUrgent,
-                          color: _getRankColor(task.rank),
-                          titleOverride: _getCompactTitle(task),
-                          hideCountdown: true,
-                          isSnoozed: snooze.isSnoozed(player.snoozedTasks, task.id),
-                          snoozeLabel:
-                              snooze.badgeLabel(player.snoozedTasks, task.id),
-                          expandedDetails: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '[${task.rank.name}] ${task.title}',
-                                style: const TextStyle(
-                                  // 札の地はライトでも漆色（暗）＝白が正しい。
-                                  color: _onDarkFill,
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 6),
-                              if (task.targetTimeMinutes != null)
-                                Text(
-                                  '⏱ 見積もり: ${task.targetTimeMinutes}分',
-                                  style: const TextStyle(
-                                    color: _onDarkFillMuted,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                              Text(
-                                _getTaskDetails(task),
-                                style: const TextStyle(
-                                  color: _onDarkFillMuted,
-                                  fontSize: 13,
-                                ),
-                              ),
-                            ],
-                          ),
-                          actions: [
-                            SemanticHelper.interactive(
-                              testId: SemanticHelper.createTestId(SemanticTypes.button, 'edit_task'),
-                              label: 'クエストを編集',
-                              child: TextButton(
-                                onPressed: () =>
-                                    _showEditTaskDialog(context, task),
-                                child: Text("編集",
-                                    style: TextStyle(
-                                        color: palette.isLight
-                                            ? _onDarkFillMuted
-                                            : Colors.grey)),
-                              ),
-                            ),
-                            SemanticHelper.interactive(
-                              testId: SemanticHelper.createTestId(SemanticTypes.button, 'delete_task'),
-                              label: 'クエストを破棄',
-                              child: TextButton(
-                                key: AppKeys.taskCardDelete,
-                                onPressed: () => _deleteTask(context, task.id),
-                                child: Text("破棄",
-                                    style: TextStyle(
-                                        color: palette.isLight
-                                            ? _onDarkFillMuted
-                                            : Colors.grey)),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            SemanticHelper.interactive(
-                              testId: SemanticHelper.createTestId(SemanticTypes.button, 'accept_task'),
-                              label: 'クエストを受注して出発',
-                              child: ElevatedButton(
-                                key: adjustedIndex == 0
-                                    ? TutorialKeys.acceptTaskKey
-                                    : null,
-                                onPressed: () =>
-                                    _acceptTask(context, task.id),
-                                style: ElevatedButton.styleFrom(
-                                  // ライトでは琥珀地に白が 2.2:1。地を濃金へ落とす。
-                                  backgroundColor: palette.isLight
-                                      ? const Color(0xFF8A5A00)
-                                      : Colors.amber[700],
-                                  foregroundColor: _onDarkFill,
-                                  textStyle: const TextStyle(
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                child: const Text("出発する"),
-                              ),
-                            ),
-                            if (canSnooze)
-                              SemanticHelper.interactive(
-                                testId: SemanticHelper.createTestId(
-                                    SemanticTypes.button, 'snooze_quest'),
-                                label: '微睡みの加護',
-                                child: TextButton(
-                                  key: AppKeys.questSnoozeButton(task.id),
-                                  onPressed: () =>
-                                      _showSnoozeDialog(context, taskVM, task),
-                                  child: const Text(
-                                    '微睡みの加護',
-                                    style: TextStyle(
-                                        color: Colors.indigoAccent,
-                                        fontSize: 12),
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      );
+                      final entry = flat[adjustedIndex];
+                      if (entry is QuestGroup) {
+                        return QuestGroupHeader(
+                          key: QuestGroupKeys.header(entry.band),
+                          group: entry,
+                          expanded: !_collapsedGroups.contains(entry.id),
+                          onToggle: () => _toggleGroup(entry),
+                          isLight: palette.isLight,
+                        );
+                      }
+                      return _buildQuestCard(
+                          context, entry as Task, adjustedIndex, palette);
+
                     },
                   );
                 },

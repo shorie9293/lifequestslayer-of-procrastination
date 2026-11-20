@@ -12,6 +12,9 @@ import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
+import 'package:rpg_todo/features/guild/domain/quest_grouping.dart';
+import 'package:rpg_todo/features/guild/presentation/widgets/task_card.dart';
+import 'package:rpg_todo/features/guild/presentation/quest_group_keys.dart';
 import 'package:rpg_todo/features/kozuchi/domain/kozuchi_quest_model.dart';
 import 'package:rpg_todo/features/kozuchi/data/kozuchi_quest_service.dart';
 
@@ -530,6 +533,64 @@ void main() {
 
       expect(find.byKey(AppKeys.guildBulkScreen), findsOneWidget);
       expect(find.text('クエスト一括操作'), findsOneWidget);
+    });
+  });
+
+  group('寄合所のグルーピング（案C）', () {
+    testWidgets('期日パネルの見出しが出て、たたむと中身が消える', (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+        vms.task.addTask('期限なしの討伐', rank: QuestRank.B);
+        vms.task.addTask('期限なしの討伐2', rank: QuestRank.S);
+      });
+
+      await pumpGuildScreen(tester,
+          taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // 期限なしパネルが出る（見出し・内訳・件数）
+      expect(find.byKey(QuestGroupKeys.header(QuestGroupBand.none)), findsOneWidget);
+      expect(find.text('期限なし'), findsOneWidget);
+      expect(find.text('S1・B1 ・ —'), findsOneWidget);
+      expect(find.byType(TaskCard), findsNWidgets(2));
+
+      // たたむ → 中のカードが消え、見出しだけ残る
+      await tester.tap(find.byKey(QuestGroupKeys.header(QuestGroupBand.none)));
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(TaskCard), findsNothing);
+      expect(find.byKey(QuestGroupKeys.header(QuestGroupBand.none)), findsOneWidget);
+
+      // もう一度ひらく → 戻る
+      await tester.tap(find.byKey(QuestGroupKeys.header(QuestGroupBand.none)));
+      await tester.pump();
+      await tester.pump();
+      expect(find.byType(TaskCard), findsNWidgets(2));
+    });
+
+    testWidgets('ランクに切り替えるとランクパネルになる', (tester) async {
+      late ({TaskViewModel task, PlayerViewModel player, SettingsViewModel settings}) vms;
+
+      await tester.runAsync(() async {
+        vms = createViewModels();
+        vms.task.addTask('S級の討伐', rank: QuestRank.S);
+        vms.task.addTask('B級の討伐', rank: QuestRank.B);
+      });
+
+      await pumpGuildScreen(tester,
+          taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
+
+      // 既定は期日 → 期限なしパネル1つ
+      expect(find.byKey(QuestGroupKeys.header(QuestGroupBand.none)), findsOneWidget);
+
+      await tester.tap(find.byKey(QuestGroupKeys.modeButton(QuestGroupMode.rank)));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byKey(QuestGroupKeys.header(QuestGroupBand.rankS)), findsOneWidget);
+      expect(find.byKey(QuestGroupKeys.header(QuestGroupBand.rankB)), findsOneWidget);
+      expect(find.text('S 級'), findsOneWidget);
     });
   });
 }

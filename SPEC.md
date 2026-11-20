@@ -97,3 +97,25 @@
   - 札: `カレンダー`（出所の識別。重複判定には使わない）
 - 取り込んだクエストは `inGuild`（寄合所に未受注で並ぶ）。勝手に受注しない。
 - 非対応基盤（Web/Desktop/iOS）では `UnsupportedCalendarGateway` が「使えない」を返し、画面は理由を表示する。
+
+## 11. Google ToDo 連携（`features/google_todo` + Edge Function `google-todo`）
+- 目的: Google ToDo（Google Tasks）とクエストを**双方向**に同期する。
+- 経路: `GoogleTodoLinkScreen` → `GoogleTodoGateway`（抽象） → Edge Function `google-todo` → Google Tasks API。
+  同期の実行主体は**サーバー**。refresh token は Edge Function 側にのみ保存し、アプリには置かない。
+- 同期対象: **札 `GoogleToDo` を持つクエスト** ⇔ 選択した1つのGoogleタスクリスト（既定 `@default`）。
+  繰り返しクエスト（`repeatInterval != none`）は初版では対象外。
+- 変換規則:
+  - 期限 `deadline` ⇔ Google `due`。JST の日付で対応し、`due` は `YYYY-MM-DDT00:00:00.000Z`、`deadline` は当日 23:59（+09:00）。
+  - 取り込んだクエストは `status = inGuild`（未受注）・`rank = B`・見積なし・札 `GoogleToDo`。
+  - Google側で完了 → ローカルも完了。ローカルで完了 → Google も完了（**完了は単調**。巻き戻さない）。
+  - Google側で削除 → ローカルの `cancelledAt`（取消。再配備抑制の既存機構）。ローカルで取消/札を外す → Google 側を削除。
+  - **サブタスク（親子）**: Google の子タスク（`parent` 付き）は単独クエストにせず、**親クエストの `subTasks`（チェックリスト）**として取り込む。
+    並びは `position` 昇順、`status=completed` はサブタスクの `isCompleted` へ写す。子の追加・完了変更は次回同期で反映する。
+    親が同期リストに居ない孤児の子は、取りこぼしを避けて単独クエストとして取り込む。ローカルの `subTasks` 変更は Google へは書き戻さない（子の所有者は Google）。
+- 競合: `updatedAt` と `updated` の last-write-wins。差が60秒以内は **Google を優先**（外部編集を尊重）。
+  更新・削除は ETag（`If-Match`）付きで行い、412 は再取得のうえ1回だけ再適用する。
+- 認証: アプリは Edge Function に Supabase JWT を渡す。Google の認可は PKCE（`/start` → `/callback`）で行い、
+  `refresh_token` は `google_todo_accounts`（service_role 専用・クライアント向けポリシー無し）に保存する。
+- 前提: Google Cloud 側で Tasks API 有効化・OAuth 同意画面に tasks スコープ追加・Web クライアントの
+  ID/シークレットを Supabase secrets（`GOOGLE_TASKS_CLIENT_ID` / `GOOGLE_TASKS_CLIENT_SECRET`）へ登録する。
+- 非対応環境: 未ログイン時は 401 文言（「ログインが必要です」）を表示し、画面は落ちない。
