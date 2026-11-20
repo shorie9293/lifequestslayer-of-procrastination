@@ -123,6 +123,7 @@ class _TsundokuIdentityLinkDialogState
                   : () async {
                       setState(() => _isSaving = true);
                       await _repository.setTsundokuLinkedUserId(null);
+                      if (!mounted) return;
                       setState(() => _isSaving = false);
                       if (mounted) {
                         Navigator.of(context).pop(null);
@@ -157,6 +158,7 @@ class _TsundokuIdentityLinkDialogState
                     }
                     setState(() => _isSaving = true);
                     await _repository.setTsundokuLinkedUserId(userId);
+                    if (!mounted) return;
                     setState(() => _isSaving = false);
                     if (mounted) {
                       Navigator.of(context).pop(userId);

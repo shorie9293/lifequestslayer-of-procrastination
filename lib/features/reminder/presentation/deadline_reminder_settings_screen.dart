@@ -86,6 +86,7 @@ class _DeadlineReminderSettingsScreenState
       initialTime: TimeOfDay(hour: _settings.hour, minute: _settings.minute),
     );
     if (picked == null) return;
+    if (!mounted) return;
     setState(() {
       _settings = _settings.copyWith(hour: picked.hour, minute: picked.minute);
     });

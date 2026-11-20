@@ -86,6 +86,7 @@ class _BattlePhaseWidgetState extends State<BattlePhaseWidget>
     await _vfx.playAttackSequence(
       onSlashPeak: () {
         // Show hit impact at enemy position
+        if (!mounted) return;
         setState(() {});
       },
     );

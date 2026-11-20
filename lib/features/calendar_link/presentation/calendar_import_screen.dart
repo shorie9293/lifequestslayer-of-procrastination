@@ -79,9 +79,11 @@ class _CalendarImportScreenState extends State<CalendarImportScreen> {
       final status = await _gateway.ensureAccess();
       switch (status) {
         case CalendarAccessStatus.denied:
+          if (!mounted) return;
           setState(() => _phase = CalendarImportPhase.denied);
           return;
         case CalendarAccessStatus.unsupported:
+          if (!mounted) return;
           setState(() => _phase = CalendarImportPhase.unsupported);
           return;
         case CalendarAccessStatus.granted:

@@ -52,6 +52,7 @@ class _NotificationSettingsDialogState
         await _settingsRepository.getEveningNotificationEnabled();
     final noonEnabled =
         await _settingsRepository.getNoonNotificationEnabled();
+    if (!mounted) return;
     setState(() {
       _enabled = enabled;
       _morningEnabled = morningEnabled;
@@ -82,6 +83,7 @@ class _NotificationSettingsDialogState
     );
     final picked = await showTimePicker(context: context, initialTime: initial);
     if (picked == null) return;
+    if (!mounted) return;
     setState(() {
       if (isMorning) {
         _morningHour = picked.hour;

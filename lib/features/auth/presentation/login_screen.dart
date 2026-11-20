@@ -34,11 +34,13 @@ class _LoginScreenState extends State<LoginScreen> {
       await getIt<AuthService>().signInWithGoogle();
       // 成功時は AuthGate が onAuthStateChange で MainScreen へ遷移。
     } on GoogleSignInException catch (e) {
+      if (!mounted) return;
       // キャンセルは静かに無視。それ以外はメッセージ表示。
       if (e.code != GoogleSignInExceptionCode.canceled) {
         setState(() => _error = 'Googleログインに失敗しました: ${e.code.name}');
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() => _error = 'ログインに失敗しました。通信環境をご確認ください。');
     } finally {
       if (mounted) setState(() => _loading = false);
