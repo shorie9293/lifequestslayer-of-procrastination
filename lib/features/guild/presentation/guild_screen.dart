@@ -510,6 +510,8 @@ class _GuildScreenState extends State<GuildScreen> {
     final at = _undoIndex < 0 ? restored.length : _undoIndex;
     restored.insert(at.clamp(0, restored.length), task);
     taskVM.setTasks(restored);
+    // 墓標を解除する（残すと次回同期でまた消える）
+    taskVM.clearTombstone(task.id);
   }
 
   void _deleteTask(BuildContext context, String taskId) {
@@ -987,7 +989,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             const Text("寄合所"),
             const SizedBox(width: 8),
-            Text("v1.5.90+186",
+            Text("v1.5.91+187",
                 style: TextStyle(
                     fontSize: 10,
                     // ライトの和紙地では #888 が 2.9:1。墨へ寄せる。
