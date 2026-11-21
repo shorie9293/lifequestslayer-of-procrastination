@@ -58,6 +58,10 @@ class _GuildBulkActionScreenState extends State<GuildBulkActionScreen> {
     final restored = tasks.where((t) => !existing.contains(t.id)).toList();
     if (restored.isEmpty) return; // 二重追加防止
     taskVM.setTasks([...taskVM.tasks, ...restored]);
+    // 墓標を解除する（残すと次回同期でまた消える）
+    for (final t in restored) {
+      taskVM.clearTombstone(t.id);
+    }
   }
 
   void _apply(GuildBulkAction action, List<Task> tasks) {

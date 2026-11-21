@@ -5,6 +5,7 @@ import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_task_deletion_repository.dart';
+import 'package:rpg_todo/domain/repositories/i_task_tombstone_repository.dart';
 import 'package:rpg_todo/core/logging/app_logger.dart';
 import 'package:rpg_todo/features/shared/domain/task_completion_service.dart';
 import 'package:rpg_todo/features/battle/domain/quiz_service.dart';
@@ -38,6 +39,9 @@ class TaskViewModel extends ChangeNotifier {
   CrossAppSettingsRepository? _crossAppSettingsRepository;
   CrossAppReward? _pendingCrossAppReward;
   PracticeLogRepository? _practiceLogRepository;
+
+  /// 削除の墓標リポジトリ（Undo 復元で墓標を解除するために使う）。
+  ITaskTombstoneRepository? tombstoneRepository;
 
   TaskViewModel(this._taskRepository, this._playerVM);
 
@@ -260,6 +264,18 @@ class TaskViewModel extends ChangeNotifier {
     notifyListeners();
     _autoSave();
     return null;
+  }
+
+  /// 削除の墓標を解除する（Undo でクエストを戻したとき）。
+  ///
+  /// 墓標が残っていると、次回同期でその id は「削除済み」として
+  /// クラウドから掃除され、復元したはずのクエストがまた消える。
+  void clearTombstone(String id) {
+    final repo = tombstoneRepository;
+    if (repo == null) return;
+    repo.clear(<String>[id]).catchError((Object e) {
+      appLog.warn('[TaskVM] clearTombstone failed: $e');
+    });
   }
 
   void deleteTask(String id) {

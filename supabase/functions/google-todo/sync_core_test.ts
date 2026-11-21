@@ -111,6 +111,27 @@ Deno.test('取消済みクエストは Google 側を削除する', () => {
   }]);
 });
 
+Deno.test('ローカルで行ごと削除されたら Google 側も削除し、孤児リンクを残さない', () => {
+  // ローカルから id が消えている＝アプリで削除（墓標入り）。
+  const ops = planSync([], [google()], [link()]);
+  assertEquals(ops, [{
+    type: 'delete_google',
+    localId: 'L1',
+    googleTaskId: 'G1',
+    etag: '"etag-1"',
+  }]);
+});
+
+Deno.test('ローカルも Google も消えている孤児リンクはリンク掃除だけ出す', () => {
+  const ops = planSync([], [], [link()]);
+  assertEquals(ops, [{
+    type: 'delete_google',
+    localId: 'L1',
+    googleTaskId: 'G1',
+    etag: null,
+  }]);
+});
+
 Deno.test('札を外したら Google 側を削除する', () => {
   const ops = planSync([local({ tags: [] })], [google()], [link()]);
   assertEquals(ops[0].type, 'delete_google');

@@ -12,6 +12,7 @@ import 'package:rpg_todo/features/shared/domain/reduce_motion_setting.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/domain/repositories/i_task_tombstone_repository.dart';
 import 'package:rpg_todo/features/google_todo/data/google_todo_auto_sync.dart';
 import 'package:rpg_todo/features/town/viewmodels/shop_view_model.dart';
 import 'package:rpg_todo/features/town/viewmodels/town_view_model.dart';
@@ -153,6 +154,11 @@ Future<void> bootstrap() async {
   }
 
   configureDependencies();
+
+  // 削除の墓標リポジトリを TaskViewModel へ配線（Undo 復元時の解除に使う）
+  if (getIt.isRegistered<ITaskTombstoneRepository>()) {
+    getIt<TaskViewModel>().tombstoneRepository = getIt<ITaskTombstoneRepository>();
+  }
 
   // IAPサービスの初期化（DI経由）
   try {

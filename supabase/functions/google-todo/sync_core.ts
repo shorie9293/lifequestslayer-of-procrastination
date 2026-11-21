@@ -174,8 +174,27 @@ export function planSync(
     const local = localById.get(link.localId);
     const google = googleById.get(link.googleTaskId);
 
-    // ローカルが消えている → 以後の対応を捨てる（link 削除は呼び出し側）
-    if (!local) continue;
+    // ローカルが消えている → ユーザーがローカルで削除した（＝墓標がある）。
+    // 対応を捨てるだけだと Google 側にタスクが残り続けるので、Google 側も消して
+    // リンクを掃除する（残すと「消したのに Google に残る」孤児リンクになる）。
+    if (!local) {
+      if (google && !google.deleted) {
+        ops.push({
+          type: 'delete_google',
+          localId: link.localId,
+          googleTaskId: link.googleTaskId,
+          etag: google.etag ?? link.etag ?? null,
+        });
+      } else {
+        ops.push({
+          type: 'delete_google',
+          localId: link.localId,
+          googleTaskId: link.googleTaskId,
+          etag: link.etag ?? null,
+        });
+      }
+      continue;
+    }
 
     // Google 側が削除/非表示 → ローカルは取消（再配備抑制の既存機構を使う）
     if (!google || google.deleted) {

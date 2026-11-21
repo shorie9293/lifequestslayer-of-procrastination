@@ -29,6 +29,8 @@ import 'package:rpg_todo/features/shared/data/player_repository.dart';
 import 'package:rpg_todo/features/guild/data/supabase_task_repository.dart';
 import 'package:rpg_todo/features/shared/data/supabase_player_repository.dart';
 import 'package:rpg_todo/features/guild/data/hybrid_task_repository.dart';
+import 'package:rpg_todo/features/guild/data/supabase_task_tombstone_repository.dart';
+import 'package:rpg_todo/domain/repositories/i_task_tombstone_repository.dart';
 import 'package:rpg_todo/features/shared/data/hybrid_player_repository.dart';
 import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
 import 'package:rpg_todo/core/infrastructure/auth_service.dart';
@@ -51,10 +53,14 @@ void configureDependencies() {
     try {
       getIt.allowReassignment = true;
 
+      getIt.registerLazySingleton<ITaskTombstoneRepository>(
+          () => SupabaseTaskTombstoneRepository(Supabase.instance.client));
+
       getIt.registerLazySingleton<ITaskRepository>(() => HybridTaskRepository(
             hiveRepo: TaskRepository(),
             supabaseRepo:
                 SupabaseTaskRepository(Supabase.instance.client),
+            tombstones: getIt<ITaskTombstoneRepository>(),
           ));
 
       getIt.registerLazySingleton<IPlayerRepository>(() => HybridPlayerRepository(

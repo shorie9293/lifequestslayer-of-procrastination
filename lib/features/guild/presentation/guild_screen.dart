@@ -510,6 +510,8 @@ class _GuildScreenState extends State<GuildScreen> {
     final at = _undoIndex < 0 ? restored.length : _undoIndex;
     restored.insert(at.clamp(0, restored.length), task);
     taskVM.setTasks(restored);
+    // 墓標を解除する（残すと次回同期でまた消える）
+    taskVM.clearTombstone(task.id);
   }
 
   void _deleteTask(BuildContext context, String taskId) {
