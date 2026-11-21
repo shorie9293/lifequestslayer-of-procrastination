@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/domain/models/practice_log.dart';
 import 'package:rpg_todo/domain/services/practice_heatmap_service.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 /// 勤行の時間帯×曜日ヒートマップ（Provider非依存・試練可能）。
 ///
@@ -15,6 +16,7 @@ class PracticeHeatmapView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final cells = PracticeHeatmapService.build(logs);
     final maxCount = PracticeHeatmapService.maxCount(cells);
     final total = PracticeHeatmapService.totalPractice(cells);
@@ -33,12 +35,13 @@ class PracticeHeatmapView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             if (busiest == null)
-              const Padding(
-                key: Key('practice_heatmap_empty'),
-                padding: EdgeInsets.symmetric(vertical: 8),
+              Padding(
+                key: const Key('practice_heatmap_empty'),
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Text(
                   'まだ記録がありません',
-                  style: TextStyle(fontSize: 13, color: Colors.grey),
+                  style: TextStyle(
+                      fontSize: 13, color: palette.readable(Colors.grey)),
                 ),
               )
             else ...[
@@ -52,7 +55,7 @@ class PracticeHeatmapView extends StatelessWidget {
                 style: const TextStyle(fontSize: 13),
               ),
               const SizedBox(height: 12),
-              _grid(cells, maxCount),
+              _grid(context, cells, maxCount),
               const SizedBox(height: 12),
               const _Legend(),
             ],
@@ -62,7 +65,10 @@ class PracticeHeatmapView extends StatelessWidget {
     );
   }
 
-  Widget _grid(List<PracticeHeatmapCell> cells, int maxCount) {
+  Widget _grid(BuildContext context, List<PracticeHeatmapCell> cells, int maxCount) {
+    final palette = GamePalette.of(context);
+    final labelStyle = TextStyle(
+        fontSize: 10, color: palette.readable(Colors.grey));
     // 列ヘッダ（時間帯）
     final header = <Widget>[
       const SizedBox(width: 20),
@@ -71,7 +77,7 @@ class PracticeHeatmapView extends StatelessWidget {
           child: Center(
             child: Text(
               PracticeHeatmapService.bandLabel(b),
-              style: const TextStyle(fontSize: 10, color: Colors.grey),
+              style: labelStyle,
             ),
           ),
         ),
@@ -87,11 +93,11 @@ class PracticeHeatmapView extends StatelessWidget {
               width: 20,
               child: Text(
                 PracticeHeatmapService.weekdayLabel(w),
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
+                style: labelStyle,
               ),
             ),
             for (var b = 0; b < PracticeHeatmapService.bands; b++)
-              Expanded(child: _cell(cells, w, b, maxCount)),
+              Expanded(child: _cell(context, cells, w, b, maxCount)),
           ],
         ),
     ];
@@ -99,7 +105,8 @@ class PracticeHeatmapView extends StatelessWidget {
     return Column(children: rows);
   }
 
-  Widget _cell(List<PracticeHeatmapCell> cells, int weekday, int band, int maxCount) {
+  Widget _cell(BuildContext context, List<PracticeHeatmapCell> cells,
+      int weekday, int band, int maxCount) {
     final cell = PracticeHeatmapService.cellOf(
       cells,
       weekday: weekday,
@@ -114,6 +121,20 @@ class PracticeHeatmapView extends StatelessWidget {
     final alpha = count <= 0
         ? 0.0
         : (0.2 + intensity * 0.8).clamp(0.2, 1.0);
+    // セル地（半透明の緑）を和紙白に合成した実効地で文字色を解決する。
+    // ダークは従来の白／黒87 をそのまま保つ（見た目不変）。
+    final palette = GamePalette.of(context);
+    final preferred = intensity > 0.5 ? Colors.white : Colors.black87;
+    final cellTextColor = palette.isLight
+        ? palette.readableOn(
+            preferred,
+            Color.alphaBlend(
+              const Color(0xFF4CAF50).withValues(alpha: alpha),
+              const Color(0xFFF4F1E6),
+            ),
+            minRatio: 4.5,
+          )
+        : preferred;
     return Padding(
       key: Key('practice_heatmap_cell_${weekday}_$band'),
       padding: const EdgeInsets.all(1.5),
@@ -130,9 +151,7 @@ class PracticeHeatmapView extends StatelessWidget {
                     '$count',
                     style: TextStyle(
                       fontSize: 9,
-                      color: intensity > 0.5
-                          ? Colors.white
-                          : Colors.black87,
+                      color: cellTextColor,
                     ),
                   ),
                 )
@@ -149,6 +168,9 @@ class _Legend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
+    final labelStyle =
+        TextStyle(fontSize: 10, color: palette.readable(Colors.grey));
     Widget swatch(double alpha) => Container(
           width: 16,
           height: 10,
@@ -159,14 +181,14 @@ class _Legend extends StatelessWidget {
         );
     return Row(
       children: [
-        const Text('少', style: TextStyle(fontSize: 10, color: Colors.grey)),
+        Text('少', style: labelStyle),
         const SizedBox(width: 4),
         for (final a in [0.2, 0.4, 0.6, 0.8, 1.0]) ...[
           swatch(a),
           const SizedBox(width: 3),
         ],
         const SizedBox(width: 1),
-        const Text('多', style: TextStyle(fontSize: 10, color: Colors.grey)),
+        Text('多', style: labelStyle),
       ],
     );
   }

@@ -6,6 +6,7 @@ import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/overview/domain/overview_service.dart';
 import 'package:rpg_todo/features/overview/presentation/widgets/growth_trajectory_chart.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -67,6 +68,7 @@ class OverviewScreen extends StatelessWidget {
   }
 
   Widget _buildLockedView(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('俯瞰の魔眼')),
       body: Center(
@@ -82,14 +84,15 @@ class OverviewScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[400],
+                  color: palette.readable(Colors.grey[400]!),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 '「俯瞰の魔眼」スキルを習得すると、\nカレンダーとカンバンの俯瞰ビューが利用できます。',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                style: TextStyle(
+                    color: palette.readable(Colors.grey[600]!), fontSize: 14),
               ),
             ],
           ),
@@ -107,6 +110,7 @@ class _CalendarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final grouped = service.groupTasksByDeadline(tasks);
     if (grouped.isEmpty) {
       return const Center(child: Text('クエストがありません'));
@@ -125,7 +129,7 @@ class _CalendarView extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                  color: Colors.amber[300],
+                  color: palette.readable(Colors.amber[300]!),
                 ),
               ),
             ),
@@ -133,7 +137,7 @@ class _CalendarView extends StatelessWidget {
               child: ListTile(
                 dense: true,
                 title: Text(task.title, style: const TextStyle(fontSize: 14)),
-                trailing: _rankBadge(task.rank),
+                trailing: _rankBadge(context, task.rank),
               ),
             )),
             const SizedBox(height: 8),
@@ -143,7 +147,8 @@ class _CalendarView extends StatelessWidget {
     );
   }
 
-  Widget _rankBadge(QuestRank rank) {
+  Widget _rankBadge(BuildContext context, QuestRank rank) {
+    final palette = GamePalette.of(context);
     final (label, color) = switch (rank) {
       QuestRank.S => ('S', Colors.red[400]!),
       QuestRank.A => ('A', Colors.orange[400]!),
@@ -156,8 +161,10 @@ class _CalendarView extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(label,
-          style: const TextStyle(
-              color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+          style: TextStyle(
+              color: palette.readableOn(Colors.white, color),
+              fontSize: 12,
+              fontWeight: FontWeight.bold)),
     );
   }
 }
@@ -170,6 +177,8 @@ class _KanbanView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
+    final isLight = palette.isLight;
     final grouped = service.groupTasksByStatus(tasks);
     if (grouped.isEmpty) {
       return const Center(child: Text('クエストがありません'));
@@ -195,7 +204,8 @@ class _KanbanView extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.grey[850],
+                    color:
+                        isLight ? palette.cardBackgroundStrong : Colors.grey[850],
                     borderRadius:
                         const BorderRadius.vertical(top: Radius.circular(8)),
                   ),
@@ -209,7 +219,7 @@ class _KanbanView extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: Colors.grey[700],
+                          color: isLight ? palette.track : Colors.grey[700],
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text('${entry.value.length}',
@@ -221,7 +231,7 @@ class _KanbanView extends StatelessWidget {
                 Container(
                   constraints: const BoxConstraints(maxHeight: 400),
                   decoration: BoxDecoration(
-                    color: Colors.grey[900],
+                    color: isLight ? palette.cardBackground : Colors.grey[900],
                     borderRadius:
                         const BorderRadius.vertical(bottom: Radius.circular(8)),
                   ),
@@ -243,9 +253,10 @@ class _KanbanView extends StatelessWidget {
                             fontSize: 11,
                             fontWeight: FontWeight.bold,
                             color: switch (task.rank) {
-                              QuestRank.S => Colors.red[300],
-                              QuestRank.A => Colors.orange[300],
-                              QuestRank.B => Colors.blue[300],
+                              QuestRank.S => palette.readable(Colors.red[300]!),
+                              QuestRank.A =>
+                                palette.readable(Colors.orange[300]!),
+                              QuestRank.B => palette.readable(Colors.blue[300]!),
                             },
                           ),
                         ),

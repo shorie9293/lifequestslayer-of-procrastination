@@ -136,6 +136,9 @@ class GameThemes {
     final scheme = theme.colorScheme;
     final filled = _readablePair(scheme.primary);
     return theme.copyWith(
+      // タブの選択ラベルは既定で primary（ライトの金 #D4A038 は和紙白地 1.95:1）
+      // を採るため、可読な濃金へ固定する。ダークは ButtonStyle 同様に不変。
+      tabBarTheme: const TabBarThemeData(labelColor: _buttonAccent),
       // 昇格ボタンは和紙色の面＋濃墨文字（既定の金文字 2.13:1 を回避）。
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ButtonStyle(

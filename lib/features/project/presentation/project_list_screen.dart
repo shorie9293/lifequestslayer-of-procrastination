@@ -13,6 +13,7 @@ import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/project/domain/project_service.dart';
 import 'package:rpg_todo/features/project/presentation/project_keys.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// プロジェクト一覧画面。
@@ -116,6 +117,7 @@ class _ProjectListScreenState extends State<ProjectListScreen> {
 class _LockedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(32),
@@ -129,14 +131,15 @@ class _LockedView extends StatelessWidget {
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey[400],
+                color: palette.readable(Colors.grey[400]!),
               ),
             ),
             const SizedBox(height: 8),
             Text(
               '「計画の陣」スキルを習得すると、\nクエストを計画としてまとめられるようになります。',
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              style: TextStyle(
+                  color: palette.readable(Colors.grey[600]!), fontSize: 14),
             ),
           ],
         ),
@@ -158,6 +161,7 @@ class _ProjectRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     return Card(
       key: ProjectAppKeys.projectRow(index),
       child: ListTile(
@@ -168,7 +172,7 @@ class _ProjectRow extends StatelessWidget {
             Row(
               children: [
                 Icon(Icons.emoji_events,
-                    size: 14, color: Colors.amber[400]),
+                    size: 14, color: palette.readable(Colors.amber[400]!)),
                 const SizedBox(width: 4),
                 Text('ボーナス +${progress.bonusExp} EXP',
                     style: const TextStyle(fontSize: 12)),
@@ -181,7 +185,8 @@ class _ProjectRow extends StatelessWidget {
             LinearProgressIndicator(value: progress.ratio),
             const SizedBox(height: 4),
             Text(progress.progressLabel,
-                style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                style: TextStyle(
+                    fontSize: 11, color: palette.readable(Colors.grey))),
           ],
         ),
         trailing: Row(
