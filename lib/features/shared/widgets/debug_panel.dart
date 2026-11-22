@@ -6,6 +6,7 @@ import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 import 'package:rpg_todo/features/shared/domain/backup_service.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 /// デバッグパネル — ModalBottomSheetで値を自由操作
@@ -82,6 +83,7 @@ class _DebugPanelState extends State<DebugPanel> {
     final exp = p.currentExp;
     final nextExp = _expForLevel(lvl + 1);
     final theme = Theme.of(context);
+    final palette = GamePalette.of(context);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -93,11 +95,16 @@ class _DebugPanelState extends State<DebugPanel> {
             // ヘッダー
             Row(
               children: [
-                const Icon(Icons.construction, color: Colors.amber, size: 20),
+                Icon(Icons.construction,
+                    color: palette.readable(Colors.amber, minRatio: 3.0), size: 20),
                 const SizedBox(width: 8),
-                Text('デバッグパネル', style: theme.textTheme.titleMedium?.copyWith(color: Colors.amber)),
+                Text('デバッグパネル',
+                    style: theme.textTheme.titleMedium
+                        ?.copyWith(color: palette.readable(Colors.amber, minRatio: 3.0))),
                 const Spacer(),
-                Text('Lv.$lvl  EXP:$exp/$nextExp', style: theme.textTheme.bodySmall?.copyWith(color: Colors.grey)),
+                Text('Lv.$lvl  EXP:$exp/$nextExp',
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: palette.readable(Colors.grey, minRatio: 3.0))),
               ],
             ),
             const Divider(height: 24),
@@ -219,7 +226,7 @@ class _DebugPanelState extends State<DebugPanel> {
             Center(
               child: Text(
                 '現在: ${(widget.settingsVM.fontSizeScale * 100).round()}%',
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                style: TextStyle(color: palette.onSurfaceFaint, fontSize: 12),
               ),
             ),
             const SizedBox(height: 16),
@@ -227,14 +234,14 @@ class _DebugPanelState extends State<DebugPanel> {
             // バックアップ（道標§五#17: データエクスポート＆バックアップ可視化）
             _sectionLabel('💾 バックアップ'),
             const SizedBox(height: 8),
-            _buildBackupSection(theme),
+            _buildBackupSection(theme, palette),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildBackupSection(ThemeData theme) {
+  Widget _buildBackupSection(ThemeData theme, GamePalette palette) {
     final lastBackup = widget.settingsVM.lastBackupTime;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -243,7 +250,7 @@ class _DebugPanelState extends State<DebugPanel> {
           lastBackup == null
               ? '最終バックアップ: 未実行'
               : '最終バックアップ: ${lastBackup.toLocal()}',
-          style: theme.textTheme.bodySmall?.copyWith(color: Colors.white70),
+          style: theme.textTheme.bodySmall?.copyWith(color: palette.onSurfaceMuted),
         ),
         const SizedBox(height: 8),
         Row(
