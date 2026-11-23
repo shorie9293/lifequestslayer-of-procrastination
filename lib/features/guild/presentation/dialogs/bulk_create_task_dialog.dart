@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
@@ -87,6 +88,10 @@ class _BulkCreateTaskDialogState extends State<BulkCreateTaskDialog> {
               maxLines: 8,
               minLines: 4,
               autofocus: true,
+              // 1行1クエストの複数行本文。行数の多い貼り付けでも本文全損しない上限。
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(2000),
+              ],
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<QuestRank>(

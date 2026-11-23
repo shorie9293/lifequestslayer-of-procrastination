@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
@@ -352,12 +353,18 @@ class _RecordDialogState extends State<_RecordDialog> {
               controller: _estimatedController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: '見積もり（分）'),
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(6),
+              ],
             ),
             TextField(
               key: EstimateAccuracyKeys.actualField,
               controller: _actualController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: '実績（分）'),
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(6),
+              ],
             ),
             if (_error != null)
               Padding(

@@ -4,6 +4,7 @@
 // 純粋ロジックは ProjectService、状態変更は PlayerViewModel。
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/text/japanese_number.dart';
 import 'package:rpg_todo/core/widgets/empty_state.dart';
@@ -384,6 +385,9 @@ class _ProjectEditDialogState extends State<_ProjectEditDialog> {
               key: ProjectAppKeys.projectBonusField,
               controller: _bonusController,
               keyboardType: TextInputType.number,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(7),
+              ],
               decoration: InputDecoration(
                 labelText: '全達成ボーナス EXP',
                 errorText: _bonusError,

@@ -4,6 +4,7 @@
 // 検証・加工はドメイン層 QuestTagService に委譲する。
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/guild/domain/quest_tag_service.dart';
@@ -137,6 +138,12 @@ class _QuestTagEditDialogState extends State<QuestTagEditDialog> {
                 isDense: true,
               ),
               onSubmitted: (_) => _addTag(),
+              // 意味上の上限（12文字）は QuestTagService.validateNew が
+              // 「12文字まで」エラーで担保する（既存試練の挙動を壊さない）。
+              // ここでは異常入力で無制限に伸びないための安全上限のみ置く。
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(64),
+              ],
             ),
             if (_error != null)
               Padding(

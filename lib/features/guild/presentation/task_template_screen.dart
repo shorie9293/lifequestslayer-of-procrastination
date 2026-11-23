@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:rpg_todo/core/text/japanese_number.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/core/widgets/empty_state.dart';
@@ -206,6 +207,9 @@ class _TaskTemplateScreenState extends State<TaskTemplateScreen> {
                   padding: const EdgeInsets.all(8),
                   child: TextField(
                     key: AppKeys.taskTemplateSearchField,
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(100),
+                    ],
                     decoration: InputDecoration(
                       hintText: '定型名・クエスト名で検索',
                       prefixIcon: const Icon(Icons.search),
@@ -446,11 +450,17 @@ class _TemplateEditDialogState extends State<_TemplateEditDialog> {
               controller: _nameController,
               key: AppKeys.taskTemplateNameField,
               decoration: const InputDecoration(labelText: '定型名'),
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(50),
+              ],
             ),
             TextField(
               controller: _titleController,
               key: AppKeys.taskTemplateTitleField,
               decoration: const InputDecoration(labelText: 'クエスト名'),
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(100),
+              ],
             ),
             DropdownButtonFormField<QuestRank>(
               initialValue: _rank,
@@ -498,6 +508,9 @@ class _TemplateEditDialogState extends State<_TemplateEditDialog> {
                     key: AppKeys.taskTemplateSubTaskField,
                     decoration: const InputDecoration(hintText: 'サブタスク名'),
                     onSubmitted: (_) => _addSubTask(),
+                    inputFormatters: [
+                      LengthLimitingTextInputFormatter(100),
+                    ],
                   ),
                 ),
                 IconButton(
@@ -524,6 +537,9 @@ class _TemplateEditDialogState extends State<_TemplateEditDialog> {
               decoration:
                   const InputDecoration(labelText: '見積もり時間（分・任意）'),
               keyboardType: TextInputType.number,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(6),
+              ],
             ),
             if (_errorText != null)
               Padding(

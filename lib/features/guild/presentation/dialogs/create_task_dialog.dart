@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/input/unsaved_changes.dart';
 import 'package:rpg_todo/core/text/japanese_number.dart';
@@ -272,6 +273,10 @@ class CreateTaskDialogState extends State<CreateTaskDialog> {
                   decoration: const InputDecoration(labelText: "タイトル（長文入力可）"),
                   autofocus: true,
                   maxLines: null,
+                  // 長文可だが無限長は保存・表示を壊すため上限を設ける。
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(200),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 TextField(
@@ -282,6 +287,9 @@ class CreateTaskDialogState extends State<CreateTaskDialog> {
                     hintText: "例: 30",
                   ),
                   keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    LengthLimitingTextInputFormatter(6),
+                  ],
                 ),
                 if (_estimatedMinutes != null)
                   Padding(
@@ -440,6 +448,9 @@ class CreateTaskDialogState extends State<CreateTaskDialog> {
                           decoration: const InputDecoration(
                               labelText: "サブクエスト追加 (Wizard Ability)"),
                           onSubmitted: (_) => _addSubTask(),
+                          inputFormatters: [
+                            LengthLimitingTextInputFormatter(100),
+                          ],
                         ),
                       ),
                       IconButton(

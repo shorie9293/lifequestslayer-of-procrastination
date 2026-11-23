@@ -9,6 +9,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:rpg_todo/core/search/search_history.dart';
@@ -217,6 +218,9 @@ class _GuildQuestSearchScreenState extends State<GuildQuestSearchScreen> {
             child: TextField(
               key: AppKeys.guildQuestSearchField,
               controller: _textController,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(100),
+              ],
               decoration: InputDecoration(
                 hintText: 'クエスト名・タグで検索',
                 prefixIcon: const Icon(Icons.search),

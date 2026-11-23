@@ -184,4 +184,34 @@ void main() {
     expect(find.byKey(AppKeys.taskTemplateRow('t1')), findsOneWidget);
     expect((await repo.load()).length, 1);
   });
+
+  testWidgets('定型名: 上限超過の長文は入力段階で切り捨てられ保存が壊れない', (tester) async {
+    final repo = InMemoryTaskTemplateRepository();
+    await _pumpWith(tester, repository: repo);
+
+    await tester.tap(find.byKey(AppKeys.taskTemplateCreateButton));
+    await tester.pumpAndSettle();
+
+    // 上限(50)を大きく超える長文を流し込む
+    final longName = 'あ' * 200;
+    await tester.enterText(find.byKey(AppKeys.taskTemplateNameField), longName);
+    await tester.enterText(
+        find.byKey(AppKeys.taskTemplateTitleField), '長文テスト');
+    await tester.pump();
+
+    // 保存経路へ渡る前に、入力欄が上限で切れている（例外・全損なし）
+    final nameField = tester.widget<TextField>(
+        find.byKey(AppKeys.taskTemplateNameField));
+    expect(nameField.controller!.text.length, 50);
+    expect(nameField.controller!.text, longName.substring(0, 50));
+
+    await tester.tap(find.byKey(AppKeys.taskTemplateSaveButton));
+    await tester.pumpAndSettle();
+
+    // 既存の保存経路（repository）から再読込しても先頭50文字が保持される
+    final loaded = await repo.load();
+    expect(loaded.length, 1, reason: '切り捨てで保存自体が失敗してはならない');
+    expect(loaded.first.name.length, 50);
+    expect(loaded.first.name, longName.substring(0, 50));
+  });
 }

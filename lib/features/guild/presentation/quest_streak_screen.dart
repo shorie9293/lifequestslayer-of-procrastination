@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 
 import 'package:rpg_todo/core/widgets/empty_state.dart';
@@ -96,6 +97,9 @@ class _QuestStreakScreenState extends State<QuestStreakScreen> {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: TextField(
               key: QuestStreakKeys.searchField,
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(100),
+              ],
               decoration: const InputDecoration(
                 hintText: 'クエストを検索',
                 prefixIcon: Icon(Icons.search),

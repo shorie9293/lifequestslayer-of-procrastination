@@ -118,7 +118,10 @@ class _DebugPanelState extends State<DebugPanel> {
                   child: TextField(
                     controller: _coinCtrl,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(9),
+                    ],
                     decoration: InputDecoration(
                       isDense: true,
                       labelText: 'コイン 現在: ${p.coins}',
@@ -144,7 +147,10 @@ class _DebugPanelState extends State<DebugPanel> {
                   child: TextField(
                     controller: _gemCtrl,
                     keyboardType: TextInputType.number,
-                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(9),
+                    ],
                     decoration: InputDecoration(
                       isDense: true,
                       labelText: '現在: ${p.gems}',

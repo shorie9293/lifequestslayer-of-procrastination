@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
@@ -454,6 +455,10 @@ class _MainScreenState extends State<MainScreen> {
             TextField(
               controller: controller,
               obscureText: true,
+              // 照合値（'11111111'）を壊さない十分な上限のみ。入力段階で切る。
+              inputFormatters: [
+                LengthLimitingTextInputFormatter(64),
+              ],
               decoration: const InputDecoration(
                 hintText: '合言葉',
                 border: OutlineInputBorder(),
