@@ -7,6 +7,7 @@ import 'package:rpg_todo/core/infrastructure/shared_file_store.dart';
 import 'package:rpg_todo/core/logging/app_logger.dart';
 import 'package:rpg_todo/features/crossapp/domain/cross_app_reward_event.dart';
 import 'package:rpg_todo/features/crossapp/domain/cross_app_title_definition.dart';
+import 'package:rpg_todo/features/crossapp/domain/cross_app_world.dart';
 import 'package:rpg_todo/features/crossapp/domain/jsonl_retention.dart';
 
 /// 連携（クロスアプリ受け渡し）の状態。連携画面はこの1つを表示すればよい。
@@ -189,7 +190,14 @@ class FileCrossAppRewardService implements ICrossAppRewardService {
 
     for (final path in existingPaths) {
       final lines = await File(path).readAsLines();
-      await _consumeLines(lines, linkedUserId, box, consumedIds, rewards);
+      await _consumeLines(
+        lines,
+        linkedUserId,
+        box,
+        consumedIds,
+        rewards,
+        sourceWorldId: CrossAppWorld.fromFileName(path)?.id,
+      );
       await _applyRetention(
         lines: lines,
         consumedIds: consumedIds,
@@ -227,6 +235,7 @@ class FileCrossAppRewardService implements ICrossAppRewardService {
         box,
         consumedIds,
         rewards,
+        sourceWorldId: CrossAppWorld.fromFileName(name)?.id,
       );
       await _applyRetention(
         lines: lines,
@@ -273,13 +282,17 @@ class FileCrossAppRewardService implements ICrossAppRewardService {
   }
 
   /// JSONL の行群を走査し、未処理イベントを報酬へ変換する。
+  ///
+  /// [sourceWorldId] は走査中ファイルの発生元現世。報酬へそのまま付与し、
+  /// 送客ダイアログが正しい宛先（`app://<world>`）を出せるようにする。
   Future<void> _consumeLines(
     List<String> lines,
     String linkedUserId,
     Box box,
     Set<String> consumedIds,
-    List<CrossAppReward> rewards,
-  ) async {
+    List<CrossAppReward> rewards, {
+    String? sourceWorldId,
+  }) async {
 
     for (final line in lines) {
       try {
@@ -296,7 +309,7 @@ class FileCrossAppRewardService implements ICrossAppRewardService {
         }
 
         // 報酬計算
-        final reward = _computeReward(event);
+        final reward = _computeReward(event, sourceWorldId: sourceWorldId);
 
         // 処理済みとして記録
         await box.put(event.eventId, true);
@@ -321,7 +334,10 @@ class FileCrossAppRewardService implements ICrossAppRewardService {
     return fallback;
   }
 
-  CrossAppReward _computeReward(CrossAppRewardEvent event) {
+  CrossAppReward _computeReward(
+    CrossAppRewardEvent event, {
+    String? sourceWorldId,
+  }) {
     final coins = kCrossAppCoinRewards[event.eventType] ?? 0;
     final exp = kCrossAppExpRewards[event.eventType] ?? 0;
 
@@ -354,7 +370,12 @@ class FileCrossAppRewardService implements ICrossAppRewardService {
         .map((t) => t.id)
         .toList();
 
-    return CrossAppReward(coins: coins, exp: exp, titles: titles);
+    return CrossAppReward(
+      coins: coins,
+      exp: exp,
+      titles: titles,
+      sourceWorldId: sourceWorldId,
+    );
   }
 
   /// Hive box から既処理の event_id セットを取得

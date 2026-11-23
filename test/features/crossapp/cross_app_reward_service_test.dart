@@ -458,4 +458,109 @@ void main() {
       }
     });
   });
+
+  group('FileCrossAppRewardService: 報酬の発生元現世（sourceWorldId）', () {
+    late Directory tempDir;
+
+    setUp(() {
+      tempDir = Directory.systemTemp.createTempSync('crossapp_world_test_');
+      Hive.init(tempDir.path);
+    });
+
+    tearDown(() async {
+      await Hive.close();
+      if (tempDir.existsSync()) {
+        tempDir.deleteSync(recursive: true);
+      }
+    });
+
+    String line(String id, String type, Map<String, dynamic> metadata) {
+      return json.encode({
+        'event_id': id,
+        'event_type': type,
+        'timestamp': '2026-06-07T10:30:00Z',
+        'user_id': 'test1234-5678-90ab-cdef-1234567890ab',
+        'metadata': metadata,
+      });
+    }
+
+    test('tsundoku ファイル由来の報酬に sourceWorldId=tsundoku が付く', () async {
+      final path = '${tempDir.path}/tsundoku_reward_events.jsonl';
+      await File(path).writeAsString('${line('evt-t1', 'book_completed', {
+            'count': 1,
+          })}\n');
+
+      final service = FileCrossAppRewardService(
+        filePath: path,
+        hiveBoxName: 'cross_app_world_tsundoku',
+      );
+      final rewards = await service.processPendingEvents(
+        linkedUserId: 'test1234',
+      );
+
+      expect(rewards.length, 1);
+      expect(rewards[0].sourceWorldId, 'tsundoku');
+    });
+
+    test('election ファイル由来の報酬に sourceWorldId=election が付く', () async {
+      // tsundoku 側は空（存在しない）、election のみ存在する状況を再現。
+      final tsundokuPath = '${tempDir.path}/tsundoku_reward_events.jsonl';
+      final electionPath = '${tempDir.path}/election_reward_events.jsonl';
+      await File(electionPath).writeAsString(
+        '${line('evt-e1', 'election_completed', {'wins': 1})}\n',
+      );
+
+      final service = FileCrossAppRewardService(
+        filePath: tsundokuPath,
+        additionalFilePaths: [electionPath],
+        hiveBoxName: 'cross_app_world_election',
+      );
+      final rewards = await service.processPendingEvents(
+        linkedUserId: 'test1234',
+      );
+
+      expect(rewards.length, 1);
+      expect(rewards[0].sourceWorldId, 'election');
+      expect(rewards[0].coins, 120);
+    });
+
+    test('book-review ファイル由来の報酬に sourceWorldId=book-review が付く',
+        () async {
+      final tsundokuPath = '${tempDir.path}/tsundoku_reward_events.jsonl';
+      final bookPath = '${tempDir.path}/book_review_reward_events.jsonl';
+      await File(bookPath).writeAsString(
+        '${line('evt-b1', 'book_completed', {'count': 1})}\n',
+      );
+
+      final service = FileCrossAppRewardService(
+        filePath: tsundokuPath,
+        additionalFilePaths: [bookPath],
+        hiveBoxName: 'cross_app_world_book',
+      );
+      final rewards = await service.processPendingEvents(
+        linkedUserId: 'test1234',
+      );
+
+      expect(rewards.length, 1);
+      expect(rewards[0].sourceWorldId, 'book-review');
+    });
+
+    test('未知のファイル名の報酬は sourceWorldId が null', () async {
+      final path = '${tempDir.path}/mystery_events.jsonl';
+      await File(path).writeAsString(
+        '${line('evt-m1', 'book_completed', {'count': 1})}\n',
+      );
+
+      final service = FileCrossAppRewardService(
+        filePath: path,
+        hiveBoxName: 'cross_app_world_unknown',
+      );
+      final rewards = await service.processPendingEvents(
+        linkedUserId: 'test1234',
+      );
+
+      expect(rewards.length, 1);
+      expect(rewards[0].sourceWorldId, isNull);
+    });
+  });
 }

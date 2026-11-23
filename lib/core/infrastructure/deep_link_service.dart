@@ -48,6 +48,20 @@ class DeepLinkService {
 
   /// [uri] がアプリ間送客用ディープリンクかどうかを判定する。
   static bool isCrossRewardLink(Uri uri) => parse(uri) != null;
+
+  /// 自分自身（rpg-task）を source に持つ送客URIか（＝自己送客）。
+  ///
+  /// rpg-task が自分宛に報酬を送る導線は存在しないため、受信しても無視する。
+  /// 純粋判定（I/O なし）。
+  static const Set<String> _selfSourceIds = <String>{'rpg-task', 'rpg'};
+
+  /// [source] が自分自身の現世IDか。
+  static bool isSelfSource(String source) =>
+      _selfSourceIds.contains(source.trim().toLowerCase());
+
+  /// [link] が自分自身からの cross-reward か（＝受信を無視すべき）。
+  static bool isSelfSourcedCrossReward(CrossRewardLink link) =>
+      isSelfSource(link.source);
 }
 
 /// アプリ間送客用ディープリンクの解析結果。

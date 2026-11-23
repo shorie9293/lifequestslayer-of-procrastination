@@ -213,12 +213,15 @@ class _MainScreenState extends State<MainScreen> {
     if (taskVM.pendingCrossAppReward != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final p = taskVM.pendingCrossAppReward!;
+        // 送客先の判定はクリア前の状態で確定させる（クリアで sourceWorldIds が消える）。
+        final sourceWorldIds = taskVM.sourceWorldIds;
         taskVM.clearPendingCrossAppReward();
         CrossAppRewardDialog.showIfHasRewards(
           context,
           totalCoins: p.coins,
           totalExp: p.exp,
           newTitles: p.titles,
+          sourceWorldIds: sourceWorldIds,
         );
       });
     }

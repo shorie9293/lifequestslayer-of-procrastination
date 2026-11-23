@@ -311,6 +311,40 @@ void main() {
 
       taskVm.clearPendingCrossAppReward();
       expect(taskVm.pendingCrossAppReward, isNull);
+      expect(taskVm.sourceWorldIds, isEmpty);
+    });
+
+    test('sourceWorldIds は複数現世を出現順ユニークで集約する', () async {
+      final settings = _MockCrossAppSettingsRepository('test1234');
+      final service = _MockCrossAppRewardService(const [
+        CrossAppReward(coins: 10, sourceWorldId: 'election'),
+        CrossAppReward(coins: 20, sourceWorldId: 'tsundoku'),
+        CrossAppReward(coins: 30, sourceWorldId: 'election'),
+        CrossAppReward(coins: 40, titles: ['称号X']), // 出所なし
+        CrossAppReward(coins: 50, sourceWorldId: 'book-review'),
+      ]);
+      taskVm.crossAppSettingsRepository = settings;
+      taskVm.crossAppRewardService = service;
+
+      await taskVm.processCrossAppRewards();
+
+      expect(taskVm.pendingCrossAppReward, isNotNull);
+      expect(taskVm.sourceWorldIds, ['election', 'tsundoku', 'book-review']);
+    });
+
+    test('出所を持たない報酬のみなら sourceWorldIds は空（後方互換経路）',
+        () async {
+      final settings = _MockCrossAppSettingsRepository('test1234');
+      final service = _MockCrossAppRewardService(const [
+        CrossAppReward(coins: 10, exp: 5, titles: ['称号A']),
+      ]);
+      taskVm.crossAppSettingsRepository = settings;
+      taskVm.crossAppRewardService = service;
+
+      await taskVm.processCrossAppRewards();
+
+      expect(taskVm.pendingCrossAppReward, isNotNull);
+      expect(taskVm.sourceWorldIds, isEmpty);
     });
   });
 }

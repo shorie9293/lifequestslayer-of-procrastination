@@ -95,6 +95,13 @@ class TaskViewModel extends ChangeNotifier {
   /// 処理済みで通知待ちのクロスアプリ報酬（UIがダイアログ表示後にクリア）
   CrossAppReward? get pendingCrossAppReward => _pendingCrossAppReward;
 
+  /// pending 報酬の発生元現世（出現順ユニーク・`CrossAppWorld.id`）。
+  ///
+  /// 送客ダイアログはこの順に「<表示名> を開く」ボタンを出す。空なら
+  /// 後方互換の `app://open`（tsundoku-quest 固定）導線になる。
+  List<String> _pendingCrossAppWorldIds = const [];
+  List<String> get sourceWorldIds => _pendingCrossAppWorldIds;
+
   /// 勤行の日別履歴ログの記録先（道標§五 #50。省略時は記録しない）
   PracticeLogRepository? get practiceLogRepository => _practiceLogRepository;
   set practiceLogRepository(PracticeLogRepository? repo) =>
@@ -103,6 +110,7 @@ class TaskViewModel extends ChangeNotifier {
   /// 通知済みとして pending 報酬をクリアする。
   void clearPendingCrossAppReward() {
     _pendingCrossAppReward = null;
+    _pendingCrossAppWorldIds = const [];
     notifyListeners();
   }
 
@@ -541,6 +549,14 @@ class TaskViewModel extends ChangeNotifier {
           exp: merged.exp,
           titles: newTitles,
         );
+        // 出所は元の報酬リストから出現順ユニークで拾う（合算で潰れないように）。
+        final worlds = <String>[];
+        for (final r in rewards) {
+          final worldId = r.sourceWorldId;
+          if (worldId == null || worldId.isEmpty) continue;
+          if (!worlds.contains(worldId)) worlds.add(worldId);
+        }
+        _pendingCrossAppWorldIds = List<String>.unmodifiable(worlds);
         notifyListeners();
       }
     } catch (e) {

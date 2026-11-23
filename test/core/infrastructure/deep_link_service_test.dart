@@ -186,4 +186,37 @@ void main() {
       );
     });
   });
+
+  group('DeepLinkService 自己送客ガード', () {
+    test('source=rpg-task は自己送客として true', () {
+      final link = DeepLinkService.parse(
+        Uri.parse('app://cross-reward?source=rpg-task&reward=quest_complete'),
+      );
+      expect(link, isNotNull);
+      expect(DeepLinkService.isSelfSourcedCrossReward(link!), isTrue);
+      expect(DeepLinkService.isSelfSource('rpg-task'), isTrue);
+    });
+
+    test('source=rpg（短縮ID）も自己送客として true', () {
+      expect(DeepLinkService.isSelfSource('rpg'), isTrue);
+    });
+
+    test('source=tsundoku は自己送客ではない（false）', () {
+      final link = DeepLinkService.parse(
+        Uri.parse('app://cross-reward?source=tsundoku&reward=book_completed'),
+      );
+      expect(link, isNotNull);
+      expect(DeepLinkService.isSelfSourcedCrossReward(link!), isFalse);
+      expect(DeepLinkService.isSelfSource('tsundoku'), isFalse);
+    });
+
+    test('source=election / book-review も自己送客ではない', () {
+      expect(DeepLinkService.isSelfSource('election'), isFalse);
+      expect(DeepLinkService.isSelfSource('book-review'), isFalse);
+    });
+
+    test('前後空白・大文字は正規化して判定する', () {
+      expect(DeepLinkService.isSelfSource(' RPG-TASK '), isTrue);
+    });
+  });
 }

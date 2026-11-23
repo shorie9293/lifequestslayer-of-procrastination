@@ -93,10 +93,17 @@ class CrossAppReward {
   final int exp;
   final List<String> titles;
 
+  /// この報酬を発生させた現世の識別子（`CrossAppWorld.id`）。
+  ///
+  /// 既存呼び出しを壊さないため additive・既定 null。サービスが報酬イベントを
+  /// 読み込む際に、走査中ファイル名から判定して付与する。
+  final String? sourceWorldId;
+
   const CrossAppReward({
     this.coins = 0,
     this.exp = 0,
     this.titles = const [],
+    this.sourceWorldId,
   });
 
   bool get hasReward => coins > 0 || exp > 0 || titles.isNotEmpty;
@@ -106,6 +113,9 @@ class CrossAppReward {
       coins: coins + other.coins,
       exp: exp + other.exp,
       titles: [...titles, ...other.titles],
+      // 単一現世同士の合算では出所を保持する。異現世混在時は先勝ち
+      // （集約側は元の報酬リストから出所を順序ユニーク収集する）。
+      sourceWorldId: sourceWorldId ?? other.sourceWorldId,
     );
   }
 }

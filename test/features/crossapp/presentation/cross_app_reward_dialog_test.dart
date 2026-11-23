@@ -100,4 +100,136 @@ void main() {
       expect(find.bySemanticsIdentifier('btn_open_tsundoku'), findsOneWidget);
     });
   });
+
+  group('CrossAppRewardDialog 報酬の発生元現世ごとの送客', () {
+    testWidgets('election 由来なら election-game を開く（app://election）',
+        (tester) async {
+      final launchedUris = <Uri>[];
+      Future<bool> fakeLaunch(Uri uri) async {
+        launchedUris.add(uri);
+        return true;
+      }
+
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CrossAppRewardDialog(
+              totalCoins: 120,
+              totalExp: 400,
+              newTitles: const [],
+              sourceWorldIds: const ['election'],
+              launchUri: fakeLaunch,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('election-game を開く'), findsOneWidget);
+      expect(find.text('tsundoku-quest を開く'), findsNothing);
+      expect(find.bySemanticsIdentifier('btn_open_election'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(TextButton, 'election-game を開く'));
+      await tester.pump();
+
+      expect(launchedUris, [Uri.parse('app://election')]);
+      handle.dispose();
+    });
+
+    testWidgets('book-review 由来なら book-review-app を開く（app://book-review）',
+        (tester) async {
+      final launchedUris = <Uri>[];
+      Future<bool> fakeLaunch(Uri uri) async {
+        launchedUris.add(uri);
+        return true;
+      }
+
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CrossAppRewardDialog(
+              totalCoins: 50,
+              totalExp: 200,
+              newTitles: const [],
+              sourceWorldIds: const ['book-review'],
+              launchUri: fakeLaunch,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('book-review-app を開く'), findsOneWidget);
+      expect(
+        find.bySemanticsIdentifier('btn_open_book_review'),
+        findsOneWidget,
+      );
+
+      await tester.tap(
+        find.widgetWithText(TextButton, 'book-review-app を開く'),
+      );
+      await tester.pump();
+
+      expect(launchedUris, [Uri.parse('app://book-review')]);
+      handle.dispose();
+    });
+
+    testWidgets('複数現世なら出現順にボタンが出る', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: CrossAppRewardDialog(
+              totalCoins: 10,
+              totalExp: 0,
+              newTitles: [],
+              sourceWorldIds: ['tsundoku', 'election'],
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('tsundoku-quest を開く'), findsOneWidget);
+      expect(find.text('election-game を開く'), findsOneWidget);
+      expect(find.text('受け取る'), findsOneWidget);
+
+      // 出現順（tsundoku が先）
+      final buttons = tester
+          .widgetList<TextButton>(find.byType(TextButton))
+          .map((b) => (b.child as Text).data)
+          .toList();
+      expect(buttons, ['tsundoku-quest を開く', 'election-game を開く', '受け取る']);
+    });
+
+    testWidgets('sourceWorldIds が空なら従来通り app://open / tsundoku-quest 固定',
+        (tester) async {
+      final launchedUris = <Uri>[];
+      Future<bool> fakeLaunch(Uri uri) async {
+        launchedUris.add(uri);
+        return true;
+      }
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: CrossAppRewardDialog(
+              totalCoins: 10,
+              totalExp: 0,
+              newTitles: const [],
+              launchUri: fakeLaunch,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('tsundoku-quest を開く'), findsOneWidget);
+      expect(find.text('election-game を開く'), findsNothing);
+
+      await tester.tap(
+        find.widgetWithText(TextButton, 'tsundoku-quest を開く'),
+      );
+      await tester.pump();
+
+      expect(launchedUris, [Uri.parse('app://open')]);
+    });
+  });
 }

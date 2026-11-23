@@ -308,6 +308,14 @@ void _handleDeepLink(Uri uri) {
   final link = DeepLinkService.parse(uri);
   if (link == null) return;
 
+  // 自己送客ガード: source が自分自身（rpg-task / rpg）の報酬は受けない。
+  if (DeepLinkService.isSelfSourcedCrossReward(link)) {
+    appLog.info(
+      '[main] 自己送客のため無視: source=${link.source}, reward=${link.reward}',
+    );
+    return;
+  }
+
   // 送客元現世と報酬タイプを記録（受信基盤の具現化）。
   // 報酬付与は既存の FileCrossAppRewardService 等が担うため、ここでは受信を確認する。
   debugPrint('[main] Cross reward: source=${link.source}, reward=${link.reward}');
