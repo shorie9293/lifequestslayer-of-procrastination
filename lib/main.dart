@@ -38,6 +38,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:app_links/app_links.dart';
 import 'package:rpg_todo/core/infrastructure/app_lock_gate.dart';
+import 'package:rpg_todo/core/text/text_scale_composition.dart';
 import 'package:rpg_todo/core/crash/crash_guard.dart';
 import 'package:rpg_todo/core/crash/crash_log_service.dart';
 import 'package:rpg_todo/core/infrastructure/deep_link_service.dart';
@@ -406,10 +407,12 @@ class _RPGTodoAppState extends State<RPGTodoApp> {
             ),
             home: AppLockGate(unlockedBuilder: (context) => const AuthGate()),
             builder: (context, child) {
-              // 端末設定に従う／アプリ内で上書き（既存の textScaler 挙動は不変）
+              // 端末の文字サイズ設定を基点に、アプリ内倍率を乗算する
+              // （旧: TextScaler.linear で置換 → OS のアクセシビリティ設定を捨てていた）
               final rm = context.watch<ReduceMotionViewModel>().setting;
               final mediaQuery = MediaQuery.of(context).copyWith(
-                  textScaler: TextScaler.linear(settingsVM.fontSizeScale));
+                  textScaler: composeWithSystemTextScaler(
+                      context, settingsVM.fontSizeScale));
               return MediaQuery(
                 data: applyReduceMotion(mediaQuery, rm),
                 child: child!,

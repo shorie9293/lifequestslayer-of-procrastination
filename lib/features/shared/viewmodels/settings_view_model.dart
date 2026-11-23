@@ -19,7 +19,7 @@ class SettingsViewModel extends ChangeNotifier {
   bool _tutChosen = false;
   bool _jobTutorialCompleted = false;
   bool _showJobTutorial = false;
-  double _fontSize = 0.85;
+  double _fontSize = 1.0;
   bool _kqEnabled = true;
   bool _debugMode = false;
   bool _sfxEnabled = true;
