@@ -63,13 +63,13 @@ class InnSection extends StatelessWidget {
                   ? Colors.amber[700]
                   : (palette.isLight
                       ? palette.onSurfaceFaintest
-                      : Colors.grey),
-              // 金地(#FFA000)はライトでは墨、ダークでは白（従来どおり）。
+                      : Colors.grey[700]),
+              // 金地(#FFA000)はライトでは墨、ダークでは墨系（白 on 金 = 2.0:1）。
               // ジョブ別テーマの onPrimary は侍/法師で白になり金地に沈むため、
               // 明度トークンで解決する。
               // 泊まれない時（灰地）はライトのみ白：墨 on #6B6B6B は 2.66:1 で不足。
               foregroundColor: hasEnough
-                  ? palette.onSurface
+                  ? (palette.isLight ? palette.onSurface : Colors.black87)
                   : (palette.isLight ? Colors.white : palette.onSurface),
             ),
             onPressed: () {

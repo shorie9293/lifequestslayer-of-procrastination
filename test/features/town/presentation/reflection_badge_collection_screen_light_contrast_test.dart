@@ -158,6 +158,7 @@ void main() {
     final scan = _scan(tester);
     // ignore: avoid_print
     print('BADGE DARK $scan');
+    expect(scan.violations, 0, reason: 'ダークで読めない文字: $scan');
     expect(scan.measurable, greaterThanOrEqualTo(8));
     for (final argb in const [0xFF2B2B2B, 0xFF4A4A4A, 0xFF5A5A5A, 0xFF6B6B6B]) {
       expect(scan.colors.contains(argb), isFalse,

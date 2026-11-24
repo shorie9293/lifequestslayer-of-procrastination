@@ -623,9 +623,9 @@ class _BuildingTile extends StatelessWidget {
                       ? state.getEffect()
                       : '町Lv.${building.unlockTownLevel}で解放',
                   style: TextStyle(
-                    color: unlocked
-                        ? palette.onSurfaceFaint
-                        : palette.onSurfaceFaintest,
+                    // ダークは情景画像の上に黒26%のカードが載るため、white38 では
+                    // 実効背景に対して 3.0:1 を割る。未解放ラベルも white54 へ揃える。
+                    color: palette.onSurfaceFaint,
                     fontSize: 11,
                   ),
                 ),

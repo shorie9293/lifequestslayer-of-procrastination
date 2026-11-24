@@ -56,7 +56,11 @@ void showBuyConfirmDialog(
               );
             },
             child: Text("購入",
-                style: TextStyle(color: GamePalette.of(ctx).onSurface)),
+                style: TextStyle(
+                    // 金地には墨系（ダークの白トークンは 2.0:1 で沈む）。
+                    color: GamePalette.of(ctx).isLight
+                        ? GamePalette.of(ctx).onSurface
+                        : Colors.black87)),
           ),
         ),
       ],
@@ -82,11 +86,12 @@ Widget buildBuyButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: hasEnough
             ? Colors.amber[700]
-            : (palette.isLight ? palette.onSurfaceFaintest : Colors.grey),
-        // 金地(#FFA000)はライトでは墨、ダークでは白（従来どおり）。
+            : (palette.isLight ? palette.onSurfaceFaintest : Colors.grey[700]),
+        // 金地(#FFA000)は明度を問わず墨系でなければ沈む（白 on 金 = 2.0:1）。
+        // ライトは従来の墨 #2B2B2B、ダークは金地専用に黒87%へ倒す。
         // 買えない時（灰地）はライトのみ白：墨(#2B2B2B) on #6B6B6B は 2.66:1 で不足する。
         foregroundColor: hasEnough
-            ? palette.onSurface
+            ? (palette.isLight ? palette.onSurface : Colors.black87)
             : (palette.isLight ? Colors.white : palette.onSurface),
       ),
       onPressed: () {
