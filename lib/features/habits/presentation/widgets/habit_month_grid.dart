@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rpg_todo/core/time/local_calendar_date.dart';
 import 'package:rpg_todo/domain/models/habit_calendar.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 /// 1か月分の勤行出席マップ（道標§五 #31）。
 ///
@@ -19,6 +20,18 @@ class HabitMonthGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
+    // 曜日ラベルの色はライトでは和紙白に沈むため、可読化してから使う
+    // （実測: grey400=1.69:1 / red300=2.69:1 / blue300=2.00:1）。
+    Color weekdayColor(int index) {
+      final base = index == 0
+          ? Colors.red[300]!
+          : index == 6
+              ? Colors.blue[300]!
+              : Colors.grey[400]!;
+      return palette.isLight ? palette.readable(base) : base;
+    }
+
     return Column(
       key: const Key('habit_month_grid'),
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -33,11 +46,7 @@ class HabitMonthGrid extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
-                      color: i == 0
-                          ? Colors.red[300]
-                          : i == 6
-                              ? Colors.blue[300]
-                              : Colors.grey[400],
+                      color: weekdayColor(i),
                     ),
                   ),
                 ),

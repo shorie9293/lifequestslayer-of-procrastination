@@ -121,20 +121,25 @@ class PracticeHeatmapView extends StatelessWidget {
     final alpha = count <= 0
         ? 0.0
         : (0.2 + intensity * 0.8).clamp(0.2, 1.0);
-    // セル地（半透明の緑）を和紙白に合成した実効地で文字色を解決する。
-    // ダークは従来の白／黒87 をそのまま保つ（見た目不変）。
+    // セル地（半透明の緑）を実効背景に合成した上で文字色を解決する。
+    // ライトは和紙白、ダークはカード地（black26）を土台にする。
+    // 白と墨のうち実地に対して比の高い方を採る（濃い緑 #4CAF50 の上では
+    // 白が 2.6:1 しか出ず読めない。低強度セルは地が暗いので白が勝つ）。
     final palette = GamePalette.of(context);
-    final preferred = intensity > 0.5 ? Colors.white : Colors.black87;
-    final cellTextColor = palette.isLight
-        ? palette.readableOn(
-            preferred,
-            Color.alphaBlend(
-              const Color(0xFF4CAF50).withValues(alpha: alpha),
-              const Color(0xFFF4F1E6),
-            ),
-            minRatio: 4.5,
-          )
-        : preferred;
+    final base = Color.alphaBlend(
+      palette.cardBackground,
+      Theme.of(context).scaffoldBackgroundColor,
+    );
+    final cellBackground = Color.alphaBlend(
+      const Color(0xFF4CAF50).withValues(alpha: alpha),
+      base,
+    );
+    final preferred = _contrastRatio(Colors.white, cellBackground) >=
+            _contrastRatio(Colors.black87, cellBackground)
+        ? Colors.white
+        : Colors.black87;
+    final cellTextColor =
+        palette.readableOn(preferred, cellBackground, minRatio: 4.5);
     return Padding(
       key: Key('practice_heatmap_cell_${weekday}_$band'),
       padding: const EdgeInsets.all(1.5),
@@ -192,4 +197,12 @@ class _Legend extends StatelessWidget {
       ],
     );
   }
+}
+/// 2 色のコントラスト比（WCAG）。セル文字色の選択に使う。
+double _contrastRatio(Color a, Color b) {
+  final la = a.computeLuminance();
+  final lb = b.computeLuminance();
+  final hi = la > lb ? la : lb;
+  final lo = la > lb ? lb : la;
+  return (hi + 0.05) / (lo + 0.05);
 }

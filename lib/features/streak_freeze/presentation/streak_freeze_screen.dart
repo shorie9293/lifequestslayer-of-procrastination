@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/streak_freeze/data/streak_freeze_repository.dart';
 import 'package:rpg_todo/features/streak_freeze/domain/streak_freeze_service.dart';
 import 'package:rpg_todo/features/streak_freeze/domain/streak_freeze_state.dart';
@@ -112,6 +113,7 @@ class _StreakFreezeScreenState extends State<StreakFreezeScreen> {
 
   Widget _buildBody(
       BuildContext context, PlayerViewModel vm, StreakFreezeState? state) {
+    final palette = GamePalette.of(context);
     if (_error != null) {
       return Center(child: Text('お休み券を読み込めませんでした: $_error'));
     }
@@ -144,7 +146,8 @@ class _StreakFreezeScreenState extends State<StreakFreezeScreen> {
                 Text(
                   '${StreakFreezeService.grantIntervalDays}日連続するごとに1枚授かり、'
                   '1枚で1日分の空白を埋められます（最大${StreakFreezeService.maxTickets}枚）。',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  style: TextStyle(
+                      fontSize: 12, color: palette.readable(Colors.grey)),
                 ),
               ],
             ),
@@ -194,9 +197,14 @@ class _StreakFreezeScreenState extends State<StreakFreezeScreen> {
       );
     }
 
+    // ライトは明るい琥珀/灰、ダークは暗い琥珀/黒系。
+    // 明るい地を両テーマで共用すると白文字が沈む（実測 1.22:1）。
+    final palette = GamePalette.of(context);
     return Card(
       key: StreakFreezeKeys.offerCard,
-      color: canUse ? Colors.amber.shade50 : Colors.grey.shade200,
+      color: canUse
+          ? (palette.isLight ? Colors.amber.shade50 : const Color(0xFF3A2E0F))
+          : (palette.isLight ? Colors.grey.shade200 : Colors.black38),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -225,7 +233,10 @@ class _StreakFreezeScreenState extends State<StreakFreezeScreen> {
               Text(
                 'お休み券が足りません（必要 $needed枚 / 所持 ${state.tickets}枚）',
                 key: StreakFreezeKeys.insufficientLabel,
-                style: const TextStyle(color: Colors.redAccent),
+                style: TextStyle(
+                    color: palette.isLight
+                        ? palette.readable(Colors.redAccent)
+                        : Colors.redAccent),
               ),
           ],
         ),

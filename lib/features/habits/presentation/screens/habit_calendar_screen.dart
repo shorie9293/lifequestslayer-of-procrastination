@@ -10,6 +10,7 @@ import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/habits/data/practice_log_repository.dart';
 import 'package:rpg_todo/features/habits/presentation/widgets/habit_month_grid.dart';
 import 'package:rpg_todo/features/habits/presentation/widgets/practice_heatmap.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/town/data/reflection_repository.dart';
 
 /// 勤行の習慣カレンダー画面（道標§五 #31 / #50）。
@@ -243,12 +244,15 @@ class _HabitCalendarViewState extends State<HabitCalendarView> {
   }
 
   Widget _stat(String label, String value) {
+    final palette = GamePalette.of(context);
+    final labelColor = palette.isLight
+        ? palette.readable(Colors.grey[400]!)
+        : Colors.grey[400]!;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(label,
-            style: TextStyle(fontSize: 11, color: Colors.grey[400])),
+        Text(label, style: TextStyle(fontSize: 11, color: labelColor)),
         Text(
           value,
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
