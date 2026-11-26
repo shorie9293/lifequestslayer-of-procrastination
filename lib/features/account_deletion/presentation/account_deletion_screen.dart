@@ -4,6 +4,7 @@ import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 import 'package:rpg_todo/features/account_deletion/domain/account_deletion_policy.dart';
 import 'package:rpg_todo/features/account_deletion/domain/account_deletion_service.dart';
 import 'package:rpg_todo/features/account_deletion/presentation/account_deletion_app_keys.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 /// アカウント削除（退会）画面 — 2段階確認。
 ///
@@ -96,6 +97,10 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen> {
   @override
   Widget build(BuildContext context) {
     final labels = widget.targetLabels;
+    final palette = GamePalette.of(context);
+    // 削除ボタンの赤面。ラベルはこの面に対して可読化した色を使う
+    // （既定前景はライト #1A1A1A / ダーク onPrimary で 2.38:1 / 1.80:1 まで落ちる）。
+    const deleteFill = Color(0xFFB00020);
     final canDelete = widget.policy.canDelete(
       hasActiveSession: widget.hasActiveSession,
     );
@@ -125,15 +130,15 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen> {
           ),
           const SizedBox(height: 16),
           if (!canDelete)
-            const Text(
+            Text(
               'ログインしていないため、アカウント削除は実行できません。',
-              style: TextStyle(color: Color(0xFFB00020)),
+              style: TextStyle(color: palette.danger),
             ),
           if (_errorMessage != null)
             Text(
               _errorMessage!,
               key: AccountDeletionAppKeys.errorMessage,
-              style: const TextStyle(color: Color(0xFFB00020)),
+              style: TextStyle(color: palette.danger),
             ),
           if (_succeeded)
             const Text(
@@ -155,7 +160,8 @@ class _AccountDeletionScreenState extends State<AccountDeletionScreen> {
             child: FilledButton(
               key: AccountDeletionAppKeys.deleteButton,
               style: FilledButton.styleFrom(
-                backgroundColor: const Color(0xFFB00020),
+                backgroundColor: deleteFill,
+                foregroundColor: palette.readableOn(Colors.white, deleteFill),
               ),
               onPressed: (_running || _succeeded || !canDelete)
                   ? null

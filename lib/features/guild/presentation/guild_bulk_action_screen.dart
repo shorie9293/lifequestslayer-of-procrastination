@@ -11,6 +11,7 @@ import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/domain/guild_bulk_action.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/undo/domain/undo_buffer.dart';
 import 'package:rpg_todo/features/undo/presentation/undo_snack_bar.dart';
 
@@ -117,6 +118,7 @@ class _GuildBulkActionScreenState extends State<GuildBulkActionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final tasks = widget.tasksOverride ??
         Provider.of<TaskViewModel>(context, listen: false).guildTasks;
     final selectable = GuildBulkActionService.selectableTasks(tasks);
@@ -168,6 +170,9 @@ class _GuildBulkActionScreenState extends State<GuildBulkActionScreen> {
                     child: ChoiceChip(
                       key: AppKeys.guildBulkPostponeChip(days),
                       label: Text('$days日'),
+                      // 選択時は chipTheme.secondaryLabelStyle 系の解決に委ねると
+                      // ダークで黒文字になり地に沈む（実測 1.09:1）。明示して可読化する。
+                      labelStyle: TextStyle(color: palette.onSurface),
                       selected: _postponeDays == days,
                       onSelected: (_) => setState(() => _postponeDays = days),
                     ),
@@ -230,7 +235,9 @@ class _GuildBulkActionScreenState extends State<GuildBulkActionScreen> {
                       key: AppKeys.guildBulkActionDelete,
                       onPressed: () => _apply(GuildBulkAction.delete, tasks),
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.red,
+                        // ライトの Colors.red は和紙地で 3.32:1。danger トークンへ。
+                        foregroundColor:
+                            palette.isLight ? palette.danger : Colors.red,
                       ),
                       child: const Text('🗑 破棄'),
                     ),

@@ -7,6 +7,7 @@ import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/data/task_template_repository.dart';
 import 'package:rpg_todo/features/guild/domain/task_template.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 /// 勤行の定型タスク（クイックテンプレート・改善提案 #73）の一覧画面。
 ///
@@ -172,6 +173,7 @@ class _TaskTemplateScreenState extends State<TaskTemplateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = GamePalette.of(context);
     final visible = _service
         .searchByName(templates: _templates, query: _query)
         .toList();
@@ -187,8 +189,12 @@ class _TaskTemplateScreenState extends State<TaskTemplateScreen> {
             const SizedBox(width: 8),
             Text('${sorted.length}件',
                 key: AppKeys.taskTemplateCount,
-                style:
-                    const TextStyle(fontSize: 12, color: Color(0xFF888888))),
+                style: TextStyle(
+                    fontSize: 12,
+                    // ライトの #888888 は AppBar 面で 2.92:1。ダークは不変。
+                    color: palette.isLight
+                        ? palette.onSurfaceFaintest
+                        : const Color(0xFF888888))),
           ],
         ),
       ),
@@ -302,6 +308,18 @@ class _TemplateCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final rankColor = RankColors.forRank(template.rank);
+    final palette = GamePalette.of(context);
+    // ランク玉の実効地（20%tintをカード地に重ねた色）に対し可読化する。
+    // ライトは墨方向、ダークは白方向へ寄せる（ダークの原色は地に沈み 2.63:1）。
+    final badgeBackground = Color.alphaBlend(
+      rankColor.withValues(alpha: 0.2),
+      palette.isLight ? const Color(0xFFF7F3E8) : const Color(0xFF2A2520),
+    );
+    final rankTextColor = palette.readableOn(
+      rankColor,
+      badgeBackground,
+      minRatio: 4.5,
+    );
     return Card(
       key: AppKeys.taskTemplateRow(template.id),
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -309,7 +327,8 @@ class _TemplateCard extends StatelessWidget {
         leading: CircleAvatar(
           backgroundColor: rankColor.withValues(alpha: 0.2),
           child: Text(template.rank.name,
-              style: TextStyle(color: rankColor, fontWeight: FontWeight.bold)),
+              style:
+                  TextStyle(color: rankTextColor, fontWeight: FontWeight.bold)),
         ),
         title: Text(template.name,
             style: const TextStyle(fontWeight: FontWeight.bold)),
