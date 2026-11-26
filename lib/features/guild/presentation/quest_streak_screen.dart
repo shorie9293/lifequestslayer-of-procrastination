@@ -6,6 +6,7 @@ import 'package:rpg_todo/core/widgets/empty_state.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/guild/domain/quest_streak.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
 
 import 'quest_streak_keys.dart';
@@ -180,6 +181,7 @@ class _QuestStreakScreenState extends State<QuestStreakScreen> {
   }
 
   Widget _buildEntryRow(QuestStreakEntry entry) {
+    final palette = GamePalette.of(context);
     return ListTile(
       title: Text(
         entry.title,
@@ -201,9 +203,9 @@ class _QuestStreakScreenState extends State<QuestStreakScreen> {
               ),
               child: Text(
                 entry.bonusLabel,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: Colors.deepOrange,
+                  color: palette.readable(Colors.deepOrange),
                   fontWeight: FontWeight.bold,
                 ),
               ),
