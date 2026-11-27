@@ -42,6 +42,9 @@ flutter test --no-pub -j 2 \
   test/features/settings/ \
   test/features/streak_freeze/ \
   test/features/about/ \
+  test/features/calendar_export/ \
+  test/features/calendar_link/ \
+  test/features/google_todo/ \
   test/core/notification/ \
   test/core/widgets/ \
   test/core/crash/

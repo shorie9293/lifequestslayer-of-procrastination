@@ -5,6 +5,7 @@ import 'package:rpg_todo/core/widgets/empty_state.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/calendar_export/data/ics_share_exporter.dart';
 import 'package:rpg_todo/features/calendar_export/domain/task_calendar_export_service.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 import 'calendar_export_keys.dart';
 
@@ -70,6 +71,10 @@ class _CalendarExportScreenState extends State<CalendarExportScreen> {
                     child: FilterChip(
                       key: CalendarExportAppKeys.rangeChip(range),
                       label: Text(range.label),
+                      // 選択時の既定ラベル色は M3 の onSecondaryContainer
+                      // （ダークではほぼ黒）に落ち、暗地で読めない。明度トークンで固定する。
+                      labelStyle:
+                          TextStyle(color: GamePalette.of(context).onSurface),
                       selected: _range == range,
                       onSelected: (_) => setState(() => _range = range),
                     ),

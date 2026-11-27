@@ -6,6 +6,7 @@ import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/features/calendar_link/data/calendar_gateway.dart';
 import 'package:rpg_todo/features/calendar_link/domain/calendar_import_service.dart';
 import 'package:rpg_todo/features/calendar_link/domain/linked_calendar_event.dart';
+import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 
 import 'calendar_link_keys.dart';
 
@@ -224,6 +225,9 @@ class _CalendarImportScreenState extends State<CalendarImportScreen> {
               child: FilterChip(
                 key: CalendarLinkAppKeys.rangeChip(range),
                 label: Text(range.label),
+                // 選択時の既定ラベル色（M3 onSecondaryContainer）はダークでほぼ黒。
+                labelStyle:
+                    TextStyle(color: GamePalette.of(context).onSurface),
                 selected: _range == range,
                 onSelected: (_) => setState(() {
                   _range = range;
