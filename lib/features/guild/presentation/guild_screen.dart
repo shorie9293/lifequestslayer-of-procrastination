@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:rpg_todo/core/input/guarded_dialog.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/core/haptics.dart';
-import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/viewmodels/game_view_model.dart';
@@ -15,10 +13,10 @@ import 'package:rpg_todo/core/testing/tutorial_keys.dart';
 import 'package:rpg_todo/features/shared/widgets/player_status_header.dart';
 import 'widgets/task_card.dart';
 import 'widgets/quest_group_header.dart';
+import 'widgets/quest_calendar_view.dart';
 import 'quest_group_keys.dart';
 import 'package:rpg_todo/features/guild/domain/quest_grouping.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/core/theme/rank_colors.dart';
 import 'package:rpg_todo/core/widgets/empty_state.dart';
 import 'package:rpg_todo/features/kozuchi/presentation/widgets/kozuchi_quest_card.dart';
@@ -33,6 +31,7 @@ import 'package:rpg_todo/features/guild/domain/quest_snooze_service.dart';
 import 'package:rpg_todo/features/guild/data/task_template_repository.dart';
 import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_keys.dart';
+import 'package:rpg_todo/features/settings/presentation/settings_hub_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/quest_streak_keys.dart' as qAppKeys;
 import 'package:rpg_todo/features/guild/presentation/quest_streak_screen.dart';
 import 'package:rpg_todo/features/calendar_export/presentation/calendar_export_screen.dart';
@@ -40,12 +39,9 @@ import 'package:rpg_todo/features/calendar_link/presentation/calendar_import_scr
 import 'package:rpg_todo/features/undo/domain/undo_buffer.dart';
 import 'package:rpg_todo/features/undo/presentation/undo_snack_bar.dart';
 import 'package:rpg_todo/core/di/injection.dart';
-import 'dialogs/tutorial_reset_dialog.dart';
 import 'dialogs/create_task_dialog.dart';
 import 'dialogs/bulk_create_task_dialog.dart';
 import 'dialogs/recurring_tasks_dialog.dart';
-import 'dialogs/notification_settings_dialog.dart';
-import 'package:rpg_todo/features/battle/presentation/widgets/knowledge_quest_dialog.dart';
 import 'package:rpg_todo/features/project/domain/job_skill_pulldown.dart';
 import 'package:rpg_todo/features/project/presentation/project_list_screen.dart';
 import 'package:rpg_todo/features/temple/presentation/temple_screen.dart';
@@ -247,15 +243,103 @@ class _GuildScreenState extends State<GuildScreen> {
   /// 寄合所の束ね方（期日 / ランク）。既定は期日。
   QuestGroupMode _groupMode = QuestGroupMode.deadline;
 
-  /// たたんだパネル（band.name）。
-  final Set<String> _collapsedGroups = <String>{};
+  /// 表示形式（一覧 / カレンダー）。既定は一覧。
+  QuestViewMode _viewMode = QuestViewMode.list;
+
+  /// たたんだパネル（band.name）。**既定は全て畳む**（2026-11-28）。
+  ///
+  /// 開いた状態で起動すると、クエストが増えるほど一覧が長くなり
+  /// 「今日どれをやるか」が読み取れなくなる。まず見出しだけを並べ、
+  /// 必要な束だけ開いてもらう。開閉の結果は端末に保存する。
+  final Set<String> _collapsedGroups =
+      QuestGroupBand.values.map((b) => b.name).toSet();
 
   static const String _groupModePrefKey = 'guild.groupMode';
+
+  /// 表示形式の保存キー。
+  static const String _viewModePrefKey = 'guild.viewMode';
+
+  /// 畳んだパネルの保存キー。**未保存＝全て畳む**、空文字＝全て開く。
+  static const String _collapsedGroupsPrefKey = 'guild.collapsedGroups';
 
   @override
   void initState() {
     super.initState();
     _restoreGroupMode();
+    _restoreViewMode();
+    _restoreCollapsedGroups();
+  }
+
+  /// 前回の表示形式を復元する（壊れていれば既定の一覧）。
+  Future<void> _restoreViewMode() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_viewModePrefKey);
+      final mode = QuestViewMode.values
+          .where((m) => m.name == raw)
+          .cast<QuestViewMode?>()
+          .firstWhere((m) => m != null, orElse: () => null);
+      if (mode != null && mounted) {
+        setState(() => _viewMode = mode);
+      }
+    } catch (_) {
+      // 復元失敗は既定のまま（起動を妨げない）
+    }
+  }
+
+  Future<void> _setViewMode(QuestViewMode mode) async {
+    if (mode == _viewMode) return;
+    setState(() => _viewMode = mode);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_viewModePrefKey, mode.name);
+    } catch (_) {
+      // 保存失敗は無視（次回は既定に戻るだけ）
+    }
+  }
+
+  /// 前回の開閉状態を復元する。未保存なら既定（全て畳む）のまま。
+  Future<void> _restoreCollapsedGroups() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_collapsedGroupsPrefKey);
+      if (raw == null) return; // 未保存＝既定（全て畳む）
+      final restored = raw.split(',').where((e) => e.isNotEmpty).toSet();
+      if (!mounted) return;
+      setState(() {
+        _collapsedGroups
+          ..clear()
+          ..addAll(restored);
+      });
+    } catch (_) {
+      // 復元失敗は既定のまま（起動を妨げない）
+    }
+  }
+
+  Future<void> _saveCollapsedGroups() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+          _collapsedGroupsPrefKey, _collapsedGroups.join(','));
+    } catch (_) {
+      // 保存失敗は無視（次回は既定に戻るだけ）
+    }
+  }
+
+  /// 全ての束を開く／畳むを切り替える。
+  void _toggleAllGroups() {
+    final allCollapsed =
+        QuestGroupBand.values.every((b) => _collapsedGroups.contains(b.name));
+    setState(() {
+      if (allCollapsed) {
+        _collapsedGroups.clear();
+      } else {
+        _collapsedGroups
+          ..clear()
+          ..addAll(QuestGroupBand.values.map((b) => b.name));
+      }
+    });
+    _saveCollapsedGroups();
   }
 
   /// 前回の束ね方を復元する（壊れていれば既定の期日）。
@@ -292,6 +376,7 @@ class _GuildScreenState extends State<GuildScreen> {
         _collapsedGroups.add(group.id);
       }
     });
+    _saveCollapsedGroups();
   }
 
   /// 期日 / ランク の切替バー。
@@ -302,32 +387,80 @@ class _GuildScreenState extends State<GuildScreen> {
     final fg = isLight ? const Color(0xFF2E2A24) : const Color(0xFFF0E8DA);
     final selectedBg =
         isLight ? const Color(0xFFE8DFCC) : const Color(0xFF2A2633);
+    final isList = _viewMode == QuestViewMode.list;
+    final allCollapsed =
+        QuestGroupBand.values.every((b) => _collapsedGroups.contains(b.name));
+
+    Widget chip({
+      required Key key,
+      required String label,
+      required bool selected,
+      required VoidCallback onTap,
+    }) =>
+        Padding(
+          padding: const EdgeInsets.only(right: 8),
+          child: ChoiceChip(
+            key: key,
+            label: Text(label),
+            selected: selected,
+            onSelected: (_) => onTap(),
+            visualDensity: VisualDensity.compact,
+            backgroundColor: Colors.transparent,
+            selectedColor: selectedBg,
+            side: BorderSide(
+              color: fg.withValues(alpha: isLight ? 0.28 : 0.35),
+            ),
+            labelStyle: TextStyle(
+              fontSize: 12,
+              color: fg,
+              fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        );
+
     return Container(
       key: QuestGroupKeys.modeToggle,
       padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
       child: Row(
         children: [
-          for (final mode in QuestGroupMode.values)
-            Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: ChoiceChip(
-                key: QuestGroupKeys.modeButton(mode),
-                label: Text(mode.label),
-                selected: _groupMode == mode,
-                onSelected: (_) => _setGroupMode(mode),
-                visualDensity: VisualDensity.compact,
-                backgroundColor: Colors.transparent,
-                selectedColor: selectedBg,
-                side: BorderSide(
-                  color: fg.withValues(alpha: isLight ? 0.28 : 0.35),
-                ),
-                labelStyle: TextStyle(
-                  fontSize: 12,
-                  color: fg,
-                  fontWeight:
-                      _groupMode == mode ? FontWeight.bold : FontWeight.normal,
-                ),
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  // 表示形式（一覧 / カレンダー）
+                  for (final view in QuestViewMode.values)
+                    chip(
+                      key: view == QuestViewMode.list
+                          ? AppKeys.guildViewListToggle
+                          : AppKeys.guildViewCalendarToggle,
+                      label: view.label,
+                      selected: _viewMode == view,
+                      onTap: () => _setViewMode(view),
+                    ),
+                  // 束ね方は一覧表示のときだけ意味を持つ
+                  if (isList)
+                    for (final mode in QuestGroupMode.values)
+                      chip(
+                        key: QuestGroupKeys.modeButton(mode),
+                        label: mode.label,
+                        selected: _groupMode == mode,
+                        onTap: () => _setGroupMode(mode),
+                      ),
+                ],
               ),
+            ),
+          ),
+          if (isList)
+            IconButton(
+              key: AppKeys.guildToggleAllGroups,
+              visualDensity: VisualDensity.compact,
+              tooltip: allCollapsed ? 'すべて開く' : 'すべて畳む',
+              icon: Icon(
+                allCollapsed ? Icons.unfold_more : Icons.unfold_less,
+                color: fg,
+              ),
+              onPressed: _toggleAllGroups,
             ),
         ],
       ),
@@ -356,79 +489,6 @@ class _GuildScreenState extends State<GuildScreen> {
     if (_isDialogOpen) return;
     _isDialogOpen = true;
     _openGuardedTaskDialog(context).then((_) => _isDialogOpen = false);
-  }
-
-  Future<void> _showOracleLinkDialog(BuildContext context) async {
-    final user = SupabaseConfig.url.isNotEmpty
-        ? Supabase.instance.client.auth.currentUser
-        : null;
-    final userId = user?.id ?? (SupabaseConfig.url.isNotEmpty ? '連携準備中...' : 'Supabase未設定');
-    final email = user?.email ?? user?.userMetadata?['email'] as String?;
-
-    await showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.link, color: Colors.amber),
-            SizedBox(width: 8),
-            Text('神託連携'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('このコードをHermes（天照）に伝えると、\nAIから直接タスクを追加できるようになります。'),
-            if (email != null) ...[
-              const SizedBox(height: 8),
-              Text('ログイン中: $email',
-                  style: TextStyle(fontSize: 12, color: _faintText(ctx))),
-            ],
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      userId,
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.copy, size: 18),
-                    tooltip: 'コピー',
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: userId));
-                      ScaffoldMessenger.of(ctx).showSnackBar(
-                        const SnackBar(
-                          content: Text('連携コードをコピーしました'),
-                          duration: Duration(seconds: 1),
-                        ),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('閉じる'),
-          ),
-        ],
-      ),
-    );
   }
 
   void _showEditTaskDialog(BuildContext context, Task task) {
@@ -989,7 +1049,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             const Text("寄合所"),
             const SizedBox(width: 8),
-            Text("v1.5.101+197",
+            Text("v1.5.102+198",
                 style: TextStyle(
                     fontSize: 10,
                     // ライトの和紙地では #888 が 2.9:1。墨へ寄せる。
@@ -1267,96 +1327,13 @@ class _GuildScreenState extends State<GuildScreen> {
               ),
             ],
           ),
-          PopupMenuButton<String>(
+          IconButton(
             key: AppKeys.settingsButton,
             icon: const Icon(Icons.settings),
             tooltip: '設定',
-            onSelected: (value) {
-              switch (value) {
-                case 'help':
-                  if (_isDialogOpen) return;
-                  _isDialogOpen = true;
-                  showHelpDialog(context, screen: HelpScreen.guild).then((_) => _isDialogOpen = false);
-                case 'notification':
-                  if (_isDialogOpen) return;
-                  _isDialogOpen = true;
-                  showDialog(
-                    context: context,
-                    builder: (context) => const NotificationSettingsDialog(),
-                  ).then((_) => _isDialogOpen = false);
-                case 'knowledge_quest':
-                  if (_isDialogOpen) return;
-                  _isDialogOpen = true;
-                  showDialog(
-                    context: context,
-                    builder: (context) => const KnowledgeQuestDialog(),
-                  ).then((_) => _isDialogOpen = false);
-                case 'tutorial_reset':
-                  if (_isDialogOpen) return;
-                  _isDialogOpen = true;
-                  showDialog(
-                    context: context,
-                    builder: (context) => const TutorialResetDialog(),
-                  ).then((_) => _isDialogOpen = false);
-                case 'oracle_link':
-                  if (_isDialogOpen) return;
-                  _isDialogOpen = true;
-                  _showOracleLinkDialog(context).then((_) => _isDialogOpen = false);
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'help',
-                child: Row(
-                  children: [
-                    Icon(Icons.help_outline, color: Colors.black54),
-                    SizedBox(width: 8),
-                    Text('遊び方・ヘルプ')
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'notification',
-                child: Row(
-                  children: [
-                    Icon(Icons.notifications_none, color: Colors.black54),
-                    SizedBox(width: 8),
-                    Text('通知設定')
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'knowledge_quest',
-                child: Row(
-                  children: [
-                    Icon(Icons.quiz_outlined, color: Colors.black54),
-                    SizedBox(width: 8),
-                    Text('知識クエスト設定')
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'tutorial_reset',
-                child: Row(
-                  children: [
-                    Icon(Icons.replay, color: Colors.black54),
-                    SizedBox(width: 8),
-                    Text('導きの書をリセット')
-                  ],
-                ),
-              ),
-              if (SupabaseConfig.url.isNotEmpty)
-                const PopupMenuItem(
-                  value: 'oracle_link',
-                  child: Row(
-                    children: [
-                      Icon(Icons.link, color: Colors.black54),
-                      SizedBox(width: 8),
-                      Text('神託連携')
-                    ],
-                  ),
-                ),
-            ],
+            onPressed: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SettingsHubScreen()),
+            ),
           ),
         ],
       ),
@@ -1402,8 +1379,17 @@ class _GuildScreenState extends State<GuildScreen> {
                   ],
                 ),
               ),
-            // 期日 / ランク の束ね方
+            // 期日 / ランク の束ね方・表示形式
             _buildGroupModeBar(context, palette.isLight),
+            if (_viewMode == QuestViewMode.calendar)
+              Expanded(
+                child: QuestCalendarView(
+                  tasks: tasks,
+                  now: now,
+                  onTaskTap: (task) => _showEditTaskDialog(context, task),
+                ),
+              )
+            else
             // Kozuchi試練セクション
             Expanded(
               child: Builder(

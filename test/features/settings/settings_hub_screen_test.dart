@@ -1,11 +1,20 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/auto_backup/data/auto_backup_status_store.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_status.dart';
 import 'package:rpg_todo/features/auto_backup/presentation/auto_backup_app_keys.dart';
+import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
+import 'package:rpg_todo/features/battle/presentation/widgets/knowledge_quest_dialog.dart';
+import 'package:rpg_todo/features/guild/presentation/dialogs/notification_settings_dialog.dart';
+import 'package:rpg_todo/features/guild/presentation/dialogs/tutorial_reset_dialog.dart';
 import 'package:rpg_todo/features/settings/presentation/settings_hub_screen.dart';
+import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rpg_todo/features/shared/data/settings_repository.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
 
@@ -192,6 +201,86 @@ void main() {
 
       expect(find.byKey(AutoBackupKeys.entryFromSettings), findsOneWidget);
       expect(find.text('保存済みバックアップの閲覧・復元・共有'), findsOneWidget);
+    });
+  });
+
+  // ── 寄合所の設定メニューから移設した5項目（2026-11-28） ─────────────
+  group('寄合所から移設した設定項目', () {
+    setUpAll(() async {
+      // 通知設定ダイアログは Hive の箱を開くため、テスト用パスを初期化する
+      final dir = await Directory.systemTemp.createTemp('settings_hub_entries');
+      Hive.init(dir.path);
+    });
+
+    setUp(() {
+      SharedPreferences.setMockInitialValues(<String, Object>{});
+    });
+
+    testWidgets('ヘルプ・通知・知識クエスト・導きの書のタイルが出る', (tester) async {
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      await tester.pumpWidget(wrap(const SettingsHubScreen()));
+      await tester.pump();
+
+      expect(find.byKey(AppKeys.settingsHelpTile), findsOneWidget);
+      expect(find.byKey(AppKeys.settingsNotificationTile), findsOneWidget);
+      expect(find.byKey(AppKeys.settingsKnowledgeQuestTile), findsOneWidget);
+      expect(find.byKey(AppKeys.settingsTutorialResetTile), findsOneWidget);
+      // 神託連携は Supabase 設定時のみ（未設定環境では導線を出さない）
+      expect(
+        find.byKey(AppKeys.settingsOracleLinkTile),
+        SupabaseConfig.url.isNotEmpty ? findsOneWidget : findsNothing,
+      );
+    });
+
+    testWidgets('ヘルプタイルでヘルプが開く', (tester) async {
+      await tester.pumpWidget(wrap(const SettingsHubScreen()));
+      await tester.pump();
+
+      await tester.tap(find.byKey(AppKeys.settingsHelpTile));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.byType(HelpDialog), findsOneWidget);
+    });
+
+    testWidgets('導きの書リセットのタイルで確認ダイアログが開く', (tester) async {
+      await tester.pumpWidget(wrap(const SettingsHubScreen()));
+      await tester.pump();
+
+      await tester.ensureVisible(find.byKey(AppKeys.settingsTutorialResetTile));
+      await tester.tap(find.byKey(AppKeys.settingsTutorialResetTile));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.byType(TutorialResetDialog), findsOneWidget);
+    });
+
+    testWidgets('知識クエストのタイルで詳細ダイアログが開く', (tester) async {
+      await tester.pumpWidget(wrap(const SettingsHubScreen()));
+      await tester.pump();
+
+      await tester.ensureVisible(
+          find.byKey(AppKeys.settingsKnowledgeQuestTile));
+      await tester.tap(find.byKey(AppKeys.settingsKnowledgeQuestTile));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.byType(KnowledgeQuestDialog), findsOneWidget);
+    });
+
+    testWidgets('通知のタイルで通知設定ダイアログが開く', (tester) async {
+      await tester.pumpWidget(wrap(const SettingsHubScreen()));
+      await tester.pump();
+
+      await tester.ensureVisible(find.byKey(AppKeys.settingsNotificationTile));
+      await tester.tap(find.byKey(AppKeys.settingsNotificationTile));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.byType(NotificationSettingsDialog), findsOneWidget);
     });
   });
 }
