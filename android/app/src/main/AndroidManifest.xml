@@ -4,9 +4,10 @@
     <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
     <!-- ローカル通知の権限 (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <!-- スケジュール通知のための正確なアラーム権限 -->
+    <!-- スケジュール通知のための正確なアラーム権限
+         （ユーザー許可ベースの SCHEDULE_EXACT_ALARM のみ宣言する。常時許可の正確アラーム権限を宣言すると
+           canScheduleExactAlarms() が常に true を返し、inexact フォールバックが到達不能になるため） -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
     <!-- カレンダー連携: 端末カレンダーの予定をクエストとして取り込む（読み取りのみ） -->
     <uses-permission android:name="android.permission.READ_CALENDAR"/>

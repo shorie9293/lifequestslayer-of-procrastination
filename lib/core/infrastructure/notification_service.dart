@@ -22,12 +22,27 @@ class NotificationService implements NotificationRouteSource {
   static const int _noonId = 3;
   static const int _testNotificationId = 999;
 
-  final FlutterLocalNotificationsPlugin _plugin =
-      FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _plugin;
+
+  /// 正確アラーム権限の判定シーム（試練用）。
+  /// null なら実機のプラットフォーム API（[canScheduleExactAlarms]）に委ねる。
+  final Future<bool> Function()? _exactAlarmAllowed;
 
   static final NotificationService _instance = NotificationService._internal();
   factory NotificationService() => _instance;
-  NotificationService._internal();
+  NotificationService._internal()
+      : _plugin = FlutterLocalNotificationsPlugin(),
+        _exactAlarmAllowed = null;
+
+  /// 試練用の注入シーム。本番経路（[NotificationService] のシングルトン）は不変。
+  /// [plugin] と [exactAlarmAllowed] を差し替えて、
+  /// [zonedSchedule] に渡る [AndroidScheduleMode] を実呼出で検証できる。
+  @visibleForTesting
+  NotificationService.forTesting({
+    required FlutterLocalNotificationsPlugin plugin,
+    Future<bool> Function()? exactAlarmAllowed,
+  })  : _plugin = plugin,
+        _exactAlarmAllowed = exactAlarmAllowed;
 
   /// アプリ稼働中の通知タップ通知先（未配線なら null）。
   void Function(ResolvedNotificationRoute)? _onRouteSelected;
@@ -306,7 +321,8 @@ class NotificationService implements NotificationRouteSource {
   /// 使用するスケジュールモードを決定する。
   /// exact 権限があれば exactAllowWhileIdle、なければ inexactAllowWhileIdle にフォールバック。
   Future<AndroidScheduleMode> _getScheduleMode() async {
-    final canExact = await canScheduleExactAlarms();
+    final seam = _exactAlarmAllowed;
+    final canExact = seam != null ? await seam() : await canScheduleExactAlarms();
     if (canExact) {
       appLog.debug('[NotificationService] exact モードを使用します');
       return AndroidScheduleMode.exactAllowWhileIdle;
