@@ -15,6 +15,8 @@ import 'package:rpg_todo/features/guild/presentation/quest_streak_screen.dart';
 
 import 'guild_screen_test.dart' show createViewModels, pumpGuildScreen;
 
+import 'quest_management_nav.dart';
+
 final DateTime fixedNow = DateTime(2026, 10, 16);
 
 Task task(String id, String title) => Task(id: id, title: title);
@@ -116,8 +118,7 @@ void main() {
     await pumpGuildScreen(
         tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
-    await tester.tap(find.byKey(AppKeys.guildOverflowMenu));
-    await tester.pumpAndSettle();
+    await openQuestManagement(tester);
 
     expect(find.byKey(AppKeys.guildOverflowQuestStreak), findsOneWidget);
     expect(find.byKey(QuestStreakKeys.guildEntry), findsOneWidget);

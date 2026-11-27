@@ -17,6 +17,8 @@ import 'package:rpg_todo/domain/models/task.dart';
 
 import 'guild_screen_test.dart' show createViewModels;
 
+import 'quest_management_nav.dart';
+
 /// 勤行テンプレート (#73) の配線合成探針:
 /// 「GuildScreen AppBar 導線 → 定型画面 → 起票 → GameViewModel.addTask」
 /// の合成が寄合所の一覧に反映されることを撃つ（眷属個別試練では届かない不変条件）。
@@ -25,8 +27,7 @@ void main() {
     final vms = createViewModels();
     await _pump(tester, vms);
     // v1.5.23: 定型導線は⋯オーバーフローメニューに集約された
-    await tester.tap(find.byKey(AppKeys.guildOverflowMenu));
-    await tester.pumpAndSettle();
+    await openQuestManagement(tester);
     expect(find.byKey(AppKeys.taskTemplateEntry), findsOneWidget);
 
     await tester.tap(find.byKey(AppKeys.taskTemplateEntry));
@@ -40,8 +41,7 @@ void main() {
     await _pump(tester, vms);
 
     // v1.5.23: 定型導線は⋯オーバーフローメニューに集約された
-    await tester.tap(find.byKey(AppKeys.guildOverflowMenu));
-    await tester.pumpAndSettle();
+    await openQuestManagement(tester);
     await tester.tap(find.byKey(AppKeys.taskTemplateEntry));
     await tester.pumpAndSettle();
 
