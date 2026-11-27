@@ -3,6 +3,19 @@
 「なぜこうなっているか」を1判断1節で残す。**新しい判断は上に追記**（新しい順）。
 書式: 日付／判断／理由／代替案を捨てた理由／根拠（ファイル）。
 
+
+## 2026-11-28 寄合所の⋯は「クエスト管理」ハブ1本へ集約
+- 判断: 溢れメニューの13項目（定型/一括登録/繰り返し/習慣カレンダー/リマインダー/見積精度/
+  ストリーク/カレンダー入出力）を `QuestManagementScreen`（4節）へ移し、⋯の項目を1つにした。
+  各項目の AppKeys は移設前と同一に保つ（既存の試練・自動操作がそのまま辿れる）。
+- 理由: 寄合所右上だけで入口が19個あり、日常動線（今日どれをやるか）が埋もれていた。
+  1画面に集約すれば、以後の追加はハブの1行で済み、寄合所の混雑は再発しない。
+- 代替案: 慣れた位置だから⋯に残す → 却下。入口の総量が問題であり、位置の慣れは新規利用者に無い。
+- 検証: `test/features/guild/presentation/quest_management_screen_test.dart` が
+  「⋯の項目が1つだけ」を回帰門として撃つ（再びメニューへ項目が戻れば赤化）。
+- 根拠: `lib/features/guild/presentation/quest_management_screen.dart`,
+  `lib/features/guild/presentation/guild_screen.dart`, `test/features/guild/presentation/quest_management_nav.dart`
+
 ---
 
 ## 2026-11-28 寄合所は「既定で畳む」・カレンダー表示・入口の一本化

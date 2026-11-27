@@ -13,6 +13,7 @@ import 'package:rpg_todo/core/testing/tutorial_keys.dart';
 import 'package:rpg_todo/features/shared/widgets/player_status_header.dart';
 import 'widgets/task_card.dart';
 import 'widgets/quest_group_header.dart';
+import 'quest_management_screen.dart';
 import 'widgets/quest_calendar_view.dart';
 import 'quest_group_keys.dart';
 import 'package:rpg_todo/features/guild/domain/quest_grouping.dart';
@@ -26,21 +27,11 @@ import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen
 import 'package:rpg_todo/features/guild/presentation/guild_bulk_action_screen.dart';
 import 'package:rpg_todo/features/guild/data/guild_quest_query_preferences.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_quest_search_screen.dart';
-import 'package:rpg_todo/features/guild/presentation/task_template_screen.dart';
 import 'package:rpg_todo/features/guild/domain/quest_snooze_service.dart';
-import 'package:rpg_todo/features/guild/data/task_template_repository.dart';
-import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_screen.dart';
-import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_keys.dart';
 import 'package:rpg_todo/features/settings/presentation/settings_hub_screen.dart';
-import 'package:rpg_todo/features/guild/presentation/quest_streak_keys.dart' as qAppKeys;
-import 'package:rpg_todo/features/guild/presentation/quest_streak_screen.dart';
-import 'package:rpg_todo/features/calendar_export/presentation/calendar_export_screen.dart';
-import 'package:rpg_todo/features/calendar_link/presentation/calendar_import_screen.dart';
 import 'package:rpg_todo/features/undo/domain/undo_buffer.dart';
 import 'package:rpg_todo/features/undo/presentation/undo_snack_bar.dart';
-import 'package:rpg_todo/core/di/injection.dart';
 import 'dialogs/create_task_dialog.dart';
-import 'dialogs/bulk_create_task_dialog.dart';
 import 'dialogs/recurring_tasks_dialog.dart';
 import 'package:rpg_todo/features/project/domain/job_skill_pulldown.dart';
 import 'package:rpg_todo/features/project/presentation/project_list_screen.dart';
@@ -1049,7 +1040,7 @@ class _GuildScreenState extends State<GuildScreen> {
           children: [
             const Text("寄合所"),
             const SizedBox(width: 8),
-            Text("v1.5.102+198",
+            Text("v1.5.103+199",
                 style: TextStyle(
                     fontSize: 10,
                     // ライトの和紙地では #888 が 2.9:1。墨へ寄せる。
@@ -1090,237 +1081,24 @@ class _GuildScreenState extends State<GuildScreen> {
             key: AppKeys.guildOverflowMenu,
             icon: const Icon(Icons.more_vert),
             tooltip: 'その他の操作',
-            onSelected: (value) {
-              switch (value) {
-                case 'task_template':
-                  final repo = getIt.isRegistered<TaskTemplateRepository>()
-                      ? getIt<TaskTemplateRepository>()
-                      : InMemoryTaskTemplateRepository();
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => TaskTemplateScreen(
-                        repository: repo,
-                        onTaskCreated: (task) {
-                          context.read<GameViewModel>().addTask(
-                                task.title,
-                                rank: task.rank,
-                                repeatInterval: task.repeatInterval,
-                                repeatWeekdays: task.repeatWeekdays.isEmpty
-                                    ? null
-                                    : task.repeatWeekdays,
-                                subTasks:
-                                    task.subTasks.isEmpty ? null : task.subTasks,
-                                targetTimeMinutes: task.targetTimeMinutes,
-                              );
-                        },
-                      ),
-                    ),
-                  );
-                case 'bulk_create':
-                  if (_isDialogOpen) return;
-                  _isDialogOpen = true;
-                  showDialog(
-                    context: context,
-                    builder: (context) => const BulkCreateTaskDialog(),
-                  ).then((_) => _isDialogOpen = false);
-                case 'recurring_tasks':
-                  if (_isDialogOpen) return;
-                  _isDialogOpen = true;
-                  showDialog(
-                    context: context,
-                    builder: (context) => const RecurringTasksDialog(),
-                  ).then((_) => _isDialogOpen = false);
-                case 'habit_calendar':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const HabitCalendarScreen(),
-                    ),
-                  );
-                case 'reminder_settings':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const ReminderSettingsScreen(
-                        quietHoursScreenBuilder: _buildQuietHoursScreen,
-                      ),
-                    ),
-                  );
-                case 'estimate_accuracy':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const EstimateAccuracyScreen(),
-                    ),
-                  );
-                case 'quest_streak':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => const QuestStreakScreen(),
-                    ),
-                  );
-                case 'calendar_export':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => CalendarExportScreen(
-                        tasksOverride: taskVM.guildTasks,
-                      ),
-                    ),
-                  );
-                case 'calendar_import':
-                  Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => CalendarImportScreen(
-                        tasksOverride: taskVM.guildTasks,
-                        onImport: taskVM.addImportedTasks,
-                      ),
-                    ),
-                  );
-              }
-            },
+            onSelected: (_) => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) => const QuestManagementScreen(),
+              ),
+            ),
             itemBuilder: (context) => [
               PopupMenuItem(
-                value: 'task_template',
-                key: AppKeys.guildOverflowTaskTemplate,
+                value: 'quest_management',
+                key: AppKeys.guildQuestManagementEntry,
                 child: SemanticHelper.interactive(
                   testId: SemanticHelper.createTestId(
-                      SemanticTypes.button, 'task_template'),
-                  label: '勤行の定型',
-                  child: Row(
-                    key: AppKeys.taskTemplateEntry,
-                    children: const [
-                      Icon(Icons.bookmark_border, color: Colors.black54),
+                      SemanticTypes.button, 'quest_management'),
+                  label: 'クエスト管理',
+                  child: const Row(
+                    children: [
+                      Icon(Icons.tune, color: Colors.black54),
                       SizedBox(width: 8),
-                      Text('勤行の定型'),
-                    ],
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 'bulk_create',
-                key: AppKeys.guildOverflowBulkCreate,
-                child: SemanticHelper.interactive(
-                  testId: SemanticHelper.createTestId(
-                      SemanticTypes.button, 'bulk_create'),
-                  label: '一括クエスト登録',
-                  child: Row(
-                    children: const [
-                      Icon(Icons.post_add, color: Colors.black54),
-                      SizedBox(width: 8),
-                      Text('一括クエスト登録'),
-                    ],
-                  ),
-                ),
-              ),
-              if (playerVM.player.canUseSkill(Job.monk))
-                PopupMenuItem(
-                  value: 'recurring_tasks',
-                  key: AppKeys.guildOverflowRecurringTasks,
-                  child: SemanticHelper.interactive(
-                    testId: SemanticHelper.createTestId(
-                        SemanticTypes.button, 'recurring_tasks'),
-                    label: '繰り返し任務一覧',
-                    child: Row(
-                      children: const [
-                        Icon(Icons.loop, color: Colors.black54),
-                        SizedBox(width: 8),
-                        Text('繰り返し任務一覧'),
-                      ],
-                    ),
-                  ),
-                ),
-              PopupMenuItem(
-                value: 'habit_calendar',
-                key: AppKeys.guildOverflowHabitCalendar,
-                child: SemanticHelper.interactive(
-                  testId: SemanticHelper.createTestId(
-                      SemanticTypes.button, 'habit_calendar'),
-                  label: '勤行の習慣カレンダー',
-                  child: Row(
-                    key: AppKeys.habitCalendarEntry,
-                    children: const [
-                      Icon(Icons.calendar_month, color: Colors.black54),
-                      SizedBox(width: 8),
-                      Text('勤行の習慣カレンダー'),
-                    ],
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 'reminder_settings',
-                key: AppKeys.guildOverflowReminder,
-                child: SemanticHelper.interactive(
-                  testId: SemanticHelper.createTestId(
-                      SemanticTypes.button, 'reminder_settings'),
-                  label: '勤行リマインダー',
-                  child: Row(
-                    key: AppKeys.reminderSettingsEntry,
-                    children: const [
-                      Icon(Icons.alarm, color: Colors.black54),
-                      SizedBox(width: 8),
-                      Text('勤行リマインダー'),
-                    ],
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 'estimate_accuracy',
-                key: EstimateAccuracyKeys.guildEntry,
-                child: SemanticHelper.interactive(
-                  testId: SemanticHelper.createTestId(
-                      SemanticTypes.button, 'estimate_accuracy'),
-                  label: '見積もり精度レポート',
-                  child: Row(
-                    children: const [
-                      Icon(Icons.insights, color: Colors.black54),
-                      SizedBox(width: 8),
-                      Text('見積もり精度レポート'),
-                    ],
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 'quest_streak',
-                key: AppKeys.guildOverflowQuestStreak,
-                child: SemanticHelper.interactive(
-                  testId: SemanticHelper.createTestId(
-                      SemanticTypes.button, 'quest_streak'),
-                  label: 'クエスト別ストリーク',
-                  child: Row(
-                    key: qAppKeys.QuestStreakKeys.guildEntry,
-                    children: const [
-                      Icon(Icons.local_fire_department, color: Colors.black54),
-                      SizedBox(width: 8),
-                      Text('クエスト別ストリーク'),
-                    ],
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 'calendar_export',
-                key: AppKeys.guildCalendarExportEntry,
-                child: SemanticHelper.interactive(
-                  testId: SemanticHelper.createTestId(
-                      SemanticTypes.button, 'calendar_export'),
-                  label: 'カレンダー書き出し',
-                  child: Row(
-                    children: const [
-                      Icon(Icons.event_available, color: Colors.black54),
-                      SizedBox(width: 8),
-                      Text('カレンダー書き出し'),
-                    ],
-                  ),
-                ),
-              ),
-              PopupMenuItem(
-                value: 'calendar_import',
-                key: AppKeys.guildCalendarImportEntry,
-                child: SemanticHelper.interactive(
-                  testId: SemanticHelper.createTestId(
-                      SemanticTypes.button, 'calendar_import'),
-                  label: 'カレンダーから取り込む',
-                  child: Row(
-                    children: const [
-                      Icon(Icons.event_note, color: Colors.black54),
-                      SizedBox(width: 8),
-                      Text('カレンダーから取り込む'),
+                      Text('クエスト管理'),
                     ],
                   ),
                 ),

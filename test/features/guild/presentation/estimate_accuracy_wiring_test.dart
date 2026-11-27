@@ -12,14 +12,15 @@ import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_screen.da
 
 import 'guild_screen_test.dart' show createViewModels, pumpGuildScreen;
 
+import 'quest_management_nav.dart';
+
 void main() {
   testWidgets('⋯メニューに見積もり精度レポートの項目がある', (tester) async {
     final vms = createViewModels();
     await pumpGuildScreen(
         tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
-    await tester.tap(find.byKey(AppKeys.guildOverflowMenu));
-    await tester.pumpAndSettle();
+    await openQuestManagement(tester);
 
     expect(find.byKey(EstimateAccuracyKeys.guildEntry), findsOneWidget);
     expect(find.text('見積もり精度レポート'), findsOneWidget);
@@ -36,8 +37,7 @@ void main() {
     await pumpGuildScreen(
         tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
-    await tester.tap(find.byKey(AppKeys.guildOverflowMenu));
-    await tester.pumpAndSettle();
+    await openQuestManagement(tester);
 
     await tester.tap(find.byKey(EstimateAccuracyKeys.guildEntry));
     await tester.pumpAndSettle();

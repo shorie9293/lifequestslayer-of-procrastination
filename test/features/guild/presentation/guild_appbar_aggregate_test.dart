@@ -23,6 +23,8 @@ import 'package:rpg_todo/domain/models/skill_slot.dart';
 
 import 'guild_screen_test.dart' show createViewModels, pumpGuildScreen;
 
+import 'quest_management_nav.dart';
+
 /// Mystic Lv12 の Player（計画の陣=解放、俯瞰の魔眼=未解放）。
 Player mysticPlayer() => Player().copyWith(
       currentJob: Job.mystic,
@@ -60,8 +62,7 @@ void main() {
     await pumpGuildScreen(
         tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
-    await tester.tap(find.byKey(AppKeys.guildOverflowMenu));
-    await tester.pumpAndSettle();
+    await openQuestManagement(tester);
     expect(find.byKey(AppKeys.guildOverflowTaskTemplate), findsOneWidget);
 
     await tester.tap(find.byKey(AppKeys.taskTemplateEntry));
@@ -75,8 +76,7 @@ void main() {
     await pumpGuildScreen(
         tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
-    await tester.tap(find.byKey(AppKeys.guildOverflowMenu));
-    await tester.pumpAndSettle();
+    await openQuestManagement(tester);
     expect(find.byKey(AppKeys.guildOverflowHabitCalendar), findsOneWidget);
     expect(find.byKey(AppKeys.guildOverflowReminder), findsOneWidget);
 
@@ -91,8 +91,7 @@ void main() {
     await pumpGuildScreen(
         tester, taskVM: vms.task, playerVM: vms.player, settingsVM: vms.settings);
 
-    await tester.tap(find.byKey(AppKeys.guildOverflowMenu));
-    await tester.pumpAndSettle();
+    await openQuestManagement(tester);
     expect(find.byKey(AppKeys.guildOverflowRecurringTasks), findsOneWidget);
   });
 

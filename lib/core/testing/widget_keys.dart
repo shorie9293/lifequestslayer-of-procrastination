@@ -305,6 +305,10 @@ class AppKeys {
   // ━━━ カレンダーから取り込み（Google カレンダー連携） ━━━
   static const Key guildCalendarImportEntry = Key('btn_guild_calendar_import');
 
+  // ━━━ クエスト管理ハブ（寄合所⋯の唯一の入口） ━━━
+  static const Key guildQuestManagementEntry = Key('item_quest_management');
+  static const Key questManagementScreen = Key('screen_quest_management');
+
   // ━━━ 寄合所の表示切替（一覧／カレンダー） ━━━
   static const Key guildViewListToggle = Key('btn_guild_view_list');
   static const Key guildViewCalendarToggle = Key('btn_guild_view_calendar');

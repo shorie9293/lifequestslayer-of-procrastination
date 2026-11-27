@@ -7,6 +7,7 @@ import 'package:rpg_todo/features/calendar_export/presentation/calendar_export_s
 
 import 'presentation/guild_screen_test.dart'
     show createViewModels, pumpGuildScreen;
+import 'presentation/quest_management_nav.dart';
 
 void main() {
   testWidgets('⋯メニューに「カレンダー書き出し」があり、遷移できる', (tester) async {
@@ -18,8 +19,7 @@ void main() {
       settingsVM: vms.settings,
     );
 
-    await tester.tap(find.byKey(AppKeys.guildOverflowMenu));
-    await tester.pumpAndSettle();
+    await openQuestManagement(tester);
     expect(find.byKey(AppKeys.guildCalendarExportEntry), findsOneWidget);
     expect(find.text('カレンダー書き出し'), findsOneWidget);
 
