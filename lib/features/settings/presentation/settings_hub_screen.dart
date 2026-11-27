@@ -18,6 +18,12 @@ import 'package:rpg_todo/features/auto_backup/domain/auto_backup_policy.dart';
 import 'package:rpg_todo/features/auto_backup/domain/auto_backup_status.dart';
 import 'package:rpg_todo/features/auto_backup/presentation/auto_backup_app_keys.dart';
 import 'package:rpg_todo/features/auto_backup/presentation/auto_backup_screen.dart';
+import 'package:rpg_todo/features/battle/presentation/widgets/knowledge_quest_dialog.dart';
+import 'package:rpg_todo/features/guild/presentation/dialogs/notification_settings_dialog.dart';
+import 'package:rpg_todo/features/guild/presentation/dialogs/tutorial_reset_dialog.dart';
+import 'package:rpg_todo/core/infrastructure/supabase_config.dart';
+import 'package:rpg_todo/features/settings/presentation/oracle_link_dialog.dart';
+import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/google_todo/presentation/google_todo_keys.dart';
 import 'package:rpg_todo/features/google_todo/presentation/google_todo_link_screen.dart';
@@ -301,6 +307,52 @@ class SettingsHubScreen extends StatelessWidget {
               ),
             ),
           ),
+          // 寄合所の設定メニューから移設（入口の一本化・2026-11-28）
+          ListTile(
+            key: AppKeys.settingsHelpTile,
+            title: const Text('遊び方・ヘルプ'),
+            subtitle: const Text('この現世の遊び方を読み返す'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showHelpDialog(context, screen: HelpScreen.guild),
+          ),
+          ListTile(
+            key: AppKeys.settingsNotificationTile,
+            title: const Text('通知の詳細設定'),
+            subtitle: const Text('時刻・曜日・通知の種類'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showDialog<void>(
+              context: context,
+              builder: (_) => const NotificationSettingsDialog(),
+            ),
+          ),
+          ListTile(
+            key: AppKeys.settingsKnowledgeQuestTile,
+            title: const Text('知識クエストの設定'),
+            subtitle: const Text('出題の有効／無効と本文の確認'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showDialog<void>(
+              context: context,
+              builder: (_) => const KnowledgeQuestDialog(),
+            ),
+          ),
+          ListTile(
+            key: AppKeys.settingsTutorialResetTile,
+            title: const Text('導きの書をリセット'),
+            subtitle: const Text('チュートリアルをもう一度見る'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => showDialog<void>(
+              context: context,
+              builder: (_) => const TutorialResetDialog(),
+            ),
+          ),
+          if (SupabaseConfig.url.isNotEmpty)
+            ListTile(
+              key: AppKeys.settingsOracleLinkTile,
+              title: const Text('神託連携'),
+              subtitle: const Text('AI（天照）から直接クエストを追加する連携コード'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => showOracleLinkDialog(context),
+            ),
           // 末尾追加: アカウント削除（退会）。ビルダー未注入なら導線を出さない。
           if (accountDeletionScreenBuilder != null)
             ListTile(

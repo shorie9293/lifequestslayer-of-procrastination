@@ -305,6 +305,22 @@ class AppKeys {
   // ━━━ カレンダーから取り込み（Google カレンダー連携） ━━━
   static const Key guildCalendarImportEntry = Key('btn_guild_calendar_import');
 
+  // ━━━ 寄合所の表示切替（一覧／カレンダー） ━━━
+  static const Key guildViewListToggle = Key('btn_guild_view_list');
+  static const Key guildViewCalendarToggle = Key('btn_guild_view_calendar');
+  static const Key guildToggleAllGroups = Key('btn_guild_toggle_all_groups');
+  static const Key questCalendarView = Key('view_quest_calendar');
+  static const Key questCalendarPrevMonth = Key('btn_quest_calendar_prev');
+  static const Key questCalendarNextMonth = Key('btn_quest_calendar_next');
+  static const Key questCalendarToday = Key('btn_quest_calendar_today');
+  static const Key questCalendarLabel = Key('txt_quest_calendar_label');
+  static const Key questCalendarDaySheet = Key('sheet_quest_calendar_day');
+  static const Key questCalendarUndatedRow = Key('row_quest_calendar_undated');
+  static Key questCalendarCell(String dateId) =>
+      Key('cell_quest_calendar_$dateId');
+  static Key questCalendarTaskRow(String taskId) =>
+      Key('row_quest_calendar_task_$taskId');
+
   // ━━━ 職業チップ＋スキルプルダウン ━━━
   static const Key guildJobChip = Key('chip_guild_job');
   static Key guildJobSkillItem(JobSkill skill) =>
@@ -344,6 +360,13 @@ class AppKeys {
   static const Key settingsKnowledgeQuestSwitch = Key('switch_settings_knowledge_quest');
   static const Key settingsBattleSceneSwitch = Key('switch_settings_battle_scene');
   static const Key settingsReminderTile = Key('tile_settings_reminder');
+  static const Key settingsHelpTile = Key('tile_settings_help');
+  static const Key settingsNotificationTile = Key('tile_settings_notification');
+  static const Key settingsKnowledgeQuestTile =
+      Key('tile_settings_knowledge_quest_detail');
+  static const Key settingsTutorialResetTile =
+      Key('tile_settings_tutorial_reset');
+  static const Key settingsOracleLinkTile = Key('tile_settings_oracle_link');
   static const Key settingsReduceMotionTile = Key('tile_settings_reduce_motion');
 
   // ━━━ 討伐戦績 敵別・月別集計（#96） ━━━

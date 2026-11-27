@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/dialogs/create_task_dialog.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
@@ -119,12 +120,22 @@ class MockKozuchiQuestService implements IKozuchiQuestService {
 }
 
 /// GuildScreen をポンプするヘルパー
+///
+/// [expandAllGroups] は既定 true。寄合所のパネルは **既定で全て畳む**（2026-11-28）
+/// ため、開いた一覧を前提にした既存試練のために「全て開いた」状態を保存済みに
+/// しておく。畳みの既定そのものは `guild_group_collapse_test.dart` が撃つ。
 Future<void> pumpGuildScreen(
   WidgetTester tester, {
   required TaskViewModel taskVM,
   required PlayerViewModel playerVM,
   required SettingsViewModel settingsVM,
+  bool expandAllGroups = true,
 }) async {
+  if (expandAllGroups) {
+    SharedPreferences.setMockInitialValues(
+      <String, Object>{'guild.collapsedGroups': ''},
+    );
+  }
   await tester.pumpWidget(
     MultiProvider(
       providers: [
@@ -137,9 +148,10 @@ Future<void> pumpGuildScreen(
       ),
     ),
   );
-  // 画面が完全に描画されるのを待つ
+  // 画面が完全に描画されるのを待つ（SharedPreferences の復元は非同期）
   await tester.pump();
   await tester.pump();
+  await tester.pump(const Duration(milliseconds: 10));
 }
 
 void main() {

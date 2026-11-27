@@ -12,6 +12,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:rpg_todo/domain/models/player.dart';
+import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/domain/repositories/i_player_repository.dart';
 import 'package:rpg_todo/domain/repositories/i_task_repository.dart';
@@ -228,6 +229,14 @@ Future<void> _pump(WidgetTester tester, ThemeData theme) async {
   );
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 20));
+  // 寄合所は既定で全ての束を畳む（2026-11-28）。走査は「展開した」状態を対象にするため、
+  // 全開ボタンで開いてから測る（畳んだままだと走査母数が足りず空振りになる）。
+  final toggle = find.byKey(AppKeys.guildToggleAllGroups);
+  if (toggle.evaluate().isNotEmpty) {
+    await tester.tap(toggle);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 20));
+  }
 }
 
 void main() {

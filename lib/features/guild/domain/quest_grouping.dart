@@ -14,6 +14,15 @@ enum QuestGroupMode {
   final String label;
 }
 
+/// 寄合所の表示形式（一覧 / カレンダー）。
+enum QuestViewMode {
+  list('一覧'),
+  calendar('カレンダー');
+
+  const QuestViewMode(this.label);
+  final String label;
+}
+
 /// パネルの種類（並び順の正は [groupQuests] が決める）。
 enum QuestGroupBand {
   overdue,

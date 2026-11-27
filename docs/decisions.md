@@ -5,6 +5,24 @@
 
 ---
 
+## 2026-11-28 寄合所は「既定で畳む」・カレンダー表示・入口の一本化
+- 判断: ① 寄合所の束（期日/ランク）は起動時に**全て畳む**。開閉と表示形式は端末に保存する。
+  ② 一覧に加えて**カレンダー表示**（月送り・日別シート）を持つ。日付計算は純粋関数へ切り出す。
+  ③ 寄合所の設定メニュー（ヘルプ/通知/知識クエスト/導きの書リセット/神託連携）を廃止し、
+  歯車は**設定ハブへ直接遷移**、項目は設定ハブ側の1箇所に集約する。
+- 理由: 機能が 23 ディレクトリ・38 画面まで増え、寄合所右上だけで入口が19個になっていた。
+  日常動線（今日どれをやるか）が埋もれるため、**初期表示の情報量**を落とすのが最も効く。
+  同じ画面へ2箇所から入る状態（習慣カレンダー・ポモドーロ）は「1機能1入口」の原則に反する。
+- 代替案: 機能そのものを削除 → 却下。どれが使われているかを測る手段が無く、削る事故になる。
+  まず計測（遷移カウンタ）を入れ、0回の入口から畳む方針（docs/declutter-proposal.md）。
+- 根拠: `lib/features/guild/presentation/guild_screen.dart`（既定畳み・_pref 3キー）、
+  `lib/features/guild/domain/quest_calendar.dart`、`lib/features/guild/presentation/widgets/quest_calendar_view.dart`、
+  `lib/features/settings/presentation/settings_hub_screen.dart`、`lib/features/settings/presentation/oracle_link_dialog.dart`、
+  `test/features/guild/domain/quest_calendar_test.dart`、`test/features/guild/presentation/guild_group_collapse_test.dart`、
+  `test/features/guild/presentation/quest_calendar_wiring_test.dart`
+
+---
+
 ## 2026-11-03 同期の差分削除を廃止し、削除は deleteTasks() の明示APIに限定
 - 判断: `SupabaseTaskRepository.saveTasks` から「クラウドにあって手元にないIDを削除」する処理を撤去。削除は `ITaskDeletionRepository.deleteTasks` で明示的に行う。
 - 理由: 手元が古い一覧のまま保存された瞬間、他端末や API が入れた行まで消える（データ喪失）。API 投入と両立しない。
