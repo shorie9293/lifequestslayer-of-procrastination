@@ -31,6 +31,7 @@ import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/reminder/presentation/quiet_hours_settings_screen.dart';
 import 'package:rpg_todo/features/reminder/presentation/reminder_settings_screen.dart';
 import 'package:rpg_todo/features/settings/presentation/cross_app_link_status_screen.dart';
+import 'package:rpg_todo/features/settings/presentation/data_portability_section.dart';
 import 'package:rpg_todo/features/settings/presentation/reduce_motion_settings_screen.dart';
 import 'package:rpg_todo/features/shared/presentation/settings_write_error_listener.dart';
 import 'package:rpg_todo/features/shared/viewmodels/settings_view_model.dart';
@@ -282,6 +283,8 @@ class SettingsHubScreen extends StatelessWidget {
           ),
           // 末尾追加: 自動バックアップの閲覧・復元・共有
           _autoBackupTile(context),
+          // 追加: データの持ち出し／取り込み（寺院画面から移設・2026-11-28）
+          const DataPortabilitySection(),
           // 末尾追加: 現世間の受け渡し（最終送信／最終受信の可視化）
           ListTile(
             key: AppKeys.crossAppLinkStatusEntry,

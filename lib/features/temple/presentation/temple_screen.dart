@@ -4,27 +4,15 @@ import 'package:provider/provider.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/domain/models/player.dart';
 import 'package:rpg_todo/domain/models/skill_slot.dart';
-import 'package:rpg_todo/domain/models/task.dart';
 import 'package:rpg_todo/core/testing/widget_keys.dart';
-import 'package:rpg_todo/domain/services/data_export_service.dart';
-import 'package:rpg_todo/domain/services/full_backup.dart';
-import 'package:rpg_todo/features/auto_backup/domain/restore_preview.dart';
-import 'package:rpg_todo/features/auto_backup/presentation/restore_preview_dialog.dart';
-import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/shared/domain/theme_palette.dart';
 import 'package:rpg_todo/features/shared/widgets/help_dialog.dart';
-import 'package:rpg_todo/features/temple/data/backup_storage.dart';
 import 'package:rpg_todo/features/temple/presentation/pomodoro_timer_screen.dart';
 import 'package:rpg_todo/domain/services/skill_progression_service.dart';
 import 'package:takamagahara_ui/takamagahara_ui.dart' hide AppKeys;
 
 class TempleScreen extends StatelessWidget {
-  const TempleScreen({super.key, BackupStorage Function()? storageFactory})
-      : _storageFactory = storageFactory ?? _defaultStorageFactory;
-
-  final BackupStorage Function() _storageFactory;
-
-  static HiveBackupStorage _defaultStorageFactory() => HiveBackupStorage();
+  const TempleScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -165,10 +153,6 @@ class TempleScreen extends StatelessWidget {
             // ━━━ 修行の道標（スキル/ジョブ進捗の俯瞰） ━━━
             const SizedBox(height: 16),
             _buildSkillProgressionCard(context, player),
-
-            // ━━━ バックアップ/復元 ━━━
-            const SizedBox(height: 16),
-            _buildBackupSection(context, playerVM),
           ],
         ),
       ),
@@ -676,200 +660,6 @@ class TempleScreen extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  Widget _buildBackupSection(BuildContext context, PlayerViewModel playerVM) {
-    final palette = GamePalette.of(context);
-    final onScene = palette.usesBackdropImage;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: onScene
-            ? Colors.black.withValues(alpha: 0.3)
-            : palette.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: onScene
-                ? Colors.blueGrey.withValues(alpha: 0.5)
-                : palette.border),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  key: AppKeys.templeBackupButton,
-                  icon: const Icon(Icons.backup, size: 20),
-                  label: const Text('データバックアップ'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: onScene
-                        ? Colors.blueGrey.withValues(alpha: 0.4)
-                        : Colors.blueGrey.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () async {
-                    final taskVM = context.read<TaskViewModel>();
-                    final service = DataExportService();
-                    try {
-                      final json = await buildBackupJsonWithStorage(
-                        player: playerVM.player,
-                        tasks: taskVM.tasks,
-                        storage: _storageFactory(),
-                      );
-                      await service.exportStringToFile(json);
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('バックアップを共有しました')),
-                        );
-                      }
-                    } catch (_) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('バックアップに失敗しました')),
-                        );
-                      }
-                    }
-                  },
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton.icon(
-                  key: AppKeys.templeRestoreButton,
-                  icon: const Icon(Icons.restore, size: 20),
-                  label: const Text('データ復元'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: onScene
-                        ? Colors.teal.withValues(alpha: 0.4)
-                        : Colors.teal.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                  ),
-                  onPressed: () async {
-                    final playerVM = context.read<PlayerViewModel>();
-                    final taskVM = context.read<TaskViewModel>();
-                    final json =
-                        await DataExportService().importStringFromFile();
-                    if (json == null) {
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('復元に失敗しました')),
-                        );
-                      }
-                      return;
-                    }
-                    final storage = _storageFactory();
-                    // 内訳プレビュー（取得失敗は null＝従来表示のまま復元へ進む）。
-                    RestorePreview? preview;
-                    try {
-                      final boxes = await storage.capture();
-                      preview = RestorePreview.tryFromJson(
-                        backupJson: json,
-                        currentBoxes: boxes,
-                      );
-                    } catch (_) {
-                      preview = null;
-                    }
-                    if (!context.mounted) return;
-                    final confirmed = await showRestorePreviewDialog(
-                      context: context,
-                      dialogKey: AppKeys.templeRestoreConfirmDialog,
-                      message: 'このバックアップから復元しますか？'
-                          '現在のデータは先に自動バックアップされます',
-                      preview: preview,
-                      cancelKey: AppKeys.templeRestoreCancelButton,
-                      confirmKey: AppKeys.templeRestoreConfirmButton,
-                    );
-                    if (!confirmed) return;
-                    final ok = await applyRestore(
-                      jsonString: json,
-                      playerVM: playerVM,
-                      taskVM: taskVM,
-                      storage: storage,
-                    );
-                    if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            ok ? 'データを復元しました' : '復元に失敗しました',
-                          ),
-                        ),
-                      );
-                    }
-                  },
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              key: AppKeys.templeCsvExportButton,
-              icon: const Icon(Icons.table_view, size: 20),
-              label: const Text('クエストをCSVで書き出す'),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: onScene
-                    ? Colors.teal.withValues(alpha: 0.35)
-                    : Colors.teal.shade700,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-              onPressed: () async {
-                final taskVM = context.read<TaskViewModel>();
-                final messenger = ScaffoldMessenger.of(context);
-                try {
-                  await DataExportService().exportTasksCsvToFile(taskVM.tasks);
-                  messenger.showSnackBar(
-                    const SnackBar(content: Text('クエスト一覧をCSVで共有しました')),
-                  );
-                } catch (_) {
-                  messenger.showSnackBar(
-                    const SnackBar(content: Text('CSV書き出しに失敗しました')),
-                  );
-                }
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// バックアップ用 JSON を構築する（storage から boxes を capture する）。
-  @visibleForTesting
-  static Future<String> buildBackupJsonWithStorage({
-    required Player player,
-    required List<Task> tasks,
-    required BackupStorage storage,
-  }) async {
-    final boxes = await storage.capture();
-    return FullBackupService().encode(
-      player: player,
-      tasks: tasks,
-      boxes: boxes,
-      exportedAt: DateTime.now(),
-    );
-  }
-
-  /// 復元用 JSON を player / tasks / boxes へ適用する。
-  ///
-  /// 成功で true、decode 失敗（破損 JSON 等）で false。
-  @visibleForTesting
-  static Future<bool> applyRestore({
-    required String jsonString,
-    required PlayerViewModel playerVM,
-    required TaskViewModel taskVM,
-    required BackupStorage storage,
-  }) async {
-    final data = FullBackupService().decode(jsonString);
-    if (data == null) return false;
-    playerVM.restorePlayer(data.player);
-    taskVM.setTasks(data.tasks);
-    await storage.restore(data.boxes);
-    return true;
   }
 
   String _jobDisplayName(Job job) {
