@@ -1,7 +1,7 @@
 // 寺院画面のバックアップ/復元配線の試練。
 //
-// TempleScreen の onPressed から呼ばれる @visibleForTesting の
-// buildBackupJsonWithStorage / applyRestore を、InMemoryBackupStorage 経由で
+// 設定ハブ「データの持ち出し」の onTap から呼ばれる buildManualBackupJson /
+// applyManualRestore を、InMemoryBackupStorage 経由で
 // 検証する（プラグイン: path_provider / share_plus / file_picker は叩かない）。
 
 import 'package:flutter_test/flutter_test.dart';
@@ -15,7 +15,7 @@ import 'package:rpg_todo/domain/services/reflection_backup_codec.dart';
 import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/player/viewmodels/player_view_model.dart';
 import 'package:rpg_todo/features/temple/data/backup_storage.dart';
-import 'package:rpg_todo/features/temple/presentation/temple_screen.dart';
+import 'package:rpg_todo/features/settings/presentation/data_portability_section.dart';
 
 class _MockPlayerRepo implements IPlayerRepository {
   @override
@@ -68,7 +68,7 @@ void main() {
         },
       });
 
-      final json = await TempleScreen.buildBackupJsonWithStorage(
+      final json = await buildManualBackupJson(
         player: playerVM.player,
         tasks: tasks,
         storage: source,
@@ -89,7 +89,7 @@ void main() {
       final taskVM = TaskViewModel(_FakeTaskRepository(), targetPlayerVM);
       final targetStorage = InMemoryBackupStorage();
 
-      final ok = await TempleScreen.applyRestore(
+      final ok = await applyManualRestore(
         jsonString: json,
         playerVM: targetPlayerVM,
         taskVM: taskVM,
@@ -126,7 +126,7 @@ void main() {
         'reflections': {'ref2': ReflectionBackupCodec.toMap(original)},
       });
 
-      final json = await TempleScreen.buildBackupJsonWithStorage(
+      final json = await buildManualBackupJson(
         player: playerVM.player,
         tasks: const [],
         storage: source,
@@ -156,7 +156,7 @@ void main() {
       final beforeTasks = taskVM.tasks.length;
       final storage = InMemoryBackupStorage();
 
-      final ok = await TempleScreen.applyRestore(
+      final ok = await applyManualRestore(
         jsonString: '{{not json',
         playerVM: playerVM,
         taskVM: taskVM,

@@ -16,6 +16,17 @@
 - 根拠: `lib/features/guild/presentation/quest_management_screen.dart`,
   `lib/features/guild/presentation/guild_screen.dart`, `test/features/guild/presentation/quest_management_nav.dart`
 
+## 2026-11-28 寺院から管理操作（バックアップ／復元／CSV）を設定ハブへ移設
+- 判断: 寺院画面の「データバックアップ」「データ復元」「クエストをCSVで書き出す」を
+  `DataPortabilitySection`（設定ハブ）へ移し、寺院は転職・技の画面に戻す。AppKeys は同一。
+- 理由: 寺院は「遊び（転職と技の解放）」の画面で、JSON入出力は管理操作。同じ画面に
+  性質の違う操作が同居すると、初見で「この画面は何をする場所か」が読めない。
+- 併せて: 自動バックアップ（アプリ保存の世代を戻す）と手動ファイル入出力（自分で持ち出した
+  JSON）は別経路として両方残す。前者は自動・後者は可搬性のため。
+- 根拠: `lib/features/settings/presentation/data_portability_section.dart`,
+  `lib/features/settings/presentation/settings_hub_screen.dart`, `lib/features/temple/presentation/temple_screen.dart`,
+  `test/features/temple/presentation/temple_csv_export_wiring_test.dart`, `test/features/temple/full_backup_wiring_test.dart`
+
 ---
 
 ## 2026-11-28 寄合所は「既定で畳む」・カレンダー表示・入口の一本化
