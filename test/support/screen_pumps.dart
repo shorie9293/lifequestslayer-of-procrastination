@@ -32,6 +32,9 @@ import 'package:rpg_todo/features/calendar_export/presentation/calendar_export_s
 import 'package:rpg_todo/features/calendar_link/data/calendar_gateway.dart';
 import 'package:rpg_todo/features/calendar_link/domain/linked_calendar_event.dart';
 import 'package:rpg_todo/features/calendar_link/presentation/calendar_import_screen.dart';
+import 'package:rpg_todo/features/google_todo/data/google_todo_gateway.dart';
+import 'package:rpg_todo/features/google_todo/domain/google_todo_status.dart';
+import 'package:rpg_todo/features/google_todo/presentation/google_todo_link_screen.dart';
 import 'package:rpg_todo/features/guild/data/task_time_record_repository.dart';
 import 'package:rpg_todo/features/guild/domain/task_time_record.dart';
 import 'package:rpg_todo/features/guild/presentation/estimate_accuracy_screen.dart';
@@ -82,6 +85,7 @@ import 'package:rpg_todo/features/guild/viewmodels/task_view_model.dart';
 import 'package:rpg_todo/features/overview/presentation/screens/overview_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/guild_screen.dart';
 import 'package:rpg_todo/features/guild/presentation/widgets/task_card.dart';
+import 'package:rpg_todo/core/testing/widget_keys.dart';
 import 'package:rpg_todo/features/guild/presentation/dialogs/bulk_create_task_dialog.dart';
 import 'package:rpg_todo/features/guild/presentation/dialogs/create_task_dialog.dart';
 import 'package:rpg_todo/features/guild/presentation/dialogs/tutorial_reset_dialog.dart';
@@ -1154,6 +1158,14 @@ Future<void> _pumpGuild(WidgetTester tester, ThemeData theme,
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 20));
   if (expand) {
+    // 寄合所は既定で全ての束を畳む（2026-11-28）。畳んだままでは TaskCard が
+    // 存在せず走査母数が空振りになるため、まず全開ボタンで開く。
+    final toggle = find.byKey(AppKeys.guildToggleAllGroups);
+    if (toggle.evaluate().isNotEmpty) {
+      await tester.tap(toggle);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 350));
+    }
     final count = find.byType(TaskCard).evaluate().length;
     for (var i = 0; i < count; i++) {
       await tester.tap(find.byType(TaskCard).at(i), warnIfMissed: false);
@@ -1672,4 +1684,72 @@ Future<void> openMainOfflineDialog(WidgetTester tester) async {
   await tester.tap(find.text('オフライン'), warnIfMissed: false);
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 300));
+}
+
+// ── Google ToDo 連携 ────────────────────────────────────
+/// 通信を持たないフェイク（既存の画面試練と同じ 6 メソッド）。
+class _FakeGoogleTodoGateway implements GoogleTodoGateway {
+  _FakeGoogleTodoGateway(this.status);
+
+  GoogleTodoStatus status;
+
+  @override
+  Future<GoogleTodoStatus> fetchStatus() async => status;
+
+  @override
+  Future<String> startLink() async =>
+      'https://accounts.google.com/o/oauth2/v2/auth?state=contrast';
+
+  @override
+  Future<List<GoogleTodoList>> fetchLists() async => const <GoogleTodoList>[
+        GoogleTodoList(id: '@default', title: 'マイタスク'),
+        GoogleTodoList(id: 'list-2', title: '仕事'),
+      ];
+
+  @override
+  Future<void> selectList({required String id, String? title}) async {
+    status = GoogleTodoStatus(
+      linked: true,
+      email: status.email,
+      listId: id,
+      listTitle: title,
+    );
+  }
+
+  @override
+  Future<void> unlink() async {
+    status = GoogleTodoStatus.notLinked;
+  }
+
+  @override
+  Future<GoogleTodoSyncResult> sync() async =>
+      const GoogleTodoSyncResult(pulled: 1, pushed: 2);
+}
+
+/// 連携済み状態（本文量が最も多い）を描画する。ローディング完了まで pump する。
+Future<void> pumpGoogleTodoLinkScreen(
+    WidgetTester tester, ThemeData theme) async {
+  final gateway = _FakeGoogleTodoGateway(
+    GoogleTodoStatus(
+      linked: true,
+      email: 'horie.shunta@gmail.com',
+      listId: '@default',
+      listTitle: 'マイタスク',
+      lastOkAt: DateTime.utc(2026, 11, 20, 1, 0),
+      pulled: 2,
+      pushed: 1,
+    ),
+  );
+  await tester.pumpWidget(
+    MaterialApp(
+      theme: theme,
+      home: GoogleTodoLinkScreen(
+        gateway: gateway,
+        clock: () => DateTime.utc(2026, 11, 20, 1, 5),
+      ),
+    ),
+  );
+  // CircularProgressIndicator が回り続けるため pumpAndSettle は使わない。
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 50));
 }

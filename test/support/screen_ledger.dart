@@ -1042,6 +1042,26 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     darkViolationCheck: false,
     warmUp: registerBattleServices,
   ),
+
+  // ── Google ToDo 連携（連携済み・本文量最大） ──
+  const ContrastCase(
+    key: 'google_todo_link_light',
+    label: 'Google ToDo 連携',
+    tag: 'GOOGLE TODO LINK',
+    dark: false,
+    minMeasurable: 15,
+    pump: pumpGoogleTodoLinkScreen,
+    config: ScanConfig.classic,
+  ),
+  const ContrastCase(
+    key: 'google_todo_link_dark',
+    label: 'Google ToDo 連携',
+    tag: 'GOOGLE TODO LINK',
+    dark: true,
+    minMeasurable: 15,
+    pump: pumpGoogleTodoLinkScreen,
+    config: ScanConfig.classic,
+  ),
 ];
 
 ContrastCase screenLedgerByKey(String key) =>
