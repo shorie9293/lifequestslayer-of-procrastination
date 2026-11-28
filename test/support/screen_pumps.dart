@@ -245,7 +245,7 @@ Future<void> pumpErrorBoundary(WidgetTester tester, ThemeData theme) async {
   await tester.pumpWidget(
     MaterialApp(
       theme: theme,
-      home: Scaffold(body: const ErrorBoundary(child: _ThrowingWidget())),
+      home: const Scaffold(body: ErrorBoundary(child: _ThrowingWidget())),
     ),
   );
   await tester.pump();

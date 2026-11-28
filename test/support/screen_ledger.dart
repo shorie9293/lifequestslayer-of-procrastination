@@ -22,7 +22,7 @@ const ScanConfig _gemShopConfig = ScanConfig(gradientMode: GradientMode.none);
 /// 台帳。キーは一意。
 final List<ContrastCase> screenLedger = <ContrastCase>[
   // ── 町タブ（幅 430dp：試練フォントの横幅溢れ回避。母数下限 30） ──
-  ContrastCase(
+  const ContrastCase(
     key: 'town_light',
     label: '町タブ',
     tag: 'TOWN',
@@ -33,7 +33,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     widthDp: 430,
     needsHive: true,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'town_dark',
     label: '町タブ',
     tag: 'TOWN',
@@ -45,7 +45,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     needsHive: true,
   ),
 // ── アカウント削除 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'account_deletion_light',
     label: 'アカウント削除',
     tag: 'ACCOUNT DELETION',
@@ -54,7 +54,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpAccountDeletionScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'account_deletion_dark',
     label: 'アカウント削除',
     tag: 'ACCOUNT DELETION',
@@ -65,7 +65,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 冒険者カルテ ──
-  ContrastCase(
+  const ContrastCase(
     key: 'adventurer_chart_light',
     label: '冒険者カルテ',
     tag: 'ADVENTURER CHART',
@@ -74,7 +74,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpAdventurerChartScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'adventurer_chart_dark',
     label: '冒険者カルテ',
     tag: 'ADVENTURER CHART',
@@ -85,7 +85,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 冒険の戦績シェアカード ──
-  ContrastCase(
+  const ContrastCase(
     key: 'adventure_share_card_light',
     label: '冒険の戦績シェアカード',
     tag: 'ADVENTURE SHARE CARD',
@@ -94,7 +94,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpAdventureShareCardScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'adventure_share_card_dark',
     label: '冒険の戦績シェアカード',
     tag: 'ADVENTURE SHARE CARD',
@@ -106,7 +106,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── ログイン ──
-  ContrastCase(
+  const ContrastCase(
     key: 'login_light',
     label: 'ログイン',
     tag: 'LOGIN',
@@ -115,7 +115,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpLoginScreen,
     config: ScanConfig.classic,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'login_dark',
     label: 'ログイン',
     tag: 'LOGIN',
@@ -125,7 +125,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.classic,
   ),
 // ── ErrorBoundary ──
-  ContrastCase(
+  const ContrastCase(
     key: 'error_boundary_light',
     label: 'ErrorBoundary',
     tag: 'ERROR_BOUNDARY',
@@ -134,7 +134,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpErrorBoundary,
     config: ScanConfig.gradientChip,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'error_boundary_dark',
     label: 'ErrorBoundary',
     tag: 'ERROR_BOUNDARY',
@@ -146,7 +146,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 自動バックアップ ──
-  ContrastCase(
+  const ContrastCase(
     key: 'auto_backup_light',
     label: '自動バックアップ画面',
     tag: 'AUTO BACKUP',
@@ -155,7 +155,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpAutoBackupScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'auto_backup_dark',
     label: '自動バックアップ画面',
     tag: 'AUTO BACKUP',
@@ -167,7 +167,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 討伐戦績（ライトのみ） ──
-  ContrastCase(
+  const ContrastCase(
     key: 'battle_record_light',
     label: '討伐戦績',
     tag: 'BATTLE RECORD',
@@ -178,7 +178,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 敵図鑑（ライトのみ・一覧と詳細ダイアログ） ──
-  ContrastCase(
+  const ContrastCase(
     key: 'enemy_catalog_list',
     label: '敵図鑑',
     tag: 'ENEMY CATALOG',
@@ -187,7 +187,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpEnemyCatalogScreen,
     config: ScanConfig.battle,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'enemy_catalog_dialog',
     label: '敵図鑑（詳細ダイアログ）',
     tag: 'ENEMY CATALOG',
@@ -197,7 +197,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.battle,
   ),
 // ── カレンダー書き出し ──
-  ContrastCase(
+  const ContrastCase(
     key: 'calendar_export_light',
     label: 'カレンダー書き出し',
     tag: 'CALENDAR EXPORT',
@@ -206,7 +206,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpCalendarExportScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'calendar_export_dark',
     label: 'カレンダー書き出し',
     tag: 'CALENDAR EXPORT',
@@ -218,7 +218,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── カレンダー取り込み ──
-  ContrastCase(
+  const ContrastCase(
     key: 'calendar_import_light',
     label: 'カレンダー取り込み',
     tag: 'CALENDAR IMPORT',
@@ -227,7 +227,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpCalendarImportScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'calendar_import_dark',
     label: 'カレンダー取り込み',
     tag: 'CALENDAR IMPORT',
@@ -239,7 +239,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 見積もり精度 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'estimate_accuracy_light',
     label: '見積もり精度',
     tag: 'ESTIMATE ACCURACY',
@@ -249,7 +249,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.gradient,
     widthDp: 430,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'estimate_accuracy_dark',
     label: '見積もり精度',
     tag: 'ESTIMATE ACCURACY',
@@ -261,7 +261,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── クエスト一括操作 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'guild_bulk_action_light',
     label: '一括操作',
     tag: 'GUILD BULK ACTION',
@@ -270,7 +270,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpGuildBulkActionScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'guild_bulk_action_dark',
     label: '一括操作',
     tag: 'GUILD BULK ACTION',
@@ -280,7 +280,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.gradient,
   ),
 // ── クエスト別ストリーク ──
-  ContrastCase(
+  const ContrastCase(
     key: 'quest_streak_light',
     label: 'クエスト別ストリーク',
     tag: 'QUEST STREAK',
@@ -289,7 +289,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpQuestStreakScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'quest_streak_dark',
     label: 'クエスト別ストリーク',
     tag: 'QUEST STREAK',
@@ -300,7 +300,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 勤行の定型 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'task_template_light',
     label: '勤行の定型',
     tag: 'TASK TEMPLATE',
@@ -309,7 +309,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpTaskTemplateScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'task_template_dark',
     label: '勤行の定型',
     tag: 'TASK TEMPLATE',
@@ -320,7 +320,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── アプリロック設定 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'app_lock_light',
     label: 'アプリロック設定',
     tag: 'APP LOCK',
@@ -329,7 +329,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpAppLockSettingsScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'app_lock_dark',
     label: 'アプリロック設定',
     tag: 'APP LOCK',
@@ -341,7 +341,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 動きを減らす設定 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'reduce_motion_light',
     label: '動きの設定',
     tag: 'REDUCE MOTION',
@@ -350,7 +350,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpReduceMotionSettingsScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'reduce_motion_dark',
     label: '動きの設定',
     tag: 'REDUCE MOTION',
@@ -360,7 +360,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.gradient,
   ),
 // ── アプリについて ──
-  ContrastCase(
+  const ContrastCase(
     key: 'about_light',
     label: 'アプリについて',
     tag: 'ABOUT',
@@ -369,7 +369,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpAboutScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'about_dark',
     label: 'アプリについて',
     tag: 'ABOUT',
@@ -380,7 +380,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── クラッシュログ ──
-  ContrastCase(
+  const ContrastCase(
     key: 'crash_log_light',
     label: 'クラッシュログ',
     tag: 'CRASH LOG',
@@ -389,7 +389,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpCrashLogScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'crash_log_dark',
     label: 'クラッシュログ',
     tag: 'CRASH LOG',
@@ -400,7 +400,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 連携状況 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'cross_app_link_light',
     label: '連携状況',
     tag: 'CROSS APP LINK',
@@ -409,7 +409,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpCrossAppLinkStatusScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'cross_app_link_dark',
     label: '連携状況',
     tag: 'CROSS APP LINK',
@@ -420,7 +420,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 期限リマインダー設定 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'deadline_reminder_light',
     label: '期限リマインダー設定',
     tag: 'DEADLINE REMINDER',
@@ -429,7 +429,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpDeadlineReminderSettingsScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'deadline_reminder_dark',
     label: '期限リマインダー設定',
     tag: 'DEADLINE REMINDER',
@@ -441,7 +441,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 静穏時間設定 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'quiet_hours_light',
     label: '静穏時間設定',
     tag: 'QUIET HOURS',
@@ -450,7 +450,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpQuietHoursSettingsScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'quiet_hours_dark',
     label: '静穏時間設定',
     tag: 'QUIET HOURS',
@@ -462,7 +462,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 勤行リマインダー設定 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'reminder_settings_light',
     label: '勤行リマインダー設定',
     tag: 'REMINDER SETTINGS',
@@ -471,7 +471,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpReminderSettingsScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'reminder_settings_dark',
     label: '勤行リマインダー設定',
     tag: 'REMINDER SETTINGS',
@@ -482,7 +482,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     darkInkCheck: false,
   ),
 // ── お休み券 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'streak_freeze_light',
     label: 'お休み券',
     tag: 'STREAK FREEZE',
@@ -491,7 +491,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpStreakFreezeRich,
     config: ScanConfig.classic,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'streak_freeze_light_insufficient',
     label: 'お休み券（券不足）',
     tag: 'STREAK FREEZE',
@@ -500,7 +500,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpStreakFreezeSparse,
     config: ScanConfig.classic,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'streak_freeze_dark',
     label: 'お休み券',
     tag: 'STREAK FREEZE',
@@ -511,7 +511,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── KozuchiQuestCard ──
-  ContrastCase(
+  const ContrastCase(
     key: 'kozuchi_light',
     label: 'KozuchiQuestCard',
     tag: 'KOZUCHI',
@@ -520,7 +520,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpKozuchiQuestCard,
     config: ScanConfig.gradientChip,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'kozuchi_light_done',
     label: 'KozuchiQuestCard（達成済み）',
     tag: 'KOZUCHI',
@@ -529,7 +529,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpKozuchiQuestCardDone,
     config: ScanConfig.gradientChip,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'kozuchi_dark',
     label: 'KozuchiQuestCard',
     tag: 'KOZUCHI',
@@ -541,7 +541,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 勤行ヒートマップ ──
-  ContrastCase(
+  const ContrastCase(
     key: 'practice_heatmap_light',
     label: '勤行ヒートマップ',
     tag: 'HEATMAP',
@@ -550,7 +550,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpPracticeHeatmap,
     config: ScanConfig.classic,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'practice_heatmap_light_empty',
     label: '勤行ヒートマップ（空状態）',
     tag: 'HEATMAP',
@@ -559,7 +559,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpPracticeHeatmapEmpty,
     config: ScanConfig.classic,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'practice_heatmap_dark',
     label: '勤行ヒートマップ',
     tag: 'HEATMAP',
@@ -570,7 +570,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 内省バッジ一覧 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'reflection_badge_light',
     label: '内省バッジ',
     tag: 'BADGE',
@@ -579,7 +579,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpReflectionBadgeCollectionScreen,
     config: ScanConfig.classic,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'reflection_badge_dark',
     label: '内省バッジ',
     tag: 'BADGE',
@@ -589,7 +589,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.classic,
   ),
 // ── 装備タブ ──
-  ContrastCase(
+  const ContrastCase(
     key: 'equipment_light_initial',
     label: '装備タブ（初期表示）',
     tag: 'EQUIP',
@@ -598,7 +598,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpEquipmentInitial,
     config: ScanConfig.gradientChip,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'equipment_light_list',
     label: '装備タブ（スキン一覧）',
     tag: 'EQUIP',
@@ -607,7 +607,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpEquipmentList,
     config: ScanConfig.gradientChip,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'equipment_light_preview',
     label: '装備タブ（プレビュー選択）',
     tag: 'EQUIP',
@@ -616,7 +616,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpEquipmentPreview,
     config: ScanConfig.gradientChip,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'equipment_dark_list',
     label: '装備タブ（ダーク一覧）',
     tag: 'EQUIP',
@@ -628,7 +628,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── クエスト検索 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'guild_quest_search_light',
     label: 'クエスト検索',
     tag: 'GUILD QUEST SEARCH',
@@ -637,7 +637,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpGuildQuestSearchScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'guild_quest_search_dark',
     label: 'クエスト検索',
     tag: 'GUILD QUEST SEARCH',
@@ -647,7 +647,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.gradient,
   ),
 // ── クロスアプリ称号図鑑 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'crossapp_light',
     label: '称号図鑑',
     tag: 'CROSSAPP TITLE',
@@ -656,7 +656,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpCrossAppTitleEncyclopedia,
     config: ScanConfig.gradientChip,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'crossapp_dark',
     label: '称号図鑑',
     tag: 'CROSSAPP TITLE',
@@ -669,7 +669,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 俯瞰の魔眼（暦／カンバン／未解放） ──
-  ContrastCase(
+  const ContrastCase(
     key: 'overview_calendar_light',
     label: '俯瞰の魔眼（暦）',
     tag: 'OVERVIEW CAL',
@@ -678,7 +678,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpOverviewCalendar,
     config: ScanConfig.classic,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'overview_kanban_light',
     label: '俯瞰の魔眼（カンバン）',
     tag: 'OVERVIEW KANBAN',
@@ -687,7 +687,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpOverviewKanban,
     config: ScanConfig.classic,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'overview_locked_light',
     label: '俯瞰の魔眼（未解放）',
     tag: 'OVERVIEW LOCKED',
@@ -696,7 +696,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpOverviewLocked,
     config: ScanConfig.classic,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'overview_calendar_dark',
     label: '俯瞰の魔眼（暦）',
     tag: 'OVERVIEW CAL',
@@ -706,7 +706,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.classic,
     darkViolationCheck: false,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'overview_kanban_dark',
     label: '俯瞰の魔眼（カンバン）',
     tag: 'OVERVIEW KANBAN',
@@ -717,7 +717,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     darkViolationCheck: false,
   ),
 // ── 寄合所（メイン画面） ──
-  ContrastCase(
+  const ContrastCase(
     key: 'guild_light',
     label: '寄合所',
     tag: 'GUILD',
@@ -727,7 +727,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.gradientChip,
     widthDp: 480,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'guild_light_expanded',
     label: '寄合所（全カード展開）',
     tag: 'GUILD EXPANDED',
@@ -737,7 +737,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.gradientChip,
     widthDp: 480,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'guild_dark',
     label: '寄合所',
     tag: 'GUILD',
@@ -749,7 +749,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 寄合所の各ダイアログ ──
-  ContrastCase(
+  const ContrastCase(
     key: 'create_task_dialog_light',
     label: 'クエスト作成ダイアログ',
     tag: 'CREATE TASK DIALOG',
@@ -758,7 +758,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpCreateTaskDialog,
     config: ScanConfig.gradientChip,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'bulk_create_dialog_light',
     label: 'クエスト一括登録ダイアログ',
     tag: 'BULK CREATE DIALOG',
@@ -767,7 +767,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpBulkCreateTaskDialog,
     config: ScanConfig.gradientChip,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'tutorial_reset_dialog_light',
     label: '導きの書リセットダイアログ',
     tag: 'TUTORIAL RESET DIALOG',
@@ -776,7 +776,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpTutorialResetDialog,
     config: ScanConfig.gradientChip,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'create_task_dialog_dark',
     label: 'クエスト作成ダイアログ',
     tag: 'CREATE TASK DIALOG',
@@ -788,7 +788,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 計画の陣（プロジェクト一覧） ──
-  ContrastCase(
+  const ContrastCase(
     key: 'project_list_light',
     label: '計画の陣（一覧）',
     tag: 'PROJECT LIGHT list',
@@ -798,7 +798,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.classic,
     widthDp: 430,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'project_list_empty_light',
     label: '計画の陣（空状態）',
     tag: 'PROJECT LIGHT empty',
@@ -808,7 +808,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.classic,
     widthDp: 430,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'project_list_locked_light',
     label: '計画の陣（未解放）',
     tag: 'PROJECT LIGHT locked',
@@ -818,7 +818,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.classic,
     widthDp: 430,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'project_list_dark',
     label: '計画の陣',
     tag: 'PROJECT DARK list',
@@ -831,7 +831,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 設定ハブ ──
-  ContrastCase(
+  const ContrastCase(
     key: 'settings_hub_light',
     label: '設定ハブ',
     tag: 'SETTINGS HUB',
@@ -840,7 +840,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpSettingsHubScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'settings_hub_dark',
     label: '設定ハブ',
     tag: 'SETTINGS HUB',
@@ -851,7 +851,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── DebugPanel ──
-  ContrastCase(
+  const ContrastCase(
     key: 'debug_panel_light',
     label: 'DebugPanel',
     tag: 'DEBUG',
@@ -861,7 +861,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.gradientChip,
     widthDp: 430,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'debug_panel_dark',
     label: 'DebugPanel',
     tag: 'DEBUG',
@@ -874,7 +874,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 勤行の習慣カレンダー ──
-  ContrastCase(
+  const ContrastCase(
     key: 'habit_calendar_light',
     label: '勤行カレンダー',
     tag: 'HABIT CALENDAR',
@@ -883,7 +883,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpHabitCalendarScreen,
     config: ScanConfig.classic,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'habit_calendar_dark',
     label: '勤行カレンダー',
     tag: 'HABIT CALENDAR',
@@ -892,7 +892,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpHabitCalendarScreen,
     config: ScanConfig.classic,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'habit_calendar_empty_light',
     label: '勤行カレンダー（記録なし）',
     tag: 'HABIT CALENDAR',
@@ -903,7 +903,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 寺院 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'temple_light',
     label: '寺院',
     tag: 'TEMPLE',
@@ -912,7 +912,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpTempleScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'temple_dark',
     label: '寺院',
     tag: 'TEMPLE',
@@ -923,7 +923,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── ポモドーロ（寺院ファイル由来） ──
-  ContrastCase(
+  const ContrastCase(
     key: 'pomodoro_light',
     label: 'ポモドーロ',
     tag: 'POMODORO',
@@ -932,7 +932,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpPomodoroScreen,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'pomodoro_dark_inkonly',
     label: 'ポモドーロ',
     tag: 'POMODORO',
@@ -944,7 +944,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── ポモドーロ（専用ファイル由来） ──
-  ContrastCase(
+  const ContrastCase(
     key: 'pomodoro2_light',
     label: 'ポモドーロ（専用）',
     tag: 'POMODORO',
@@ -953,7 +953,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     pump: pumpPomodoroScreenSimple,
     config: ScanConfig.gradient,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'pomodoro2_dark',
     label: 'ポモドーロ（専用）',
     tag: 'POMODORO',
@@ -964,7 +964,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 宝石ショップ ──
-  ContrastCase(
+  const ContrastCase(
     key: 'gem_shop_light',
     label: '宝石ショップ',
     tag: 'GEMSHOP',
@@ -974,7 +974,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: _gemShopConfig,
     widthDp: 430,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'gem_shop_dark',
     label: '宝石ショップ',
     tag: 'GEMSHOP',
@@ -986,7 +986,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── 戦闘画面 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'battle_light_list',
     label: '戦闘画面',
     tag: 'BATTLE',
@@ -997,7 +997,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     warmUp: registerBattleServices,
     expectForeign: true,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'battle_light_combat',
     label: '戦闘画面（戦術選択フェーズ）',
     tag: 'BATTLE COMBAT',
@@ -1009,7 +1009,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
   ),
 
   // ── メイン画面 ──
-  ContrastCase(
+  const ContrastCase(
     key: 'main_light',
     label: 'メイン画面',
     tag: 'MAIN',
@@ -1019,7 +1019,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     config: ScanConfig.gradientChip,
     warmUp: registerBattleServices,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'main_light_dialog',
     label: 'メイン画面（オフライン復帰ダイアログ）',
     tag: 'MAIN DIALOG',
@@ -1031,7 +1031,7 @@ final List<ContrastCase> screenLedger = <ContrastCase>[
     warmUp: registerBattleServices,
     widthDp: 430,
   ),
-  ContrastCase(
+  const ContrastCase(
     key: 'main_dark',
     label: 'メイン画面',
     tag: 'MAIN',
